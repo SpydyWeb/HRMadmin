@@ -10,7 +10,7 @@ import { TanstackDevtools } from '@tanstack/react-devtools'
 import { ThemeProvider, CssBaseline, Box } from '@mui/material'
 import React from 'react'
 import { auth } from '@/auth'
-
+import "../styles.css"
 interface MyRouterContext {
   queryClient: any;
 }
