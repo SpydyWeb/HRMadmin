@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { auth } from './_auth'
+import { auth } from '@/auth'
 
 export const Route = createFileRoute('/')({
   component: App,

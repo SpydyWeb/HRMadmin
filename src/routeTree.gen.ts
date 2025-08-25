@@ -9,40 +9,52 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { createFileRoute } from '@tanstack/react-router'
+import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExampleChatRouteImport } from './routes/example.chat'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
 import { Route as DemoTableRouteImport } from './routes/demo.table'
 import { Route as DemoStoreRouteImport } from './routes/demo.store'
-import { Route as AuthTerminationRouteImport } from './routes/_auth.termination'
+import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
 import { Route as ExampleGuitarsIndexRouteImport } from './routes/example.guitars/index'
 import { Route as ExampleGuitarsGuitarIdRouteImport } from './routes/example.guitars/$guitarId'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo.start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo.start.api-request'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
+import { ServerRoute as ApiSseServerRouteImport } from './routes/api.sse'
+import { ServerRoute as ApiMessagesServerRouteImport } from './routes/api.messages'
+import { ServerRoute as ApiDemoTqTodosServerRouteImport } from './routes/api.demo-tq-todos'
+import { ServerRoute as ApiDemoNamesServerRouteImport } from './routes/api.demo-names'
+import { ServerRoute as ApiDemoChatServerRouteImport } from './routes/api.demo-chat'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
 const AuthDashboardLazyRouteImport = createFileRoute('/_auth/dashboard')()
+const rootServerRouteImport = createServerRootRoute()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/login.lazy').then((d) => d.Route))
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthDashboardLazyRoute = AuthDashboardLazyRouteImport.update({
-  id: '/_auth/dashboard',
+  id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRoute,
 } as any).lazy(() =>
-  import('./routes/_auth.dashboard.lazy').then((d) => d.Route),
+  import('./routes/_auth/dashboard.lazy').then((d) => d.Route),
 )
 const ExampleChatRoute = ExampleChatRouteImport.update({
   id: '/example/chat',
@@ -65,9 +77,9 @@ const DemoStoreRoute = DemoStoreRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthTerminationRoute = AuthTerminationRouteImport.update({
-  id: '/_auth/termination',
+  id: '/termination',
   path: '/termination',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRoute,
 } as any)
 const ExampleGuitarsIndexRoute = ExampleGuitarsIndexRouteImport.update({
   id: '/example/guitars/',
@@ -98,6 +110,31 @@ const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
   id: '/demo/form/address',
   path: '/demo/form/address',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSseServerRoute = ApiSseServerRouteImport.update({
+  id: '/api/sse',
+  path: '/api/sse',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiMessagesServerRoute = ApiMessagesServerRouteImport.update({
+  id: '/api/messages',
+  path: '/api/messages',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiDemoTqTodosServerRoute = ApiDemoTqTodosServerRouteImport.update({
+  id: '/api/demo-tq-todos',
+  path: '/api/demo-tq-todos',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiDemoNamesServerRoute = ApiDemoNamesServerRouteImport.update({
+  id: '/api/demo-names',
+  path: '/api/demo-names',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiDemoChatServerRoute = ApiDemoChatServerRouteImport.update({
+  id: '/api/demo-chat',
+  path: '/api/demo-chat',
+  getParentRoute: () => rootServerRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -135,6 +172,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
   '/_auth/termination': typeof AuthTerminationRoute
   '/demo/store': typeof DemoStoreRoute
@@ -185,6 +223,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_auth'
     | '/login'
     | '/_auth/termination'
     | '/demo/store'
@@ -202,19 +241,71 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
   LoginLazyRoute: typeof LoginLazyRoute
-  AuthTerminationRoute: typeof AuthTerminationRoute
   DemoStoreRoute: typeof DemoStoreRoute
   DemoTableRoute: typeof DemoTableRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   ExampleChatRoute: typeof ExampleChatRoute
-  AuthDashboardLazyRoute: typeof AuthDashboardLazyRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   ExampleGuitarsGuitarIdRoute: typeof ExampleGuitarsGuitarIdRoute
   ExampleGuitarsIndexRoute: typeof ExampleGuitarsIndexRoute
+}
+export interface FileServerRoutesByFullPath {
+  '/api/demo-chat': typeof ApiDemoChatServerRoute
+  '/api/demo-names': typeof ApiDemoNamesServerRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
+  '/api/messages': typeof ApiMessagesServerRoute
+  '/api/sse': typeof ApiSseServerRoute
+}
+export interface FileServerRoutesByTo {
+  '/api/demo-chat': typeof ApiDemoChatServerRoute
+  '/api/demo-names': typeof ApiDemoNamesServerRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
+  '/api/messages': typeof ApiMessagesServerRoute
+  '/api/sse': typeof ApiSseServerRoute
+}
+export interface FileServerRoutesById {
+  __root__: typeof rootServerRouteImport
+  '/api/demo-chat': typeof ApiDemoChatServerRoute
+  '/api/demo-names': typeof ApiDemoNamesServerRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
+  '/api/messages': typeof ApiMessagesServerRoute
+  '/api/sse': typeof ApiSseServerRoute
+}
+export interface FileServerRouteTypes {
+  fileServerRoutesByFullPath: FileServerRoutesByFullPath
+  fullPaths:
+    | '/api/demo-chat'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/messages'
+    | '/api/sse'
+  fileServerRoutesByTo: FileServerRoutesByTo
+  to:
+    | '/api/demo-chat'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/messages'
+    | '/api/sse'
+  id:
+    | '__root__'
+    | '/api/demo-chat'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/messages'
+    | '/api/sse'
+  fileServerRoutesById: FileServerRoutesById
+}
+export interface RootServerRouteChildren {
+  ApiDemoChatServerRoute: typeof ApiDemoChatServerRoute
+  ApiDemoNamesServerRoute: typeof ApiDemoNamesServerRoute
+  ApiDemoTqTodosServerRoute: typeof ApiDemoTqTodosServerRoute
+  ApiMessagesServerRoute: typeof ApiMessagesServerRoute
+  ApiSseServerRoute: typeof ApiSseServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -238,7 +336,7 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthDashboardLazyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/example/chat': {
       id: '/example/chat'
@@ -273,7 +371,7 @@ declare module '@tanstack/react-router' {
       path: '/termination'
       fullPath: '/termination'
       preLoaderRoute: typeof AuthTerminationRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/example/guitars/': {
       id: '/example/guitars/'
@@ -319,16 +417,66 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+declare module '@tanstack/react-start/server' {
+  interface ServerFileRoutesByPath {
+    '/api/sse': {
+      id: '/api/sse'
+      path: '/api/sse'
+      fullPath: '/api/sse'
+      preLoaderRoute: typeof ApiSseServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/messages': {
+      id: '/api/messages'
+      path: '/api/messages'
+      fullPath: '/api/messages'
+      preLoaderRoute: typeof ApiMessagesServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/demo-tq-todos': {
+      id: '/api/demo-tq-todos'
+      path: '/api/demo-tq-todos'
+      fullPath: '/api/demo-tq-todos'
+      preLoaderRoute: typeof ApiDemoTqTodosServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/demo-names': {
+      id: '/api/demo-names'
+      path: '/api/demo-names'
+      fullPath: '/api/demo-names'
+      preLoaderRoute: typeof ApiDemoNamesServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/demo-chat': {
+      id: '/api/demo-chat'
+      path: '/api/demo-chat'
+      fullPath: '/api/demo-chat'
+      preLoaderRoute: typeof ApiDemoChatServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+  }
+}
+
+interface AuthRouteChildren {
+  AuthTerminationRoute: typeof AuthTerminationRoute
+  AuthDashboardLazyRoute: typeof AuthDashboardLazyRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthTerminationRoute: AuthTerminationRoute,
+  AuthDashboardLazyRoute: AuthDashboardLazyRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
   LoginLazyRoute: LoginLazyRoute,
-  AuthTerminationRoute: AuthTerminationRoute,
   DemoStoreRoute: DemoStoreRoute,
   DemoTableRoute: DemoTableRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   ExampleChatRoute: ExampleChatRoute,
-  AuthDashboardLazyRoute: AuthDashboardLazyRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
@@ -339,3 +487,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+const rootServerRouteChildren: RootServerRouteChildren = {
+  ApiDemoChatServerRoute: ApiDemoChatServerRoute,
+  ApiDemoNamesServerRoute: ApiDemoNamesServerRoute,
+  ApiDemoTqTodosServerRoute: ApiDemoTqTodosServerRoute,
+  ApiMessagesServerRoute: ApiMessagesServerRoute,
+  ApiSseServerRoute: ApiSseServerRoute,
+}
+export const serverRouteTree = rootServerRouteImport
+  ._addFileChildren(rootServerRouteChildren)
+  ._addFileTypes<FileServerRouteTypes>()
