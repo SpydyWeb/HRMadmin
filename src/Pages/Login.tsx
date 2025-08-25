@@ -1,75 +1,27 @@
-import React, { useState } from 'react'
-import { FiEye, FiEyeOff, FiLock, FiUser } from 'react-icons/fi'
 import { MdBusiness, MdSecurity } from 'react-icons/md'
+import { useForm } from '@tanstack/react-form'
+import { zodValidator } from '@tanstack/zod-form-adapter';
+import { loginSchema } from '@/schema/loginSchema'
+import { FieldInfo } from '@/utils/utilities'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button';
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    validatorAdapter: zodValidator(),
+    validators: {
+      onChange: loginSchema
+    },
+    onSubmit: async ({ value }) => {
+      // Do something with form data
+      console.log(value)
+    },
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [focusedField, setFocusedField] = useState('')
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }))
-    }
-  }
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-
-    return newErrors
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const formErrors = validateForm()
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors)
-      return
-    }
-
-    setIsLoading(true)
-    setErrors({})
-
-    setTimeout(() => {
-      setIsLoading(false)
-      alert('Login successful! Welcome to HMS Hierarchy Management')
-    }, 2000)
-  }
-
-  const handleFocus = (fieldName) => {
-    setFocusedField(fieldName)
-  }
-
-  const handleBlur = () => {
-    setFocusedField('')
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
       {/* Background pattern */}
@@ -98,110 +50,59 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <div
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
           className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100 animate-slide-up"
           style={{
             boxShadow:
               '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           }}
         >
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Email Field */}
-            <div className="space-y-1">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700 block mb-2"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <div
-                  className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                    focusedField === 'email'
-                      ? 'text-orange-500'
-                      : 'text-gray-400'
-                  }`}
-                >
-                  <FiUser className="h-5 w-5" />
-                </div>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  onFocus={() => handleFocus('email')}
-                  onBlur={handleBlur}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-300 outline-none ${
-                    errors.email
-                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                      : focusedField === 'email'
-                        ? 'border-orange-500 bg-orange-50 focus:ring-2 focus:ring-orange-200'
-                        : 'border-gray-300 bg-gray-50 hover:bg-white hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                  }`}
-                  placeholder="admin@company.com"
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1 animate-shake">
-                    {errors.email}
-                  </p>
-                )}
-              </div>
-            </div>
-
+            <form.Field
+              name="email"
+              children={(field) => {
+                // Avoid hasty abstractions. Render props are great!
+                return (
+                  <>
+                    <Label htmlFor={field.name}>Email id</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    <FieldInfo field={field} />
+                  </>
+                )
+              }}
+            />
             {/* Password Field */}
-            <div className="space-y-1">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-700 block mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <div
-                  className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200 ${
-                    focusedField === 'password'
-                      ? 'text-orange-500'
-                      : 'text-gray-400'
-                  }`}
-                >
-                  <FiLock className="h-5 w-5" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  onFocus={() => handleFocus('password')}
-                  onBlur={handleBlur}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg transition-all duration-300 outline-none ${
-                    errors.password
-                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                      : focusedField === 'password'
-                        ? 'border-orange-500 bg-orange-50 focus:ring-2 focus:ring-orange-200'
-                        : 'border-gray-300 bg-gray-50 hover:bg-white hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-orange-500 transition-colors duration-200"
-                >
-                  {showPassword ? (
-                    <FiEyeOff className="h-5 w-5" />
-                  ) : (
-                    <FiEye className="h-5 w-5" />
-                  )}
-                </button>
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1 animate-shake">
-                    {errors.password}
-                  </p>
-                )}
-              </div>
-            </div>
+            <form.Field
+              name="password"
+              children={(field) => {
+                // Avoid hasty abstractions. Render props are great!
+                return (
+                  <>
+                    <Label htmlFor={field.name}>Password</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    <FieldInfo field={field} />
+                  </>
+                )
+              }}
+            />
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
@@ -218,31 +119,36 @@ export default function Login() {
             </div>
 
             {/* Submit Button */}
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 transform focus:outline-none focus:ring-4 ${
-                isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:scale-105 hover:shadow-lg active:scale-95 focus:ring-orange-300'
-              }`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Signing In...
-                </div>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <MdBusiness className="w-5 h-5" />
-                  Access Dashboard
-                </span>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]) => (
+                <Button
+                  disabled={!canSubmit}
+                  className={`w-full !py-5 !px-4 rounded-lg font-semibold text-white transition-all duration-300 transform focus:outline-none focus:ring-4 ${
+                    isSubmitting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:scale-105 hover:shadow-lg active:scale-95 focus:ring-orange-300'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Signing In...
+                    </div>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <MdBusiness className="w-5 h-5" />
+                      Access Dashboard
+                    </span>
+                  )}
+                </Button>
               )}
-            </button>
+            />
+          
           </div>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-3 border-t border-gray-200">
             <div className="text-center">
               <p className="text-gray-500 text-sm mb-2">
                 Secure access to organizational hierarchy
@@ -257,7 +163,7 @@ export default function Login() {
               </div>
             </div>
           </div>
-        </div>
+        </form>
 
         {/* Footer */}
         <div className="mt-6 text-center animate-fade-in-delay">

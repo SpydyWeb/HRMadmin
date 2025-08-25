@@ -49,3 +49,26 @@ export interface User {
   role: string;
   exp: number;
 }
+
+export interface TextInputProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  error?: string;
+  focused?: boolean;
+}
+
+export interface PasswordInputProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  error?: string;
+  focused?: boolean;
+}
