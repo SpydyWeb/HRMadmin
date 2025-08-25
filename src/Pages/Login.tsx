@@ -1,21 +1,17 @@
 import { MdBusiness, MdSecurity } from 'react-icons/md'
-import { useForm } from '@tanstack/react-form'
-import { zodValidator } from '@tanstack/zod-form-adapter';
 import { loginSchema } from '@/schema/loginSchema'
-import { FieldInfo } from '@/utils/utilities'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button';
+import { useAppForm } from '@/components/form'
+import { TextFeild } from '@/components/form/text-field'
 
 export default function Login() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       email: '',
       password: '',
     },
-    validatorAdapter: zodValidator(),
+    // validatorAdapter: zodValidator(),
     validators: {
-      onChange: loginSchema
+      onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
       // Do something with form data
@@ -64,45 +60,16 @@ export default function Login() {
         >
           <div className="space-y-4">
             {/* Email Field */}
-            <form.Field
+            <form.AppField
               name="email"
-              children={(field) => {
-                // Avoid hasty abstractions. Render props are great!
-                return (
-                  <>
-                    <Label htmlFor={field.name}>Email id</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
-                    <FieldInfo field={field} />
-                  </>
-                )
-              }}
+              children={() => <TextFeild label="Email" />}
             />
             {/* Password Field */}
-            <form.Field
+             <form.AppField
               name="password"
-              children={(field) => {
-                // Avoid hasty abstractions. Render props are great!
-                return (
-                  <>
-                    <Label htmlFor={field.name}>Password</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
-                    <FieldInfo field={field} />
-                  </>
-                )
-              }}
+              children={() => <TextFeild label="Password" />}
             />
+       
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
@@ -119,32 +86,11 @@ export default function Login() {
             </div>
 
             {/* Submit Button */}
-            <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-              children={([canSubmit, isSubmitting]) => (
-                <Button
-                  disabled={!canSubmit}
-                  className={`w-full !py-5 !px-4 rounded-lg font-semibold text-white transition-all duration-300 transform focus:outline-none focus:ring-4 ${
-                    isSubmitting
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:scale-105 hover:shadow-lg active:scale-95 focus:ring-orange-300'
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Signing In...
-                    </div>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <MdBusiness className="w-5 h-5" />
-                      Access Dashboard
-                    </span>
-                  )}
-                </Button>
-              )}
-            />
-          
+            <form.AppForm>
+              <form.SubmitButton icon={<MdBusiness className="w-5 h-5" />}>
+                Access Dashboard
+              </form.SubmitButton>
+            </form.AppForm>
           </div>
 
           {/* Divider */}
