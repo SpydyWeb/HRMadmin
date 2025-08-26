@@ -1,9 +1,12 @@
 import { MdBusiness, MdSecurity } from 'react-icons/md'
+import { useNavigate } from '@tanstack/react-router'
 import { loginSchema } from '@/schema/loginSchema'
 import { useAppForm } from '@/components/form'
 import { TextFeild } from '@/components/form/text-field'
+import { auth } from '@/auth'
 
 export default function Login() {
+  const navigate=useNavigate()
   const form = useAppForm({
     defaultValues: {
       email: '',
@@ -15,6 +18,8 @@ export default function Login() {
     },
     onSubmit: async ({ value }) => {
       // Do something with form data
+      auth.login(value.email, value.password);
+navigate({to:'/dashboard'})
       console.log(value)
     },
   })

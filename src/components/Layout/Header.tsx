@@ -1,13 +1,4 @@
-import { Link } from '@tanstack/react-router'
-import { GoBell } from 'react-icons/go'
-import { IoMdLock } from 'react-icons/io'
-import Button from '@mui/material/Button'
-import Avatar from '@mui/material/Avatar'
-import IconButton from '@mui/material/IconButton'
-import { styled } from '@mui/material/styles'
-import Badge from '@mui/material/Badge'
-import { CommonButton } from './ui/CustomButton'
-import Notification from './Notification'
+
 
 
 export default function Header() {
@@ -22,23 +13,23 @@ export default function Header() {
         </div>
         <div className="flex flex-row gap-4 items-center">
           <div>
-            <Notification />          
+            {/* <Notification />           */}
           </div>
           <div>
-            <CommonButton
+            {/* <CommonButton
               label="Manish"
               startIcon={<Avatar className='!w-6 !h-6' />}
               onClick={() => alert('Profile clicked')}
               color="primary"
-            />
+            /> */}
           </div>
           <div>
-            <CommonButton
+            {/* <CommonButton
               label="Reset Password"
               startIcon={<IoMdLock className='!w-6 !h-6' />}
               onClick={() => alert('Reset Password clicked')}
               color="info"
-            />
+            /> */}
           </div>
         </div>
       </nav>

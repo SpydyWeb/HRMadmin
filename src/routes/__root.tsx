@@ -11,6 +11,8 @@ import { ThemeProvider, CssBaseline, Box } from '@mui/material'
 import React from 'react'
 import { auth } from '@/auth'
 import "../styles.css"
+import MainLayout from '@/components/Layout/MainLayout'
+import Layout from '@/components/Layout'
 interface MyRouterContext {
   queryClient: any;
 }
@@ -98,11 +100,12 @@ function RootComponent() {
         ) : (
           // Show main application when authenticated
           <Box component="main">
-            {/* Header component would go here */}
-            {/* Sidebar component would go here */}
-            <div className='mt-[6rem] ml-[19rem]'>
+          {/* <MainLayout/> */}
+          <Layout>
+            <div>
               <Outlet />
             </div>
+            </Layout>
           </Box>
         )}
         <Scripts />

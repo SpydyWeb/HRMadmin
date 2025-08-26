@@ -3,6 +3,8 @@ import { auth } from '../auth';
 
 export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ location }) => {
+    console.log('Auth route beforeLoad check',auth.isAuthenticated(),location);
+    
     if (!auth.isAuthenticated()) {
       throw redirect({
         to: '/login',
@@ -15,19 +17,7 @@ export const Route = createFileRoute('/_auth')({
 
 function AuthLayout() {
   return (
-    <div className="p-4">
-      <header className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Secure Area</h1>
-        <button
-          onClick={() => {
-            auth.logout();
-            window.location.href = '/login';
-          }}
-          className="bg-red-500 text-white px-3 py-1 rounded"
-        >
-          Logout
-        </button>
-      </header>
+    <div className="p-1">
       <Outlet />
     </div>
   );
