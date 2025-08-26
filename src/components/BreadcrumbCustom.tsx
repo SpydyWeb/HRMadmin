@@ -21,7 +21,7 @@ export function BreadcrumbCustom() {
   const pathSegments = location.pathname.split('/').filter(Boolean)
 
   // Hide breadcrumb if only dashboard
-  if (pathSegments.length === 1 && pathSegments[0].toLowerCase() === "dashboard") {
+  if (pathSegments.length === 1) {
     return null
   }
 
