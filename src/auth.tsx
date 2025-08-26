@@ -3,7 +3,7 @@ export const auth = {
   _token: null as string | null,
 
   isAuthenticated: () => {
-    return true;
+   // return true;
     const token = auth._token;
     if (!token) return false;
 
