@@ -3,7 +3,9 @@ import { IoMdLock } from 'react-icons/io'
 import { FiBell } from 'react-icons/fi'
 import { auth } from '@/auth'
 import { useNavigate } from '@tanstack/react-router'
-import { Separator } from "@/components/ui/separator"
+import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Button } from '../ui/button'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -19,9 +21,8 @@ export default function Header() {
       <div className="flex items-center justify-between h-full px-6">
         {/* Left side with sidebar trigger and logo */}
         <div className="flex items-center gap-4">
-          
           <Separator orientation="vertical" className="h-6" />
-          
+
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-orange-400 to-orange-500 w-10 h-10 font-bold text-white flex items-center justify-center rounded-lg">
               HM
@@ -41,21 +42,27 @@ export default function Header() {
           </button>
 
           {/* User Profile */}
-          <div className="flex items-center gap-3 bg-orange-50 px-3 py-2 rounded-lg">
-            <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-white font-semibold">
-              {user?.name?.charAt(0) || 'M'}
-            </div>
-            <span className="text-orange-700 font-medium">{user?.name || 'Manish'}</span>
+          <div
+            className="inline-flex  px-3 py-1 rounded-full text-white font-medium gap-2 items-center cursor-pointer"
+            style={{ backgroundColor: 'var(--brand-orange)' }}
+          >
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+            <span>
+              {user?.name || 'Manish'}
+            </span>
           </div>
 
           {/* Reset Password Button */}
-          <button
+          <Button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200"
+            className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-200 text-black  hover:bg-blue-100 transition-colors duration-200"
           >
             <IoMdLock className="w-4 h-4" />
-            <span className="font-medium">Logout</span>
-          </button>
+            <span className="font-medium">Reset Password</span>
+          </Button>
         </div>
       </div>
     </header>

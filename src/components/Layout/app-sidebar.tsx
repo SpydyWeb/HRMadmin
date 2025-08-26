@@ -81,7 +81,7 @@ export function AppSidebar() {
   const { open } = useContext(SidebarContext)
 
   return (
-    <Sidebar variant="floating" className="top-16 left-4 h-[calc(100vh-5rem)]">
+    <Sidebar variant="floating" className="top-16 left-4 h-[calc(100vh-5rem)] rounded-md">
       <div className="absolute top-5 z-10" style={{right:  '-0.7rem' }} >
       <SidebarTrigger />
       </div>
@@ -112,7 +112,6 @@ export function AppSidebar() {
                       asChild
                       isActive={isActive}
                       className="group"
-                      theme={theme}
                     >
                       <button
                         onClick={() => navigate({ to: item.url })}
