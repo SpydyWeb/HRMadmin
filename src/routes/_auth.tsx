@@ -13,6 +13,7 @@ export const Route = createFileRoute('/_auth')({
     }
   },
   component: AuthLayout,
+  
 });
 
 function AuthLayout() {

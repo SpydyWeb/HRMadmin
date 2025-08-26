@@ -12,11 +12,16 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as NotFoundRouteImport } from './routes/$not-found'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
+import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
-const AuthDashboardLazyRouteImport = createFileRoute('/_auth/dashboard')()
+const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
+const AuthDashboardCodeMovementLazyRouteImport = createFileRoute(
+  '/_auth/dashboard/code-movement',
+)()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
   id: '/login',
@@ -27,60 +32,105 @@ const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotFoundRoute = NotFoundRouteImport.update({
+  id: '/$not-found',
+  path: '/$not-found',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthDashboardLazyRoute = AuthDashboardLazyRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthRoute,
-} as any).lazy(() =>
-  import('./routes/_auth/dashboard.lazy').then((d) => d.Route),
-)
 const AuthTerminationRoute = AuthTerminationRouteImport.update({
   id: '/termination',
   path: '/termination',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => AuthRoute,
+} as any).lazy(() =>
+  import('./routes/_auth/dashboard/index.lazy').then((d) => d.Route),
+)
+const AuthDashboardCodeMovementLazyRoute =
+  AuthDashboardCodeMovementLazyRouteImport.update({
+    id: '/dashboard/code-movement',
+    path: '/dashboard/code-movement',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/dashboard/code-movement.lazy').then((d) => d.Route),
+  )
+const AuthDashboardNotFoundRoute = AuthDashboardNotFoundRouteImport.update({
+  id: '/dashboard/$not-found',
+  path: '/dashboard/$not-found',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
-  '/dashboard': typeof AuthDashboardLazyRoute
+  '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
+  '/dashboard': typeof AuthDashboardIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
-  '/dashboard': typeof AuthDashboardLazyRoute
+  '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
+  '/dashboard': typeof AuthDashboardIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$not-found': typeof NotFoundRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
   '/_auth/termination': typeof AuthTerminationRoute
-  '/_auth/dashboard': typeof AuthDashboardLazyRoute
+  '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/_auth/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
+  '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/termination' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/$not-found'
+    | '/login'
+    | '/termination'
+    | '/dashboard/$not-found'
+    | '/dashboard/code-movement'
+    | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/termination' | '/dashboard'
+  to:
+    | '/'
+    | '/$not-found'
+    | '/login'
+    | '/termination'
+    | '/dashboard/$not-found'
+    | '/dashboard/code-movement'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
+    | '/$not-found'
     | '/_auth'
     | '/login'
     | '/_auth/termination'
-    | '/_auth/dashboard'
+    | '/_auth/dashboard/$not-found'
+    | '/_auth/dashboard/code-movement'
+    | '/_auth/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NotFoundRoute: typeof NotFoundRoute
   AuthRoute: typeof AuthRouteWithChildren
   LoginLazyRoute: typeof LoginLazyRoute
 }
@@ -101,19 +151,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$not-found': {
+      id: '/$not-found'
+      path: '/$not-found'
+      fullPath: '/$not-found'
+      preLoaderRoute: typeof NotFoundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_auth/dashboard': {
-      id: '/_auth/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthDashboardLazyRouteImport
-      parentRoute: typeof AuthRoute
     }
     '/_auth/termination': {
       id: '/_auth/termination'
@@ -122,23 +172,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthTerminationRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/': {
+      id: '/_auth/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthDashboardIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard/code-movement': {
+      id: '/_auth/dashboard/code-movement'
+      path: '/dashboard/code-movement'
+      fullPath: '/dashboard/code-movement'
+      preLoaderRoute: typeof AuthDashboardCodeMovementLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard/$not-found': {
+      id: '/_auth/dashboard/$not-found'
+      path: '/dashboard/$not-found'
+      fullPath: '/dashboard/$not-found'
+      preLoaderRoute: typeof AuthDashboardNotFoundRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
   AuthTerminationRoute: typeof AuthTerminationRoute
-  AuthDashboardLazyRoute: typeof AuthDashboardLazyRoute
+  AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
+  AuthDashboardCodeMovementLazyRoute: typeof AuthDashboardCodeMovementLazyRoute
+  AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthTerminationRoute: AuthTerminationRoute,
-  AuthDashboardLazyRoute: AuthDashboardLazyRoute,
+  AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
+  AuthDashboardCodeMovementLazyRoute: AuthDashboardCodeMovementLazyRoute,
+  AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NotFoundRoute: NotFoundRoute,
   AuthRoute: AuthRouteWithChildren,
   LoginLazyRoute: LoginLazyRoute,
 }

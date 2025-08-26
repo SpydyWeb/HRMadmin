@@ -5,14 +5,12 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanstackDevtools } from '@tanstack/react-devtools'
-import { ThemeProvider, CssBaseline, Box } from '@mui/material'
 import React from 'react'
 import { auth } from '@/auth'
 import "../styles.css"
-import MainLayout from '@/components/Layout/MainLayout'
 import Layout from '@/components/Layout'
+import Loader from '@/components/Loader'
+import BreadcrumbCustom from '@/components/BreadcrumbCustom'
 interface MyRouterContext {
   queryClient: any;
 }
@@ -62,24 +60,14 @@ function RootComponent() {
     }
   }, [isAuthenticated, isLoginPage, navigate]);
 
-  if (isLoading) {
+  if (isLoading ) {
     return (
       <html lang="en">
         <head>
           <HeadContent />
         </head>
         <body>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              minHeight: '100vh',
-              backgroundColor: '#f5f5f5'
-            }}
-          >
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-          </Box>
+         <Loader/>
           <Scripts />
         </body>
       </html>
@@ -94,19 +82,15 @@ function RootComponent() {
       <body>
         {!isAuthenticated ? (
           // Show only login page when not authenticated
-          <Box component="main">
-            <Outlet />
-          </Box>
+           <Outlet />
+         
         ) : (
           // Show main application when authenticated
-          <Box component="main">
-          {/* <MainLayout/> */}
-          <Layout>
-            <div>
-              <Outlet />
-            </div>
+          <Layout> 
+            <BreadcrumbCustom/>           
+              <Outlet />          
             </Layout>
-          </Box>
+        
         )}
         <Scripts />
       </body>

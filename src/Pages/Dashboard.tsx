@@ -42,7 +42,7 @@ const metrics = [
 
 const Dashboard = () => {
   return (
-    <div className="flex  gap-6">
+    <div className="flex gap-6">
       <div className="w-full space-y-3">
           <MetricsCard />
           <AlertCard />
