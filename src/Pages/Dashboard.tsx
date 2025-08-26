@@ -47,36 +47,33 @@ const Dashboard = () => {
   const alerts = [
   {
     icon: TbCertificate,
-    iconBgColor: theme.palette.primary.main,
-    iconColor: 'white',
+    iconBgColor: "var(--brand-orange)",
     count: '52',
-    countColor: theme.palette.primary.main,
+    btnColor: "var(--brand-orange)",
     title: 'Licenses Expiring Soon',
     subtitle: 'Expiring in 30 days',
     },
   {
     icon: BsWindowDock,
-    iconBgColor: theme.palette.secondary.main,
-    iconColor: 'text-green-600',
+    iconBgColor: "var(--brand-green)",
     count: '23',
-    countColor: theme.palette.secondary.main,
+    btnColor:"var(--brand-green)",
     title: 'Certifications Expiring',
     subtitle: 'Expiring in 30 days',
  },
   {
     icon: LuSquareUserRound,
-    iconBgColor: theme.palette.success.main,
-    iconColor: 'text-blue-600',
+    iconBgColor: "var(--brand-blue)",
     count: '13',
-    countColor: theme.palette.success.main,
+    btnColor: "var(--brand-blue)",
     title: 'MBG Criteria Not Met',
     subtitle: 'Entities not meeting MBG criteria',
     },
 ]
   return (
-    <div className='flex  gap-6 mr-8'>
+    <div className='flex  gap-6'>
     <div>
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-row gap-6 overflow-x-auto">
         {metrics.map((metric, index) => (
           <MetricsCard
             key={index}
@@ -104,15 +101,11 @@ const Dashboard = () => {
                 key={index}
                 icon={alert.icon}
                 iconBgColor={alert.iconBgColor}
-                iconColor={alert.iconColor}
                 count={alert.count}
-                countColor={alert.countColor}
+                btnColor={alert.btnColor}
                 title={alert.title}
                 subtitle={alert.subtitle}
-                notifyBtnColor={alert.notifyBtnColor}
-                notifyBtnTextColor={alert.notifyBtnTextColor}
-                viewBtnColor={alert.viewBtnColor}
-                viewBtnTextColor={alert.viewBtnTextColor}
+                
               />
             ))}
           </div>

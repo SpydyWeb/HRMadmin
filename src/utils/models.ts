@@ -19,15 +19,10 @@ export interface MiniChartProps  {
 export interface AlertCardProps {
   icon: React.ElementType;
   iconBgColor: string;
-  iconColor: string;
   count: number | string;
-  countColor: string;
+  btnColor: string;
   title: string;
   subtitle: string;
-  notifyBtnColor: string;
-  notifyBtnTextColor: string;
-  viewBtnColor: string;
-  viewBtnTextColor: string;
 }
 
 export interface ActionItem {

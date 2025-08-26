@@ -1,19 +1,16 @@
 
 import { AlertCardProps } from "@/utils/models";
+import { Button } from "./ui/button";
 
 
 export const AlertCard = ({ 
   icon: Icon, 
   iconBgColor, 
-  iconColor, 
   count, 
-  countColor, 
+  btnColor, 
   title, 
   subtitle, 
-  notifyBtnColor, 
-  notifyBtnTextColor,
-  viewBtnColor,
-  viewBtnTextColor 
+
 }: AlertCardProps) => {
   return (
     <div className="bg-gray-200 rounded-sm p-6 shadow-sm flex-1 min-w-0">
@@ -22,7 +19,7 @@ export const AlertCard = ({
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white`} style={{backgroundColor: iconBgColor}}>
           <Icon className={`w-5 h-5`} />
         </div>
-        <div className={`text-4xl font-bold`} style={{color: countColor}}>
+        <div className={`text-4xl font-bold`} style={{color: iconBgColor}}>
           {count}
         </div>
       </div>
@@ -35,16 +32,16 @@ export const AlertCard = ({
 
       {/* Action Buttons */}
       <div className="flex justify-between ">
-        <button  style={{borderColor: iconBgColor,color:iconBgColor}}
-          className={`px-4 py-2 rounded-sm border-2 font-medium text-sm transition-colors hover:opacity-80`}
+        <Button  style={{borderColor: btnColor,color:btnColor}}
+          className={` rounded-sm border-2 bg-transparent font-medium text-sm transition-colors hover:bg-transparent `}
         >
           Notify
-        </button>
-        <button  style={{backgroundColor: iconBgColor}}
-          className={`px-4 py-2 rounded-sm font-medium text-sm text-white transition-colors hover:opacity-90 `}
+        </Button>
+        <Button  style={{backgroundColor: btnColor}}
+          className={` rounded-sm font-medium text-sm text-white transition-colors hover:opacity-90 `}
         >
           View Details
-        </button>
+        </Button>
       </div>
     </div>
   );

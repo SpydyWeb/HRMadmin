@@ -17,7 +17,7 @@ export const MetricsCard = ({
   const isPositive = changeType === 'positive';
   const isNegative = changeType === 'negative';
   return (
-    <div className="bg-white rounded-lg p-3 shadow border border-gray-100 flex-1 min-w-0">
+    <div className="bg-white rounded-lg p-3 shadow border border-gray-100 flex-1 ">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="text-gray-500 text-sm font-medium mb-2">{title}</h3>
