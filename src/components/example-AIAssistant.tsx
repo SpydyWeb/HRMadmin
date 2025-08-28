@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@tanstack/react-store'
-import { Send, X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
@@ -13,6 +12,8 @@ import { showAIAssistant } from '../store/example-assistant'
 import GuitarRecommendation from './example-GuitarRecommendation'
 
 import type { UIMessage } from 'ai'
+import { FiSend } from 'react-icons/fi'
+import { IoMdClose } from 'react-icons/io'
 
 function Messages({ messages }: { messages: Array<UIMessage> }) {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -121,7 +122,7 @@ export default function AIAssistant() {
               onClick={() => showAIAssistant.setState((state) => !state)}
               className="text-gray-400 hover:text-white transition-colors"
             >
-              <X className="w-4 h-4" />
+              <IoMdClose className="w-4 h-4" />
             </button>
           </div>
 
@@ -162,7 +163,7 @@ export default function AIAssistant() {
                   disabled={!input.trim()}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-orange-500 hover:text-orange-400 disabled:text-gray-500 transition-colors focus:outline-none"
                 >
-                  <Send className="w-4 h-4" />
+                  <FiSend className="w-4 h-4" />
                 </button>
               </div>
             </form>
