@@ -6,6 +6,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import Button from '../ui/button'
+import Notification from '../Notification'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -34,14 +35,8 @@ export default function Header() {
         {/* Right side with notifications and user info */}
         <div className="flex items-center gap-4">
           {/* Notification Bell */}
-          <button className="relative p-2 rounded-full hover:bg-accent transition-colors duration-200 bg-gray-200">
-            <FiBell className="w-5 h-5" />
-            <span className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs rounded-full w-2 h-2 flex items-center justify-center">
-              1
-            </span>
-          </button>
-
-          {/* User Profile */}
+          <Notification/>
+                   {/* User Profile */}
           <div
             className="inline-flex  px-3 py-1 rounded-full text-white font-medium gap-2 items-center cursor-pointer"
             style={{ backgroundColor: 'var(--brand-orange)' }}
