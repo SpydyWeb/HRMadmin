@@ -75,7 +75,6 @@ const items = [
 ]
 
 export function AppSidebar() {
-  const theme=useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const { open } = useContext(SidebarContext)
@@ -85,26 +84,14 @@ export function AppSidebar() {
       <div className="absolute top-5 z-10" style={{right:  '-0.7rem' }} >
       <SidebarTrigger />
       </div>
-      {/* <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 text-white font-bold text-sm">
-            HM
-          </div>
-          {open && (
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Hierarchy Management</span>
-              <span className="truncate text-xs text-sidebar-foreground/70">Admin Portal</span>
-            </div>
-          )}
-        </div>
-      </SidebarHeader> */}
+   
       
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu >
               {items.map((item) => {
-                const isActive = location.pathname === item.url
+                const isActive = location.pathname.startsWith(item.url)
                 
                 return (
                   <SidebarMenuItem key={item.title}>

@@ -30,17 +30,16 @@ export default function Notification() {
       <Popover>
         <PopoverTrigger>
           <div className="relative flex items-center justify-center w-10 h-10 cursor-pointer bg-gray-200 rounded-full">
-  {/* Bell Icon */}
-  <GoBell className="w-6 h-6 text-gray-700" />
+            {/* Bell Icon */}
+            <GoBell className="w-6 h-6 text-gray-700" />
 
-  {/* Red Dot with Animation */}
-  <span className="absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
-  <span className="absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-</div>
-
+            {/* Red Dot with Animation */}
+            <span className="absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+            <span className="absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+          </div>
         </PopoverTrigger>
         <PopoverContent>
-          <div className='text-gray-600 text-sm'>
+          <div className="text-gray-600 text-sm">
             Investment services license is expiring today
           </div>
 
