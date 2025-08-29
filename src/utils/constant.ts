@@ -9,4 +9,6 @@ export const RoutePaths = {
   CMS: '/cms',
   SETTING: '/setting',
   CODEMOVEMENT: '/dashboard/code-movement',
+  CERTIFICATIONUPDATE: '/dashboard/certification-update',
+  TERMINATION: '/dashboard/termination',
 }

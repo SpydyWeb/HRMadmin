@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as NotFoundRouteImport } from './routes/$not-found'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
+import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
+import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
@@ -62,6 +64,18 @@ const AuthDashboardCodeMovementLazyRoute =
   } as any).lazy(() =>
     import('./routes/_auth/dashboard/code-movement.lazy').then((d) => d.Route),
   )
+const AuthDashboardTerminationRoute =
+  AuthDashboardTerminationRouteImport.update({
+    id: '/dashboard/termination',
+    path: '/dashboard/termination',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthDashboardCertificationUpdateRoute =
+  AuthDashboardCertificationUpdateRouteImport.update({
+    id: '/dashboard/certification-update',
+    path: '/dashboard/certification-update',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthDashboardNotFoundRoute = AuthDashboardNotFoundRouteImport.update({
   id: '/dashboard/$not-found',
   path: '/dashboard/$not-found',
@@ -74,6 +88,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
 }
@@ -83,6 +99,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
 }
@@ -94,6 +112,8 @@ export interface FileRoutesById {
   '/login': typeof LoginLazyRoute
   '/_auth/termination': typeof AuthTerminationRoute
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
+  '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/_auth/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
 }
@@ -105,6 +125,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/termination'
     | '/dashboard/$not-found'
+    | '/dashboard/certification-update'
+    | '/dashboard/termination'
     | '/dashboard/code-movement'
     | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
@@ -114,6 +136,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/termination'
     | '/dashboard/$not-found'
+    | '/dashboard/certification-update'
+    | '/dashboard/termination'
     | '/dashboard/code-movement'
     | '/dashboard'
   id:
@@ -124,6 +148,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/_auth/termination'
     | '/_auth/dashboard/$not-found'
+    | '/_auth/dashboard/certification-update'
+    | '/_auth/dashboard/termination'
     | '/_auth/dashboard/code-movement'
     | '/_auth/dashboard/'
   fileRoutesById: FileRoutesById
@@ -186,6 +212,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardCodeMovementLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/termination': {
+      id: '/_auth/dashboard/termination'
+      path: '/dashboard/termination'
+      fullPath: '/dashboard/termination'
+      preLoaderRoute: typeof AuthDashboardTerminationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard/certification-update': {
+      id: '/_auth/dashboard/certification-update'
+      path: '/dashboard/certification-update'
+      fullPath: '/dashboard/certification-update'
+      preLoaderRoute: typeof AuthDashboardCertificationUpdateRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/$not-found': {
       id: '/_auth/dashboard/$not-found'
       path: '/dashboard/$not-found'
@@ -199,6 +239,8 @@ declare module '@tanstack/react-router' {
 interface AuthRouteChildren {
   AuthTerminationRoute: typeof AuthTerminationRoute
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
+  AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
+  AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
   AuthDashboardCodeMovementLazyRoute: typeof AuthDashboardCodeMovementLazyRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
 }
@@ -206,6 +248,8 @@ interface AuthRouteChildren {
 const AuthRouteChildren: AuthRouteChildren = {
   AuthTerminationRoute: AuthTerminationRoute,
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
+  AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
+  AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
   AuthDashboardCodeMovementLazyRoute: AuthDashboardCodeMovementLazyRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
 }

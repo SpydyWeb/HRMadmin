@@ -25,14 +25,14 @@ const tableData = [
     pending: 2,
     updated: '3 hours ago',
     priority: 'High',
-    path: '',
+    path: RoutePaths.CERTIFICATIONUPDATE,
   },
   {
     channel: 'Termination',
     pending: 21,
     updated: '6 hours ago',
     priority: 'Critical',
-    path: '',
+    path: RoutePaths.TERMINATION,
   },
   {
     channel: 'New Entity Approval',

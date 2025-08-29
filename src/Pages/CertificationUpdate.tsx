@@ -18,8 +18,17 @@ import { Pagination } from '@/components/Pagination'
 import { Link } from '@tanstack/react-router'
 
 const tabs = [
-  { value: 'new', label: 'New Termination Requests', icon: <FaNetworkWired /> },
-
+  { value: 'new', label: 'New Certification Requests', icon: <FaNetworkWired /> },
+  {
+    value: 'movement',
+    label: 'Movements in Existing Certificates',
+    icon: <HiOutlineCodeBracketSquare />,
+  },
+  {
+    value: 'status',
+    label: 'Change in Status',
+    icon: <MdOutlinePublishedWithChanges />,
+  },
 ]
 
 const tableData = [
@@ -67,7 +76,7 @@ const tableData = [
   },
 ]
 
-const Termination = () => {
+const CertificationUpdate = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
@@ -144,7 +153,7 @@ const Termination = () => {
       {/* Table with Filters */}
       <div className="bg-white p-6 space-y-6">
         <div className="flex flex-row justify-between items-center">
-          <h4 className="text-xl font-semibold">Termination</h4>
+          <h4 className="text-xl font-semibold">Certification Update</h4>
           <Filter
             searchPlaceholder="Enter Agent ID"
             dropdownLabel="Channel"
@@ -181,4 +190,4 @@ const Termination = () => {
   )
 }
 
-export default Termination
+export default CertificationUpdate
