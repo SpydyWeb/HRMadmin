@@ -1,59 +1,61 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import React from 'react'
+import clsx from 'clsx'
 
-import { cn } from "@/lib/utils"
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
-
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot : "button"
-
-  return (
-    <Comp
-      data-slot="button"
-      className={'cursor-pointer py-3 px-6 rounded-sm '+ cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+type ButtonProps = {
+  children: React.ReactNode
+  variant?:
+    | 'default'
+    | 'red'
+    | 'green'
+    | 'orange'
+    | 'blue'
+    | 'outline-red'
+    | 'outline-green'
+    | 'outline-orange'
+    | 'outline-blue'
+  size?: 'sm' | 'md' | 'lg'
+  onClick?: () => void
+  className?: string
 }
 
-export { Button, buttonVariants }
+export default function Button({
+  children,
+  variant = 'green',
+  size = 'md',
+  onClick,
+  className,
+}: ButtonProps) {
+  const baseStyles =
+    'flex items-center gap-2 !font-normal cursor-pointer rounded-sm font-semibold transition duration-200'
+
+  const sizes = {
+    sm: 'px-3 py-1 text-sm',
+    md: 'px-6 py-1.5 text-base',
+    lg: 'px-5 py-3 text-lg',
+  }
+
+  const variants = {
+    default: 'bg-gray-200 text-gray-700 ',
+    red: 'bg-white text-red-600 border border-red-400 hover:bg-red-100',
+    green: 'bg-[var(--brand-green)] text-white hover:brightness-110',
+    orange: 'bg-[var(--brand-orange)] text-white hover:brightness-110',
+    blue: 'bg-[var(--brand-blue)] text-white hover:brightness-110',
+
+    'outline-red': 'border border-red-400 text-red-500 hover:bg-red-50',
+    'outline-green':
+      'border border-[var(--brand-green)] text-[var(--brand-green)] hover:bg-green-50',
+    'outline-orange':
+      'border border-[var(--brand-orange)] text-[var(--brand-orange)] hover:bg-orange-50',
+    'outline-blue':
+      'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={clsx(baseStyles, sizes[size], variants[variant], className)}
+    >
+      {children}
+    </button>
+  )
+}

@@ -5,7 +5,7 @@ import { auth } from '@/auth'
 import { useNavigate } from '@tanstack/react-router'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { Button } from '../ui/button'
+import Button from '../ui/button'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -50,18 +50,17 @@ export default function Header() {
               <AvatarImage src="https://github.com/shadcn.png" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
-            <span>
-              {user?.name || 'Manish'}
-            </span>
+            <span>{user?.name || 'Manish'}</span>
           </div>
 
           {/* Reset Password Button */}
           <Button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-200 text-black  hover:bg-blue-100 transition-colors duration-200"
+            variant="default"
+            className="!rounded-full !font-medium"
           >
             <IoMdLock className="w-4 h-4" />
-            <span className="font-medium">Reset Password</span>
+            <span>Reset Password</span>
           </Button>
         </div>
       </div>

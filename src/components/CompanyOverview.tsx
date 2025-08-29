@@ -1,6 +1,6 @@
 import { FiEye } from 'react-icons/fi'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { Button } from './ui/button'
+import  Button  from './ui/button'
 import {
   Select,
   SelectContent,
@@ -32,11 +32,10 @@ const columns = [
     header: 'Actions',
     accessor: (row: any) => (
       <div className="flex items-center gap-3">
+        
         <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
         <Button
-          className=" text-white rounded-sm px-8"
-          style={{ backgroundColor: 'var(--brand-blue)' }}
-        >
+         variant='green'    >
           Add New
         </Button>
       </div>

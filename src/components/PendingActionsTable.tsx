@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+import Button from '@/components/ui/button'
 import { RoutePaths } from '@/utils/constant'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -69,7 +69,7 @@ export default function PendingActionsTable() {
 
   // Proper handleRedirect function
   const handleRedirect = (path: string) => {
-     if (!path) return
+    if (!path) return
     navigate({ to: path })
   }
 
@@ -89,7 +89,7 @@ export default function PendingActionsTable() {
       accessor: (row: any) => (
         <span
           className={`px-2 py-1 rounded-md font-medium ${priorityColor(
-            row.priority
+            row.priority,
           )}`}
         >
           {row.priority}
@@ -99,11 +99,7 @@ export default function PendingActionsTable() {
     {
       header: 'Actions',
       accessor: (row: any) => (
-        <Button
-          className="hover:opacity-90 text-white text-sm"
-          style={{ backgroundColor: 'var(--brand-blue)' }}
-          onClick={() => handleRedirect(row.path)}
-        >
+        <Button variant="blue" onClick={() => handleRedirect(row.path)}>
           Process Now
         </Button>
       ),

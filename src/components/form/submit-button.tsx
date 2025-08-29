@@ -1,7 +1,7 @@
 import { useStore } from "@tanstack/react-form";
 import { TbLoader2 } from "react-icons/tb";
 import { useFormContext } from ".";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type SubmitButtonProps = {

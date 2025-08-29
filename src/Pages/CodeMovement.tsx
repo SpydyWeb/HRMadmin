@@ -5,7 +5,6 @@ import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
 import { LuSquareUserRound } from 'react-icons/lu'
 import { FiEye } from 'react-icons/fi'
 import CustomTabs from '@/components/CustomTabs'
-import { Button } from '@/components/ui/button'
 import DataTable from '@/components/DataTable'
 import {
   Select,
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Filter } from '@/components/Filter'
 import { Checkbox } from '@/components/ui/checkbox'
+import Button from '@/components/ui/button'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
@@ -69,6 +69,7 @@ const CodeMovement = () => {
           onCheckedChange={() => toggleRowSelection(row.srno)}
         />
       ),
+      width:"5rem"
     },
     { header: 'Agent ID', accessor: 'agentid' },
     { header: 'Requested By', accessor: 'requestedby' },
@@ -77,17 +78,11 @@ const CodeMovement = () => {
       header: 'Actions',
       accessor: (row: any) => (
         <div className="flex items-center gap-3">
-          <FiEye size={20} className="text-gray-700 cursor-pointer" />
-          <Button
-            variant="outline"
-            className="text-red-500 border border-gray-500 bg-transparent text-sm"
-          >
+          <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
+          <Button variant="outline-red">
             Reject
           </Button>
-          <Button
-            className="text-white text-sm"
-            style={{ backgroundColor: 'var(--brand-green)' }}
-          >
+         <Button variant="green">
             Approve
           </Button>
         </div>

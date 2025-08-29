@@ -1,35 +1,40 @@
-
 import { TbCertificate } from 'react-icons/tb'
 import { BsWindowDock } from 'react-icons/bs'
 import { LuSquareUserRound } from 'react-icons/lu'
 import { CardContent } from '@mui/material'
 import { Card, CardHeader, CardTitle } from './ui/card'
-import { Button } from './ui/button'
+import Button from './ui/button'
 
 const alerts = [
   {
-    icon: <TbCertificate className={`w-5 h-5`}/>,
+    icon: <TbCertificate className={`w-5 h-5`} />,
     iconBgColor: 'var(--brand-orange)',
     count: '52',
     btnColor: 'var(--brand-orange)',
     title: 'Licenses Expiring Soon',
     subtitle: 'Expiring in 30 days',
+    button1: 'outline-orange',
+    button2: 'orange',
   },
   {
-    icon: <BsWindowDock className={`w-5 h-5`}/>,
+    icon: <BsWindowDock className={`w-5 h-5`} />,
     iconBgColor: 'var(--brand-green)',
     count: '23',
     btnColor: 'var(--brand-green)',
     title: 'Certifications Expiring',
     subtitle: 'Expiring in 30 days',
+    button1: 'outline-green',
+    button2: 'green',
   },
   {
-    icon: <LuSquareUserRound className={`w-5 h-5`}/>,
+    icon: <LuSquareUserRound className={`w-5 h-5`} />,
     iconBgColor: 'var(--brand-blue)',
     count: '13',
     btnColor: 'var(--brand-blue)',
     title: 'MBG Criteria Not Met',
     subtitle: 'Entities not meeting MBG criteria',
+    button1: 'outline-blue',
+    button2: 'blue',
   },
 ]
 export const AlertCard = () => {
@@ -38,7 +43,6 @@ export const AlertCard = () => {
       <CardHeader>
         <CardTitle className="text-xl font-semibold">Urgent Alerts</CardTitle>
       </CardHeader>
-  
       <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {alerts.map((alert, index) => (
           <Card
@@ -71,18 +75,8 @@ export const AlertCard = () => {
 
             {/* Action Buttons */}
             <div className="flex justify-between ">
-              <Button
-                style={{ borderColor: alert.btnColor, color: alert.btnColor }}
-                className={` rounded-sm border-2 bg-transparent font-medium text-sm transition-colors hover:bg-transparent `}
-              >
-                Notify
-              </Button>
-              <Button
-                style={{ backgroundColor: alert.btnColor }}
-                className={` rounded-sm font-medium text-sm text-white transition-colors hover:opacity-90 `}
-              >
-                View Details
-              </Button>
+              <Button variant={alert.button1}>Notify</Button>
+              <Button variant={alert.button2}>View Details</Button>
             </div>
           </Card>
         ))}
