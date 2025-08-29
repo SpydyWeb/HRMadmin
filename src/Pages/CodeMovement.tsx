@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FaNetworkWired } from 'react-icons/fa6'
+import { FaClipboardList, FaNetworkWired } from 'react-icons/fa6'
 import { MdOutlinePublishedWithChanges } from 'react-icons/md'
 import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
 import { LuSquareUserRound } from 'react-icons/lu'
@@ -16,6 +16,9 @@ import {
 import { Filter } from '@/components/Filter'
 import { Checkbox } from '@/components/ui/checkbox'
 import Button from '@/components/ui/button'
+import { BiUser } from 'react-icons/bi'
+import { BsClock } from 'react-icons/bs'
+import { Card } from '@/components/ui/card'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
@@ -137,7 +140,36 @@ const CodeMovement = () => {
           />
         </div>
         <DataTable columns={columns} data={tableData} />
+        <Card className="bg-[#F2F2F7] shadow-none border-none rounded-sm flex flex-row items-center justify-between px-6 py-4">
+      {/* Left Section */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">
+          Bulk Actions Available
+        </h2>
+        <p className="text-sm text-gray-500">
+          Process multiple entries at once using templates
+        </p>
       </div>
+
+      {/* Right Section */}
+      <div className="flex gap-3">
+        <Button variant='blue' size={"sm"}>
+          <FaClipboardList className="h-4 w-4"/>
+          Bulk Action
+        </Button>
+        <Button variant="outline" size={"sm"}>
+          <BiUser className="h-4 w-4" />
+          Individual Action
+        </Button>
+        <Button size={"sm"} className="bg-indigo-100 hover:bg-indigo-200 !text-indigo-600">
+          <BsClock className="h-4 w-4" />
+          Bulk History
+        </Button>
+      </div>
+    </Card>
+      </div>
+       
+
     </div>
   )
 }

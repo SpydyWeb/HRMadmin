@@ -174,7 +174,7 @@ export const Filter = ({
         )}
         {/* Advanced Search Button */}
         {showAdvancedSearch && (
-          <Button onClick={handleAdvancedSearch} variant="default">
+          <Button onClick={handleAdvancedSearch} variant="default" >
            
             <Tooltip>
             <TooltipTrigger asChild>

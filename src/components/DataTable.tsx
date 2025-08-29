@@ -16,7 +16,7 @@ export default function DataTable({ columns, data }: DataTableProps) {
   const defaultWidth = `${100 / columns.filter(col => !col.width).length}%`;
 
   return (
-    <div className="overflow-x-auto rounded-md border border-gray-200">
+    <div className="overflow-x-auto rounded-sm bg-[#F2F2F7]">
       <Table className="min-w-full divide-y divide-gray-200 text-sm table-fixed">
         {/* Table Header */}
         <TableHeader className="bg-gray-100">

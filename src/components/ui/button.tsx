@@ -9,6 +9,7 @@ type ButtonProps = {
     | 'green'
     | 'orange'
     | 'blue'
+    | 'outline'
     | 'outline-red'
     | 'outline-green'
     | 'outline-orange'
@@ -29,7 +30,7 @@ export default function Button({
     'flex items-center gap-2 !font-normal cursor-pointer rounded-sm font-semibold transition duration-200'
 
   const sizes = {
-    sm: 'px-3 py-1 text-sm',
+    sm: 'px-4 py-1.5 text-sm',
     md: 'px-6 py-1.5 text-base',
     lg: 'px-5 py-3 text-lg',
   }
@@ -41,6 +42,7 @@ export default function Button({
     orange: 'bg-[var(--brand-orange)] text-white hover:brightness-110',
     blue: 'bg-[var(--brand-blue)] text-white hover:brightness-110',
 
+    outline: 'border border-gray-700 bg-gray-50 text-gray-700 ',
     'outline-red': 'border border-red-400 text-red-500 hover:bg-red-50',
     'outline-green':
       'border border-[var(--brand-green)] text-[var(--brand-green)] hover:bg-green-50',
