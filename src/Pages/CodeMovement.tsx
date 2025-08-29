@@ -20,6 +20,7 @@ import { BiUser } from 'react-icons/bi'
 import { BsClock } from 'react-icons/bs'
 import { Card } from '@/components/ui/card'
 import { Pagination } from '@/components/Pagination'
+import { Link } from '@tanstack/react-router'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
@@ -118,14 +119,15 @@ const CodeMovement = () => {
       ),
       width: '5rem',
     },
-    { header: 'Agent ID', accessor: 'agentid' },
+    { header: 'Agent ID', accessor: (row: any) => (
+       <Link to="" className="hover:text-blue-700 hover:underline">{row.agentid}</Link>
+      ), },
     { header: 'Requested By', accessor: 'requestedby' },
     { header: 'Date', accessor: 'date' },
     {
       header: 'Actions',
       accessor: (row: any) => (
         <div className="flex items-center gap-3">
-          <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
           <Button variant="outline-red">Reject</Button>
           <Button variant="green">Approve</Button>
         </div>
