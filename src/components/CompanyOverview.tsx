@@ -41,7 +41,7 @@ const columns = [
         </Button>
       </div>
     ),
-  },
+  },  
 ]
 const tableData = [
   {

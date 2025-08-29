@@ -8,4 +8,5 @@ export const RoutePaths = {
   RESOURCES: '/resources',
   CMS: '/cms',
   SETTING: '/setting',
+  CODEMOVEMENT: '/dashboard/code-movement',
 }
