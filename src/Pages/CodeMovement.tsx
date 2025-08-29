@@ -19,34 +19,78 @@ import Button from '@/components/ui/button'
 import { BiUser } from 'react-icons/bi'
 import { BsClock } from 'react-icons/bs'
 import { Card } from '@/components/ui/card'
+import { Pagination } from '@/components/Pagination'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
-  { value: 'movement', label: 'Movements in Existing Codes', icon: <HiOutlineCodeBracketSquare /> },
+  {
+    value: 'movement',
+    label: 'Movements in Existing Codes',
+    icon: <HiOutlineCodeBracketSquare />,
+  },
   { value: 'pi', label: 'PI Change in Code', icon: <LuSquareUserRound /> },
-  { value: 'status', label: 'Change in Status', icon: <MdOutlinePublishedWithChanges /> },
+  {
+    value: 'status',
+    label: 'Change in Status',
+    icon: <MdOutlinePublishedWithChanges />,
+  },
 ]
 
 const tableData = [
-  { srno: 1, agentid: 'AG10F12', requestedby: 'Manan Kumar', date: '12 May 2025' },
-  { srno: 2, agentid: 'BG10F12', requestedby: 'Jaydeep Sharma', date: '11 May 2025' },
-  { srno: 3, agentid: 'FG10F12', requestedby: 'Jitendra Rathore', date: '10 May 2025' },
-  { srno: 4, agentid: 'KJ10F12', requestedby: 'Vivek Choubey', date: '10 May 2025' },
-  { srno: 5, agentid: 'KG10F12', requestedby: 'Jaydeep Sharma', date: '09 May 2025' },
-  { srno: 6, agentid: 'MG10F12', requestedby: '12 July 2025', date: '08 May 2025' },
-  { srno: 7, agentid: 'AG10F12', requestedby: 'Vivek Choubey', date: '07 May 2025' },
+  {
+    srno: 1,
+    agentid: 'AG10F12',
+    requestedby: 'Manan Kumar',
+    date: '12 May 2025',
+  },
+  {
+    srno: 2,
+    agentid: 'BG10F12',
+    requestedby: 'Jaydeep Sharma',
+    date: '11 May 2025',
+  },
+  {
+    srno: 3,
+    agentid: 'FG10F12',
+    requestedby: 'Jitendra Rathore',
+    date: '10 May 2025',
+  },
+  {
+    srno: 4,
+    agentid: 'KJ10F12',
+    requestedby: 'Vivek Choubey',
+    date: '10 May 2025',
+  },
+  {
+    srno: 5,
+    agentid: 'KG10F12',
+    requestedby: 'Jaydeep Sharma',
+    date: '09 May 2025',
+  },
+  {
+    srno: 6,
+    agentid: 'MG10F12',
+    requestedby: '12 July 2025',
+    date: '08 May 2025',
+  },
+  {
+    srno: 7,
+    agentid: 'AG10F12',
+    requestedby: 'Vivek Choubey',
+    date: '07 May 2025',
+  },
 ]
 
 const CodeMovement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
-
+ const [page, setPage] = useState(1);
   const toggleRowSelection = (srno: number) => {
     setSelectedRows((prev) =>
       prev.includes(srno)
         ? prev.filter((rowId) => rowId !== srno)
-        : [...prev, srno]
+        : [...prev, srno],
     )
   }
 
@@ -72,7 +116,7 @@ const CodeMovement = () => {
           onCheckedChange={() => toggleRowSelection(row.srno)}
         />
       ),
-      width:"5rem"
+      width: '5rem',
     },
     { header: 'Agent ID', accessor: 'agentid' },
     { header: 'Requested By', accessor: 'requestedby' },
@@ -82,12 +126,8 @@ const CodeMovement = () => {
       accessor: (row: any) => (
         <div className="flex items-center gap-3">
           <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
-          <Button variant="outline-red">
-            Reject
-          </Button>
-         <Button variant="green">
-            Approve
-          </Button>
+          <Button variant="outline-red">Reject</Button>
+          <Button variant="green">Approve</Button>
         </div>
       ),
     },
@@ -141,35 +181,41 @@ const CodeMovement = () => {
         </div>
         <DataTable columns={columns} data={tableData} />
         <Card className="bg-[#F2F2F7] shadow-none border-none rounded-sm flex flex-row items-center justify-between px-6 py-4">
-      {/* Left Section */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">
-          Bulk Actions Available
-        </h2>
-        <p className="text-sm text-gray-500">
-          Process multiple entries at once using templates
-        </p>
-      </div>
+          {/* Left Section */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Bulk Actions Available
+            </h2>
+            <p className="text-sm text-gray-500">
+              Process multiple entries at once using templates
+            </p>
+          </div>
 
-      {/* Right Section */}
-      <div className="flex gap-3">
-        <Button variant='blue' size={"sm"}>
-          <FaClipboardList className="h-4 w-4"/>
-          Bulk Action
-        </Button>
-        <Button variant="outline" size={"sm"}>
-          <BiUser className="h-4 w-4" />
-          Individual Action
-        </Button>
-        <Button size={"sm"} className="bg-indigo-100 hover:bg-indigo-200 !text-indigo-600">
-          <BsClock className="h-4 w-4" />
-          Bulk History
-        </Button>
+          {/* Right Section */}
+          <div className="flex gap-3">
+            <Button variant="blue" size={'sm'}>
+              <FaClipboardList className="h-4 w-4" />
+              Bulk Action
+            </Button>
+            <Button variant="outline" size={'sm'}>
+              <BiUser className="h-4 w-4" />
+              Individual Action
+            </Button>
+            <Button size={'sm'} variant="ghost">
+              <BsClock className="h-4 w-4" />
+              Bulk History
+            </Button>
+          </div>
+        </Card>
       </div>
-    </Card>
+      <div className='flex justify-between items-center'>
+        <span className='font-semibold text-lg text-gray-700'>Page 1/6</span>
+       <Pagination
+        totalPages={4}
+        currentPage={page}
+        onPageChange={setPage}
+      />
       </div>
-       
-
     </div>
   )
 }

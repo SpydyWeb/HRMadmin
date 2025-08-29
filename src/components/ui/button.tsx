@@ -14,6 +14,7 @@ type ButtonProps = {
     | 'outline-green'
     | 'outline-orange'
     | 'outline-blue'
+     | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   onClick?: () => void
   className?: string
@@ -50,6 +51,8 @@ export default function Button({
       'border border-[var(--brand-orange)] text-[var(--brand-orange)] hover:bg-orange-50',
     'outline-blue':
       'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
+        ghost: 'bg-[var(--brand-blue)]/10 text-[var(--brand-blue)] hover:bg-[var(--brand-blue)]/20',
+ 
   }
 
   return (
