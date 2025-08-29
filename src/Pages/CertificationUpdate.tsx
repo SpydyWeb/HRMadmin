@@ -114,7 +114,7 @@ const CertificationUpdate = () => {
       width: '5rem',
     },
     { header: 'Agent ID', accessor: (row: any) => (
-       <Link to="" className="hover:text-blue-700 hover:underline">{row.agentid}</Link>
+      <Link to="" className="text-blue-700 underline font-medium">{row.agentid}</Link>
       ), },
     { header: 'Requested By', accessor: 'requestedby' },
     { header: 'Date', accessor: 'date' },
