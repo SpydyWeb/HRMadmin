@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
-import DataTable from './DataTable'
+import DataTable from './table/DataTable'
 const columns = [
   { header: 'Channel Name', accessor: 'channelName' },
   { header: 'Total Entities', accessor: 'totalEntities' },

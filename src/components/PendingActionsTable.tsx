@@ -1,4 +1,4 @@
-import DataTable from './DataTable'
+import DataTable from './table/DataTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,

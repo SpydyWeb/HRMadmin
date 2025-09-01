@@ -1,5 +1,5 @@
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
-import Button from "./ui/button";
+import Button from "../ui/button";
 import { cn } from "@/lib/utils";
 
 

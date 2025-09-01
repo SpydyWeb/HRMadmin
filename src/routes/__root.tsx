@@ -6,6 +6,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import React from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { auth } from '@/auth'
 import '../styles.css'
 import Layout from '@/components/Layout'
@@ -44,6 +45,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootComponent() {
+  const queryClient = new QueryClient()
   const { isAuthenticated, isLoginPage } = Route.useRouteContext()
   const navigate = Route.useNavigate()
   const [isLoading, setIsLoading] = React.useState(true)
@@ -81,17 +83,19 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body>
-        {!isAuthenticated ? (
-          // Show only login page when not authenticated
-          <Outlet />
-        ) : (
-          // Show main application when authenticated
-          <Layout>
-            <ScrollToTop />
-            <BreadcrumbCustom />
+        <QueryClientProvider client={queryClient}>
+          {!isAuthenticated ? (
+            // Show only login page when not authenticated
             <Outlet />
-          </Layout>
-        )}
+          ) : (
+            // Show main application when authenticated
+            <Layout>
+              <ScrollToTop />
+              <BreadcrumbCustom />
+              <Outlet />
+            </Layout>
+          )}
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>

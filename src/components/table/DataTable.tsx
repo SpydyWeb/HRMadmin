@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 interface Column {
   header: string;
@@ -7,8 +7,8 @@ interface Column {
 }
 
 interface DataTableProps {
-  columns: Column[];
-  data: any[];
+  columns: Array<Column>;
+  data: Array<any>;
 }
 
 export default function DataTable({ columns, data }: DataTableProps) {

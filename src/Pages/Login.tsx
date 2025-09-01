@@ -6,10 +6,10 @@ import { TextFeild } from '@/components/form/text-field'
 import { auth } from '@/auth'
 
 export default function Login() {
-  const navigate=useNavigate()
+  const navigate = useNavigate()
   const form = useAppForm({
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
     // validatorAdapter: zodValidator(),
@@ -17,10 +17,12 @@ export default function Login() {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      // Do something with form data
-      auth.login(value.email, value.password);
-navigate({to:'/dashboard'})
-      console.log(value)
+      try {
+        const response = await auth.login(value)
+        console.log('Logged in user:', response)
+      } catch (err) {
+        console.error('Login failed:', err)
+      }
     },
   })
   return (
@@ -66,15 +68,14 @@ navigate({to:'/dashboard'})
           <div className="space-y-4">
             {/* Email Field */}
             <form.AppField
-              name="email"
+              name="username"
               children={() => <TextFeild label="Email" />}
             />
             {/* Password Field */}
-             <form.AppField
+            <form.AppField
               name="password"
               children={() => <TextFeild label="Password" />}
             />
-       
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
@@ -92,9 +93,15 @@ navigate({to:'/dashboard'})
 
             {/* Submit Button */}
             <form.AppForm>
-              <form.SubmitButton icon={<MdBusiness className="w-5 h-5" />}>
-                Access Dashboard
-              </form.SubmitButton>
+              <form.Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                variant="orange"
+                icon={<MdBusiness className="w-5 h-5" />}
+              >
+                Login
+              </form.Button>
             </form.AppForm>
           </div>
 

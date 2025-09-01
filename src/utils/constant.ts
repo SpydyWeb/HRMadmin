@@ -11,4 +11,5 @@ export const RoutePaths = {
   CODEMOVEMENT: '/dashboard/code-movement',
   CERTIFICATIONUPDATE: '/dashboard/certification-update',
   TERMINATION: '/dashboard/termination',
+  BULKACTION: '/dashboard/code-movement/bulk-action',
 }

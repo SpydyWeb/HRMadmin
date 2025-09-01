@@ -18,11 +18,12 @@ import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
+import { Route as AuthDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/dashboard/code-movement/bulk-action'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
 const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
-const AuthDashboardCodeMovementLazyRouteImport = createFileRoute(
-  '/_auth/dashboard/code-movement',
+const AuthDashboardCodeMovementIndexLazyRouteImport = createFileRoute(
+  '/_auth/dashboard/code-movement/',
 )()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
@@ -56,14 +57,6 @@ const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_auth/dashboard/index.lazy').then((d) => d.Route),
 )
-const AuthDashboardCodeMovementLazyRoute =
-  AuthDashboardCodeMovementLazyRouteImport.update({
-    id: '/dashboard/code-movement',
-    path: '/dashboard/code-movement',
-    getParentRoute: () => AuthRoute,
-  } as any).lazy(() =>
-    import('./routes/_auth/dashboard/code-movement.lazy').then((d) => d.Route),
-  )
 const AuthDashboardTerminationRoute =
   AuthDashboardTerminationRouteImport.update({
     id: '/dashboard/termination',
@@ -81,6 +74,22 @@ const AuthDashboardNotFoundRoute = AuthDashboardNotFoundRouteImport.update({
   path: '/dashboard/$not-found',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthDashboardCodeMovementIndexLazyRoute =
+  AuthDashboardCodeMovementIndexLazyRouteImport.update({
+    id: '/dashboard/code-movement/',
+    path: '/dashboard/code-movement/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/dashboard/code-movement/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AuthDashboardCodeMovementBulkActionRoute =
+  AuthDashboardCodeMovementBulkActionRouteImport.update({
+    id: '/dashboard/code-movement/bulk-action',
+    path: '/dashboard/code-movement/bulk-action',
+    getParentRoute: () => AuthRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -90,8 +99,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
-  '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
+  '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,8 +111,9 @@ export interface FileRoutesByTo {
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
-  '/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
+  '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,8 +125,9 @@ export interface FileRoutesById {
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
-  '/_auth/dashboard/code-movement': typeof AuthDashboardCodeMovementLazyRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
+  '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/_auth/dashboard/code-movement/': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,8 +139,9 @@ export interface FileRouteTypes {
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/termination'
-    | '/dashboard/code-movement'
     | '/dashboard'
+    | '/dashboard/code-movement/bulk-action'
+    | '/dashboard/code-movement'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,8 +151,9 @@ export interface FileRouteTypes {
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/termination'
-    | '/dashboard/code-movement'
     | '/dashboard'
+    | '/dashboard/code-movement/bulk-action'
+    | '/dashboard/code-movement'
   id:
     | '__root__'
     | '/'
@@ -150,8 +164,9 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
     | '/_auth/dashboard/termination'
-    | '/_auth/dashboard/code-movement'
     | '/_auth/dashboard/'
+    | '/_auth/dashboard/code-movement/bulk-action'
+    | '/_auth/dashboard/code-movement/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,13 +220,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/dashboard/code-movement': {
-      id: '/_auth/dashboard/code-movement'
-      path: '/dashboard/code-movement'
-      fullPath: '/dashboard/code-movement'
-      preLoaderRoute: typeof AuthDashboardCodeMovementLazyRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/dashboard/termination': {
       id: '/_auth/dashboard/termination'
       path: '/dashboard/termination'
@@ -233,6 +241,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardNotFoundRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/code-movement/': {
+      id: '/_auth/dashboard/code-movement/'
+      path: '/dashboard/code-movement'
+      fullPath: '/dashboard/code-movement'
+      preLoaderRoute: typeof AuthDashboardCodeMovementIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard/code-movement/bulk-action': {
+      id: '/_auth/dashboard/code-movement/bulk-action'
+      path: '/dashboard/code-movement/bulk-action'
+      fullPath: '/dashboard/code-movement/bulk-action'
+      preLoaderRoute: typeof AuthDashboardCodeMovementBulkActionRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
@@ -241,8 +263,9 @@ interface AuthRouteChildren {
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
-  AuthDashboardCodeMovementLazyRoute: typeof AuthDashboardCodeMovementLazyRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
+  AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
+  AuthDashboardCodeMovementIndexLazyRoute: typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -250,8 +273,11 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
-  AuthDashboardCodeMovementLazyRoute: AuthDashboardCodeMovementLazyRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
+  AuthDashboardCodeMovementBulkActionRoute:
+    AuthDashboardCodeMovementBulkActionRoute,
+  AuthDashboardCodeMovementIndexLazyRoute:
+    AuthDashboardCodeMovementIndexLazyRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

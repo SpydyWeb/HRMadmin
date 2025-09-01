@@ -8,7 +8,7 @@ interface TabItem {
 }
 
 interface CustomTabsProps {
-  tabs: TabItem[];
+  tabs: Array<TabItem>;
   defaultValue: string;
   onValueChange?: (value: string) => void;
 }

@@ -1,55 +1,63 @@
-// src/auth.tsx
+import { LoginRequest, LoginResponse } from './models/authentication'
+import { apiClient } from './services/apiClient'
+import { APIRoutes } from './services/constant'
+
+const TOKEN_KEY = ''
+
 export const auth = {
-  _token: null as string | null,
+  _token:
+    typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null,
 
-  isAuthenticated: () => {
-    return true;
-    const token = auth._token;
-    if (!token) return false;
+  /** Check if user is authenticated */
+  isAuthenticated(): boolean {
+    const token = this._token
+    if (!token) return false
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Date.now() / 1000;
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Date.now() / 1000
       if (payload.exp && payload.exp < currentTime) {
-        auth._token = null;
-        return false;
+        this.logout()
+        return false
       }
-      return true;
+      return true
     } catch {
-      auth._token = null;
-      return false;
+      this.logout()
+      return false
     }
   },
 
-  login: async (email: string, password: string) => {
-      auth._token = email;
-
-    if (email === 'admin@company.com' && password === 'password123') {
-      const mockPayload = {
-        sub: '1',
-        name: 'Admin User',
-        role: 'admin',
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h expiry
-      };
-      const mockToken = 'header.' + btoa(JSON.stringify(mockPayload)) + '.signature';
-      auth._token = mockToken;
-      return { success: true, user: mockPayload };
-    }
-    return { success: false, error: 'Invalid credentials' };
+  /** Perform login and store token */
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>(APIRoutes.LOGIN, data)
+    console.log('====================================')
+    console.log(response)
+    console.log('====================================')
+    // if (response && response.token) {
+    //   this._token = response.token;
+    //   localStorage.setItem(TOKEN_KEY, response.token);
+    // }
+    return response
   },
 
-  logout: () => {
-    auth._token = null;
+  /** Logout and clear token */
+  logout(): void {
+    this._token = null
+    localStorage.removeItem(TOKEN_KEY)
   },
 
-  getCurrentUser: () => {
-    if (!auth._token) return null;
+  /** Get current user payload from token */
+  getCurrentUser(): any | null {
+    if (!this._token) return null
     try {
-      return JSON.parse(atob(auth._token.split('.')[1]));
+      return JSON.parse(atob(this._token.split('.')[1]))
     } catch {
-      return null;
+      return null
     }
   },
 
-  getToken: () => auth._token,
-};
+  /** Get stored token */
+  getToken(): string | null {
+    return this._token
+  },
+}

@@ -3,9 +3,10 @@ import { FaClipboardList, FaNetworkWired } from 'react-icons/fa6'
 import { MdOutlinePublishedWithChanges } from 'react-icons/md'
 import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
 import { LuSquareUserRound } from 'react-icons/lu'
-import { FiEye } from 'react-icons/fi'
+import { BiUser } from 'react-icons/bi'
+import { BsClock } from 'react-icons/bs'
 import CustomTabs from '@/components/CustomTabs'
-import DataTable from '@/components/DataTable'
+import DataTable from '@/components/table/DataTable'
 import {
   Select,
   SelectContent,
@@ -16,11 +17,10 @@ import {
 import { Filter } from '@/components/Filter'
 import { Checkbox } from '@/components/ui/checkbox'
 import Button from '@/components/ui/button'
-import { BiUser } from 'react-icons/bi'
-import { BsClock } from 'react-icons/bs'
 import { Card } from '@/components/ui/card'
-import { Pagination } from '@/components/Pagination'
-import { Link } from '@tanstack/react-router'
+import { Pagination } from '@/components/table/Pagination'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { RoutePaths } from '@/utils/constant'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
@@ -126,6 +126,7 @@ const tableData = [
 
 
 const CodeMovement = () => {
+  const navigate=useNavigate();
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
@@ -238,7 +239,7 @@ const CodeMovement = () => {
 
           {/* Right Section */}
           <div className="flex gap-3">
-            <Button variant="blue" size={'sm'}>
+            <Button variant="blue" size={'sm'} onClick={()=>navigate({ to: RoutePaths.BULKACTION })}>
               <FaClipboardList className="h-4 w-4" />
               Bulk Action
             </Button>

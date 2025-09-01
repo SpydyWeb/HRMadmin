@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { IconButton, Typography, Box, Divider, Badge } from '@mui/material'
 import { GoBell } from 'react-icons/go'
-import Button from './ui/button'
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from './ui/popover'
+import { Separator } from './ui/separator'
 
 export default function Notification() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
@@ -42,9 +41,7 @@ export default function Notification() {
           <div className="text-gray-600 text-sm">
             Investment services license is expiring today
           </div>
-
-          <Divider sx={{ my: 1 }} />
-
+          <Separator className="my-2" />
           <div className="flex justify-around">
             <span
               onClick={handleClose}

@@ -3,7 +3,7 @@ import { FaClipboardList, FaNetworkWired } from 'react-icons/fa6'
 import { MdOutlinePublishedWithChanges } from 'react-icons/md'
 import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
 import CustomTabs from '@/components/CustomTabs'
-import DataTable from '@/components/DataTable'
+import DataTable from '@/components/table/DataTable'
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
 import { Filter } from '@/components/Filter'
 import { Checkbox } from '@/components/ui/checkbox'
 import Button from '@/components/ui/button'
-import { Pagination } from '@/components/Pagination'
+import { Pagination } from '@/components/table/Pagination'
 import { Link } from '@tanstack/react-router'
 
 const tabs = [
