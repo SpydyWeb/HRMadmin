@@ -4,6 +4,8 @@ import { loginSchema } from '@/schema/loginSchema'
 import { useAppForm } from '@/components/form'
 import { TextFeild } from '@/components/form/text-field'
 import { auth } from '@/auth'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -69,7 +71,7 @@ export default function Login() {
             {/* Email Field */}
             <form.AppField
               name="username"
-              children={() => <TextFeild label="Email" />}
+              children={() => <TextFeild label="User Name" />}
             />
             {/* Password Field */}
             <form.AppField
@@ -79,13 +81,13 @@ export default function Login() {
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center text-gray-600 hover:text-gray-800 transition-colors cursor-pointer">
-                <input
-                  type="checkbox"
+                <Checkbox
+                 id='terms'
                   className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 mr-2"
                 />
-                Remember me
-              </label>
+                
+        <Label htmlFor="terms">Remember me</Label>
+            
               <button className="text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200">
                 Forgot password?
               </button>

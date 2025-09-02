@@ -1,7 +1,7 @@
-import { env } from '@/env'
+import { APIRoutes } from './constant'
 import axios, { AxiosError, AxiosRequestConfig } from 'axios'
 
-const BASE_URL = env.VITE_API_URL
+const BASE_URL = APIRoutes.APIBASEURL;
 
 const api = axios.create({
   baseURL: BASE_URL,
