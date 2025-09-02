@@ -1,7 +1,4 @@
-import { env } from "@/env";
-
 export const APIRoutes = {
-  APIBASEURL:env.VITE_API_URL.toString(),
+  APIBASEURL: 'https://new-api.example.com/api',
   LOGIN: 'Auth/Login',
-
 }
