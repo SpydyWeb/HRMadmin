@@ -81,13 +81,14 @@ export default function Login() {
 
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1">
                 <Checkbox
-                 id='terms'
+                  id="terms"
                   className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 mr-2"
                 />
-                
-        <Label htmlFor="terms">Remember me</Label>
-            
+
+                <Label htmlFor="terms">Remember me</Label>
+              </div>
               <button className="text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200">
                 Forgot password?
               </button>
