@@ -25,6 +25,8 @@ type ButtonProps = {
   icon?: React.ReactNode
   iconRight?: React.ReactNode
   type?: 'button' | 'submit' | 'reset'
+  disabled?: boolean
+  isLoading?: boolean // ✅ for manual loading state without form
 }
 
 export default function Button({
@@ -37,14 +39,20 @@ export default function Button({
   icon,
   iconRight,
   type = 'button',
+  disabled = false,
+  isLoading = false,
 }: ButtonProps) {
-  const form = useFormContext()
+  let form: any = null
+  try {
+    // Try getting form context if inside AppForm
+    form = useFormContext()
+  } catch {
+    form = null
+  }
 
-  const [isSubmitting, canSubmit] = useStore(form.store, (state: any) => [
-    state.isSubmitting,
-    state.canSubmit,
-  ])
-console.log(isSubmitting, canSubmit);
+  const [isSubmitting, canSubmit] = form
+    ? useStore(form.store, (state: any) => [state.isSubmitting, state.canSubmit])
+    : [false, true] // Default fallback values
 
   const baseStyles =
     'flex items-center justify-center gap-2 font-semibold cursor-pointer rounded-sm transition duration-200'
@@ -74,20 +82,23 @@ console.log(isSubmitting, canSubmit);
       'bg-[var(--brand-blue)]/10 text-[var(--brand-blue)] hover:bg-[var(--brand-blue)]/20',
   }
 
+  const isButtonDisabled = disabled || (!canSubmit && form) || isSubmitting
+  const showLoader = isSubmitting || isLoading
+
   return (
     <button
       type={type}
-      disabled={!canSubmit || isSubmitting}
+      disabled={isButtonDisabled}
       onClick={onClick}
       className={clsx(
         baseStyles,
         sizes[size],
         variants[variant],
-        (!canSubmit || isSubmitting) && 'bg-gray-400 !cursor-not-allowed hover:!none',
+        isButtonDisabled && 'bg-gray-400 !cursor-not-allowed hover:!none',
         className
       )}
     >
-      {isSubmitting ? (
+      {showLoader ? (
         <div className="flex items-center justify-center gap-2">
           <TbLoader2 className="w-5 h-5 animate-spin" />
           {loadingText}

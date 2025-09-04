@@ -5,9 +5,8 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 
-const config = defineConfig({
+export default defineConfig({
   plugins: [
-    // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
@@ -16,11 +15,17 @@ const config = defineConfig({
       customViteReactPlugin: true,
     }),
     tanstackRouter({
-      // ...
       autoCodeSplitting: true,
     }),
     viteReact(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://ezytek1706-003-site1.rtempurl.com/', // Backend API URL
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
-
-export default config

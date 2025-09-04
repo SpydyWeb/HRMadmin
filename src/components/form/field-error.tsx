@@ -2,7 +2,6 @@ import { FiAlertCircle } from 'react-icons/fi'
 import type { AnyFieldMeta } from '@tanstack/react-form'
 
 export function FieldError({ field }: { field: AnyFieldMeta }) {
-    console.log(field)
   return (
     field.isTouched &&
     !field.isValid &&

@@ -1,35 +1,103 @@
-import { MdBusiness, MdSecurity } from 'react-icons/md'
-import { useNavigate } from '@tanstack/react-router'
-import { loginSchema } from '@/schema/loginSchema'
+import React, { useState, useEffect } from 'react'
+import { BiShield } from 'react-icons/bi'
 import { useAppForm } from '@/components/form'
-import { TextFeild } from '@/components/form/text-field'
+import LoginForm from '@/components/login/LoginForm'
+import ForgotPasswordForm from '@/components/login/ForgotPasswordForm'
+import OtpVerificationForm from '@/components/login/OtpVerificationForm'
+import SuccessMessage from '@/components/login/SuccessMessage'
 import { auth } from '@/auth'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+import { loginSchema } from '@/schema/loginSchema'
+import { showToast } from '@/components/ui/Toast'
+import { CommonConstants, LoginConstants } from '@/services/constant'
+import { useNavigate } from '@tanstack/react-router'
+
+type Step = 'login' | 'forgot-email' | 'otp' | 'success'
 
 export default function Login() {
   const navigate = useNavigate()
-  const form = useAppForm({
+  const [currentStep, setCurrentStep] = useState<Step>('login')
+  const [otp, setOtp] = useState<string>('')
+  const [countdown, setCountdown] = useState<number>(0)
+
+  const loginform = useAppForm({
     defaultValues: {
       username: '',
       password: '',
     },
-    // validatorAdapter: zodValidator(),
     validators: {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
       try {
         const response = await auth.login(value)
-        console.log('Logged in user:', response)
-      } catch (err) {
-        console.error('Login failed:', err)
+        const { errorCode, errorMessage } = response.responseHeader
+        const loginResponse = response.responseBody.loginResponse
+
+        switch (errorCode) {
+          case CommonConstants.SUCCESS:
+            navigate({ to: '/dashboard' })
+            break
+
+          case LoginConstants.INVALID_CREDENTIALS:
+            showToast('error', 'Invalid username or password')
+            break
+
+          case LoginConstants.ACCOUNT_LOCKED:
+            showToast('error', 'Your account is locked. Contact support.')
+            break
+
+          case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
+            showToast('warning', 'No active role assigned to your account')
+            break
+
+          default:
+            showToast('error', errorMessage || 'Unexpected error occurred')
+        }
+      } catch (err: any) {
+        showToast('error', 'Login failed: ' + (err.message || 'Unknown error'))
       }
     },
   })
+
+  /** Handle Forgot Password */
+  const handleForgotPassword = () => {
+    setCurrentStep('forgot-email')
+  }
+
+  /** Send OTP Code */
+  const handleSendCode = (email) => {
+    debugger
+    if (!email) return
+    setCurrentStep('otp')
+    setCountdown(60)
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  /** Verify OTP */
+  const handleVerifyOTP = () => {
+    if (otp.length === 6) {
+      setCurrentStep('success')
+    }
+  }
+
+  /** Back to Login */
+  const handleBackToLogin = () => {
+    setCurrentStep('login')
+    setOtp('')
+    setCountdown(0)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
-      {/* Background pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 opacity-50"></div>
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-400 rounded-full opacity-10 animate-pulse"></div>
@@ -38,10 +106,8 @@ export default function Login() {
           style={{ animationDelay: '2s' }}
         ></div>
       </div>
-
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8 animate-fade-in">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg mb-4 shadow-lg animate-float">
             <span className="text-white font-bold text-xl">HM</span>
           </div>
@@ -49,157 +115,58 @@ export default function Login() {
             Hierarchy Management
           </h1>
           <p className="text-gray-600 flex items-center justify-center gap-2 text-sm">
-            <MdSecurity className="w-4 h-4 text-blue-500" />
+            <BiShield className="w-4 h-4 text-blue-500" />
             Administrator Portal
           </p>
         </div>
-
-        {/* Login Card */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100 animate-slide-up"
-          style={{
-            boxShadow:
-              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <div className="space-y-4">
-            {/* Email Field */}
-            <form.AppField
-              name="username"
-              children={() => <TextFeild label="User Name" />}
-            />
-            {/* Password Field */}
-            <form.AppField
-              name="password"
-              children={() => <TextFeild label="Password" />}
-            />
-
-            {/* Remember & Forgot */}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1">
-                <Checkbox
-                  id="terms"
-                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 mr-2"
-                />
-
-                <Label htmlFor="terms">Remember me</Label>
-              </div>
-              <button className="text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200">
-                Forgot password?
-              </button>
-            </div>
-
-            {/* Submit Button */}
-            <form.AppForm>
-              <form.Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                variant="orange"
-                icon={<MdBusiness className="w-5 h-5" />}
-              >
-                Login
-              </form.Button>
-            </form.AppForm>
-          </div>
-
-          {/* Divider */}
-          <div className="mt-6 pt-3 border-t border-gray-200">
-            <div className="text-center">
-              <p className="text-gray-500 text-sm mb-2">
-                Secure access to organizational hierarchy
-              </p>
-              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  System Online
-                </span>
-                <span>•</span>
-                <span>Support: ext. 1234</span>
-              </div>
+        {currentStep === 'login' && (
+          <LoginForm
+            form={loginform}
+            onForgotPassword={handleForgotPassword}
+            onSubmit={loginform.handleSubmit}
+          />
+        )}
+        {currentStep === 'forgot-email' && (
+          <ForgotPasswordForm
+            onBack={handleBackToLogin}
+            onSendCode={handleSendCode}
+          />
+        )}
+        {currentStep === 'otp' && (
+          <OtpVerificationForm
+            otp={otp}
+            countdown={countdown}
+            setOtp={setOtp}
+            onBack={() => setCurrentStep('forgot-email')}
+            onVerify={handleVerifyOTP}
+            onResend={handleSendCode}
+          />
+        )}
+        {currentStep === 'success' && (
+          <SuccessMessage onBackToLogin={handleBackToLogin} />
+        )}
+        <div className="mt-6 pt-3 border-t border-gray-200">
+          <div className="text-center">
+            <p className="text-gray-500 text-sm mb-2">
+              Secure access to organizational hierarchy
+            </p>
+            <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                System Online
+              </span>
+              <span>•</span>
+              <span>Support: ext. 1234</span>
             </div>
           </div>
-        </form>
-
+        </div>
         {/* Footer */}
-        <div className="mt-6 text-center animate-fade-in-delay">
+        <div className="mt-6 text-center">
           <p className="text-gray-500 text-xs">
             © 2025 Hierarchy Management System. All rights reserved.
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-6px);
-          }
-        }
-
-        @keyframes shake {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          25% {
-            transform: translateX(-4px);
-          }
-          75% {
-            transform: translateX(4px);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-
-        .animate-fade-in-delay {
-          animation: fade-in 1s ease-out 0.6s both;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out 0.2s both;
-        }
-
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-
-        .animate-shake {
-          animation: shake 0.4s ease-in-out;
-        }
-      `}</style>
     </div>
   )
 }

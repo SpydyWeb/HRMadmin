@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 body {
-  background: #F2F2F7 !important
+  background: #f2f2f7 !important;
 }
 
 code {
@@ -14,9 +14,9 @@ code {
 }
 
 :root {
-  --brand-orange: #FF9F4A;
-  --brand-green: #12A312;
-  --brand-blue: #4A5EFF;
+  --brand-orange: #ff9f4a;
+  --brand-green: #12a312;
+  --brand-blue: #4a5eff;
   font-size: 1vw;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -136,15 +136,27 @@ code {
   }
 }
 
-
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
 }
 
 .animate-slide-up {
@@ -154,18 +166,133 @@ code {
   animation: shake 0.4s ease-in-out;
 }
 
-
 .custom-loader {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: 
-    radial-gradient(farthest-side,#F46128 94%,#0000) top/16px 16px no-repeat,
-    conic-gradient(#0000 30%,#F46128);
-  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 16px),#000 0);
-  animation:s3 0.5s infinite linear;
+  background:
+    radial-gradient(farthest-side, #f46128 94%, #0000) top/16px 16px no-repeat,
+    conic-gradient(#0000 30%, #f46128);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 16px), #000 0);
+  animation: s3 0.5s infinite linear;
 }
 
-@keyframes s3{ 
-  100%{transform: rotate(1turn)}
+@keyframes s3 {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in 1s ease-out 0.6s both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out 0.2s both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+
+/* Custom Toast Styles */
+.custom-toast {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: auto !important;
+}
+
+.custom-toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.custom-progress {
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8) !important;
+}
+
+/* Toast Container Positioning */
+.Toastify__toast-container {
+  width: auto !important;
+  max-width: 420px !important;
+}
+
+/* Animation */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .Toastify__toast-container {
+    left: 1rem !important;
+    right: 1rem !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
 }
