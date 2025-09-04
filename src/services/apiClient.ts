@@ -1,8 +1,10 @@
 // src/apiClient.ts
 import axios, { AxiosRequestConfig } from 'axios'
 import { storage, TOKEN_KEY } from '@/utils/storage'
+import { APIRoutes } from './constant'
 
 const api = axios.create({
+  baseURL:APIRoutes.BASEURL,
   headers: { 'Content-Type': 'application/json' },
   validateStatus: () => true, // so 400/401 don't throw
 })
