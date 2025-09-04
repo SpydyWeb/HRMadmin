@@ -18,6 +18,7 @@ export const auth = {
 
 
  isAuthenticated(): boolean {
+  debugger;
     const token = this.getToken()
     if (!token) return false
     try {

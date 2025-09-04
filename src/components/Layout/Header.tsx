@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import Button from '../ui/button'
 import Notification from '../Notification'
+import { RoutePaths } from '@/utils/constant'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ export default function Header() {
 
   const handleLogout = () => {
     auth.logout()
-    navigate({ to: '/login' })
+    navigate({ to: RoutePaths.LOGIN })
   }
 
   return (

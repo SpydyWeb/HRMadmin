@@ -10,14 +10,9 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
-      {/* Fixed Header */}
       <Header />
-      
-      {/* Sidebar */}
-      <AppSidebar />
-      
-      {/* Main Content */}
-      <SidebarInset>
+      {/* <AppSidebar /> */}
+      <SidebarInset className='ml-0'>
         <main className="pt-20 p-6">
           {children}
         </main>

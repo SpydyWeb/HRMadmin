@@ -13,6 +13,8 @@ import Loader from '@/components/Loader'
 import BreadcrumbCustom from '@/components/BreadcrumbCustom'
 import ScrollToTop from '@/utils/ScrollToTop'
 import { ToastProvider } from '@/components/ui/Toast'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+
 interface MyRouterContext {
   queryClient: any
 }
@@ -35,7 +37,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   beforeLoad: ({ location }) => {
     const isAuthenticated = auth.isAuthenticated()
     const isLoginPage = location.pathname === '/login'
-
     return {
       isAuthenticated,
       isLoginPage,
@@ -53,15 +54,7 @@ function RootComponent() {
   React.useEffect(() => {
     setIsLoading(false)
 
-    // Handle redirects based on authentication status
-    if (!isAuthenticated && !isLoginPage) {
-      // Not authenticated and not on login page - redirect to login
-      navigate({ to: '/login', replace: true })
-    } else if (isAuthenticated && isLoginPage) {
-      // Authenticated but on login page - redirect to dashboard
-      navigate({ to: '/dashboard', replace: true })
-    }
-  }, [isAuthenticated, isLoginPage, navigate])
+  }, [ navigate])
 
   if (isLoading) {
     return (
@@ -97,6 +90,7 @@ function RootComponent() {
           )}
         </QueryClientProvider>
         <ToastProvider  />
+         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
     </html>

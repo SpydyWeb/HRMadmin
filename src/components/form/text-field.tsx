@@ -10,6 +10,7 @@ interface TextFieldProps {
   value?: string
   onChange?: (value: string) => void
   placeholder?: string
+  type?:string
 }
 
  export  const  TextFeild = ({
@@ -18,6 +19,7 @@ interface TextFieldProps {
   value,
   onChange,
   placeholder,
+  type="text"
 }: TextFieldProps) => {
   let field
   try {
@@ -54,6 +56,7 @@ interface TextFieldProps {
         {label}
       </Label>
       <Input
+      type={type}
         id={currentName}
         name={currentName}
         value={currentValue}

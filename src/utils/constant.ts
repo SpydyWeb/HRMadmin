@@ -1,5 +1,7 @@
 export const RoutePaths = {
   DASHBOARD: '/dashboard',
+  SEARCH: '/search',
+  LOGIN: '/login',
   ENTITYMANAGEMENT: '/entitymanagement',
   HIERARCYTOOLS: '/hierarchytools',
   CERTIFICATIONS: '/certifications',

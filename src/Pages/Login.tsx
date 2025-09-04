@@ -6,10 +6,11 @@ import ForgotPasswordForm from '@/components/login/ForgotPasswordForm'
 import OtpVerificationForm from '@/components/login/OtpVerificationForm'
 import SuccessMessage from '@/components/login/SuccessMessage'
 import { auth } from '@/auth'
-import { loginSchema } from '@/schema/loginSchema'
+import { loginSchema, UserNameSchema } from '@/schema/authSchema'
 import { showToast } from '@/components/ui/Toast'
 import { CommonConstants, LoginConstants } from '@/services/constant'
 import { useNavigate } from '@tanstack/react-router'
+import { RoutePaths } from '@/utils/constant'
 
 type Step = 'login' | 'forgot-email' | 'otp' | 'success'
 
@@ -31,25 +32,19 @@ export default function Login() {
       try {
         const response = await auth.login(value)
         const { errorCode, errorMessage } = response.responseHeader
-        const loginResponse = response.responseBody.loginResponse
-
         switch (errorCode) {
           case CommonConstants.SUCCESS:
-            navigate({ to: '/dashboard' })
+            navigate({ to: RoutePaths.SEARCH })
             break
-
           case LoginConstants.INVALID_CREDENTIALS:
             showToast('error', 'Invalid username or password')
             break
-
           case LoginConstants.ACCOUNT_LOCKED:
             showToast('error', 'Your account is locked. Contact support.')
             break
-
           case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
             showToast('warning', 'No active role assigned to your account')
             break
-
           default:
             showToast('error', errorMessage || 'Unexpected error occurred')
         }
@@ -58,16 +53,15 @@ export default function Login() {
       }
     },
   })
-
-  /** Handle Forgot Password */
-  const handleForgotPassword = () => {
-    setCurrentStep('forgot-email')
-  }
-
-  /** Send OTP Code */
-  const handleSendCode = (email) => {
-    debugger
-    if (!email) return
+ const forgetform = useAppForm({
+    defaultValues: {
+      username: ''
+    },
+    validators: {
+      onChange: UserNameSchema,
+    },
+    onSubmit: async ({ value }) => {
+      if (!value.username) return
     setCurrentStep('otp')
     setCountdown(60)
 
@@ -80,7 +74,15 @@ export default function Login() {
         return prev - 1
       })
     }, 1000)
+    },
+  })
+
+  /** Handle Forgot Password */
+  const handleForgotPassword = () => {
+    setCurrentStep('forgot-email')
   }
+
+
 
   /** Verify OTP */
   const handleVerifyOTP = () => {
@@ -128,8 +130,9 @@ export default function Login() {
         )}
         {currentStep === 'forgot-email' && (
           <ForgotPasswordForm
+          form={forgetform}
             onBack={handleBackToLogin}
-            onSendCode={handleSendCode}
+            onSubmit={forgetform.handleSubmit}
           />
         )}
         {currentStep === 'otp' && (
@@ -139,7 +142,7 @@ export default function Login() {
             setOtp={setOtp}
             onBack={() => setCurrentStep('forgot-email')}
             onVerify={handleVerifyOTP}
-            onResend={handleSendCode}
+            onResend={forgetform.handleSubmit}
           />
         )}
         {currentStep === 'success' && (

@@ -14,6 +14,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as NotFoundRouteImport } from './routes/$not-found'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
+import { Route as AuthSearchRouteImport } from './routes/_auth/search'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
@@ -42,6 +43,11 @@ const NotFoundRoute = NotFoundRouteImport.update({
 const AuthTerminationRoute = AuthTerminationRouteImport.update({
   id: '/termination',
   path: '/termination',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSearchRoute = AuthSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
@@ -88,6 +94,7 @@ const AuthDashboardCodeMovementBulkActionRoute =
 export interface FileRoutesByFullPath {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
+  '/search': typeof AuthSearchRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
+  '/search': typeof AuthSearchRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/$not-found': typeof NotFoundRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
+  '/_auth/search': typeof AuthSearchRoute
   '/_auth/termination': typeof AuthTerminationRoute
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/$not-found'
     | '/login'
+    | '/search'
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
   to:
     | '/$not-found'
     | '/login'
+    | '/search'
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/_auth'
     | '/login'
+    | '/_auth/search'
     | '/_auth/termination'
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/termination'
       fullPath: '/termination'
       preLoaderRoute: typeof AuthTerminationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search': {
+      id: '/_auth/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthSearchRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/dashboard/': {
@@ -239,6 +258,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
+  AuthSearchRoute: typeof AuthSearchRoute
   AuthTerminationRoute: typeof AuthTerminationRoute
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
@@ -249,6 +269,7 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthSearchRoute: AuthSearchRoute,
   AuthTerminationRoute: AuthTerminationRoute,
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,

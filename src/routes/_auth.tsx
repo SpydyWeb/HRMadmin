@@ -4,7 +4,6 @@ import { auth } from '../auth';
 export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ location }) => {
     console.log('Auth route beforeLoad check',auth.isAuthenticated(),location);
-     debugger;
     if (!auth.isAuthenticated()) {
       throw redirect({
         to: '/login',

@@ -2,6 +2,8 @@ import React from 'react'
 import { BiUserCheck } from 'react-icons/bi'
 import { BsArrowLeft } from 'react-icons/bs'
 import OTPInput from './OTPInput'
+import { Card, CardContent } from '../ui/card'
+import Button from '../ui/button'
 
 interface OtpVerificationFormProps {
   otp: string
@@ -21,8 +23,8 @@ const OtpVerificationForm: React.FC<OtpVerificationFormProps> = ({
   onResend,
 }) => {
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100 animate-slide-up">
-      <div className="text-center mb-6">
+     <Card className=" animate-slide-up">
+       <CardContent> <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-green-500 rounded-lg mb-4 shadow-lg">
           <BiUserCheck className="w-8 h-8 text-white" />
         </div>
@@ -54,26 +56,28 @@ const OtpVerificationForm: React.FC<OtpVerificationFormProps> = ({
         </div>
 
         <div className="flex gap-3">
-          <button
-            type="button"
+          <Button
+           variant='default'
             onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+            size='lg'
+              >
             <BsArrowLeft className="w-4 h-4" />
             Back
-          </button>
-          <button
-            type="button"
-            onClick={onVerify}
+          </Button>
+          <Button
+           variant='green'
+           onClick={onVerify}
             disabled={otp.length !== 6}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-lg hover:from-green-500 hover:to-green-600 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          >
+            className='w-full'
+            size='lg'
+             >
             <BiUserCheck className="w-5 h-5" />
             Verify Code
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </CardContent>
+    </Card>
   )
 }
 

@@ -1,6 +1,6 @@
 export const APIRoutes = {
-  //BASEURL:"",
-  BASEURL:"http://ezytek1706-003-site1.rtempurl.com/",
+  BASEURL:"",
+  // BASEURL:"http://ezytek1706-003-site1.rtempurl.com/",
   LOGIN: 'api/Auth/Login',
 }
 
