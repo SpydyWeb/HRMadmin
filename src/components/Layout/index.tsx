@@ -1,7 +1,6 @@
 import React from 'react'
-import { AppSidebar } from "./app-sidebar"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import Header from "./Header"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 interface LayoutProps {
   children: React.ReactNode

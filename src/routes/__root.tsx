@@ -1,19 +1,23 @@
+import '../styles.css'
 import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRouteWithContext  
+  createRootRouteWithContext,
+  redirect,
+  useLocation,
 } from '@tanstack/react-router'
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { auth } from '@/auth'
-import '../styles.css'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import Layout from '@/components/Layout'
 import Loader from '@/components/Loader'
 import BreadcrumbCustom from '@/components/BreadcrumbCustom'
 import ScrollToTop from '@/utils/ScrollToTop'
 import { ToastProvider } from '@/components/ui/Toast'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { useAuth } from '@/hooks/useAuth'
+import { auth } from '@/auth'
+import { RoutePaths } from '@/utils/constant'
 
 interface MyRouterContext {
   queryClient: any
@@ -34,28 +38,21 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
-  beforeLoad: ({ location }) => {
-    const isAuthenticated = auth.isAuthenticated()
-    const isLoginPage = location.pathname === '/login'
-    return {
-      isAuthenticated,
-      isLoginPage,
-    }
-  },
   component: RootComponent,
 })
 
 function RootComponent() {
   const queryClient = new QueryClient()
-  const { isAuthenticated, isLoginPage } = Route.useRouteContext()
+  const { token } = useAuth()
   const navigate = Route.useNavigate()
   const [isLoading, setIsLoading] = React.useState(true)
-
+  const location = useLocation()
   React.useEffect(() => {
     setIsLoading(false)
-
-  }, [ navigate])
-
+  }, [navigate])
+console.log('====================================');
+console.log(token);
+console.log('====================================');
   if (isLoading) {
     return (
       <html lang="en">
@@ -77,20 +74,18 @@ function RootComponent() {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          {!isAuthenticated ? (
-            // Show only login page when not authenticated
-            <Outlet />
-          ) : (
-            // Show main application when authenticated
+          {token && !(location.pathname === RoutePaths.LOGIN) ? (
             <Layout>
               <ScrollToTop />
               <BreadcrumbCustom />
               <Outlet />
             </Layout>
+          ) : (
+            <Outlet />
           )}
         </QueryClientProvider>
-        <ToastProvider  />
-         <TanStackRouterDevtools position="bottom-right" />
+        <ToastProvider />
+        <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
     </html>

@@ -1,17 +1,16 @@
-import React from 'react'
 import { IoMdLock } from 'react-icons/io'
-import { FiBell } from 'react-icons/fi'
-import { auth } from '@/auth'
 import { useNavigate } from '@tanstack/react-router'
-import { Separator } from '@/components/ui/separator'
+import Notification from '../Notification'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import Button from '../ui/button'
-import Notification from '../Notification'
+import { auth } from '@/auth'
+import { Separator } from '@/components/ui/separator'
 import { RoutePaths } from '@/utils/constant'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function Header() {
   const navigate = useNavigate()
-  const user = auth.getCurrentUser()
+  const { user } = useAuth()
 
   const handleLogout = () => {
     auth.logout()
@@ -36,8 +35,8 @@ export default function Header() {
         {/* Right side with notifications and user info */}
         <div className="flex items-center gap-4">
           {/* Notification Bell */}
-          <Notification/>
-                   {/* User Profile */}
+          <Notification />
+          {/* User Profile */}
           <div
             className="inline-flex  px-3 py-1 rounded-full text-white font-medium gap-2 items-center cursor-pointer"
             style={{ backgroundColor: 'var(--brand-orange)' }}
@@ -46,7 +45,7 @@ export default function Header() {
               <AvatarImage src="https://github.com/shadcn.png" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
-            <span>{user?.name || 'Manish'}</span>
+            <span>{user?.username || 'Manish'}</span>
           </div>
 
           {/* Reset Password Button */}

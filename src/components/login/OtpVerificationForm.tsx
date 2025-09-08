@@ -1,9 +1,9 @@
 import React from 'react'
 import { BiUserCheck } from 'react-icons/bi'
 import { BsArrowLeft } from 'react-icons/bs'
-import OTPInput from './OTPInput'
-import { Card, CardContent } from '../ui/card'
 import Button from '../ui/button'
+import { Card, CardContent } from '../ui/card'
+import OTPInput from './OTPInput'
 
 interface OtpVerificationFormProps {
   otp: string

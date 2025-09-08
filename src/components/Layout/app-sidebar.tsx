@@ -1,6 +1,18 @@
+import { use, useContext } from 'react'
+import { useNavigate, useLocation } from '@tanstack/react-router'
+import { TiDatabase } from 'react-icons/ti'
+import { RxDashboard } from 'react-icons/rx'
+import { BiBuildings } from 'react-icons/bi'
+import { VscTypeHierarchySuper } from 'react-icons/vsc'
+import { LiaCertificateSolid } from 'react-icons/lia'
+import { FaRegClock } from 'react-icons/fa6'
+import { TfiBarChart } from 'react-icons/tfi'
+import { IoBookOutline, IoSettingsOutline } from 'react-icons/io5'
+import { RoutePaths } from '@/utils/constant'
 import {
   Sidebar,
   SidebarContent,
+  SidebarContext,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
@@ -10,65 +22,52 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { RxDashboard } from "react-icons/rx"
-import { BiBuildings } from "react-icons/bi"
-import { VscTypeHierarchySuper } from "react-icons/vsc"
-import { LiaCertificateSolid } from "react-icons/lia"
-import { FaRegClock } from "react-icons/fa6"
-import { TfiBarChart } from "react-icons/tfi"
-import { IoBookOutline, IoSettingsOutline } from "react-icons/io5"
-import { TiDatabase } from "react-icons/ti"
-import { useNavigate, useLocation } from '@tanstack/react-router'
-import { RoutePaths } from '@/utils/constant'
-import { use, useContext } from 'react'
-import { SidebarContext } from "@/components/ui/sidebar"
-import { useTheme } from "@mui/material"
+} from '@/components/ui/sidebar'
 
 // Menu items
 const items = [
   {
-    title: "Dashboard",
+    title: 'Dashboard',
     url: RoutePaths.DASHBOARD,
     icon: RxDashboard,
   },
   {
-    title: "Entity Management",
+    title: 'Entity Management',
     url: RoutePaths.ENTITYMANAGEMENT,
     icon: BiBuildings,
   },
   {
-    title: "Hierarchy Tools",
+    title: 'Hierarchy Tools',
     url: RoutePaths.HIERARCYTOOLS,
     icon: VscTypeHierarchySuper,
   },
   {
-    title: "Certifications",
+    title: 'Certifications',
     url: RoutePaths.CERTIFICATIONS,
     icon: LiaCertificateSolid,
   },
   {
-    title: "Pending Actions",
+    title: 'Pending Actions',
     url: RoutePaths.PENDINGACTIONS,
     icon: FaRegClock,
   },
   {
-    title: "Channel Reports",
+    title: 'Channel Reports',
     url: RoutePaths.CHANNELREPORTS,
     icon: TfiBarChart,
   },
   {
-    title: "Resources",
+    title: 'Resources',
     url: RoutePaths.RESOURCES,
     icon: IoBookOutline,
   },
   {
-    title: "CMS/ICMS / Queries",
+    title: 'CMS/ICMS / Queries',
     url: RoutePaths.CMS,
     icon: TiDatabase,
   },
   {
-    title: "Settings",
+    title: 'Settings',
     url: RoutePaths.SETTING,
     icon: IoSettingsOutline,
   },
@@ -80,22 +79,24 @@ export function AppSidebar() {
   const { open } = useContext(SidebarContext)
 
   return (
-    <Sidebar variant="floating" className="top-16 left-4 h-[calc(100vh-5rem)] rounded-md">
-      <div className="absolute top-5 z-10" style={{right:  '-0.7rem' }} >
-      <SidebarTrigger />
+    <Sidebar
+      variant="floating"
+      className="top-16 left-4 h-[calc(100vh-5rem)] rounded-md"
+    >
+      <div className="absolute top-5 z-10" style={{ right: '-0.7rem' }}>
+        <SidebarTrigger />
       </div>
-   
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu >
+            <SidebarMenu>
               {items.map((item) => {
                 const isActive = location.pathname.startsWith(item.url)
-                
+
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
+                    <SidebarMenuButton
                       asChild
                       isActive={isActive}
                       className="group"
@@ -116,7 +117,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       {/* <SidebarFooter className="border-t border-sidebar-border p-4">
         {open && (
           <div className="text-xs text-sidebar-foreground/70">
@@ -124,7 +125,7 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarFooter> */}
-      
+
       <SidebarRail />
     </Sidebar>
   )

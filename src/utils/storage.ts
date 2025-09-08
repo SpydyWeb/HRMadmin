@@ -1,9 +1,7 @@
-// utils/storage.ts
-export const TOKEN_KEY = 'auth_token'
 
 export const storage = {
   get: (key: string) => {
-    if (typeof window === 'undefined') return null
+      if (typeof window === 'undefined') return null
     return localStorage.getItem(key)
   },
   set: (key: string, value: string) => {

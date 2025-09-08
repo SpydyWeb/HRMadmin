@@ -1,7 +1,7 @@
 // src/apiClient.ts
 import axios, { AxiosRequestConfig } from 'axios'
-import { APIRoutes } from './constant' 
-import { storage, TOKEN_KEY } from '@/utils/storage'
+import { APIRoutes, TOKEN_KEY } from './constant' 
+import { storage } from '@/utils/storage'
 
 const api = axios.create({
   baseURL:APIRoutes.BASEURL,

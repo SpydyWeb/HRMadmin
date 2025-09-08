@@ -14,7 +14,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as NotFoundRouteImport } from './routes/$not-found'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
-import { Route as AuthSearchRouteImport } from './routes/_auth/search'
+import { Route as AuthSearchIndexRouteImport } from './routes/_auth/search/index'
+import { Route as AuthSearchAgentIdRouteImport } from './routes/_auth/search/$agentId'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
@@ -45,11 +46,6 @@ const AuthTerminationRoute = AuthTerminationRouteImport.update({
   path: '/termination',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthSearchRoute = AuthSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
@@ -57,6 +53,16 @@ const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_auth/dashboard/index.lazy').then((d) => d.Route),
 )
+const AuthSearchIndexRoute = AuthSearchIndexRouteImport.update({
+  id: '/search/',
+  path: '/search/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSearchAgentIdRoute = AuthSearchAgentIdRouteImport.update({
+  id: '/search/$agentId',
+  path: '/search/$agentId',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthDashboardTerminationRoute =
   AuthDashboardTerminationRouteImport.update({
     id: '/dashboard/termination',
@@ -94,11 +100,12 @@ const AuthDashboardCodeMovementBulkActionRoute =
 export interface FileRoutesByFullPath {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
-  '/search': typeof AuthSearchRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/search/$agentId': typeof AuthSearchAgentIdRoute
+  '/search': typeof AuthSearchIndexRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
@@ -106,11 +113,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
-  '/search': typeof AuthSearchRoute
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/search/$agentId': typeof AuthSearchAgentIdRoute
+  '/search': typeof AuthSearchIndexRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
@@ -120,11 +128,12 @@ export interface FileRoutesById {
   '/$not-found': typeof NotFoundRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
-  '/_auth/search': typeof AuthSearchRoute
   '/_auth/termination': typeof AuthTerminationRoute
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
+  '/_auth/search/': typeof AuthSearchIndexRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/_auth/dashboard/code-movement/': typeof AuthDashboardCodeMovementIndexLazyRoute
@@ -134,11 +143,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/$not-found'
     | '/login'
-    | '/search'
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/termination'
+    | '/search/$agentId'
+    | '/search'
     | '/dashboard'
     | '/dashboard/code-movement/bulk-action'
     | '/dashboard/code-movement'
@@ -146,11 +156,12 @@ export interface FileRouteTypes {
   to:
     | '/$not-found'
     | '/login'
-    | '/search'
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/termination'
+    | '/search/$agentId'
+    | '/search'
     | '/dashboard'
     | '/dashboard/code-movement/bulk-action'
     | '/dashboard/code-movement'
@@ -159,11 +170,12 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/_auth'
     | '/login'
-    | '/_auth/search'
     | '/_auth/termination'
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
     | '/_auth/dashboard/termination'
+    | '/_auth/search/$agentId'
+    | '/_auth/search/'
     | '/_auth/dashboard/'
     | '/_auth/dashboard/code-movement/bulk-action'
     | '/_auth/dashboard/code-movement/'
@@ -205,18 +217,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthTerminationRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/search': {
-      id: '/_auth/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof AuthSearchRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/dashboard/': {
       id: '/_auth/dashboard/'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthDashboardIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/': {
+      id: '/_auth/search/'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthSearchIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/$agentId': {
+      id: '/_auth/search/$agentId'
+      path: '/search/$agentId'
+      fullPath: '/search/$agentId'
+      preLoaderRoute: typeof AuthSearchAgentIdRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/dashboard/termination': {
@@ -258,22 +277,24 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
-  AuthSearchRoute: typeof AuthSearchRoute
   AuthTerminationRoute: typeof AuthTerminationRoute
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
+  AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
+  AuthSearchIndexRoute: typeof AuthSearchIndexRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
   AuthDashboardCodeMovementIndexLazyRoute: typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthSearchRoute: AuthSearchRoute,
   AuthTerminationRoute: AuthTerminationRoute,
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
+  AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
+  AuthSearchIndexRoute: AuthSearchIndexRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
   AuthDashboardCodeMovementBulkActionRoute:
     AuthDashboardCodeMovementBulkActionRoute,
