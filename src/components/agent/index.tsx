@@ -1,10 +1,9 @@
-import React from 'react'
+import { useParams } from '@tanstack/react-router'
 import CustomTabs from '../CustomTabs'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import Button from '../ui/button'
 import AgentDetail from './AgentDetail'
-import { useParams } from '@tanstack/react-router'
 import { tableData } from '@/utils/utilities'
 
 const tabs = [

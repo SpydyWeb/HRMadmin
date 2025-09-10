@@ -19,13 +19,13 @@ export default defineConfig({
     }),
     viteReact(),
   ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://ezytek1706-003-site1.rtempurl.com/', // Backend API URL
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
+  // server: {
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://ezytek1706-003-site1.rtempurl.com/', // Backend API URL
+  //       changeOrigin: true,
+  //       secure: false,
+  //     },
+  //   },
+  // },
 })

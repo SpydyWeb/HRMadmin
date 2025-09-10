@@ -30,25 +30,25 @@ export default function Login() {
     },
     onSubmit: async ({ value }) => {
       try {
-         navigate({ to: RoutePaths.SEARCH })
-        // const response = await auth.login(value)
-        // const { errorCode, errorMessage } = response.responseHeader
-        // switch (errorCode) {
-        //   case CommonConstants.SUCCESS:
-        //     navigate({ to: RoutePaths.SEARCH })
-        //     break
-        //   case LoginConstants.INVALID_CREDENTIALS:
-        //     showToast('error', 'Invalid username or password')
-        //     break
-        //   case LoginConstants.ACCOUNT_LOCKED:
-        //     showToast('error', 'Your account is locked. Contact support.')
-        //     break
-        //   case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
-        //     showToast('warning', 'No active role assigned to your account')
-        //     break
-        //   default:
-        //     showToast('error', errorMessage || 'Unexpected error occurred')
-        // }
+        // navigate({ to: RoutePaths.SEARCH })
+        const response = await auth.login(value)
+        const { errorCode, errorMessage } = response.responseHeader
+        switch (errorCode) {
+          case CommonConstants.SUCCESS:
+            navigate({ to: RoutePaths.SEARCH })
+            break
+          case LoginConstants.INVALID_CREDENTIALS:
+            showToast('error', 'Invalid username or password')
+            break
+          case LoginConstants.ACCOUNT_LOCKED:
+            showToast('error', 'Your account is locked. Contact support.')
+            break
+          case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
+            showToast('warning', 'No active role assigned to your account')
+            break
+          default:
+            showToast('error', errorMessage || 'Unexpected error occurred')
+        }
       } catch (err: any) {
         showToast('error', 'Login failed: ' + (err.message || 'Unknown error'))
       }
@@ -107,7 +107,7 @@ export default function Login() {
           style={{ animationDelay: '2s' }}
         ></div>
       </div>
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-[30rem]">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg mb-4 shadow-lg animate-float">
             <span className="text-white font-bold text-xl">HM</span>

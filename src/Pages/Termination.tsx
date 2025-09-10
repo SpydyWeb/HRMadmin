@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { FaClipboardList, FaNetworkWired } from 'react-icons/fa6'
-import { MdOutlinePublishedWithChanges } from 'react-icons/md'
-import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
+import {  FaNetworkWired } from 'react-icons/fa6'
+import { Link } from '@tanstack/react-router'
 import CustomTabs from '@/components/CustomTabs'
 import DataTable from '@/components/table/DataTable'
 import {
@@ -15,7 +14,6 @@ import { Filter } from '@/components/Filter'
 import { Checkbox } from '@/components/ui/checkbox'
 import Button from '@/components/ui/button'
 import { Pagination } from '@/components/table/Pagination'
-import { Link } from '@tanstack/react-router'
 
 const tabs = [
   { value: 'new', label: 'New Termination Requests', icon: <FaNetworkWired /> },
