@@ -1,7 +1,7 @@
 export const TOKEN_KEY = 'auth_token'
 export const APIRoutes = {
-  // BASEURL:"",
-  BASEURL:"http://ezytek1706-003-site1.rtempurl.com/api/",
+  BASEURL:"/api/",
+  // BASEURL:"http://ezytek1706-003-site1.rtempurl.com/api/",
   LOGIN: 'Auth/Login',
 }
 
