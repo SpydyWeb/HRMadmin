@@ -3,6 +3,5 @@ import { useStore } from '@tanstack/react-store'
 import { authStore } from '@/store/authStore'
 
 export function useAuth() {
-  console.log('authStore', authStore);
   return useStore(authStore)
 }

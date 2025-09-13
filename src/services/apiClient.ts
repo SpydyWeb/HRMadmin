@@ -12,11 +12,13 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = storage.get(TOKEN_KEY)
   if (token) {
+    const jwt = JSON.parse(token) // assuming token stored as JSON { token: "xxx" }
     config.headers = config.headers ?? {}
-    ;(config.headers as any).Authorization = `Bearer ${token}`
+    ;(config.headers as any).Authorization = `Bearer ${jwt.token}`
   }
   return config
 })
+
 
 const request = async <T>(
   method: 'get' | 'post' | 'put' | 'delete',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import { MdMonitor } from 'react-icons/md'
@@ -10,15 +10,17 @@ import { BiSearch } from 'react-icons/bi'
 import { useAuth } from '@/hooks/useAuth'
 import ZoneList from '@/components/dashboard/ZoneList'
 import DataTable from '@/components/table/DataTable'
-import { tableData } from '@/utils/utilities'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { agentService } from '@/services/agentService'
+import { AgentConstants, CommonConstants } from '@/services/constant'
+import { useQuery } from '@tanstack/react-query'
 
 export default function SearchInterface() {
   const [searchQuery, setSearchQuery] = useState('')
   const { user } = useAuth()
   const navigate = useNavigate()
   const [selectedZone, setSelectedZone] = useState('All Zone')
-  const [isShowtable, setisShowtable] = useState(false)
+
   const handleClick = (agentid: string) => {
     navigate({ to: '/search/$agentId', params: { agentId: agentid } })
   }
@@ -59,7 +61,8 @@ export default function SearchInterface() {
       isActive: false,
     },
   ]
-  const columns = [
+
+  const dynamicColumns = [
     {
       header: 'Agent ID',
       accessor: (row: any) => (
@@ -75,6 +78,33 @@ export default function SearchInterface() {
     { header: 'Date', accessor: 'date' },
     { header: 'Current Branch', accessor: 'currentBranch' },
   ]
+  const fetchAgents = useCallback(async () => {
+    if (!searchQuery.trim()) return []
+    const value = { searchCondition: searchQuery, zone: selectedZone }
+    const response = await agentService.search(value)
+
+    const { errorCode, errorMessage } = response.responseHeader
+    if (errorCode === CommonConstants.SUCCESS) {
+      return response.responseBody.agents.map((agent: any) => ({
+        agentid: agent.agentCode,
+        requestedby: agent.createdBy,
+        date: new Date(agent.createdDate).toLocaleDateString(),
+        currentBranch: agent.businessName,
+      }))
+    } else if (errorCode === AgentConstants.AGENT_NOTFOUND) {
+      throw new Error(errorMessage || 'No records found')
+    } else {
+      throw new Error(errorMessage || 'Unexpected error occurred')
+    }
+  }, [searchQuery, selectedZone])
+
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ['agents', searchQuery, selectedZone],
+    queryFn: fetchAgents,
+    enabled: false,
+    retry: false,
+    networkMode: 'offlineFirst',
+  })
   return (
     <Card>
       <CardContent>
@@ -108,7 +138,7 @@ export default function SearchInterface() {
               <div className="absolute  inset-y-0 right-1 pl-3 flex items-center">
                 <Button
                   variant="blue"
-                  onClick={() => setisShowtable(!isShowtable)}
+                  onClick={() => refetch()}
                   className="px-10"
                   size="sm"
                 >
@@ -144,8 +174,13 @@ export default function SearchInterface() {
             })}
           </div>
         </div>
-        <div className={`mt-5 px-20 ${isShowtable ? 'block' : 'hidden'}`}>
-          <DataTable columns={columns} data={tableData} />
+        <div className={`mt-5 px-20 text-center `}>
+          <DataTable
+            columns={dynamicColumns}
+            data={data || []}
+            loading={isLoading}
+            noDataMessage={error?.message || ''}
+          />
         </div>
       </CardContent>
     </Card>

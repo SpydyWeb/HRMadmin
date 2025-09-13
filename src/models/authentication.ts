@@ -1,16 +1,12 @@
+import type { Agent } from "./agent"
+
 // src/models/authentication.ts
 export interface LoginRequest {
   username: string
   password: string
 }
 
-export interface ApiResponse<T> {
-  responseHeader: {
-    errorCode: number
-    errorMessage: string
-  }
-  responseBody: T
-}
+
 
 export interface LoginResponseBody {
   loginResponse: {
@@ -21,5 +17,5 @@ export interface LoginResponseBody {
     role: string | null
   } | null
   hmsDashboard: any
-  agents: any
+  agents: Agent[]
 }

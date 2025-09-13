@@ -50,9 +50,6 @@ function RootComponent() {
   React.useEffect(() => {
     setIsLoading(false)
   }, [navigate])
-console.log('====================================');
-console.log(token);
-console.log('====================================');
   if (isLoading) {
     return (
       <html lang="en">

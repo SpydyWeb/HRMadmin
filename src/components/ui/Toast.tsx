@@ -30,7 +30,7 @@ export const showToast = (type: ToastType, message: string, options: ToastOption
 export const ToastProvider: React.FC = () => {
   return (
     <ToastContainer
-    position="top-right"
+    position='bottom-right'
       autoClose={3000}          // Ensures auto-close
       hideProgressBar={true}    // Matches your default
       closeOnClick

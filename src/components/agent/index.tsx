@@ -1,4 +1,4 @@
-import { useParams } from '@tanstack/react-router'
+import { useLoaderData, useParams } from '@tanstack/react-router'
 import CustomTabs from '../CustomTabs'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
@@ -37,8 +37,8 @@ const tabs = [
 
 const Agent = () => {
         const { agentId } = useParams({ strict: false }) // 👈 get agentId from URL
-  const agent = tableData.find((a) => a.agentid === agentId)
-
+  const agent = useLoaderData({ from: '/_auth/search/$agentId' })
+  console.log('Loader Data:', agent)
   return (
     <>
       <div className="space-y-2 my-6">

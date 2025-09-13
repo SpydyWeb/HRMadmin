@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import React from "react";
 
 interface Column {
   header: string;
@@ -9,9 +10,16 @@ interface Column {
 interface DataTableProps {
   columns: Array<Column>;
   data: Array<any>;
+  loading?: boolean;      // 👈 new prop
+  noDataMessage?: string; // 👈 new prop
 }
 
-export default function DataTable({ columns, data }: DataTableProps) {
+export default function DataTable({
+  columns,
+  data,
+  loading = false,
+  noDataMessage = "No Data Found",
+}: DataTableProps) {
   // Calculate default width only for columns without explicit width
   const defaultWidth = `${100 / columns.filter(col => !col.width).length}%`;
 
@@ -24,7 +32,7 @@ export default function DataTable({ columns, data }: DataTableProps) {
             {columns.map((col, idx) => (
               <TableHead
                 key={idx}
-                className="px-4 py-2 text-left font-semibold text-gray-700"
+                className="px-4 py-2 text-left font-semibold text-gray-700 uppercase"
                 style={{ width: col.width || defaultWidth }}
               >
                 {col.header}
@@ -35,21 +43,48 @@ export default function DataTable({ columns, data }: DataTableProps) {
 
         {/* Table Body */}
         <TableBody className="divide-y divide-gray-100">
-          {data.map((row, rowIdx) => (
-            <TableRow key={rowIdx} className="hover:bg-gray-50">
-              {columns.map((col, colIdx) => (
-                <TableCell
-                  key={colIdx}
-                  className="px-4 py-2"
-                  style={{ width: col.width || defaultWidth }}
-                >
-                  {typeof col.accessor === "function"
-                    ? col.accessor(row)
-                    : row[col.accessor]}
-                </TableCell>
-              ))}
+          {/* Loader */}
+          {loading && (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="text-center py-6 text-gray-500"
+              >
+                Loading...
+              </TableCell>
             </TableRow>
-          ))}
+          )}
+
+          {/* No Data */}
+          {!loading && data.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="text-center py-6 text-gray-500"
+              >
+                {noDataMessage}
+              </TableCell>
+            </TableRow>
+          )}
+
+          {/* Data Rows */}
+          {!loading &&
+            data.length > 0 &&
+            data.map((row, rowIdx) => (
+              <TableRow key={rowIdx} className="hover:bg-gray-50">
+                {columns.map((col, colIdx) => (
+                  <TableCell
+                    key={colIdx}
+                    className="px-4 py-2 text-left"
+                    style={{ width: col.width || defaultWidth }}
+                  >
+                    {typeof col.accessor === "function"
+                      ? col.accessor(row)
+                      : row[col.accessor]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     </div>
