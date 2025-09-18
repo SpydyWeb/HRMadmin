@@ -1,28 +1,36 @@
 
-export interface AgentSearchRequest {
+export interface IAgentSearchRequest {
     searchCondition: string;
     zone: string;
 }
-export interface AgentSearchByCodeRequest {
-    AgentCode: string;
+export interface IAgentSearchByCodeRequest {
+   searchCondition?: string
+  zone?: string
+  agentId?: number
+  agentCode?: string
+  pageNo?: number
+  pageSize?: number
+  sortColumn?: string
+  sortDirection?: string
 }
-export interface Agent {
+
+export interface IAgent {
   agentId: number;
   agentCode: string;
-  agentTypeCode: string;
-  agentSubTypeCode: string;
+  agentTypeCode: string | null;
+  agentSubTypeCode: string | null;
   agentName: string;
-  businessName: string;
-  firstName: string;
-  middleName: string;x
-  lastName: string;
-  prefix: string;
-  suffix: string;
-  gender: string;
-  dob: string; // can use Date if you parse it
-  nationality: string;
-  maritalStatusCode: string;
-  preferredLanguage: string;
+  businessName: string | null;
+  firstName: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  prefix: string | null;
+  suffix: string | null;
+  gender: string | null;
+  dob: string | null;
+  nationality: string | null;
+  maritalStatusCode: string | null;
+  preferredLanguage: string | null;
   channelCode: string | null;
   subChannelCode: string | null;
   designationCode: string | null;
@@ -34,17 +42,19 @@ export interface Agent {
   agentStatusCode: string | null;
   statusDate: string | null;
   isLicensed: boolean;
-  maskedPanNumber: string;
-  aadhaarNumber: string | null;
+  maskedPanNumber: string | null;
+  aadhaar_number: string | null;
   irdaLicenseNumber: string | null;
   gstNumber: string | null;
-  createdBy: string;
+  createdBy: string | null;
   createdDate: string;
-  modifiedBy: string;
-  modifiedDate: string;
-  rowVersion: number;
+  modifiedBy: string | null;
+  modifiedDate: string | null;
+  rowVersion: number | null;
   isActive: boolean;
   panNumber: string;
   email: string | null;
   mobileNo: string | null;
+  total_count?: number;
 }
+

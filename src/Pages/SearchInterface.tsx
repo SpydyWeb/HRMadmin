@@ -14,6 +14,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { agentService } from '@/services/agentService'
 import { AgentConstants, CommonConstants } from '@/services/constant'
 import { useQuery } from '@tanstack/react-query'
+import {  IAgent } from '@/models/agent'
 
 export default function SearchInterface() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -85,9 +86,9 @@ export default function SearchInterface() {
 
     const { errorCode, errorMessage } = response.responseHeader
     if (errorCode === CommonConstants.SUCCESS) {
-      return response.responseBody.agents.map((agent: any) => ({
+      return response.responseBody.agents.map((agent: IAgent) => ({
         agentid: agent.agentCode,
-        requestedby: agent.createdBy,
+        requestedby: agent.agentName,
         date: new Date(agent.createdDate).toLocaleDateString(),
         currentBranch: agent.businessName,
       }))
@@ -97,14 +98,22 @@ export default function SearchInterface() {
       throw new Error(errorMessage || 'Unexpected error occurred')
     }
   }, [searchQuery, selectedZone])
-
-  const { data, error, isLoading, refetch } = useQuery({
+const handleSearch = () => {
+  if (!searchQuery.trim()) {
+    showToast('error','Please enter a search value')
+    return
+  }
+  refetch()
+}
+  const { data, error, isFetching, refetch } = useQuery({
     queryKey: ['agents', searchQuery, selectedZone],
     queryFn: fetchAgents,
     enabled: false,
     retry: false,
     networkMode: 'offlineFirst',
+     refetchOnWindowFocus: false
   })
+
   return (
     <Card>
       <CardContent>
@@ -138,9 +147,10 @@ export default function SearchInterface() {
               <div className="absolute  inset-y-0 right-1 pl-3 flex items-center">
                 <Button
                   variant="blue"
-                  onClick={() => refetch()}
-                  className="px-10"
+                  onClick={() => handleSearch()}
+                  className={`px-10`}
                   size="sm"
+                  disabled={isFetching}
                 >
                   Search
                 </Button>
@@ -178,7 +188,7 @@ export default function SearchInterface() {
           <DataTable
             columns={dynamicColumns}
             data={data || []}
-            loading={isLoading}
+            loading={isFetching}
             noDataMessage={error?.message || ''}
           />
         </div>

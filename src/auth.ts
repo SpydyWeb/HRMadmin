@@ -1,7 +1,7 @@
 import {
   ApiResponse,
-  LoginRequest,
-  LoginResponseBody,
+  ILoginRequest,
+  ILoginResponseBody,
 } from './models/authentication'
 import { authService } from './services/authService'
 import { TOKEN_KEY } from './services/constant'
@@ -37,7 +37,7 @@ export const auth = {
       return false
     }
   },
-  async login(data: LoginRequest): Promise<ApiResponse<LoginResponseBody>> {
+  async login(data: ILoginRequest): Promise<ApiResponse<ILoginResponseBody>> {
     const response = await authService.login(data)
     const token = response.responseBody.loginResponse?.token
     if (token) {

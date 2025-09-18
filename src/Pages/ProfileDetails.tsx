@@ -1,7 +1,10 @@
+import { useLoaderData } from '@tanstack/react-router'
 import Agent from '@/components/agent'
-import AgentDetail from '@/components/agent/AgentDetail'
+import { agentService } from '@/services/agentService'
+import { useEffect } from 'react'
 
 const ProfileDetails = () => {
+
 
   return (
     <div className='px-8'>
@@ -10,4 +13,4 @@ const ProfileDetails = () => {
   )
 }
 
-export default ProfileDetails
+export default ProfileDetails;

@@ -4,7 +4,8 @@ import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import Button from '../ui/button'
 import AgentDetail from './AgentDetail'
-import { tableData } from '@/utils/utilities'
+import type { ApiResponse } from '@/models/api'
+import type { ILoginResponseBody } from '@/models/authentication'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal Details' },
@@ -17,28 +18,48 @@ const tabs = [
     value: 'partnersmapped',
     label: 'Partners Mapped',
   },
-    {
+  {
     value: 'autditlog',
     label: 'Audit Log',
   },
-    {
+  {
     value: 'licensedetails',
     label: 'License Details',
   },
-    {
+  {
     value: 'financialdetails',
-    label:  'Financial Details',
+    label: 'Financial Details',
   },
-    {
+  {
     value: 'entity360',
-    label:   'Entity 360°',
+    label: 'Entity 360°',
   },
 ]
 
 const Agent = () => {
-        const { agentId } = useParams({ strict: false }) // 👈 get agentId from URL
-  const agent = useLoaderData({ from: '/_auth/search/$agentId' })
-  console.log('Loader Data:', agent)
+  // const params = useParams()
+  // const[agentdata,setAgentdata]=useState<any>(null);
+  // useEffect(() => {
+  //   fetchData()
+  // }, [])
+  // const fetchData = async () => {
+  //   const res = await agentService.searchbycode({
+  //     searchCondition: '',
+  //     zone: '',
+  //     agentId: 0,
+  //     agentCode: params.agentId,
+  //     pageNo: 1,
+  //     pageSize: 10,
+  //     sortColumn: '',
+  //     sortDirection: 'asc',
+  //   })
+  //   console.log(res);
+    
+  //   setAgentdata(res);
+  // }
+const agentdata = useLoaderData<ApiResponse<ILoginResponseBody>>({
+    from: '/_auth/search/$agentId',
+  })
   return (
     <>
       <div className="space-y-2 my-6">
@@ -61,7 +82,7 @@ const Agent = () => {
         defaultValue="personaldetails"
         onValueChange={(value) => console.log('Selected Tab:', value)}
       />
-     <AgentDetail agent={agent}/>
+      <AgentDetail agent={agentdata.responseBody.agents[0]} />
     </>
   )
 }

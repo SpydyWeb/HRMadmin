@@ -1,14 +1,13 @@
-import type { Agent } from "./agent"
+import type { IAgent } from "./agent"
 
-// src/models/authentication.ts
-export interface LoginRequest {
+export interface ILoginRequest {
   username: string
   password: string
 }
 
 
 
-export interface LoginResponseBody {
+export interface ILoginResponseBody {
   loginResponse: {
     token: string
     expiration: string
@@ -17,5 +16,5 @@ export interface LoginResponseBody {
     role: string | null
   } | null
   hmsDashboard: any
-  agents: Agent[]
+  agents: Array<IAgent>
 }

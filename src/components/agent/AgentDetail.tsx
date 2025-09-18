@@ -3,8 +3,10 @@ import { BiCreditCard, BiMapPin, BiTargetLock, BiUser } from 'react-icons/bi'
 import { FiTarget } from 'react-icons/fi'
 import { Card, CardContent } from '../ui/card'
 import DetailCard from './DetailCard'
+import type {  IAgent } from '@/models/agent'
 
-const AgentDetail = ({agent}:any) => {
+const AgentDetail = ({ agent }: { agent: IAgent }) => {
+console.log(agent);
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -37,9 +39,9 @@ const AgentDetail = ({agent}:any) => {
                   <div className="flex items-center gap-3">
                     <BiUser className="h-8 w-8 text-white" />
                     <div className="text-left">
-                      <h3 className="font-semibold text-lg">{agent.name}</h3>
+                      <h3 className="font-semibold text-lg">{agent.agentName}</h3>
                       <p className="text-orange-100 text-sm">
-                        AGENT CODE - {agent.agentid}
+                        AGENT CODE - {agent.agentCode}
                       </p>
                     </div>
                   </div>
@@ -55,13 +57,13 @@ const AgentDetail = ({agent}:any) => {
                 <DetailCard
                   icon={<BiCreditCard className="h-6 w-6 text-green-600" />}
                   label="PAN"
-                  value={agent.pan}
+                  value={agent.panNumber}
                 />
 
                 <DetailCard
                   icon={<BiTargetLock className="h-6 w-6 text-green-600" />}
                   label="Region"
-                  value={agent.region}
+                  value={agent.subChannelCode}
                 />
               </div>
 
@@ -70,12 +72,12 @@ const AgentDetail = ({agent}:any) => {
                 <DetailCard
                   icon={<FiTarget className="h-6 w-6 text-green-600" />}
                   label="Zone"
-                  value={agent.zone}
+                  value={agent.locationCode}
                 />
                 <DetailCard
                   icon={<BiMapPin className="h-6 w-6 text-green-600" />}
                   label="Current Branch"
-                  value={agent.currentBranch}
+                  value={agent.businessName}
                 />
               </div>
             </CardContent>
