@@ -57,7 +57,7 @@ const Agent = () => {
     
   //   setAgentdata(res);
   // }
-const agentdata = useLoaderData<ApiResponse<ILoginResponseBody>>({
+const agentdata = useLoaderData<ApiResponse<{ agents: ILoginResponseBody[] }>>({
     from: '/_auth/search/$agentId',
   })
   return (
