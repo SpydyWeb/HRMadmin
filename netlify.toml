@@ -1,5 +1,0 @@
-[[redirects]]
-  from = "/api/*"
-  to = "http://ezytek1706-003-site1.rtempurl.com/api/:splat"
-  status = 200
-  force = true
