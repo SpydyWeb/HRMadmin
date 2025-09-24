@@ -4,7 +4,6 @@ Admin-ui/dist
 Admin-ui/dist-ssr
 Admin-ui/*.local
 Admin-ui/count.txt
-Admin-ui/.env
 Admin-ui/.nitro
 Admin-ui/.tanstack
 Admin-ui/.output
