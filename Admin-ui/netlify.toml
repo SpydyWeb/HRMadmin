@@ -1,5 +1,5 @@
 [[redirects]]
-  from = "/api/*"
-  to = "http://ezytek1706-003-site1.rtempurl.com/api/:splat"
+  from = "/*"
+  to = "https://hrmadmin-nodeproxxy.onrender.com/:splat"
   status = 200
   force = true
