@@ -1,5 +1,17 @@
+[build]
+  base = "Admin-ui"
+  command = "npm run build"
+  publish = "Admin-ui/dist" # or build if using CRA
+
+# Proxy only API calls to Render
 [[redirects]]
-  from = "/*"
+  from = "/api/*"
   to = "https://hrmadmin-nodeproxxy.onrender.com/:splat"
   status = 200
   force = true
+
+# Let React handle frontend routes (SPA fallback)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
