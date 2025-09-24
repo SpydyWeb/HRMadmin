@@ -12,7 +12,7 @@ const api = axios.create({
 const request = async (method, url, data, config = {}) => {
   try {
     // Encrypt payload if data is provided
-    const payload = data ? { data: JSON.stringify(data) } : undefined;
+    const payload = data ? data: undefined;
 
     // Forward Authorization header if exists
     const headers = {
