@@ -1,9 +1,9 @@
 export const TOKEN_KEY = 'auth_token'
 export const APIRoutes = {
-  BASEURL:"https://hrmadmin-nodeproxxy.onrender.com/",
-  // BASEURL: process.env.REACT_API_URL || "http://localhost:5000/",
-    PROXY:"api/proxy" ,
-    CHUNKS:"getHRMChunks" ,
+  // BASEURL:"https://hrmadmin-nodeproxxy.onrender.com/",
+  BASEURL: import.meta.env.VITE_API_URL,
+  PROXY: 'api/proxy',
+  CHUNKS: 'getHRMChunks',
 }
 
 export const LoginConstants = {

@@ -1,6 +1,4 @@
 // src/services/authService.ts
-import { APIRoutes } from './constant'
-import { apiClient } from './apiClient'
 import { callApi } from './apiService'
 import type { ILoginResponseBody } from '@/models/authentication'
 import type { ApiResponse } from '@/models/api'

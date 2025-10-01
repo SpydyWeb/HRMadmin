@@ -11,7 +11,7 @@ let _token: string | null = null
 
 export const auth = {
   getToken(): string | null {
-    return 'mytoken';
+    //return 'mytoken';
     if (typeof window === 'undefined') return null // SSR guard
     if (_token) return _token
     _token = storage.get(TOKEN_KEY)
@@ -19,7 +19,7 @@ export const auth = {
   },
 
   isAuthenticated(): boolean {
-    return true;
+    //return true;
     if (typeof window === 'undefined') return false // SSR guard
     const token = this.getToken()
     if (!token) return false
