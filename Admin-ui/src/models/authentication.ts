@@ -5,7 +5,8 @@ export interface ILoginRequest {
   password: string
 }
 export interface IHRMChunks{
-  HRMChunks:string
+  HRMChunks:string,
+  isEncryptionEnabled: boolean
 }
 
 

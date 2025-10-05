@@ -4,9 +4,16 @@ import { apiClient } from './apiClient'
 import type { IHRMChunks } from '@/models/authentication'
 import type { IEncryptAPIResponse } from '@/models/api'
 import { auth } from '@/auth'
+import { useEncryption } from '@/store/encryptionStore'
 
 //  Encrypted POST helper
 export async function encryptedPost(url: string, body: any) {
+  const encryptionEnabled = useEncryption()
+    if (!encryptionEnabled) {
+    const res = await apiClient.post(url, body)
+    return res 
+  }
+
   const encryptedBody = encryptionService.encryptObject(body)
   const res = await apiClient.post<IEncryptAPIResponse>(url, {
     requestEncryptedString: encryptedBody,

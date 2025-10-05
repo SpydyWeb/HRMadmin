@@ -1,26 +1,34 @@
 const express = require("express");
 const apiService = require("../services/apiService");
 const { encryptionService } = require("../services/encryptionService");
+const { isEncryptionEnabled } = require("../config/encryptionConfig");
+const e = require("express");
 const router = express.Router();
 
 router.post("/proxy", async (req, res) => {
   try {
-    const decryptedBody = req.body.requestEncryptedString
-      ? encryptionService.decryptObject(req.body.requestEncryptedString)
-      : req.body;
+    const encryptionEnabled = isEncryptionEnabled();
+    let decryptedBody;
+    if (encryptionEnabled && req.body.requestEncryptedString) {
+      decryptedBody = encryptionService.decryptObject(
+        req.body.requestEncryptedString
+      );
+    } else {
+      decryptedBody = req.body;
+    }
     const { fn, args = [], headers = {} } = decryptedBody;
-    console.log(fn,args,apiService);
-    
+
     if (!fn || typeof apiService[fn] !== "function") {
       return res.status(400).json({ error: "Invalid function name" });
     }
     const result = await apiService[fn](...args, headers);
-    console.log('====================================');
-    console.log(result);
-    console.log('====================================');
-     const safeData = { ...result };
-    let ciphertextResp = encryptionService.encryptObject(safeData);
-    return res.json({ responseEncryptedString: ciphertextResp });
+    const safeData = { ...result };
+    console.log("Safe Data:", safeData,encryptionEnabled);
+    if (encryptionEnabled) {
+      const ciphertextResp = encryptionService.encryptObject(safeData);
+      return res.json({ responseEncryptedString: ciphertextResp });
+    }
+    return res.json(safeData);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message || String(err) });

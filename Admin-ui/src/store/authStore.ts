@@ -9,7 +9,7 @@ export interface AuthState {
 }
 
 function getInitialState(): AuthState {
-  return {token:'mytoken', user: {name: 'Demo User'}}; // default for testing
+  // return {token:'mytoken', user: {name: 'Demo User'}}; // default for testing
   const saved = storage.get(TOKEN_KEY)
   if (saved) {
     try {

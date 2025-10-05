@@ -1,5 +1,6 @@
 // src/services/authService.ts
 import { callApi } from './apiService'
+import { APIRoutes } from './constant'
 import type { ILoginResponseBody } from '@/models/authentication'
 import type { ApiResponse } from '@/models/api'
 import type {
@@ -9,7 +10,7 @@ import type {
 
 export const agentService = {
   search: (data: IAgentSearchRequest) =>
-    callApi<ApiResponse<ILoginResponseBody>>("search", [data]),
+    callApi<ApiResponse<ILoginResponseBody>>(APIRoutes.SEARCH, [data]),
   searchbycode: (data: IAgentSearchByCodeRequest) =>
-    callApi<ApiResponse<ILoginResponseBody>>("searchbycode", [data]),
+    callApi<ApiResponse<ILoginResponseBody>>(APIRoutes.SEARCHBYCODE, [data]),
 }

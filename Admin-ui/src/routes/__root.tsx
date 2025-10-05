@@ -21,6 +21,7 @@ import { RoutePaths } from '@/utils/constant'
 import { authService } from '@/services/authService'
 import encryptionService from '@/services/encryptionService'
 import { getChunks } from '@/services/apiService'
+import { setEncryption } from '@/store/encryptionStore'
 
 interface MyRouterContext {
   queryClient: any
@@ -52,10 +53,12 @@ function RootComponent() {
   const location = useLocation()
   React.useEffect(() => {
     setIsLoading(false)
+ 
     getChunks().then((res) => {
       if (res.HRMChunks) {
         encryptionService.setHrm_Key(res.HRMChunks)
         localStorage.setItem('HRMChunks', res.HRMChunks)
+        setEncryption(res.isEncryptionEnabled)
       }
     })
   }, [navigate])

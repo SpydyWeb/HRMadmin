@@ -4,6 +4,9 @@ export const APIRoutes = {
   BASEURL: import.meta.env.VITE_API_URL,
   PROXY: 'api/proxy',
   CHUNKS: 'getHRMChunks',
+  SEARCH: 'search',
+  SEARCHBYCODE: 'searchbycode',
+  LOGIN: 'login',
 }
 
 export const LoginConstants = {
