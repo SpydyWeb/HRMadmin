@@ -6,6 +6,9 @@ import Button from '../ui/button'
 import AgentDetail from './AgentDetail'
 import type { ApiResponse } from '@/models/api'
 import type { ILoginResponseBody } from '@/models/authentication'
+import { useState } from 'react'
+import ComingSoon from '../comming-soon'
+import { Hierarchy } from './hierarchy'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal Details' },
@@ -37,27 +40,10 @@ const tabs = [
 ]
 
 const Agent = () => {
-  // const params = useParams()
-  // const[agentdata,setAgentdata]=useState<any>(null);
-  // useEffect(() => {
-  //   fetchData()
-  // }, [])
-  // const fetchData = async () => {
-  //   const res = await agentService.searchbycode({
-  //     searchCondition: '',
-  //     zone: '',
-  //     agentId: 0,
-  //     agentCode: params.agentId,
-  //     pageNo: 1,
-  //     pageSize: 10,
-  //     sortColumn: '',
-  //     sortDirection: 'asc',
-  //   })
-  //   console.log(res);
-    
-  //   setAgentdata(res);
-  // }
-const agentdata = useLoaderData<ApiResponse<{ agents: ILoginResponseBody[] }>>({
+  const [activeTab, setactiveTab] = useState('personaldetails')
+  const agentdata = useLoaderData<
+    ApiResponse<{ agents: ILoginResponseBody[] }>
+  >({
     from: '/_auth/search/$agentId',
   })
   return (
@@ -80,9 +66,15 @@ const agentdata = useLoaderData<ApiResponse<{ agents: ILoginResponseBody[] }>>({
       <CustomTabs
         tabs={tabs}
         defaultValue="personaldetails"
-        onValueChange={(value) => console.log('Selected Tab:', value)}
+        onValueChange={(value) => setactiveTab(value)}
       />
-      <AgentDetail agent={agentdata.responseBody.agents[0]} />
+      {activeTab === 'personaldetails' ? (
+        <AgentDetail agent={agentdata.responseBody.agents[0]} />
+      ) : activeTab === 'peoplehierarchy' ? (
+        <Hierarchy />
+      ) : (
+        <ComingSoon />
+      )}
     </>
   )
 }
