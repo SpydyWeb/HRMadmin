@@ -11,7 +11,7 @@ const getHRMChunks = () => {
   return token;
 };
 const loadEncryptionConfig = () => {
-  const enabled = false;
+  const enabled = true;
   setEncryptionEnabled(enabled);
   return enabled;
 };

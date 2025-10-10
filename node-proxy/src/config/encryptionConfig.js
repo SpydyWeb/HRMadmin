@@ -1,5 +1,5 @@
 // config/encryptionConfig.js
-let encryptionEnabled = false // default
+let encryptionEnabled = true // default
 
 module.exports = {
   isEncryptionEnabled: () => encryptionEnabled,
