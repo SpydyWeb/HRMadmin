@@ -14,14 +14,12 @@ import Layout from '@/components/Layout'
 import Loader from '@/components/Loader'
 import BreadcrumbCustom from '@/components/BreadcrumbCustom'
 import ScrollToTop from '@/utils/ScrollToTop'
-import { ToastProvider } from '@/components/ui/Toast'
 import { useAuth } from '@/hooks/useAuth'
-import { auth } from '@/auth'
 import { RoutePaths } from '@/utils/constant'
-import { authService } from '@/services/authService'
 import encryptionService from '@/services/encryptionService'
 import { getChunks } from '@/services/apiService'
 import { setEncryption } from '@/store/encryptionStore'
+import { ToastProvider } from '@/components/ui/sonner'
 
 interface MyRouterContext {
   queryClient: any

@@ -891,7 +891,7 @@ export default function TreeView({
     <div className="flex gap-4">
       <div
         ref={treeRef}
-        className="bg-white p-6 rounded-xl border border-neutral-200  space-y-4 w-full relative shadow-lg dark:bg-neutral-950 dark:border-neutral-800"
+        className="bg-white p-6  space-y-4 w-full relative  dark:bg-neutral-950 dark:border-neutral-800"
       >
         <AnimatePresence mode="wait">
           {selectedIds.size > 0 ? (

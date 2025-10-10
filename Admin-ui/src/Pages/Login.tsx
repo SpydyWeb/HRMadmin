@@ -8,7 +8,7 @@ import OtpVerificationForm from '@/components/login/OtpVerificationForm'
 import SuccessMessage from '@/components/login/SuccessMessage'
 import { auth } from '@/auth'
 import { UserNameSchema, loginSchema } from '@/schema/authSchema'
-import { showToast } from '@/components/ui/Toast'
+import { showToast } from '@/components/ui/sonner'
 import { CommonConstants, LoginConstants } from '@/services/constant'
 import { RoutePaths } from '@/utils/constant'
 
