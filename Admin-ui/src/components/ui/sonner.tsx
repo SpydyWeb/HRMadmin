@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Toaster as Sonner, ToasterProps, toast } from "sonner";
+import { NOTIFICATION_CONSTANTS } from "@/utils/constant";
+import React, { useState } from "react";
+import { Toaster as Sonner, toast } from "sonner";
+import type { ToasterProps } from "sonner";
 
 
 type ToastType = "default" | "success" | "error" | "info" | "warning" | "action" | "promise";
@@ -16,19 +18,19 @@ export const showToast = (type: ToastType, message: string, options: ShowToastOp
   const { description, duration = 3000, actionLabel, onAction } = options;
 
   switch (type) {
-    case "success":
+    case NOTIFICATION_CONSTANTS.SUCCESS:
       toast.success(message, { description, duration });
       break;
-    case "error":
+    case NOTIFICATION_CONSTANTS.ERROR:
       toast.error(message, { description, duration });
       break;
-    case "info":
+    case NOTIFICATION_CONSTANTS.INFO:
       toast.info(message, { description, duration });
       break;
-    case "warning":
+    case NOTIFICATION_CONSTANTS.WARNING:
       toast.warning(message, { description, duration });
       break;
-    case "action":
+    case NOTIFICATION_CONSTANTS.ACTION:
       toast(message, {
         description,
         duration,
@@ -59,9 +61,6 @@ export const showPromiseToast = async <T,>(
 export const ToastProvider: React.FC<ToasterProps> = (props) => {
   // Optional theme support
   const [theme, setTheme] = useState<ToasterProps["theme"]>("light");
-  // use next-themes if desired
-  // const { theme: nextTheme = "system" } = useTheme();
-  // useEffect(() => setTheme(nextTheme as ToasterProps["theme"]), [nextTheme]);
 
   return (
     <Sonner

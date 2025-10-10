@@ -10,7 +10,7 @@ import { auth } from '@/auth'
 import { UserNameSchema, loginSchema } from '@/schema/authSchema'
 import { showToast } from '@/components/ui/sonner'
 import { CommonConstants, LoginConstants } from '@/services/constant'
-import { RoutePaths } from '@/utils/constant'
+import { NOTIFICATION_CONSTANTS, RoutePaths } from '@/utils/constant'
 
 type Step = 'login' | 'forgot-email' | 'otp' | 'success'
 
@@ -38,19 +38,34 @@ export default function Login() {
             navigate({ to: RoutePaths.SEARCH })
             break
           case LoginConstants.INVALID_CREDENTIALS:
-            showToast('error', 'Invalid username or password')
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              'Invalid username or password',
+            )
             break
           case LoginConstants.ACCOUNT_LOCKED:
-            showToast('error', 'Your account is locked. Contact support.')
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              'Your account is locked. Contact support.',
+            )
             break
           case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
-            showToast('warning', 'No active role assigned to your account')
+            showToast(
+              NOTIFICATION_CONSTANTS.WARNING,
+              'No active role assigned to your account',
+            )
             break
           default:
-            showToast('error', errorMessage || 'Unexpected error occurred')
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              errorMessage || 'Unexpected error occurred',
+            )
         }
       } catch (err: any) {
-        showToast('error', 'Login failed: ' + (err.message || 'Unknown error'))
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          'Login failed: ' + (err.message || 'Unknown error'),
+        )
       }
     },
   })

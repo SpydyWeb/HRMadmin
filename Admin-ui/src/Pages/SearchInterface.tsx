@@ -14,6 +14,7 @@ import { agentService } from '@/services/agentService'
 import { AgentConstants, CommonConstants } from '@/services/constant'
 import { useQuery } from '@tanstack/react-query'
 import {  IAgent } from '@/models/agent'
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 
 export default function SearchInterface() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -99,7 +100,7 @@ export default function SearchInterface() {
   }, [searchQuery, selectedZone])
 const handleSearch = () => {
   if (!searchQuery.trim()) {
-    showToast('error','Please enter a search value')
+    showToast(NOTIFICATION_CONSTANTS.ERROR,'Please enter a search value')
     return
   }
   refetch()

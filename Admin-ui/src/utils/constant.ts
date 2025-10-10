@@ -15,3 +15,11 @@ export const RoutePaths = {
   TERMINATION: '/dashboard/termination',
   BULKACTION: '/dashboard/code-movement/bulk-action',
 }
+
+export const NOTIFICATION_CONSTANTS = {
+  SUCCESS: 'success' as const,
+  ERROR: 'error' as const,
+  INFO: 'info' as const,
+  WARNING: 'warning' as const,
+  ACTION: 'action' as const,
+}
