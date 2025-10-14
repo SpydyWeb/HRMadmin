@@ -11,6 +11,10 @@ export async function encryptedPost(url: string, body: any) {
   const encryptionEnabled = useEncryption()
     if (!encryptionEnabled) {
     const res = await apiClient.post(url, body)
+    if(res?.status===401)
+    {
+      auth.logout();
+    }
     return res 
   }
 
@@ -18,6 +22,9 @@ export async function encryptedPost(url: string, body: any) {
   const res = await apiClient.post<IEncryptAPIResponse>(url, {
     requestEncryptedString: encryptedBody,
   })
+ console.log('====================================');
+ console.log(res);
+ console.log('====================================');
   if (!res.responseEncryptedString) {
     throw new Error('Invalid encrypted response')
   }

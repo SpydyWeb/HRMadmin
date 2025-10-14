@@ -50,6 +50,7 @@ export const auth = {
     _token = null
     if (typeof window !== 'undefined') {
       storage.remove(TOKEN_KEY)
+      window.location.href = '/login'
     }
   },
 }
