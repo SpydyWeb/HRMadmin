@@ -14,7 +14,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     const jwt = JSON.parse(token) // assuming token stored as JSON { token: "xxx" }
     config.headers = config.headers ?? {}
-    ;(config.headers as any).Authorization = `Bearer ${jwt.token}`
+    ;(config.headers as any).Authorization = `Bearer ${jwt}`
   }
   return config
 })
