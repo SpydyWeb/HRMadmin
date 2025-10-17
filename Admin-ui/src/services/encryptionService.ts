@@ -1,32 +1,41 @@
+// encryptionService.ts
 import CryptoJS from 'crypto-js'
 import { IpAddress } from '@/utils/IpAddress'
 
-let HRM_Key = process.env.ENCRYPTION_KEY || null
+let HRM_Key: string | null = null
+
+const isBrowser = () => typeof window !== 'undefined'
+
+const storage = {
+  getItem: (k: string) => (isBrowser() ? window.localStorage.getItem(k) : null),
+  setItem: (k: string, v: string) => {
+    if (isBrowser()) window.localStorage.setItem(k, v)
+  },
+}
+
 
 const encryptionService = {
-  setHrm_Key: (key: string) => {
+ setHrm_Key: (key: string) => {
     HRM_Key = key
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('HRMChunks', key) //  store key for persistence
-    }
+    storage.setItem('HRMChunks', key)
   },
 
   getHrm_Key: (): string | null => {
     if (HRM_Key) return HRM_Key
+    if (!isBrowser()) return null
 
-    if (typeof window !== 'undefined') {
-      const storedKey = localStorage.getItem('HRMChunks')
-      if (storedKey) {
-        HRM_Key = storedKey
-        return HRM_Key
-      }
+    const storedKey = storage.getItem('HRMChunks')
+    if (storedKey) {
+      HRM_Key = storedKey
+      return HRM_Key
     }
 
-    console.warn(' HRM_Key not found — please call setHrm_Key() before encryption/decryption.')
     return null
   },
 
-  encryptObject: (data: any) => {
+
+  encryptObject: (data: unknown) => {
+    console.log('Encrypting data:', data)
     const keyValue = encryptionService.getHrm_Key()
     if (!keyValue) throw new Error('HRM_Key not set')
 
@@ -42,7 +51,7 @@ const encryptionService = {
     return encrypted.toString()
   },
 
-  decryptObject: (encryptedData: any) => {
+  decryptObject: (encryptedData: string) => {
     const keyValue = encryptionService.getHrm_Key()
     if (!keyValue) throw new Error('HRM_Key not set')
 
@@ -51,10 +60,13 @@ const encryptionService = {
 
     const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
       iv,
+      mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
     })
 
-    return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8))
+    const plaintext = decrypted.toString(CryptoJS.enc.Utf8)
+    if (!plaintext) throw new Error('Decryption failed. Possibly wrong key/iv.')
+    return JSON.parse(plaintext)
   },
 }
 

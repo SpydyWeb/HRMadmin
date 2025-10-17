@@ -23,7 +23,7 @@ router.post("/proxy", async (req, res) => {
     }
     const result = await apiService[fn](...args, headers);
     const safeData = { ...result };
-    console.log("Safe Data:", safeData,encryptionEnabled);
+    console.log("Safe Data:", safeData,decryptedBody);
     if (encryptionEnabled) {
       const ciphertextResp = encryptionService.encryptObject(safeData);
       return res.json({ responseEncryptedString: ciphertextResp });

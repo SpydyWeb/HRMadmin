@@ -1,7 +1,4 @@
-import { useLoaderData } from '@tanstack/react-router'
 import Agent from '@/components/agent'
-import { agentService } from '@/services/agentService'
-import { useEffect } from 'react'
 
 const ProfileDetails = () => {
 

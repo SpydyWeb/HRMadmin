@@ -4,10 +4,9 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  redirect,
+
   useLocation,
 } from '@tanstack/react-router'
-import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import Layout from '@/components/Layout'
@@ -16,10 +15,9 @@ import BreadcrumbCustom from '@/components/BreadcrumbCustom'
 import ScrollToTop from '@/utils/ScrollToTop'
 import { useAuth } from '@/hooks/useAuth'
 import { RoutePaths } from '@/utils/constant'
-import encryptionService from '@/services/encryptionService'
-import { getChunks } from '@/services/apiService'
-import { setEncryption } from '@/store/encryptionStore'
 import { ToastProvider } from '@/components/ui/sonner'
+import { useEncryptionReady } from '@/hooks/useEncryptionReady'
+import { authStore } from '@/store/authStore'
 
 interface MyRouterContext {
   queryClient: any
@@ -47,20 +45,10 @@ function RootComponent() {
   const queryClient = new QueryClient()
   const { token } = useAuth()
   const navigate = Route.useNavigate()
-  const [isLoading, setIsLoading] = React.useState(true)
   const location = useLocation()
-  React.useEffect(() => {
-    setIsLoading(false)
- 
-    getChunks().then((res) => {
-      if (res.HRMChunks) {
-        encryptionService.setHrm_Key(res.HRMChunks)
-        localStorage.setItem('HRMChunks', res.HRMChunks)
-        setEncryption(res.isEncryptionEnabled)
-      }
-    })
-  }, [navigate])
-  if (isLoading) {
+  const encryptionReady = useEncryptionReady() // 👈 use our hook
+console.log('Encryption Ready:', authStore.state.token, encryptionReady)
+  if (!encryptionReady) {
     return (
       <html lang="en">
         <head>
@@ -81,7 +69,7 @@ function RootComponent() {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          {token && !(location.pathname === RoutePaths.LOGIN) ? (
+          {token && location.pathname !== RoutePaths.LOGIN ? (
             <Layout>
               <ScrollToTop />
               <BreadcrumbCustom />

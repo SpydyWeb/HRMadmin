@@ -15,6 +15,8 @@ export const auth = {
     if (typeof window === 'undefined') return null // SSR guard
     if (_token) return _token
     _token = storage.get(TOKEN_KEY)
+    console.log(_token);
+    
     return _token
   },
 
