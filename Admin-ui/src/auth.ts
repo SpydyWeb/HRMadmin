@@ -41,10 +41,10 @@ export const auth = {
   },
   async login(data: ILoginRequest): Promise<ApiResponse<ILoginResponseBody>> {
     const response = await authService.login(data)
-    const token = response.responseBody.loginResponse?.token
+    const token = response.responseBody.loginResponse
     if (token) {
       _token = token
-      storage.set(TOKEN_KEY, JSON.stringify(response.responseBody.loginResponse))
+      storage.set(TOKEN_KEY, JSON.stringify(token))
     }
     return response
   },
