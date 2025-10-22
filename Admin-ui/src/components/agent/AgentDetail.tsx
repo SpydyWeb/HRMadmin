@@ -7,6 +7,7 @@ import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { FloatedTextFeild } from '../form/floated-text-field'
 import EditSwitch from './EditSwitch'
+import { Switch } from "@/components/ui/switch"
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
@@ -76,8 +77,27 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
             </CardContent>{' '}
           </Card>
 
-          <div className='absolute right-20 top-55'>
-            <EditSwitch isEdit={isEdit} setIsEdit={setIsEdit} />
+          <div className='absolute right-20 top-82'>            
+            <div className="flex items-center gap-3 pr-5">
+              {/* Label before the switch */}
+              <span className="font-medium text-gray-700">Edit</span>
+
+              {/* The switch itself */}
+              <Switch
+                checked={isEdit}
+                onCheckedChange={setIsEdit}
+                className="data-[state=checked]:bg-orange-500"
+              />
+
+              {/* Dynamic On/Off text */}
+              <span
+                className={`font-medium ${isEdit ? "text-gray-500" : "text-gray-500"
+                  } transition-colors`}
+              >
+                {isEdit ? "On" : "Off"}
+              </span>
+            </div>
+
           </div>
 
           <Card className="bg-gray-100 w-full max-h-[400px] overflow-y-auto">
