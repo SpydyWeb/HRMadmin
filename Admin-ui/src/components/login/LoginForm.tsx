@@ -13,7 +13,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ form, onForgotPassword ,onSubmit}) => {
   return (
-    <Card className=" animate-slide-up">
+    <Card className="animate-slide-up">
        <CardContent>
       <form.AppForm  >
        <div className="space-y-4">

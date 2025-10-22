@@ -23,7 +23,7 @@ export async function encryptedPost(url: string, body: any) {
     requestEncryptedString: encryptedBody,
   })
  console.log('====================================');
- console.log(res);
+ console.log("this res:-",res);
  console.log('====================================');
   if (!res.responseEncryptedString) {
     throw new Error('Invalid encrypted response')

@@ -2,6 +2,7 @@ const {  setEncryptionEnabled } = require("../config/encryptionConfig");
 const { apiClient } = require("./apiclient");
 const { APIRoutes } = require("./constant");
 const { encryptionService } = require("./encryptionService");
+
 const getHRMChunks = () => {
   const config = loadEncryptionConfig();
   const token = {

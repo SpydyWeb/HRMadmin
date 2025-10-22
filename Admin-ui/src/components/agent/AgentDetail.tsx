@@ -1,12 +1,38 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { BiCreditCard, BiMapPin, BiTargetLock, BiUser } from 'react-icons/bi'
 import { FiTarget } from 'react-icons/fi'
 import { Card, CardContent } from '../ui/card'
 import DetailCard from './DetailCard'
-import type {  IAgent } from '@/models/agent'
+import type { IAgent } from '@/models/agent'
+import { useAppForm } from '@/components/form'
+import { FloatedTextFeild } from '../form/floated-text-field'
+import EditSwitch from './EditSwitch'
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
-console.log(agent);
+  const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
+
+  console.log(agent);
+
+
+
+  const agentForm = useAppForm({
+    defaultValues: {
+      agentCode: agent.agentCode,
+      agentName: agent.agentName,
+      email: agent.email,
+      gender: agent.gender,
+      maritalStatusCode: agent.maritalStatusCode,
+      nationality: agent.nationality,
+      panNumber: agent.panNumber,
+      preferredLanguage: agent.preferredLanguage,
+    },
+    onSubmit: async ({ value }) => {
+      console.log('Updated agent:', value)
+    },
+  })
+
+  const f = agentForm as any;
+
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -50,36 +76,117 @@ console.log(agent);
             </CardContent>{' '}
           </Card>
 
-          <Card className="bg-gray-100 w-full">
-            <CardContent className="space-y-8 ">
-              {/* PAN and Region Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailCard
-                  icon={<BiCreditCard className="h-6 w-6 text-green-600" />}
-                  label="PAN"
-                  value={agent.panNumber}
-                />
+          <div className='absolute right-20 top-55'>
+            <EditSwitch isEdit={isEdit} setIsEdit={setIsEdit} />
+          </div>
 
-                <DetailCard
-                  icon={<BiTargetLock className="h-6 w-6 text-green-600" />}
-                  label="Region"
-                  value={agent.subChannelCode}
-                />
-              </div>
+          <Card className="bg-gray-100 w-full max-h-[400px] overflow-y-auto">
+            <CardContent>
+              <f.AppForm>
+                <div className="grid grid-cols-2 gap-4 w-full">
 
-              {/* Zone and Current Branch Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailCard
-                  icon={<FiTarget className="h-6 w-6 text-green-600" />}
-                  label="Zone"
-                  value={agent.locationCode}
-                />
-                <DetailCard
-                  icon={<BiMapPin className="h-6 w-6 text-green-600" />}
-                  label="Current Branch"
-                  value={agent.businessName}
-                />
-              </div>
+                  <f.AppField name="agentCode">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Code"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="agentName">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Name"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="email">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Email"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="gender">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Gender"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="maritalStatusCode">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Martial Status"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="nationality">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Nationality"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="panNumber">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Pan Number"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  <f.AppField name="preferredLanguage">
+                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                      <FloatedTextFeild
+                        label="Agent Preferred Language"
+                        value={value}
+                        onChange={onChange}
+                        readOnly={!isEdit}
+                      />
+                    )}
+                  </f.AppField>
+
+                  {/* Repeat for other fields */}
+                </div>
+
+                {isEdit && (
+                  <agentForm.Button
+                    onClick={agentForm.handleSubmit}
+                    className="mt-4"
+                    size="lg"
+                    variant="orange"
+                  >
+                    Save Changes
+                  </agentForm.Button>
+                )}
+              </f.AppForm>
             </CardContent>
           </Card>
         </div>
