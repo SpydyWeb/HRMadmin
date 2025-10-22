@@ -4,7 +4,7 @@ import { MdMonitor } from 'react-icons/md'
 import { IoIosArrowRoundForward } from 'react-icons/io'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import type {  IAgent } from '@/models/agent'
+import type { IAgent } from '@/models/agent'
 import { Card, CardContent } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -98,20 +98,20 @@ export default function SearchInterface() {
       throw new Error(errorMessage || 'Unexpected error occurred')
     }
   }, [searchQuery, selectedZone])
-const handleSearch = () => {
-  if (!searchQuery.trim()) {
-    showToast(NOTIFICATION_CONSTANTS.ERROR,'Please enter a search value')
-    return
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please enter a search value')
+      return
+    }
+    refetch()
   }
-  refetch()
-}
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: ['agents', searchQuery, selectedZone],
     queryFn: fetchAgents,
     enabled: false,
     retry: false,
     networkMode: 'offlineFirst',
-     refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   })
 
   return (
