@@ -15,6 +15,8 @@ export const auth = {
     if (typeof window === 'undefined') return null // SSR guard
     if (_token) return _token
     _token = storage.get(TOKEN_KEY)
+    console.log(_token);
+    
     return _token
   },
 
@@ -39,10 +41,10 @@ export const auth = {
   },
   async login(data: ILoginRequest): Promise<ApiResponse<ILoginResponseBody>> {
     const response = await authService.login(data)
-    const token = response.responseBody.loginResponse?.token
+    const token = JSON.stringify(response.responseBody.loginResponse)
     if (token) {
       _token = token
-      storage.set(TOKEN_KEY, JSON.stringify(response.responseBody.loginResponse))
+      storage.set(TOKEN_KEY, token)
     }
     return response
   },
