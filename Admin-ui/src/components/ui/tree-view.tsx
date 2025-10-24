@@ -35,6 +35,8 @@ export interface TreeViewItem {
   id: string
   name: string
   type: string
+  agentCode: string 
+  agentName:string
   children?: TreeViewItem[]
   checked?: boolean
 }

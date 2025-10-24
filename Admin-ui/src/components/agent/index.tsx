@@ -110,7 +110,7 @@ const Agent = () => {
 
       <CustomTabs
         tabs={tabs}
-        value={activeTab}
+        defaultValue={activeTab}
         onValueChange={(value) => setActiveTab(value)}
       />
 
@@ -121,7 +121,7 @@ const Agent = () => {
           <div>No agent found.</div>
         )
       ) : activeTab === 'peoplehierarchy' ? (
-        <Hierarchy />
+        <Hierarchy Agent={firstAgent}/>
       ) : (
         <ComingSoon />
       )}

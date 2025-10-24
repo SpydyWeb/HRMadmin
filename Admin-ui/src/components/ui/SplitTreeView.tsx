@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import {
+  FiAlertCircle,
+  FiChevronRight,
+  FiChevronDown,
+  FiUser,
+  FiSearch,
+  FiX,
+  FiLoader,
+  FiFolder,
+  FiUsers,
+} from 'react-icons/fi';
+import { BiFolderOpen } from 'react-icons/bi';
 import { Badge } from '@/components/ui/badge';
 import  Button  from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,44 +34,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import {
-  FiAlertCircle,
-  FiChevronRight,
-  FiChevronDown,
-  FiUser,
-  FiSearch,
-  FiX,
-  FiLoader,
-  FiFolder,
-  FiUsers,
-} from 'react-icons/fi';
-import { BiFolderOpen } from 'react-icons/bi';
 
-interface TreeViewItem {
-  id: string;
-  name: string;
-  type: string;
-  agentCode: string;
-  agentName: string;
-  region: string;
-  children?: TreeViewItem[];
-}
-
-interface ApiResponse {
-  data: TreeViewItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
 
 interface SplitTreeTableProps {
-  treeData: TreeViewItem[];
+  treeData: Array<any>;
   onSearch?: (
     query: string,
     page: number,
     pageSize: number,
     selectedNodeId?: string
-  ) => Promise<ApiResponse>;
+  ) => Promise<any>;
   isLoading?: boolean;
 }
 
@@ -74,14 +58,14 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(['1', '2'])
   );
-  const [selectedNode, setSelectedNode] = useState<TreeViewItem | null>(null);
+  const [selectedNode, setSelectedNode] = useState<any | null>(null);
 
   // Table states
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [tableData, setTableData] = useState<TreeViewItem[]>([]);
+  const [tableData, setTableData] = useState<Array<any>>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [apiLoading, setApiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,11 +133,11 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
   };
 
   // Get breadcrumb path for selected node
-  const getBreadcrumb = (item: TreeViewItem | null): string[] => {
+  const getBreadcrumb = (item: any | null): string[] => {
     if (!item) return [];
 
     const findPath = (
-      items: TreeViewItem[],
+      items: any[],
       targetId: string,
       path: string[] = []
     ): string[] | null => {
@@ -189,7 +173,7 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
 
   // Render tree node recursively
   const renderTreeNode = (
-    item: TreeViewItem,
+    item: any,
     level: number = 0
   ): React.ReactNode => {
     const hasChildren = item.children && item.children.length > 0;

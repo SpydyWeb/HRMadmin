@@ -4,4 +4,5 @@ export const APIRoutes = {
   LOGIN: 'Auth/Login',
   AGENTSEARCH: 'Agent/Search',
   AGENTBYCODE: "/Agent/AgentByCode", 
+  AGENTBYID: "/Agent/AgentByid", 
 }

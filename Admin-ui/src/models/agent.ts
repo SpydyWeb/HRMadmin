@@ -12,6 +12,7 @@ export interface IAgentSearchByCodeRequest {
   pageSize?: number
   sortColumn?: string
   sortDirection?: string
+  FetchHierarchy?: boolean
 }
 
 export interface IAgent {
@@ -55,6 +56,17 @@ export interface IAgent {
   panNumber: string;
   email: string | null;
   mobileNo: string | null;
+   supervisors?: Array<IAgent> | null; 
+  reportees?: Array<IAgent>| null;  
+  agentAuditTrail?: Array<any>;     
+  peopleHeirarchy?: Array<IPeopleHierarchy> | null;
   total_count?: number;
 }
-
+export interface IPeopleHierarchy {
+  agentId: number;
+  agentCode: string | null;
+  firstName: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  supervisors?: IPeopleHierarchy | null;
+}

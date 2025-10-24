@@ -24,7 +24,7 @@ export async function encryptedPost(url: string, body: any) {
   if (!encryptionEnabled) {
     const res = await apiClient.post(url, body)
     if (res?.status === 401) {
-      // auth.logout()
+      auth.logout()
     }
     return res
   }

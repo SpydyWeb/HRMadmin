@@ -17,7 +17,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { RoutePaths } from '@/utils/constant'
 import { ToastProvider } from '@/components/ui/sonner'
 import { useEncryptionReady } from '@/hooks/useEncryptionReady'
-import { authStore } from '@/store/authStore'
 
 interface MyRouterContext {
   queryClient: any
@@ -46,8 +45,7 @@ function RootComponent() {
   const { token } = useAuth()
   const navigate = Route.useNavigate()
   const location = useLocation()
-  const encryptionReady = useEncryptionReady() // 👈 use our hook
-console.log('Encryption Ready:', authStore.state.token, encryptionReady)
+  const encryptionReady = useEncryptionReady() 
   if (!encryptionReady) {
     return (
       <html lang="en">
