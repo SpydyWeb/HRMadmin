@@ -58,9 +58,20 @@ export interface IAgent {
   mobileNo: string | null;
    supervisors?: Array<IAgent> | null; 
   reportees?: Array<IAgent>| null;  
-  agentAuditTrail?: Array<any>;     
+  agentAuditTrail?: Array<IAgentAuditTrail>;     
   peopleHeirarchy?: Array<IPeopleHierarchy> | null;
   total_count?: number;
+}
+export interface IAgentAuditTrail{
+   agentCode : number;
+   agentId : string;
+   changedOn:string;
+   filedName:string;
+   oldValue:string;
+   newValue:string;
+   modifiedBy:string;
+   modifiedDate:string;
+   changeDescription:string;
 }
 export interface IPeopleHierarchy {
   agentId: number;

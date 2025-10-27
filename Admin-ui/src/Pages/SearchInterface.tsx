@@ -83,7 +83,7 @@ export default function SearchInterface() {
     if (!searchQuery.trim()) return []
     const value = { searchCondition: searchQuery, zone: selectedZone }
     const response = await agentService.search(value)
-
+    console.log("main response :-",response);
     const { errorCode, errorMessage } = response.responseHeader
     if (errorCode === CommonConstants.SUCCESS) {
       return response.responseBody.agents.map((agent: IAgent) => ({
@@ -98,6 +98,7 @@ export default function SearchInterface() {
       throw new Error(errorMessage || 'Unexpected error occurred')
     }
   }, [searchQuery, selectedZone])
+  
   const handleSearch = () => {
     if (!searchQuery.trim()) {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please enter a search value')

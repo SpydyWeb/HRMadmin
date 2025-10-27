@@ -11,6 +11,7 @@ import Loader from '@/components/Loader'
 import { useParams } from '@tanstack/react-router'
 import encryptionService from '@/services/encryptionService'
 import { useEncryption } from '@/store/encryptionStore'
+import AuditLog from './AuditLog'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal Details' },
@@ -37,7 +38,7 @@ const Agent = () => {
   const [error, setError] = useState<string | null>(null)
 
   // Adjust the "from" path to your actual route, e.g. '/agent/$agentId'
-  const { agentId } = useParams({ from: "/_auth/search/$agentId"}) as { agentId?: string }
+  const { agentId } = useParams({ from: "/_auth/search/$agentId" }) as { agentId?: string }
 
   // Only fetch when encryption is ready (if encryption is enabled)
   const encryptionEnabled = useEncryption()
@@ -121,7 +122,9 @@ const Agent = () => {
           <div>No agent found.</div>
         )
       ) : activeTab === 'peoplehierarchy' ? (
-        <Hierarchy Agent={firstAgent}/>
+        <Hierarchy Agent={firstAgent} />
+      ) : activeTab === 'auditlog' ? (
+        <AuditLog Agentcode={agentId||""} />
       ) : (
         <ComingSoon />
       )}

@@ -8,6 +8,7 @@ export const APIRoutes = {
   SEARCHBYCODE: 'searchbycode',
   LOGIN: 'login',
   AGENTBYID: 'Agentbyid',
+  AGENTBYCODE: 'AgentByCode',
 }
 
 export const LoginConstants = {
