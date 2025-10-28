@@ -1,41 +1,52 @@
-import React, { useEffect } from 'react';
-import type { IAgent, IAgentSearchByCodeRequest } from '@/models/agent'
+import React from 'react';
+import type { IAgentSearchByCodeRequest } from '@/models/agent';
 import DataTable from '../table/DataTable';
-import { auditService } from '@/services/auditService';
 import { agentService } from '@/services/agentService';
 import { useQuery } from '@tanstack/react-query';
 
-
 const AuditLog = ({ Agentcode }) => {
-    const requestData: IAgentSearchByCodeRequest = {
-        agentCode: Agentcode,
-        FetchHierarchy: true,
-    }
+  const requestData: IAgentSearchByCodeRequest = {
+    agentCode: Agentcode,
+    FetchHierarchy: true,
+  };
 
-    const { data, isLoading, isError } = useQuery({
-        queryKey: ['auditLog', requestData], // object form
-        queryFn: () => agentService.AgentByCode(requestData), // object form
-        staleTime: 5 * 60 * 1000, // optional: cache for 5 minutes
-    })
-    const dynamicColumns = [
-        { header: 'Modified Date', accessor: 'modifiedDate' },
-        { header: 'Modified By', accessor: 'modifiedBy' },
-        { header: 'Change Description', accessor: 'changeDescription' },
-    ]
+  const { data, isLoading } = useQuery({
+    queryKey: ['auditLog', requestData],
+    queryFn: () => agentService.AgentByCode(requestData),
+    staleTime: 5 * 60 * 1000,
+  });
 
-    // Hardcoded temporary data
+  // Format date to dd-mm-yy hh:mm:ss
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date
+      .getFullYear()
+      .toString()
+      .slice(-2)} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
+      date.getSeconds()
+    )}`;
+  };
 
+  // Prepare formatted data
+  const formattedData =
+    data?.responseBody.agents[0].agentAuditTrail?.map((item) => ({
+      ...item,
+      modifiedDate: formatDateTime(item.modifiedDate),
+    })) || [];
 
+  const dynamicColumns = [
+    { header: 'Modified Date', accessor: 'modifiedDate' },
+    { header: 'Modified By', accessor: 'modifiedBy' },
+    { header: 'Change Description', accessor: 'changeDescription' },
+  ];
 
-    return (
-        <div className="bg-white p-10">
-            <DataTable
-                columns={dynamicColumns}
-                data={data?.responseBody.agents[0].agentAuditTrail || []}
-                loading={isLoading}
-            />
-        </div>
-    );
+  return (
+    <div className="bg-white p-10">
+      <DataTable columns={dynamicColumns} data={formattedData} loading={isLoading} />
+    </div>
+  );
 };
 
 export default AuditLog;
