@@ -32,8 +32,7 @@ const AuditLog = ({ Agentcode }) => {
             <DataTable
                 columns={dynamicColumns}
                 data={data?.responseBody.agents[0].agentAuditTrail || []}
-                loading={false}
-                noDataMessage={''}
+                loading={isLoading}
             />
         </div>
     );

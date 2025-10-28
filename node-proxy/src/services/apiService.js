@@ -28,6 +28,9 @@ const searchbycode = (data, headers = {}) => {
 const Agentbyid = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYID, data, { headers });
 };
+const AgentByCode = (data, headers = {}) => {
+  return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
+};
 
 module.exports = {
   login,
@@ -35,5 +38,6 @@ module.exports = {
   searchbycode,
   loadEncryptionConfig,
   getHRMChunks,
-  Agentbyid
+  Agentbyid,
+  AgentByCode
 };
