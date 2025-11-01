@@ -1,10 +1,8 @@
 import * as React from "react"
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-
-
-import { cn } from "@/lib/utils"
-import { IoCheckmarkDoneCircleOutline } from "react-icons/io5"
 import { BiCheck } from "react-icons/bi"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
+import { cn } from "@/lib/utils"
+
 
 function Checkbox({
   className,
