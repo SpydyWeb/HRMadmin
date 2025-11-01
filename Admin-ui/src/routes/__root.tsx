@@ -1,10 +1,10 @@
+import { useEffect } from 'react'
 import '../styles.css'
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-
   useLocation,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -45,7 +45,8 @@ function RootComponent() {
   const { token } = useAuth()
   const navigate = Route.useNavigate()
   const location = useLocation()
-  const encryptionReady = useEncryptionReady() 
+  const encryptionReady = useEncryptionReady()
+
   if (!encryptionReady) {
     return (
       <html lang="en">

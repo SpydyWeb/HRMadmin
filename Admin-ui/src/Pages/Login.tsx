@@ -1,16 +1,12 @@
 import { useState } from 'react'
-import { BiShield } from 'react-icons/bi'
+import {  BiShield } from 'react-icons/bi'
 import { useNavigate } from '@tanstack/react-router'
 import { useAppForm } from '@/components/form'
 import LoginForm from '@/components/login/LoginForm'
 import ForgotPasswordForm from '@/components/login/ForgotPasswordForm'
 import OtpVerificationForm from '@/components/login/OtpVerificationForm'
 import SuccessMessage from '@/components/login/SuccessMessage'
-import { auth } from '@/auth'
-import { UserNameSchema, loginSchema } from '@/schema/authSchema'
-import { showToast } from '@/components/ui/sonner'
-import { CommonConstants, LoginConstants } from '@/services/constant'
-import { NOTIFICATION_CONSTANTS, RoutePaths } from '@/utils/constant'
+import { UserNameSchema } from '@/schema/authSchema'
 
 type Step = 'login' | 'forgot-email' | 'otp' | 'success'
 
@@ -20,56 +16,7 @@ export default function Login() {
   const [otp, setOtp] = useState<string>('')
   const [countdown, setCountdown] = useState<number>(0)
 
-  const loginform = useAppForm({
-    defaultValues: {
-      username: '',
-      password: '',
-    },
-    validators: {
-      onChange: loginSchema,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        // navigate({ to: RoutePaths.SEARCH })
-        const response = await auth.login(value)
-        const { errorCode, errorMessage } = response.responseHeader
-        switch (errorCode) {
-          case CommonConstants.SUCCESS:
-            navigate({ to: RoutePaths.SEARCH })
-            break
-          case LoginConstants.INVALID_CREDENTIALS:
-            showToast(
-              NOTIFICATION_CONSTANTS.ERROR,
-              'Invalid username or password',
-            )
-            break
-          case LoginConstants.ACCOUNT_LOCKED:
-            showToast(
-              NOTIFICATION_CONSTANTS.ERROR,
-              'Your account is locked. Contact support.',
-            )
-            break
-          case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
-            showToast(
-              NOTIFICATION_CONSTANTS.WARNING,
-              'No active role assigned to your account',
-            )
-            break
-          default:
-            showToast(
-              NOTIFICATION_CONSTANTS.ERROR,
-              errorMessage || 'Unexpected error occurred',
-            )
-        }
-      } catch (err: any) {
-        showToast(
-          NOTIFICATION_CONSTANTS.ERROR,
-          'Login failed: ' + (err.message || 'Unknown error'),
-        )
-      }
-    },
-  })
-  
+
   const forgetform = useAppForm({
     defaultValues: {
       username: '',
@@ -113,78 +60,80 @@ export default function Login() {
     setCountdown(0)
   }
 
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 opacity-50"></div>
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-400 rounded-full opacity-10 animate-pulse"></div>
-        <div
-          className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500 rounded-full opacity-10 animate-pulse"
-          style={{ animationDelay: '2s' }}
-        ></div>
-      </div>
-      <div className="relative z-10 w-[30rem]">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg mb-4 shadow-lg animate-float">
-            <span className="text-white font-bold text-xl">HM</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            Hierarchy Management
-          </h1>
-          <p className="text-gray-600 flex items-center justify-center gap-2 text-sm">
-            <BiShield className="w-4 h-4 text-blue-500" />
-            Administrator Portal
-          </p>
+    <>
+   
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 opacity-50"></div>
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-400 rounded-full opacity-10 animate-pulse"></div>
+          <div
+            className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500 rounded-full opacity-10 animate-pulse"
+            style={{ animationDelay: '2s' }}
+          ></div>
         </div>
-        {currentStep === 'login' && (
-          <LoginForm
-            form={loginform}
-            onForgotPassword={handleForgotPassword}
-            onSubmit={loginform.handleSubmit}
-          />
-        )}
-        {currentStep === 'forgot-email' && (
-          <ForgotPasswordForm
-            form={forgetform}
-            onBack={handleBackToLogin}
-            onSubmit={forgetform.handleSubmit}
-          />
-        )}
-        {currentStep === 'otp' && (
-          <OtpVerificationForm
-            otp={otp}
-            countdown={countdown}
-            setOtp={setOtp}
-            onBack={() => setCurrentStep('forgot-email')}
-            onVerify={handleVerifyOTP}
-            onResend={forgetform.handleSubmit}
-          />
-        )}
-        {currentStep === 'success' && (
-          <SuccessMessage onBackToLogin={handleBackToLogin} />
-        )}
-        <div className="mt-6 pt-3 border-t border-gray-200">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm mb-2">
-              Secure access to organizational hierarchy
+        <div className="relative z-10 w-[30rem]">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg mb-4 shadow-lg animate-float">
+              <span className="text-white font-bold text-xl">HM</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">
+              Hierarchy Management
+            </h1>
+            <p className="text-gray-600 flex items-center justify-center gap-2 text-sm">
+              <BiShield className="w-4 h-4 text-blue-500" />
+              Administrator Portal
             </p>
-            <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                System Online
-              </span>
-              <span>•</span>
-              <span>Support: ext. 1234</span>
+          </div>
+          {currentStep === 'login' && (
+            <LoginForm
+              // onForgotPassword={handleForgotPassword}
+            />
+          )}
+          {currentStep === 'forgot-email' && (
+            <ForgotPasswordForm
+              form={forgetform}
+              onBack={handleBackToLogin}
+              onSubmit={forgetform.handleSubmit}
+            />
+          )}
+          {currentStep === 'otp' && (
+            <OtpVerificationForm
+              otp={otp}
+              countdown={countdown}
+              setOtp={setOtp}
+              onBack={() => setCurrentStep('forgot-email')}
+              onVerify={handleVerifyOTP}
+              onResend={forgetform.handleSubmit}
+            />
+          )}
+          {currentStep === 'success' && (
+            <SuccessMessage onBackToLogin={handleBackToLogin} />
+          )}
+          <div className="mt-6 pt-3 border-t border-gray-200">
+            <div className="text-center">
+              <p className="text-gray-500 text-sm mb-2">
+                Secure access to organizational hierarchy
+              </p>
+              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  System Online
+                </span>
+                <span>•</span>
+                <span>Support: ext. 1234</span>
+              </div>
             </div>
           </div>
-        </div>
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-xs">
-            © 2025 Hierarchy Management System. All rights reserved.
-          </p>
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-500 text-xs">
+              © 2025 Hierarchy Management System. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

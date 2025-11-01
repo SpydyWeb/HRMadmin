@@ -13,6 +13,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as NotFoundRouteImport } from './routes/$not-found'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
 import { Route as AuthSearchIndexRouteImport } from './routes/_auth/search/index'
 import { Route as AuthSearchAgentIdRouteImport } from './routes/_auth/search/$agentId'
@@ -39,6 +40,11 @@ const AuthRoute = AuthRouteImport.update({
 const NotFoundRoute = NotFoundRouteImport.update({
   id: '/$not-found',
   path: '/$not-found',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthTerminationRoute = AuthTerminationRouteImport.update({
@@ -98,6 +104,7 @@ const AuthDashboardCodeMovementBulkActionRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/$not-found': typeof NotFoundRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/$not-found'
     | '/login'
     | '/termination'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/$not-found'
     | '/login'
     | '/termination'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement'
   id:
     | '__root__'
+    | '/'
     | '/$not-found'
     | '/_auth'
     | '/login'
@@ -182,6 +194,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   NotFoundRoute: typeof NotFoundRoute
   AuthRoute: typeof AuthRouteWithChildren
   LoginLazyRoute: typeof LoginLazyRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/$not-found'
       fullPath: '/$not-found'
       preLoaderRoute: typeof NotFoundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/termination': {
@@ -305,6 +325,7 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   NotFoundRoute: NotFoundRoute,
   AuthRoute: AuthRouteWithChildren,
   LoginLazyRoute: LoginLazyRoute,
