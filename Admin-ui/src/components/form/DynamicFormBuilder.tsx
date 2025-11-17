@@ -15,11 +15,11 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 
-
 interface DynamicFormBuilderProps {
   config: any
   onSubmit: (data: Record<string, any>) => void
-  onFieldClick?: (fieldName: string,data?:Array<any>) => void
+  onFieldClick?: (fieldName: string, data?: Array<any>) => void
+  defaultValues?: Record<string, any>
 }
 const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   config,
@@ -29,11 +29,15 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const form = useForm({
-    defaultValues: config.fields.reduce((acc, field) => {
-      acc[field.name] =
-        field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
-      return acc
-    }, {}),
+    defaultValues: {
+      ...config.fields.reduce((acc, field) => {
+        acc[field.name] =
+          field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
+        return acc
+      }, {}),
+
+      ...(config.defaultValues || {}), // ⬅ Apply dynamic values
+    },
     onSubmit: async ({ value }) => {
       if (onSubmit) {
         setIsSubmitting(true)
@@ -74,7 +78,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {field.type !== 'checkbox'&&field.type !== 'link' && (
+              {field.type !== 'checkbox' && field.type !== 'link' && (
                 <Label htmlFor={field.name} className="text-sm font-medium">
                   {field.label}
                 </Label>
@@ -88,6 +92,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
@@ -99,6 +106,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
@@ -110,6 +120,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
@@ -121,6 +134,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
@@ -131,6 +147,8 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full min-h-24"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
                 />
               )}
 
@@ -138,6 +156,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 <Select
                   value={fieldApi.state.value}
                   onValueChange={handleChange}
+                  disabled={field.readOnly}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={field.placeholder} />
@@ -158,6 +177,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     id={field.name}
                     checked={fieldApi.state.value}
                     onCheckedChange={handleChange}
+                     disabled={field.readOnly}
                   />
                   <Label
                     htmlFor={field.name}
@@ -169,9 +189,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
               {field.type === 'link' && (
                 <span
-                  onClick={() =>
-                    onFieldClick(field.name)
-                  }
+                  onClick={() => onFieldClick(field.name)}
                   className={
                     field.className ||
                     'text-blue-600 hover:underline text-sm cursor-pointer'
@@ -222,7 +240,11 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               type={ele.type}
               variant={ele.variant || 'default'}
               size={ele.size || 'default'}
-              onClick={() => ele.type==="submit"? handleButtonClick(ele): onFieldClick(ele.name,ele.data)}
+              onClick={() =>
+                ele.type === 'submit'
+                  ? handleButtonClick(ele)
+                  : onFieldClick(ele.name, ele.data)
+              }
               className={ele.className}
               style={{
                 gridColumn: `span ${ele.colSpan || 1} / span ${ele.colSpan || 1}`,
