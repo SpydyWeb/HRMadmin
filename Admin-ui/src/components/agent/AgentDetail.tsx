@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { BiCreditCard, BiMapPin, BiTargetLock, BiUser } from 'react-icons/bi'
-import { FiTarget } from 'react-icons/fi'
 import { Card, CardContent } from '../ui/card'
-import DetailCard from './DetailCard'
+import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
-import { FloatedTextFeild } from '../form/floated-text-field'
-// import EditSwitch from './EditSwitch'
 import { Switch } from '@/components/ui/switch'
-import { FloatedSelectField } from '../form/dropdown-fields'
-import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import z from 'zod'
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
