@@ -13,6 +13,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
   console.log(agent);
+  console.log(agentForm);
 
 
 
