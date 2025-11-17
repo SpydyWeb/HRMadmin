@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import {  BiShield } from 'react-icons/bi'
+import { BiShield } from 'react-icons/bi'
 import { useNavigate } from '@tanstack/react-router'
 import { useAppForm } from '@/components/form'
 import LoginForm from '@/components/login/LoginForm'
@@ -15,7 +15,6 @@ export default function Login() {
   const [currentStep, setCurrentStep] = useState<Step>('login')
   const [otp, setOtp] = useState<string>('')
   const [countdown, setCountdown] = useState<number>(0)
-
 
   const forgetform = useAppForm({
     defaultValues: {
@@ -60,10 +59,8 @@ export default function Login() {
     setCountdown(0)
   }
 
-
   return (
     <>
-   
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-orange-50 opacity-50"></div>
@@ -88,12 +85,11 @@ export default function Login() {
           </div>
           {currentStep === 'login' && (
             <LoginForm
-              // onForgotPassword={handleForgotPassword}
+            onForgotPassword={handleForgotPassword}
             />
           )}
           {currentStep === 'forgot-email' && (
             <ForgotPasswordForm
-              form={forgetform}
               onBack={handleBackToLogin}
               onSubmit={forgetform.handleSubmit}
             />

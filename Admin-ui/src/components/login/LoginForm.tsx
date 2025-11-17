@@ -1,17 +1,16 @@
 import React from 'react'
 import { BiBuilding } from 'react-icons/bi'
+import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
+import { showToast } from '../ui/sonner'
 import { loginSchema } from '@/schema/authSchema'
 import { auth } from '@/auth'
 import { CommonConstants, LoginConstants } from '@/services/constant'
 import { NOTIFICATION_CONSTANTS, RoutePaths } from '@/utils/constant'
-import { useNavigate } from '@tanstack/react-router'
-import { showToast } from '../ui/sonner'
+import z from 'zod'
 
-
-
-const LoginForm: any = () => {
+const LoginForm: any = ({ onForgotPassword }) => {
   const navigate = useNavigate()
   const loginformConfig = {
     gridCols: 1,
@@ -51,52 +50,68 @@ const LoginForm: any = () => {
         placeholder: '',
         colSpan: 1,
       },
+      {
+        name: 'forgot-password',
+        label: 'Forgot Password?',
+        type: 'link',
+        placeholder: '',
+        colSpan: 1,
+      },
     ],
   }
-    const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
-       try {
-          // navigate({ to: RoutePaths.SEARCH })
-          const response = await auth.login(data)
-          const { errorCode, errorMessage } = response.responseHeader
-          switch (errorCode) {
-            case CommonConstants.SUCCESS:
-              navigate({ to: RoutePaths.SEARCH })
-              break
-            case LoginConstants.INVALID_CREDENTIALS:
-              showToast(
-                NOTIFICATION_CONSTANTS.ERROR,
-                'Invalid username or password',
-              )
-              break
-            case LoginConstants.ACCOUNT_LOCKED:
-              showToast(
-                NOTIFICATION_CONSTANTS.ERROR,
-                'Your account is locked. Contact support.',
-              )
-              break
-            case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
-              showToast(
-                NOTIFICATION_CONSTANTS.WARNING,
-                'No active role assigned to your account',
-              )
-              break
-            default:
-              showToast(
-                NOTIFICATION_CONSTANTS.ERROR,
-                errorMessage || 'Unexpected error occurred',
-              )
-          }
-        } catch (err: any) {
+  const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
+    try {
+      // navigate({ to: RoutePaths.SEARCH })
+      const response = await auth.login(data)
+      const { errorCode, errorMessage } = response.responseHeader
+      switch (errorCode) {
+        case CommonConstants.SUCCESS:
+          navigate({ to: RoutePaths.SEARCH })
+          break
+        case LoginConstants.INVALID_CREDENTIALS:
           showToast(
             NOTIFICATION_CONSTANTS.ERROR,
-            'Login failed: ' + (err.message || 'Unknown error'),
+            'Invalid username or password',
           )
-        }
+          break
+        case LoginConstants.ACCOUNT_LOCKED:
+          showToast(
+            NOTIFICATION_CONSTANTS.ERROR,
+            'Your account is locked. Contact support.',
+          )
+          break
+        case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
+          showToast(
+            NOTIFICATION_CONSTANTS.WARNING,
+            'No active role assigned to your account',
+          )
+          break
+        default:
+          showToast(
+            NOTIFICATION_CONSTANTS.ERROR,
+            errorMessage || 'Unexpected error occurred',
+          )
+      }
+    } catch (err: any) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        'Login failed: ' + (err.message || 'Unknown error'),
+      )
     }
+  }
+  const handleFieldClick = (type: string) => {
+    if (type === 'forgot-password') {
+      onForgotPassword()
+    }
+  }
   return (
     <Card className="animate-slide-up">
       <CardContent>
-        <DynamicFormBuilder config={loginformConfig} onSubmit={handleSubmit} />
+        <DynamicFormBuilder
+          config={loginformConfig}
+          onSubmit={handleSubmit}
+          onFieldClick={handleFieldClick}
+        />
       </CardContent>
     </Card>
   )

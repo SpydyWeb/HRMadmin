@@ -1,38 +1,54 @@
-import React from 'react';
-import { useForm } from '@tanstack/react-form';
-import { zodValidator } from '@tanstack/zod-form-adapter';
-import { FieldError } from './field-error';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import  Button  from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import React from 'react'
+import { useForm } from '@tanstack/react-form'
+import { zodValidator } from '@tanstack/zod-form-adapter'
+import { FieldError } from './field-error'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import Button from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 
 
-const DynamicFormBuilder = ({ config, onSubmit }) => {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
+interface DynamicFormBuilderProps {
+  config: any
+  onSubmit: (data: Record<string, any>) => void
+  onFieldClick?: (fieldName: string,data?:Array<any>) => void
+}
+const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
+  config,
+  onSubmit,
+  onFieldClick = () => {},
+}) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+
   const form = useForm({
     defaultValues: config.fields.reduce((acc, field) => {
-      acc[field.name] = field.type === 'checkbox' ? false : field.type === 'number' ? 0 : '';
-      return acc;
+      acc[field.name] =
+        field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
+      return acc
     }, {}),
     onSubmit: async ({ value }) => {
       if (onSubmit) {
-        setIsSubmitting(true);
+        setIsSubmitting(true)
         try {
-          await onSubmit(value);
+          await onSubmit(value)
         } finally {
-          setIsSubmitting(false);
+          setIsSubmitting(false)
         }
       }
     },
     validatorAdapter: zodValidator,
-  });
+  })
 
   const renderField = (field) => {
-    const fieldSchema = config.schema.shape[field.name];
+    const fieldSchema = config.schema.shape[field.name]
 
     return (
       <form.Field
@@ -45,23 +61,25 @@ const DynamicFormBuilder = ({ config, onSubmit }) => {
         {(fieldApi) => {
           const handleChange = (value) => {
             if (field.type === 'number') {
-              fieldApi.handleChange(value === '' ? 0 : Number(value));
+              fieldApi.handleChange(value === '' ? 0 : Number(value))
             } else {
-              fieldApi.handleChange(value);
+              fieldApi.handleChange(value)
             }
-          };
+          }
 
           return (
-            <div 
+            <div
               className="space-y-2"
-              style={{ gridColumn: `span ${field.colSpan} / span ${field.colSpan}` }}
+              style={{
+                gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
+              }}
             >
-              {field.type !== 'checkbox' && (
+              {field.type !== 'checkbox'&&field.type !== 'link' && (
                 <Label htmlFor={field.name} className="text-sm font-medium">
                   {field.label}
                 </Label>
               )}
-              
+
               {field.type === 'text' && (
                 <Input
                   id={field.name}
@@ -149,60 +167,78 @@ const DynamicFormBuilder = ({ config, onSubmit }) => {
                   </Label>
                 </div>
               )}
-
+              {field.type === 'link' && (
+                <span
+                  onClick={() =>
+                    onFieldClick(field.name)
+                  }
+                  className={
+                    field.className ||
+                    'text-blue-600 hover:underline text-sm cursor-pointer'
+                  }
+                >
+                  {field.label}
+                </span>
+              )}
               {fieldApi.state.meta.errors.length > 0 && (
                 <FieldError field={fieldApi.state.meta} />
               )}
             </div>
-          );
+          )
         }}
       </form.Field>
-    );
-  };
+    )
+  }
 
   const handleButtonClick = async (button) => {
     if (button.type === 'submit') {
-      await form.handleSubmit();
+      await form.handleSubmit()
     } else if (button.type === 'reset') {
-      form.reset();
+      form.reset()
     }
-  };
+  }
 
   return (
     <>
-      <div 
+      <div
         className="grid gap-6 mb-6"
-        style={{ gridTemplateColumns: `repeat(${config.gridCols}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${config.gridCols}, minmax(0, 1fr))`,
+        }}
       >
         {config.fields.map(renderField)}
       </div>
 
       {config.buttons && (
-        <div 
+        <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${config.buttons?.gridCols || 2}, minmax(0, 1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${config.buttons?.gridCols || 2}, minmax(0, 1fr))`,
+          }}
         >
-          {config.buttons?.items?.map((button, index) => (
+          {config.buttons?.items?.map((ele: any, index: number) => (
             <Button
               key={index}
-              type="button"
-              variant={button.variant || 'default'}
-              size={button.size || 'default'}
-              onClick={() => handleButtonClick(button)}
-              className={button.className}
-              style={{ gridColumn: `span ${button.colSpan || 1} / span ${button.colSpan || 1}` }}
-              icon={button.icon}
+              type={ele.type}
+              variant={ele.variant || 'default'}
+              size={ele.size || 'default'}
+              onClick={() => ele.type==="submit"? handleButtonClick(ele): onFieldClick(ele.name,ele.data)}
+              className={ele.className}
+              style={{
+                gridColumn: `span ${ele.colSpan || 1} / span ${ele.colSpan || 1}`,
+              }}
+              icon={ele.icon}
               disabled={isSubmitting}
-              isLoading={isSubmitting && button.type === 'submit'}
-              loadingText={button.loadingText || 'Processing...'}
+              isLoading={isSubmitting && ele.type === 'submit'}
+              loadingText={ele.loadingText || 'Processing...'}
             >
-              {button.label}
+              {ele.label}
             </Button>
           ))}
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default DynamicFormBuilder;
+export default DynamicFormBuilder

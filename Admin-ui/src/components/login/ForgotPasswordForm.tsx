@@ -1,21 +1,60 @@
 import React from 'react'
 import { BiMailSend } from 'react-icons/bi'
 import { BsArrowLeft } from 'react-icons/bs'
+import { Card, CardContent } from '../ui/card'
 import Button from '@/components/ui/button'
 import { TextFeild } from '@/components/form/text-field'
-import { Card, CardContent } from '../ui/card'
+import { UserNameSchema } from '@/schema/authSchema'
+import DynamicFormBuilder from '../form/DynamicFormBuilder'
+
 
 interface ForgotPasswordFormProps {
-  form: any
   onBack: () => void
   onSubmit: () => void
 }
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  form,
   onBack,
   onSubmit,
 }) => {
+   const formConfig = {
+      gridCols: 1,
+      schema: UserNameSchema,
+      buttons: {
+        gridCols: 2,
+        items: [
+          {
+            label: 'Back',
+            type: 'button',
+            variant: 'default',
+            colSpan: 1,
+            icon: <BsArrowLeft className="w-5 h-5" />,
+            size: 'lg',
+          }, {
+            label: 'Send Code',
+            type: 'submit',
+            variant: 'orange',
+            colSpan: 1,
+            icon: <BiMailSend className="w-5 h-5" />,
+            size: 'lg',
+          },
+        ],
+      },
+      fields: [
+        {
+          name: 'username',
+          label: 'User Name',
+          type: 'text',
+          placeholder: 'Enter user name',
+          colSpan: 1,
+        },
+      ],
+    }
+      const handleFieldClick = (type: string) => {
+    if (type === 'Back') {
+      onBack()
+    }
+  }
   return (
     <Card className=" animate-slide-up">
       <CardContent>
@@ -30,7 +69,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
             Enter your email address and we'll send you a verification code
           </p>
         </div>
-        <form.AppForm>
+          <DynamicFormBuilder config={formConfig} onSubmit={onSubmit}   onFieldClick={handleFieldClick}/>
+        {/* <form.AppForm>
           <div className="space-y-4">
             <form.AppField name="username">
               {({
@@ -69,7 +109,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               </form.Button>
             </div>
           </div>
-        </form.AppForm>
+        </form.AppForm> */}
       </CardContent>
     </Card>
   )
