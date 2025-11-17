@@ -63,6 +63,9 @@ const Agent = () => {
           sortColumn: '',
           sortDirection: 'asc',
         })
+//         console.log("res",res);
+// console.log("resagent keys:", Object.keys(res || {}));
+// console.log("resagent.responseBody", res?.responseBody);
         if (!cancelled) setAgentData(res)
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? 'Failed to fetch agent')
@@ -81,6 +84,8 @@ const Agent = () => {
   if (error) return <div className="text-red-500">Error: {error}</div>
 
   const firstAgent = agentData?.responseBody?.agents?.[0]
+  // console.log("agentData", agentData)
+  // console.log("firstAgent", firstAgent)
 
   return (
     <>

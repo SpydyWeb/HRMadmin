@@ -11,24 +11,29 @@ const getHRMChunks = () => {
   };
   return token;
 };
+
 const loadEncryptionConfig = () => {
   const enabled = false;
   setEncryptionEnabled(enabled);
   return enabled;
 };
 const login = (data) => {
+  console.log("data", data);
   return apiClient.post(APIRoutes.LOGIN, data);
+
 };
 const search = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTSEARCH, data, { headers });
 };
 const searchbycode = (data, headers = {}) => {
+  console.log("data", data);
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
 const Agentbyid = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYID, data, { headers });
 };
 const AgentByCode = (data, headers = {}) => {
+  console.log("data1", data);
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
 

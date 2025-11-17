@@ -26,11 +26,13 @@ const request = async (method, url, data, config = {}) => {
       headers,
       ...config,
     });
+    console.log("url", response);
 
     // Decrypt response if `data` field exists
     if (response.data && response.data.data) {
       return JSON.parse(response.data.data);
     }
+    console.log("url", response);
 
     return response.data;
   } catch (error) {

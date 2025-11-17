@@ -56,11 +56,26 @@ export interface IAgent {
   panNumber: string;
   email: string | null;
   mobileNo: string | null;
-   supervisors?: Array<IAgent> | null; 
+  supervisors?: Array<IAgent> | null; 
   reportees?: Array<IAgent>| null;  
   agentAuditTrail?: Array<IAgentAuditTrail>;     
   peopleHeirarchy?: Array<IPeopleHierarchy> | null;
   total_count?: number;
+  title: string | null;
+  father_Husband_Nm?: string | null;
+  employeeCode?: string | null;
+  applicationDocketNo?: string | null;
+  candidateType?: string | null;
+  startDate?: string | Date;
+  appointmentDate?: string | Date;
+  incorporationDate?: string | Date;
+  agentTypeCategory?: string;
+  agentClassification?: string;
+  cmsAgentType?: string;
+  channel_Name?: string;
+  sub_Channel?: string;
+  sec206abFlag?: boolean;
+  panAadharLinkFlag?: Boolean;
 }
 export interface IAgentAuditTrail{
    agentCode : number;
@@ -73,6 +88,7 @@ export interface IAgentAuditTrail{
    modifiedDate:string;
    changeDescription:string;
 }
+
 export interface IPeopleHierarchy {
   agentId: number;
   agentCode: string | null;

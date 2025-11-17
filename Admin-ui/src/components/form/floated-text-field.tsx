@@ -44,37 +44,58 @@ export const FloatedTextFeild = ({
 
   const currentValue = field ? field.state.value : localValue
   const currentName = field ? field.name : name
-  const hasValue = currentValue && currentValue.length > 0
+  // const hasValue = currentValue && currentValue.length > 0
+  const hasValue =
+    currentValue !== undefined &&
+    currentValue !== null &&
+    String(currentValue).trim() !== ''
+
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full pt-3">
       {/* Input */}
+
       <Input
         type={type}
         id={currentName}
         name={currentName}
         value={currentValue}
-        placeholder={placeholder}
+        placeholder=" "
         onChange={(e) => handleChange(e.target.value)}
         onBlur={field?.handleBlur}
         readOnly={readOnly}
-        aria-invalid={field?.state.meta?.errors?.length > 0 ? 'true' : 'false'}
-        className={`peer block rounded-md border border-gray-300 bg-transparent px-3 pt-7 pb-4 mr-8 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${readOnly ? 'bg-gray-100 cursor-not-allowed' : ''
-          }`} />
+        className={`
+    peer w-full border-0 border-b-2 rounded-none shadow-none
+    px-0 pb-2 pt-6 text-orange-700 bg-transparent
+    focus:outline-none focus:ring-0 
+    focus:border-orange-500
+    ${readOnly ? "cursor-not-allowed text-orange-400" : "border-gray-300"}
+  `}
+      />
 
       {/* Floating Label */}
+
       <label
         htmlFor={currentName}
-        className={`absolute left-3 text-gray-500 transition-all duration-200
-        ${hasValue
-            ? 'top-0.5 text-sm text-blue-600 font-medium' // ⬅️ bigger blue label
-            : 'top-2.5 text-gray-400 text-base'
+        // className={`
+        //   absolute left-0 text-black-500 transition-all duration-200 pointer-events-none
+        //   ${hasValue
+        //     ? "top-0 text-xs text-black-600"
+        //     : "top-4 text-sm"
+        //   }
+        //   peer-focus:top-0 peer-focus:text-xs peer-focus:text-orange-600
+        // `}
+        className={`
+    absolute left-0 transition-all duration-200 pointer-events-none
+    ${hasValue
+            ? "top-0 text-xs text-black-600"
+            : "top-4 text-sm text-gray-600"
           }
-        peer-focus:top-0.5 peer-focus:text-sm peer-focus:text-blue-600 peer-focus:font-medium pb-4`}
+    peer-focus:top-0 peer-focus:text-xs peer-focus:text-black-600
+  `}
       >
         {label}
       </label>
-
       {field && <FieldError field={field.state.meta} />}
     </div>
   )
