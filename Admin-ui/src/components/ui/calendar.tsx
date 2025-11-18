@@ -5,9 +5,8 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
-
 import { cn } from "@/lib/utils"
-import Button from "@/components/ui/button"
+// import Button from "@/components/ui/button"
 
 function Calendar({
   className,
@@ -46,11 +45,11 @@ function Calendar({
 
         // 🔥 now using your Button styles directly
         button_previous: cn(
-          "size-(--cell-size) p-0 select-none",
+          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
           defaultClassNames.button_previous
         ),
         button_next: cn(
-          "size-(--cell-size) p-0 select-none",
+          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
           defaultClassNames.button_next
         ),
 

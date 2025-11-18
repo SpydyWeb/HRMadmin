@@ -2,10 +2,8 @@ import React from 'react'
 import { BiMailSend } from 'react-icons/bi'
 import { BsArrowLeft } from 'react-icons/bs'
 import { Card, CardContent } from '../ui/card'
-import Button from '@/components/ui/button'
-import { TextFeild } from '@/components/form/text-field'
-import { UserNameSchema } from '@/schema/authSchema'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
+import { UserNameSchema } from '@/schema/authSchema'
 
 
 interface ForgotPasswordFormProps {
@@ -70,46 +68,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           </p>
         </div>
           <DynamicFormBuilder config={formConfig} onSubmit={onSubmit}   onFieldClick={handleFieldClick}/>
-        {/* <form.AppForm>
-          <div className="space-y-4">
-            <form.AppField name="username">
-              {({
-                value,
-                onChange,
-              }: {
-                value: string
-                onChange: (v: string) => void
-              }) => (
-                <TextFeild
-                  label="User name"
-                  value={value}
-                  onChange={onChange}
-                />
-              )}
-            </form.AppField>
-
-            <div className="flex justify-between gap-3">
-              <Button
-                variant="default"
-                type="button"
-                onClick={onBack}
-                size="lg"
-              >
-                <BsArrowLeft className="w-4 h-4" />
-                Back
-              </Button>
-              <form.Button
-                onClick={onSubmit}
-                className="w-full"
-                size="lg"
-                variant="orange"
-                icon={<BiMailSend className="w-5 h-5" />}
-              >
-                Send Code
-              </form.Button>
-            </div>
-          </div>
-        </form.AppForm> */}
       </CardContent>
     </Card>
   )

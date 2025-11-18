@@ -14,12 +14,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Calendar } from '../ui/calendar'
+import { format } from 'date-fns'
+import { DatePicker } from '../ui/date-picker'
+import { TimePicker } from '../ui/time-picker'
+import { DateTimePicker } from '../ui/date-timepicker'
 
 interface DynamicFormBuilderProps {
   config: any
   onSubmit: (data: Record<string, any>) => void
-  onFieldClick?: (fieldName: string,data?:Array<any>) => void
+  onFieldClick?: (fieldName: string, data?: Array<any>) => void
+  defaultValues?: Record<string, any>
 }
 const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   config,
@@ -29,11 +35,15 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const form = useForm({
-    defaultValues: config.fields.reduce((acc, field) => {
-      acc[field.name] =
-        field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
-      return acc
-    }, {}),
+    defaultValues: {
+      ...config.fields.reduce((acc, field) => {
+        acc[field.name] =
+          field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
+        return acc
+      }, {}),
+
+      ...(config.defaultValues || {}), // ⬅ Apply dynamic values
+    },
     onSubmit: async ({ value }) => {
       if (onSubmit) {
         setIsSubmitting(true)
@@ -74,53 +84,27 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {field.type !== 'checkbox'&&field.type !== 'link' && (
+              {field.type !== 'checkbox' && field.type !== 'link' && (
                 <Label htmlFor={field.name} className="text-sm font-medium">
                   {field.label}
                 </Label>
               )}
-
-              {field.type === 'text' && (
+              {['text', 'email', 'password', 'number'].includes(field.type) && (
                 <Input
                   id={field.name}
-                  type="text"
+                  type={field.type}
                   placeholder={field.placeholder}
                   value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                />
-              )}
-
-              {field.type === 'email' && (
-                <Input
-                  id={field.name}
-                  type="email"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                />
-              )}
-
-              {field.type === 'password' && (
-                <Input
-                  id={field.name}
-                  type="password"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                />
-              )}
-
-              {field.type === 'number' && (
-                <Input
-                  id={field.name}
-                  type="number"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
+                  onChange={(e) =>
+                    fieldApi.handleChange(
+                      field.type === 'number'
+                        ? Number(e.target.value)
+                        : e.target.value,
+                    )
+                  }
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
@@ -131,6 +115,8 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
                   className="w-full min-h-24"
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
                 />
               )}
 
@@ -138,6 +124,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 <Select
                   value={fieldApi.state.value}
                   onValueChange={handleChange}
+                  disabled={field.readOnly}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={field.placeholder} />
@@ -158,6 +145,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     id={field.name}
                     checked={fieldApi.state.value}
                     onCheckedChange={handleChange}
+                    disabled={field.readOnly}
                   />
                   <Label
                     htmlFor={field.name}
@@ -167,11 +155,33 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   </Label>
                 </div>
               )}
+              {/* DATE PICKER */}
+              {field.type === 'date' && (
+                <DatePicker
+                  value={fieldApi.state.value}
+                  onChange={(d) => fieldApi.handleChange(d)}
+                />
+              )}
+
+              {/* TIME PICKER */}
+              {field.type === 'time' && (
+                <TimePicker
+                  value={fieldApi.state.value}
+                  onChange={(t) => fieldApi.handleChange(t)}
+                />
+              )}
+
+              {/* DATE + TIME PICKER */}
+              {field.type === 'datetime' && (
+                <DateTimePicker
+                  value={fieldApi.state.value}
+                  onChange={(v) => fieldApi.handleChange(v)}
+                />
+              )}
+
               {field.type === 'link' && (
                 <span
-                  onClick={() =>
-                    onFieldClick(field.name)
-                  }
+                  onClick={() => onFieldClick(field.name)}
                   className={
                     field.className ||
                     'text-blue-600 hover:underline text-sm cursor-pointer'
@@ -222,7 +232,11 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               type={ele.type}
               variant={ele.variant || 'default'}
               size={ele.size || 'default'}
-              onClick={() => ele.type==="submit"? handleButtonClick(ele): onFieldClick(ele.name,ele.data)}
+              onClick={() =>
+                ele.type === 'submit'
+                  ? handleButtonClick(ele)
+                  : onFieldClick(ele.name, ele.data)
+              }
               className={ele.className}
               style={{
                 gridColumn: `span ${ele.colSpan || 1} / span ${ele.colSpan || 1}`,
