@@ -19,7 +19,7 @@ type ButtonProps = {
     | 'outline-blue'
     | 'ghost'
   size?: 'sm' | 'md' | 'lg'
-  onClick?: () => void
+onClick?: React.MouseEventHandler<HTMLButtonElement>
   className?: string
   loadingText?: string
   icon?: React.ReactNode
@@ -27,6 +27,7 @@ type ButtonProps = {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   isLoading?: boolean // ✅ for manual loading state without form
+  ref?: React.Ref<HTMLButtonElement>
 }
 
 export default function Button({

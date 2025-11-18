@@ -1,31 +1,26 @@
-import React, { useEffect, useState } from 'react'
-import { BiCreditCard, BiMapPin, BiTargetLock, BiUser } from 'react-icons/bi'
-import { FiTarget } from 'react-icons/fi'
+import React, { useState } from 'react'
+import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
-import DetailCard from './DetailCard'
 import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { FloatedTextFeild } from '../form/floated-text-field'
-// import EditSwitch from './EditSwitch'
 import { Switch } from "@/components/ui/switch"
 import { FloatedSelectField } from '../form/dropdown-fields'
+import { FloatedDateTimeField } from '../form/field-datetime-picker'
 
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
-  const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
+  const [isEdit, setIsEdit] = useState(false) 
 
-  // console.log("agent",agent);
+  console.log("agent",agent);
 
+  const genderOptions = ["Male", "Female", "Other"];
+  const genderDropdown = genderOptions.map(g => ({
+    label: g,
+    value: g
+  }));
 
-const genderOptions = ["Male", "Female", "Other"];
-const genderDropdown = genderOptions.map(g => ({
-  label: g,
-  value: g
-}));
-
-
-
-if (!agent) return null;
+  if (!agent) return null;
 
   const agentForm = useAppForm({
     defaultValues: {
@@ -45,18 +40,18 @@ if (!agent) return null;
       PanAadharLinkFlag: agent.panAadharLinkFlag,
       sec206abFlag: agent.sec206abFlag,
       preferredLanguage: agent.preferredLanguage,
-      employeeCode:agent.employeeCode,
-      FatherHusbandNm:agent.father_Husband_Nm,
-      applicationDocketNo:agent.applicationDocketNo,
-      candidateType:agent.candidateType,
-      startDate:agent.startDate,
-      appointmentDate:agent.appointmentDate,
-      incorporationDate:agent.incorporationDate,
-      agentTypeCategory:agent.agentTypeCategory,
-      agentClassification:agent.agentClassification,
-      cmsAgentType:agent.cmsAgentType,
-      channel_Name:agent.channel_Name,
-      sub_Channel:agent.sub_Channel,
+      employeeCode: agent.employeeCode,
+      FatherHusbandNm: agent.father_Husband_Nm,
+      applicationDocketNo: agent.applicationDocketNo,
+      candidateType: agent.candidateType,
+      startDate: agent.startDate,
+      appointmentDate: agent.appointmentDate,
+      incorporationDate: agent.incorporationDate,
+      agentTypeCategory: agent.agentTypeCategory,
+      agentClassification: agent.agentClassification,
+      cmsAgentType: agent.cmsAgentType,
+      channel_Name: agent.channel_Name,
+      sub_Channel: agent.sub_Channel,
 
     },
     onSubmit: async ({ value }) => {
@@ -65,17 +60,7 @@ if (!agent) return null;
   })
 
 
-
-
-//   console.log("Date values:", {
-//   startDate: agent.startDate,
-//   appointmentDate: agent.appointmentDate,
-//   incorporationDate: agent.incorporationDate
-// });
-// console.log("date", startDate)
-
   const f = agentForm as any;
-
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -119,7 +104,7 @@ if (!agent) return null;
             </CardContent>{' '}
           </Card>
 
-          <div className='absolute right-20 top-82'>            
+          <div className='absolute right-20 top-82'>
             <div className="flex items-center gap-3 pr-5">
               {/* Label before the switch */}
               <span className="font-medium text-gray-700">Edit</span>
@@ -157,7 +142,7 @@ if (!agent) return null;
                       />
                     )}
                   </f.AppField>
-               
+
 
                   <f.AppField name="agentFirstName">
                     {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
@@ -209,34 +194,45 @@ if (!agent) return null;
                         onChange={onChange}
                         readOnly={!isEdit}
                         options={genderDropdown}
-                        
                       />
                     )}
                   </f.AppField>
-                
-
                   <f.AppField name="PanAadharLinkFlag">
                     {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Pan Aadhar Link Flag"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
+                       <div className="flex items-center gap-3 mt-3">
+      <label className="text-xs text-black-500">Pan–Aadhar Linked</label>
+
+      <Switch
+        checked={Boolean(value)}
+        onCheckedChange={(v) => onChange(v)}
+        disabled={!isEdit}
+        className="data-[state=checked]:bg-orange-500 h-[1rem] w-10"
+      />
+
+      <span className="text-xs text-orange-500">
+        {value ? "Yes" : "No"}
+      </span>
+    </div>
                     )}
                   </f.AppField>
                   <f.AppField name="sec206abFlag">
                     {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Sec 206ab Flag"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
+                      <div className="flex items-center gap-3 mt-3">
+      <label className="text-xs text-black-500">Sec 206ab Flag</label>
+
+      <Switch
+        checked={Boolean(value)}
+        onCheckedChange={(v) => onChange(v)}
+        disabled={!isEdit}
+        className="data-[state=checked]:bg-orange-500 h-[1rem] w-10"
+      />
+
+      <span className="text-xs text-orange-500">
+        {value ? "Yes" : "No"}
+      </span>
+    </div>
                     )}
                   </f.AppField>
-
-          
 
                   {/* Repeat for other fields */}
                 </div>
@@ -245,7 +241,7 @@ if (!agent) return null;
                   <agentForm.Button
                     onClick={agentForm.handleSubmit}
                     className="mt-4"
-                    size="lg"
+                    size="md"
                     variant="orange"
                   >
                     Save Changes
@@ -254,230 +250,209 @@ if (!agent) return null;
               </f.AppForm>
             </CardContent>
           </Card>
-      
+
         </div>
 
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
           Employment Details
         </h2>
 
-         <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
+        <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
+          <CardContent>
+            <f.AppForm>
+              <div className="grid grid-cols-3 gap-6 w-full mt-4">
 
-                  <f.AppField name="agentCode">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Code"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
+                <f.AppField name="agentCode">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Agent Code"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                  <f.AppField name="employeeCode">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Employee Code"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="agentID">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Id"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="applicationDocketNo">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Application Docket No"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="agentType">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Type"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="candidateType">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Candidate Type"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
+                <f.AppField name="employeeCode">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Employee Code"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="agentID">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Agent Id"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="applicationDocketNo">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Application Docket No"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="agentType">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Agent Type"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="candidateType">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Candidate Type"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                  {/* <f.AppField name="startDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Start Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField> */}
-                  <f.AppField name="startDate">
-  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-    console.log("AppField → startDate value from form:", value);
-    return (
-      <FloatedTextFeild
-        label="Start Date"
-        value={value}
-        onChange={onChange}
-        readOnly={!isEdit}
-      />
-    );
-  }}
-</f.AppField>
 
-                  <f.AppField name="appointmentDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Appointment Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="incorporationDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Incorpation Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="agentTypeCategory">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Type Category"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
+                <f.AppField name="startDate">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
 
-                  <f.AppField name="agentClassification">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Classification"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                   {/* <f.AppField name="apiResponseDescription">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Create/Update Agent API Response Description"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>  */}
+                    <FloatedDateTimeField
+                      label="Start Date"
+                      value={value || ''}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                  <f.AppField name="cmsAgentType">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="CMS Agent Type"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}                        
-                      />
-                    )}
-                  </f.AppField>
+                <f.AppField name="appointmentDate">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedDateTimeField
+                      label="Appointment Date"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="incorporationDate">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedDateTimeField
+                      label="Incorpation Date"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="agentTypeCategory">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Agent Type Category"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                  {/* Repeat for other fields */}
-                </div>
+                <f.AppField name="agentClassification">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Agent Classification"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                {isEdit && (
-                  <agentForm.Button
-                    onClick={agentForm.handleSubmit}
-                    className="mt-4"
-                    size="lg"
-                    variant="orange"
-                  >
-                    Save Changes
-                  </agentForm.Button>
-                )}
-              </f.AppForm>
-            </CardContent>
-          </Card>
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
+                <f.AppField name="cmsAgentType">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="CMS Agent Type"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+
+                {/* Repeat for other fields */}
+              </div>
+
+              {/* {isEdit && (
+                <agentForm.Button
+                  onClick={agentForm.handleSubmit}
+                  className="mt-4"
+                  size="md"
+                  variant="orange"
+                >
+                  Save Changes
+                </agentForm.Button>
+              )} */}
+            </f.AppForm>
+          </CardContent>
+        </Card>
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
           Channel
         </h2>
 
-         <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
+        <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
+          <CardContent>
+            <f.AppForm>
+              <div className="grid grid-cols-3 gap-6 w-full mt-4">
 
-                  <f.AppField name="channel_Name">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Channel Name"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="sub_Channel">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Sub Channel"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-     
+                <f.AppField name="channel_Name">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Channel Name"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
+                <f.AppField name="sub_Channel">
+                  {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+                    <FloatedTextFeild
+                      label="Sub Channel"
+                      value={value}
+                      onChange={onChange}
+                      readOnly={!isEdit}
+                    />
+                  )}
+                </f.AppField>
 
-                  {/* Repeat for other fields */}
-                </div>
 
-                {isEdit && (
-                  <agentForm.Button
-                    onClick={agentForm.handleSubmit}
-                    className="mt-4"
-                    size="lg"
-                    variant="orange"
-                  >
-                    Save Changes
-                  </agentForm.Button>
-                )}
-              </f.AppForm>
-            </CardContent>
-          </Card>
+                {/* Repeat for other fields */}
+              </div>
+
+              {/* {isEdit && (
+                <agentForm.Button
+                  onClick={agentForm.handleSubmit}
+                  className="mt-4"
+                  size="md"
+                  variant="orange"
+                >
+                  Save Changes
+                </agentForm.Button>
+              )} */}
+            </f.AppForm>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

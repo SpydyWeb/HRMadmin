@@ -1,16 +1,14 @@
-"use client"
+import * as React from "react";
+import { ChevronDownIcon } from "lucide-react";
 
-import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
-
-import Button  from "@/components/ui/button"
-import {Calendar}  from "@/components/ui/calendar"
-import { Label } from "@/components/ui/label"
+import Button from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
 import {
   Select,
@@ -18,28 +16,40 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-export function DateTimePicker({ value, onChange }: {
-  value?: Date
-  onChange?: (value: Date | undefined) => void
+import { useLocalizedDate } from "@/utils/date";
+
+export function DateTimePicker({
+  value,
+  onChange,
+}: {
+  value?: Date;
+  onChange?: (value: Date | undefined) => void;
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [date, setDate] = React.useState<Date | undefined>(value)
-  const [time, setTime] = React.useState<string>("")
+  const [open, setOpen] = React.useState(false);
+  const [date, setDate] = React.useState<Date | undefined>(value);
+  const [time, setTime] = React.useState("");
 
-  // combine date + time into final Date object
+  const { formatDate, formatTime } = useLocalizedDate();
+
+  // Combine date + time
   React.useEffect(() => {
-    if (!date || !time) return
+    if (!date || !time) return;
 
-    const [h, m] = time.split(":")
-    const finalDate = new Date(date)
-    finalDate.setHours(Number(h))
-    finalDate.setMinutes(Number(m))
-    finalDate.setSeconds(0)
+    const [h, m] = time.split(":");
+    const final = new Date(date);
+    final.setHours(Number(h));
+    final.setMinutes(Number(m));
+    final.setSeconds(0);
 
-    onChange?.(finalDate)
-  }, [date, time])
+    onChange?.(final);
+  }, [date, time]);
+
+  const displayValue =
+    date && time
+      ? `${formatDate(date)} ${formatTime(date)}`
+      : "Select date & time";
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -47,34 +57,25 @@ export function DateTimePicker({ value, onChange }: {
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-56 justify-between font-normal"
-          >
-            {date && time
-              ? `${date.toLocaleDateString()} ${time}`
-              : "Select date & time"}
+          <Button variant="outline" className="w-56 justify-between font-normal">
+            {displayValue}
             <ChevronDownIcon className="ml-2" />
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent
-          className="w-auto p-3 flex gap-4"
-          align="start"
-        >
-          {/* CALENDAR */}
+        <PopoverContent className="w-auto p-3 flex gap-4" align="start">
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(d) => setDate(d)}
+            onSelect={(d) => setDate(d || undefined)}
             captionLayout="dropdown"
           />
 
-          {/* TIME SELECT */}
+          {/* TIME */}
           <div className="flex flex-col gap-2 w-32">
             <Label className="text-xs px-1">Time</Label>
 
-            <Select onValueChange={(val) => setTime(val)}>
+            <Select onValueChange={setTime}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -91,18 +92,15 @@ export function DateTimePicker({ value, onChange }: {
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }
 
-// helper → generates 24h time list (HH:MM)
 function generateTimes() {
-  const result: string[] = []
+  const result: string[] = [];
   for (let h = 0; h < 24; h++) {
     for (let m = 0; m < 60; m += 30) {
-      const hh = h.toString().padStart(2, "0")
-      const mm = m.toString().padStart(2, "0")
-      result.push(`${hh}:${mm}`)
+      result.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
     }
   }
-  return result
+  return result;
 }

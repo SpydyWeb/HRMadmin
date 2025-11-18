@@ -30,9 +30,11 @@ export const FloatedTextFeild = ({
 
   const [localValue, setLocalValue] = useState(value ?? '')
 
+
   useEffect(() => {
     if (value !== undefined) setLocalValue(value)
   }, [value])
+
 
   const handleChange = (val: string) => {
     if (field) field.handleChange(val)
@@ -65,7 +67,7 @@ export const FloatedTextFeild = ({
         onBlur={field?.handleBlur}
         readOnly={readOnly}
         className={`
-    peer w-full border-0 border-b-2 rounded-none shadow-none
+    peer w-full border-0 border-b-1 rounded-none shadow-none
     px-0 pb-2 pt-6 text-orange-500 bg-transparent
     focus:outline-none focus:ring-0 
     focus:border-orange-500

@@ -66,9 +66,9 @@ export interface IAgent {
   employeeCode?: string | null;
   applicationDocketNo?: string | null;
   candidateType?: string | null;
-  startDate?: string | Date;
-  appointmentDate?: string | Date;
-  incorporationDate?: string | Date;
+  startDate?: string;
+  appointmentDate?: string;
+  incorporationDate?: string;
   agentTypeCategory?: string;
   agentClassification?: string;
   cmsAgentType?: string;

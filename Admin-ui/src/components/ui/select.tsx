@@ -105,7 +105,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "hover:!bg-[var(--brand-blue)]/30 hover:!text-[var(--brand-blue)] focus:!bg-[var(--brand-blue)]/30 focus:text-[var(--brand-blue)] [&_svg:not([class*='text-'])]:text-neutral-500 relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 dark:focus:bg-neutral-800 dark:focus:text-neutral-50 dark:[&_svg:not([class*='text-'])]:text-neutral-400",
+        "hover:!bg-[var(--brand-orange)]/30 hover:!text-[var(--brand-orange)] focus:!bg-[var(--brand-orange)]/30 focus:text-[var(--brand-orange)] [&_svg:not([class*='text-'])]:text-neutral-500 relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 dark:focus:bg-neutral-800 dark:focus:text-neutral-50 dark:[&_svg:not([class*='text-'])]:text-neutral-400",
         className
       )}
       {...props}

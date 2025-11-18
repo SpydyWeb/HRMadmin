@@ -63,7 +63,7 @@ export const FloatedSelectField = ({
         <SelectTrigger
           id={currentName}
           className={`
-            peer w-full border-0 border-b-2 pt-9.5 rounded-none bg-transparent
+            peer w-full border-0 border-b-1 pt-9.5 rounded-none bg-transparent
             focus:border-orange-500 focus:ring-0 text-orange-500 text-sm
             ${readOnly ? "cursor-not-allowed opacity-100" : "border-gray-400"}
           `}
