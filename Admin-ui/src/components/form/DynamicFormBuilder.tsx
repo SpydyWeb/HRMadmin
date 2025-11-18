@@ -14,6 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Calendar } from '../ui/calendar'
+import { format } from 'date-fns'
+import { DatePicker } from '../ui/date-picker'
+import { TimePicker } from '../ui/time-picker'
+import { DateTimePicker } from '../ui/date-timepicker'
 
 interface DynamicFormBuilderProps {
   config: any
@@ -83,57 +89,19 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   {field.label}
                 </Label>
               )}
-
-              {field.type === 'text' && (
+              {['text', 'email', 'password', 'number'].includes(field.type) && (
                 <Input
                   id={field.name}
-                  type="text"
+                  type={field.type}
                   placeholder={field.placeholder}
                   value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                  readOnly={field.readOnly}
-                  disabled={field.readOnly}
-                  variant={field.variant}
-                />
-              )}
-
-              {field.type === 'email' && (
-                <Input
-                  id={field.name}
-                  type="email"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                  readOnly={field.readOnly}
-                  disabled={field.readOnly}
-                  variant={field.variant}
-                />
-              )}
-
-              {field.type === 'password' && (
-                <Input
-                  id={field.name}
-                  type="password"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
-                  readOnly={field.readOnly}
-                  disabled={field.readOnly}
-                  variant={field.variant}
-                />
-              )}
-
-              {field.type === 'number' && (
-                <Input
-                  id={field.name}
-                  type="number"
-                  placeholder={field.placeholder}
-                  value={fieldApi.state.value}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full"
+                  onChange={(e) =>
+                    fieldApi.handleChange(
+                      field.type === 'number'
+                        ? Number(e.target.value)
+                        : e.target.value,
+                    )
+                  }
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
                   variant={field.variant}
@@ -177,7 +145,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     id={field.name}
                     checked={fieldApi.state.value}
                     onCheckedChange={handleChange}
-                     disabled={field.readOnly}
+                    disabled={field.readOnly}
                   />
                   <Label
                     htmlFor={field.name}
@@ -187,6 +155,30 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   </Label>
                 </div>
               )}
+              {/* DATE PICKER */}
+              {field.type === 'date' && (
+                <DatePicker
+                  value={fieldApi.state.value}
+                  onChange={(d) => fieldApi.handleChange(d)}
+                />
+              )}
+
+              {/* TIME PICKER */}
+              {field.type === 'time' && (
+                <TimePicker
+                  value={fieldApi.state.value}
+                  onChange={(t) => fieldApi.handleChange(t)}
+                />
+              )}
+
+              {/* DATE + TIME PICKER */}
+              {field.type === 'datetime' && (
+                <DateTimePicker
+                  value={fieldApi.state.value}
+                  onChange={(v) => fieldApi.handleChange(v)}
+                />
+              )}
+
               {field.type === 'link' && (
                 <span
                   onClick={() => onFieldClick(field.name)}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BiCreditCard, BiMapPin, BiTargetLock, BiUser } from 'react-icons/bi'
+import {  BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import type { IAgent } from '@/models/agent'
@@ -153,7 +153,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       {
         name: 'startDate',
         label: 'Start Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -161,7 +161,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       {
         name: 'appointmentDate',
         label: 'Appointment Date',
-        type: 'text',
+        type: 'datetime',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',

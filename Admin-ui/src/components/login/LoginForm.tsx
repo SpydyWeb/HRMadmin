@@ -1,4 +1,3 @@
-import React from 'react'
 import { BiBuilding } from 'react-icons/bi'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent } from '../ui/card'
@@ -8,9 +7,9 @@ import { loginSchema } from '@/schema/authSchema'
 import { auth } from '@/auth'
 import { CommonConstants, LoginConstants } from '@/services/constant'
 import { NOTIFICATION_CONSTANTS, RoutePaths } from '@/utils/constant'
-import z from 'zod'
 
-const LoginForm: any = ({ onForgotPassword }) => {
+
+const LoginForm: any = ({ onForgotPassword }:any) => {
   const navigate = useNavigate()
   const loginformConfig = {
     gridCols: 1,
@@ -59,7 +58,7 @@ const LoginForm: any = ({ onForgotPassword }) => {
       },
     ],
   }
-  const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
+  const handleSubmit = async (data: any) => {
     try {
       // navigate({ to: RoutePaths.SEARCH })
       const response = await auth.login(data)
