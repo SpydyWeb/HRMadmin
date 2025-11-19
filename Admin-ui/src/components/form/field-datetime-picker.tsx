@@ -1,216 +1,3 @@
-// import { useEffect, useState } from "react";
-// import { Calendar as CalendarIcon } from "lucide-react";
-// import { useLocalizedDate } from "@/utils/date";
-// import { FieldError } from "./field-error";
-// import { useFieldContext } from "."; 
-
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from "@/components/ui/popover";
-
-// import { Calendar } from "@/components/ui/calendar";
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectValue,
-//   SelectContent,
-//   SelectItem,
-// } from "@/components/ui/select";
-
-
-// interface Props {
-//   label: string;
-//   value?: string;
-//   onChange?: (value: string) => void;
-//   readOnly?: boolean;
-// }
-
-// export function FloatedDateTimeField({
-//   label,
-//   value,
-//   onChange,
-//   readOnly = false,
-// }: Props) {
-//   const { formatDate, formatTime } = useLocalizedDate();
-  
-//   let field;
-//   try {
-//     field = useFieldContext<string>();
-//   } catch {
-//     field = null;
-//   }
-
-//   const [open, setOpen] = useState(false);
-//   const [date, setDate] = useState<Date | undefined>();
-//   const [time, setTime] = useState("");
-
-//   useEffect(() => {
-//     const currentValue = field ? field.state.value : value;
-    
-//     if (!currentValue) {
-//       setDate(undefined);
-//       setTime("");
-//       return;
-//     }
-
-//     try {
-//       const d = new Date(currentValue);
-//       if (isNaN(d.getTime())) {
-//         console.warn("Invalid date value passed to FloatedDateTimeField:", currentValue);
-//         setDate(undefined);
-//         setTime("");
-//         return;
-//       }
-
-//       setDate(d);
-//       const hh = String(d.getHours()).padStart(2, "0");
-//       const mm = String(d.getMinutes()).padStart(2, "0");
-//       setTime(`${hh}:${mm}`);
-//     } catch (error) {
-//       console.error("Error parsing date:", error);
-//       setDate(undefined);
-//       setTime("");
-//     }
-//   }, [field?.state.value, value]); 
-
-//   useEffect(() => {
-//     if (!date || !time) {
-//       return;
-//     }
-
-//     const [h, m] = time.split(":");
-//     const final = new Date(date);
-//     final.setHours(Number(h));
-//     final.setMinutes(Number(m));
-//     final.setSeconds(0);
-
-//     const isoString = final.toISOString();
-
-//     if (field) {
-//       field.handleChange(isoString);
-//     } else {
-//       onChange?.(isoString);
-//     }
-//   }, [date, time, field, onChange]); 
-
-//   const displayValue = date
-//     ? `${formatDate(date)} , ${formatTime(date)}`
-//     : "";
-
-//   return (
-//     <div className="relative w-full pt-3">
-//       <div className="relative">
-//         <input
-//           readOnly
-//           value={displayValue}
-//           placeholder=" "
-//           onClick={() => !readOnly && setOpen(true)}
-//           className={`
-//             peer w-full border-0 border-b-2 rounded-none bg-transparent
-//              pt-4 text-orange-400
-//             focus:outline-none focus:ring-0
-//             ${
-//               readOnly
-//                 ? "cursor-not-allowed text-orange-400 border-gray-300"
-//                 : "cursor-pointer border-gray-300"
-//             }
-//           `}
-//         />
-
-//         {/* Calendar icon to open the popover */}
-//         {!readOnly && (
-//           <CalendarIcon
-//             className="absolute right-0 top-4 h-5 w-5 text-gray-400 cursor-pointer"
-//             onClick={() => setOpen(prev => !prev)}
-
-//           />
-//         )}
-//       </div>
-
-//       {/* The floating label */}
-//       <label
-//         className={`
-//           absolute left-0 transition-all duration-200 pointer-events-none
-//           ${
-//             displayValue
-//               ? "top-0 text-xs text-black-600"
-//               : "top-4 text-sm text-gray-600"
-//           }
-//           peer-focus:top-0 peer-focus:text-xs peer-focus:text-black-600
-//         `}
-//       >
-//         {label}
-//       </label>
-
-//       {/* The Popover containing the Calendar and Time Select */}
-//       <Popover open={open} onOpenChange={setOpen}>
-//         <PopoverTrigger asChild>
-//           {/* This is an invisible trigger for the popover */}
-//           <div></div>
-//         </PopoverTrigger>
-
-//         <PopoverContent className="w-auto p-4 flex gap-4" align="start">
-//           {/* The Calendar component */}
-//           <Calendar
-//             mode="single"
-//             selected={date}
-//             // onSelect={(d) => setDate(d || undefined)}
-//             onSelect={(d) => {
-//   setDate(d || undefined);
-//   setOpen(false); 
-// }}
-
-//             captionLayout="dropdown"
-//           />
-
-//           {/* The Time selector */}
-//           <div className="flex flex-col gap-2 w-32">
-//             <label className="text-xs">Time</label>
-
-//             <Select value={time} 
-//             // onValueChange={setTime}
-//             onValueChange={(t) => {
-//     setTime(t);
-//     setOpen(false); 
-//   }}
-//             >
-//               <SelectTrigger className="w-32">
-//                 <SelectValue placeholder="Select" />
-//               </SelectTrigger>
-
-//               <SelectContent className="max-h-60">
-//                 {generateTimes().map((t) => (
-//                   <SelectItem key={t} value={t}>
-//                     {t}
-//                   </SelectItem>
-//                 ))}
-//               </SelectContent>
-//             </Select>
-//           </div>
-//         </PopoverContent>
-//       </Popover>
-      
-//       {/* Display field validation errors if inside a form */}
-//       {field && <FieldError field={field.state.meta} />}
-//     </div>
-//   );
-// }
-
-// // Helper function to generate time options for the select dropdown
-// function generateTimes() {
-//   const items: string[] = [];
-//   for (let h = 0; h < 24; h++) {
-//     for (let m = 0; m < 60; m += 30) {
-//       items.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-//     }
-//   }
-//   return items;
-// }
-
-
-//=========================================================================================================
 import { useEffect, useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useLocalizedDate } from "@/utils/date";
@@ -356,7 +143,7 @@ export function FloatedDateTimeField({
           <div className="flex flex-col sm:flex-row">
             {/* Calendar section with custom styling */}
             <div className="p-2">
-              <Calendar
+              {/* <Calendar
                 mode="single"
                 selected={date}
                 onSelect={(d) => {
@@ -387,7 +174,35 @@ export function FloatedDateTimeField({
                   day_hidden: "invisible",
                 }}
                 
-              />
+              /> */}
+              <div className="p-2">
+  <Calendar
+    mode="single"
+    selected={date}
+    captionLayout="dropdown"
+    onSelect={(d) => {
+      setDate(d || undefined)
+      setOpen(false)
+    }}
+    className="p-2"
+    classNames={{
+      months: "flex flex-col space-y-4",
+      month: "space-y-2",
+      caption: "flex justify-between items-center px-2",
+      caption_label: "text-sm font-medium",
+      caption_dropdowns: "flex gap-1 items-center",
+      table: "w-full border-collapse",
+      head_row: "flex",
+      head_cell: "w-8 text-xs text-muted-foreground",
+      row: "flex",
+      cell: "relative p-0 w-8 h-8 text-center",
+      day: "h-8 w-8 rounded hover:bg-accent hover:text-accent-foreground",
+      day_selected:
+        "h-8 w-8 rounded bg-orange-500 text-white hover:bg-orange-600",
+    }}
+  />
+</div>
+
             </div>
 
             {/* Time selector section with scroll area */}

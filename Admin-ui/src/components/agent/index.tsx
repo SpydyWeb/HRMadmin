@@ -12,16 +12,19 @@ import { useParams } from '@tanstack/react-router'
 import encryptionService from '@/services/encryptionService'
 import { useEncryption } from '@/store/encryptionStore'
 import AuditLog from './AuditLog'
+import Training from './Training'
+import License from './License'
 
 const tabs = [
-  { value: 'personaldetails', label: 'Personal Details' },
+  { value: 'personaldetails', label: 'Personal' },
   { value: 'peoplehierarchy', label: 'People Hierarchy' },
   { value: 'geographicalhierarchy', label: 'Geographical Hierarchy' },
   { value: 'partnersmapped', label: 'Partners Mapped' },
   { value: 'auditlog', label: 'Audit Log' }, // typo fixed
-  { value: 'licensedetails', label: 'License Details' },
-  { value: 'financialdetails', label: 'Financial Details' },
+  { value: 'licensedetails', label: 'License' },
+  { value: 'financialdetails', label: 'Financial' },
   { value: 'entity360', label: 'Entity 360°' },
+  { value: 'training', label: 'Training' },
 ]
 
 type AgentResponse = {
@@ -125,6 +128,10 @@ const Agent = () => {
         <Hierarchy Agent={firstAgent} />
       ) : activeTab === 'auditlog' ? (
         <AuditLog Agentcode={agentId||""} />
+      ) : activeTab === 'training' ? (
+        <Training agent={firstAgent} />
+      ) : activeTab === 'licensedetails' ? (
+        <License agent={firstAgent} />
       ) : (
         <ComingSoon />
       )}

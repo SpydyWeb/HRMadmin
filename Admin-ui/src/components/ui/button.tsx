@@ -28,6 +28,7 @@ onClick?: React.MouseEventHandler<HTMLButtonElement>
   disabled?: boolean
   isLoading?: boolean // ✅ for manual loading state without form
   ref?: React.Ref<HTMLButtonElement>
+  id?: string
 }
 
 export default function Button({
@@ -42,6 +43,7 @@ export default function Button({
   type = 'button',
   disabled = false,
   isLoading = false,
+  id
 }: ButtonProps) {
   let form: any = null
   try {
@@ -90,6 +92,7 @@ export default function Button({
     <button
       type={type}
       disabled={isButtonDisabled}
+      id={id}
       onClick={onClick}
       className={clsx(
         baseStyles,
