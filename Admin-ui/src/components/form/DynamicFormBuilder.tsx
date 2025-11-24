@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Button from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -14,10 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { Calendar } from '../ui/calendar'
-import { format } from 'date-fns'
-import { DatePicker } from '../ui/date-picker'
+import DatePicker from '../ui/date-picker'
 import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
 
@@ -36,7 +34,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
   const form = useForm({
     defaultValues: {
-      ...config.fields.reduce((acc, field) => {
+      ...config.fields.reduce((acc: any, field: any) => {
         acc[field.name] =
           field.type === 'checkbox' ? false : field.type === 'number' ? 0 : ''
         return acc
@@ -56,8 +54,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
     },
     validatorAdapter: zodValidator,
   })
+  // console.log('config', config)
 
-  const renderField = (field) => {
+  const renderField = (field: any) => {
     const fieldSchema = config.schema.shape[field.name]
 
     return (
@@ -69,7 +68,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         }}
       >
         {(fieldApi) => {
-          const handleChange = (value) => {
+          const handleChange = (value: any) => {
             if (field.type === 'number') {
               fieldApi.handleChange(value === '' ? 0 : Number(value))
             } else {
@@ -79,17 +78,19 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
           return (
             <div
-              className="space-y-2"
+                className="flex flex-col gap-1 bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
               style={{
-                gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
-              }}
+    gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
+  }}
             >
               {field.type !== 'checkbox' && field.type !== 'link' && (
-                <Label htmlFor={field.name} className="text-sm font-medium">
+                <Label htmlFor={field.name} className="label-text">
                   {field.label}
                 </Label>
               )}
               {['text', 'email', 'password', 'number'].includes(field.type) && (
+                  <div className="relative flex items-center">
+
                 <Input
                   id={field.name}
                   type={field.type}
@@ -104,8 +105,10 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   }
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
-                  variant={field.variant}
+                  variant={field.custom}
+                  
                 />
+                </div>
               )}
 
               {field.type === 'textarea' && (
@@ -117,6 +120,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   className="w-full min-h-24"
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
+                  
                 />
               )}
 
@@ -130,7 +134,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     <SelectValue placeholder={field.placeholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    {field.options?.map((option) => (
+                    {field.options?.map((option: any) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -157,17 +161,21 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
               {/* DATE PICKER */}
               {field.type === 'date' && (
+                
                 <DatePicker
                   value={fieldApi.state.value}
                   onChange={(d) => fieldApi.handleChange(d)}
+                  icon={field.icon}
+                  disabled={field.readOnly}
                 />
               )}
+       
 
               {/* TIME PICKER */}
               {field.type === 'time' && (
                 <TimePicker
                   value={fieldApi.state.value}
-                  onChange={(t) => fieldApi.handleChange(t)}
+                  onChange={(t: any) => fieldApi.handleChange(t)}
                 />
               )}
 
@@ -175,7 +183,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               {field.type === 'datetime' && (
                 <DateTimePicker
                   value={fieldApi.state.value}
-                  onChange={(v) => fieldApi.handleChange(v)}
+                  onChange={(v: any) => fieldApi.handleChange(v)}
                 />
               )}
 
@@ -190,9 +198,22 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   {field.label}
                 </span>
               )}
-              {fieldApi.state.meta.errors.length > 0 && (
-                <FieldError field={fieldApi.state.meta} />
+
+              {field.type === 'boolean' && (
+                <div className="flex items-center justify-between py-1">
+                  <Switch
+                    id={field.name}
+                    checked={fieldApi.state.value ?? false}
+                    onCheckedChange={(val) => fieldApi.handleChange(val)}
+                    disabled={field.readOnly}
+                    className="h-5 w-9 data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-300 [&>span]:h-3 [&>span]:w-3 [&>span]:translate-x-0 data-[state=checked]:[&>span]:translate-x-5 transition-all duration-200"
+                  />
+                </div>
               )}
+
+              {/* {fieldApi.state.meta.errors.length > 0 && (
+                <FieldError field={fieldApi.state.meta} />
+              )} */}
             </div>
           )
         }}
@@ -200,7 +221,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
     )
   }
 
-  const handleButtonClick = async (button) => {
+  const handleButtonClick = async (button: any) => {
     if (button.type === 'submit') {
       await form.handleSubmit()
     } else if (button.type === 'reset') {
@@ -217,6 +238,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         }}
       >
         {config.fields.map(renderField)}
+
       </div>
 
       {config.buttons && (

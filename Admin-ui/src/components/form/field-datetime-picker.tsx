@@ -100,12 +100,12 @@ export function FloatedDateTimeField({
           placeholder=" "
           onClick={() => !readOnly && setOpen(true)}
           className={`
-            peer w-full border-0 border-b-1 rounded-none bg-transparent
+            input-text peer w-full border-0 border-b-1 rounded-none bg-transparent
              pt-4 text-orange-400
             focus:outline-none focus:ring-0
             ${
               readOnly
-                ? "cursor-not-allowed text-orange-400 border-gray-400"
+                ? "input-text cursor-not-allowed text-orange-400 border-gray-400"
                 : "cursor-pointer border-gray-400"
             }
           `}
@@ -121,13 +121,13 @@ export function FloatedDateTimeField({
 
       <label
         className={`
-          absolute left-0 transition-all duration-200 pointer-events-none
+          label-text absolute left-0 transition-all duration-200 pointer-events-none
           ${
             displayValue
-              ? "top-0 text-xs text-black-600"
+              ? "top-0 text-xs text-gray-600"
               : "top-4 text-sm text-gray-600"
           }
-          peer-focus:top-0 peer-focus:text-xs peer-focus:text-black-600
+          peer-focus:top-0 peer-focus:text-xs peer-focus:text-gray-600
         `}
       >
         {label}

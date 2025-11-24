@@ -67,7 +67,7 @@ export const FloatedTextFeild = ({
         onBlur={field?.handleBlur}
         readOnly={readOnly}
         className={`
-    peer w-full border-0 border-b-1 rounded-none shadow-none
+    input-text peer w-full border-0 !border-b-[0.5px] rounded-none shadow-none
     px-0 pb-2 pt-6 text-orange-500 bg-transparent
     focus:outline-none focus:ring-0 
     focus:border-orange-500
@@ -88,12 +88,12 @@ export const FloatedTextFeild = ({
         //   peer-focus:top-0 peer-focus:text-xs peer-focus:text-orange-600
         // `}
         className={`
-    absolute left-0 transition-all duration-200 pointer-events-none
+    label-text absolute left-0 transition-all duration-200 pointer-events-none
     ${hasValue
-            ? "top-0 text-xs text-black-600"
+            ? "top-0 text-xs text-gray-600"
             : "top-4 text-sm text-gray-600"
           }
-    peer-focus:top-0 peer-focus:text-xs peer-focus:text-black-600
+    peer-focus:top-0 peer-focus:text-xs peer-focus:text-gray-600
   `}
       >
         {label}

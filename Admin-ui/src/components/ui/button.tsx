@@ -82,7 +82,7 @@ export default function Button({
     'outline-blue':
       'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
     ghost:
-      'bg-[var(--brand-blue)]/10 text-[var(--brand-blue)] hover:bg-[var(--brand-blue)]/20',
+      'bg-[var(--brand-blue)]/10 text-black-400 hover:bg-[var(--brand-blue)]/20',
   }
 
   const isButtonDisabled = disabled || (!canSubmit && form) || isSubmitting

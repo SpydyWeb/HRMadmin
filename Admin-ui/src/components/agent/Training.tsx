@@ -1,66 +1,300 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
+import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
-import { FloatedTextFeild } from '../form/floated-text-field'
-import { Switch } from "@/components/ui/switch"
-import { FloatedSelectField } from '../form/dropdown-fields'
-import { FloatedDateTimeField } from '../form/field-datetime-picker'
-
+import { Switch } from '@/components/ui/switch'
+import z from 'zod'
+import region from 'public/region.png'
+// import { BiIdCard } from 'react-icons/bi'
+import DisplaySection from '../ui/displaySection'
 
 const Training = ({ agent }: { agent: IAgent }) => {
-  const [isEdit, setIsEdit] = useState(false)
+  const [isEdit, setIsEdit] = useState(false) 
+  // console.log('agent', agent)
 
-  console.log("agent", agent);
+  if (!agent) return null
 
-  const genderOptions = ["Male", "Female", "Other"];
-  const genderDropdown = genderOptions.map(g => ({
-    label: g,
-    value: g
-  }));
-
-  if (!agent) return null;
-
-  const trainingForm = useAppForm({
+  const agentForm = useAppForm({
     defaultValues: {
-      branchCode: agent.agentCode,
-      branchName : agent.title,
-      confirmationDate: agent.agentTypeCode,
-      hRDoj: agent.agentId,
-      fGValueTrngDate: agent.firstName,
- itSecPolicyTrngDate: agent.middleName,
-      npsTrngCompletionDate: agent.lastName,
-      whistleBlowerTrngDate: agent.agentName,
-      govPolicyTrngDate: agent.email,
-      InductionTrngDate: agent.gender,
-      maritalStatusCode: agent.maritalStatusCode,
-      nationality: agent.nationality,
-      panNumber: agent.panNumber,
-      PanAadharLinkFlag: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
-      preferredLanguage: agent.preferredLanguage,
-      employeeCode: agent.employeeCode,
-      FatherHusbandNm: agent.father_Husband_Nm,
-      applicationDocketNo: agent.applicationDocketNo,
-      candidateType: agent.candidateType,
-      startDate: agent.startDate,
-      appointmentDate: agent.appointmentDate,
-      incorporationDate: agent.incorporationDate,
-      agentTypeCategory: agent.agentTypeCategory,
-      agentClassification: agent.agentClassification,
-      cmsAgentType: agent.cmsAgentType,
-      channel_Name: agent.channel_Name,
-      sub_Channel: agent.sub_Channel,
-
+      branchCode: agent.branchCode,
+      branchName: agent.branchName,
+      confirmationDate: agent.confirmationDate,
+      hRDoj: agent.hrDoj,
+      fgValueTrngDate: agent.fgValueTrngDate,
+      itSecPolicyTrngDate: agent.itSecPolicyTrngDate,
+      npsTrngCompletionDate: agent.npsTrngCompletionDate,
+      whistleBlowerTrngDate: agent.whistleBlowerTrngDate,
+      govPolicyTrngDate: agent.govPolicyTrngDate,
+      inductionTrngDate: agent.inductionTrngDate,
+      incrementDate: agent.incrementDate,
+      lastWorkingDate: agent.lastWorkingDate,
+      lastPromotionDate: agent.lastPromotionDate,
+      hSecPolicyTrngDate: agent.hSecPolicyTrngDate,
     },
     onSubmit: async ({ value }) => {
       console.log('Updated agent:', value)
     },
   })
 
+  const organisationConfig = {
+    gridCols: 3,
+    defaultValues: {
+       confirmationDate: agent.confirmationDate,
+             incrementDate: agent.incrementDate,
+                   lastPromotionDate: agent.lastPromotionDate,
+                   hRDoj: agent.hrDoj,
+                   lastWorkingDate: agent.lastWorkingDate,
 
-  const f = trainingForm as any;
+
+     
+    },
+    schema: z.object({
+      confirmationDate: z.string().optional(),
+      incrementDate: z.string().optional(),
+      lastPromotionDate: z.string().optional(),
+      hRDoj: z.string().optional(),
+      lastWorkingDate: z.string().optional(),
+      
+    }),
+
+    fields: [
+      {
+        name: 'confirmationDate',
+        label: 'Confirmation Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        icon: region,
+      },
+      {
+        name: 'incrementDate',
+        label: 'Increment Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        icon: region,
+      },
+      {
+        name: 'lastPromotionDate',
+        label: 'Last Promotion Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        icon: region,
+      },
+      {
+        name: 'hRDoj',
+        label: 'HR Doj',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        icon: region,
+      },
+      {
+        name: 'lastWorkingDate',
+        label: 'Last Working Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        icon: region,
+      },
+
+
+
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'sm',
+            },
+          ],
+        }
+      : null,
+  }
+  const branchConfig = {
+    gridCols: 2,
+
+    defaultValues: {
+            branchCode: agent.branchCode,
+      branchName: agent.branchName,
+    },
+
+    schema: z.object({
+      branchCode: z.string().optional(),
+      branchName: z.string().optional(),
+    }),
+
+    fields: [
+      {
+        name: 'branchCode',
+        label: 'Branch Code',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'branchName',
+        label: 'Branch Name',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'sm',
+            },
+          ],
+        }
+      : null,
+  }
+
+ const otherTrainingConfig = {
+  gridCols: 3,
+
+  defaultValues: {
+    ic36TrngCompletionDate: agent.ic36TrngCompletionDate,
+    sTrngCompletionDate: agent.sTrngCompletionDate,
+    fgRockstarTrainingDate: agent.fgRockstarTrainingDate,
+    fgValueTrngDate: agent.fgValueTrngDate,
+    hSecPolicyTrngDate: agent.hSecPolicyTrngDate,
+    itSecPolicyTrngDate: agent.itSecPolicyTrngDate,
+    npsTrngCompletionDate: agent.npsTrngCompletionDate,
+    whistleBlowerTrngDate: agent.whistleBlowerTrngDate,
+    govPolicyTrngDate: agent.govPolicyTrngDate,
+    inductionTrngDate: agent.inductionTrngDate,
+  },
+
+  schema: z.object({
+    ic36TrngCompletionDate: z.string().optional(),
+    sTrngCompletionDate: z.string().optional(),
+    fgRockstarTrainingDate: z.string().optional(),
+    fgValueTrngDate: z.string().optional(),
+    hSecPolicyTrngDate: z.string().optional(),
+    itSecPolicyTrngDate: z.string().optional(),
+    npsTrngCompletionDate: z.string().optional(),
+    whistleBlowerTrngDate: z.string().optional(),
+    govPolicyTrngDate: z.string().optional(),
+    inductionTrngDate: z.string().optional(),
+  }),
+
+  fields: [
+    {
+      name: 'ic36TrngCompletionDate',
+      label: 'IC36 Trng Completion Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'sTrngCompletionDate',
+      label: 'S Trng Completion Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'fgRockstarTrainingDate',
+      label: 'FG Rockstar Training Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'fgValueTrngDate',
+      label: 'FG Value Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'hSecPolicyTrngDate',
+      label: 'H Sec Policy Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'itSecPolicyTrngDate',
+      label: 'IT Sec Policy Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'npsTrngCompletionDate',
+      label: 'NPS Trng Completion Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'whistleBlowerTrngDate',
+      label: 'Whistle Blower Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'govPolicyTrngDate',
+      label: 'Gov Policy Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+    {
+      name: 'inductionTrngDate',
+      label: 'Induction Trng Date',
+      type: 'date',
+      colSpan: 1,
+      readOnly: !isEdit,
+    },
+  ],
+
+  buttons: isEdit
+    ? {
+        gridCols: 6,
+        items: [
+          {
+            label: 'Save Changes',
+            type: 'submit',
+            variant: 'orange',
+            colSpan: 1,
+            size: 'sm',
+          },
+        ],
+      }
+    : null,
+}
+
+
+  // console.log("agentFormConfig", agentFormConfig)
+
+  const f = agentForm as any
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -68,269 +302,67 @@ const Training = ({ agent }: { agent: IAgent }) => {
   return (
     <div className="bg-white p-10">
       <div className="mb-6">
-        <div className="flex flex-col justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Branch
+        <div className="flex justify-between">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 font-poppins font-semibold text-[20px]">
+           Branch
           </h2>
-          <div className="flex gap-10">
-           
-
-            <div className='absolute right-20 top-82'>
-              <div className="flex items-center gap-3 pr-5">
-                {/* Label before the switch */}
-                <span className="font-medium text-gray-700">Edit</span>
-
-                {/* The switch itself */}
-                <Switch
-                  checked={isEdit}
-                  onCheckedChange={setIsEdit}
-                  className="data-[state=checked]:bg-orange-500"
-                />
-
-                {/* Dynamic On/Off text */}
-                <span
-                  className={`font-medium ${isEdit ? "text-gray-500" : "text-gray-500"
-                    } transition-colors`}
-                >
-                  {isEdit ? "On" : "Off"}
-                </span>
-              </div>
-
-            </div>
-
-            <Card className="bg-gray-100 w-full max-h-[400px] overflow-y-auto">
-              <CardContent>
-                <f.AppForm>
-                  <div className="grid grid-cols-2 gap-6 w-full mt-4">
-
-                    <f.AppField name="branchCode">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedTextFeild
-                          label="Branch Code"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-
-                    <f.AppField name="branchName ">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedTextFeild
-                          label="Branch Name"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-                    {/* Repeat for other fields */}
-                  </div>
-
-                  {isEdit && (
-                    <trainingForm.Button
-                      onClick={trainingForm.handleSubmit}
-                      className="mt-4"
-                      size="md"
-                      variant="orange"
-                    >
-                      Save Changes
-                    </trainingForm.Button>
-                  )}
-                </f.AppForm>
-              </CardContent>
-            </Card>
-
+          <div className="flex gap-2">
+            <span className="font-medium text-gray-700">Edit</span>
+            <Switch
+              checked={isEdit}
+              onCheckedChange={setIsEdit}
+              className="data-[state=checked]:bg-orange-500"
+            />
           </div>
+        </div>
 
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-           Organisation
-          </h2>
+        <div className="flex gap-10">
+     
 
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
+          <Card className="bg-white w-full overflow-y-auto">
             <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
+              <DynamicFormBuilder
+                config={branchConfig}
+                onSubmit={agentForm.handleSubmit}
+              />
 
-                  <f.AppField name="confirmationDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Confirmation Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="incrementDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Increment Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="lastPromotionDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Last Promotion Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="hRDoj">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="HR Doj"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="lastWorkingDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Last Working Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
-            </CardContent>
-          </Card>
-
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-Other Trainings
-          </h2>
-
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
-
-                  <f.AppField name="fGValueTrngDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="FG Value Trng Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="hsecPolicyTrngDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="H sec Policy Trng Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="npsTrngCompletionDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Nps Trng Completion Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="whistleBlowerTrngDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Whistle Blower Trng Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="govPolicyTrngDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Gov Policy Trng Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="InductionTrngDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Induction Trng Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
+              {/* some form inputs here */}
             </CardContent>
           </Card>
         </div>
+
+        <div className="flex justify-between">
+          <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
+           Organisation
+          </h2>
+        </div>
+        <div className="flex gap-2">
+          <Card className="bg-white w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
+            <CardContent>
+              <DynamicFormBuilder
+                config={organisationConfig}
+                onSubmit={agentForm.handleSubmit}
+              />
+              {/* some form inputs here */}
+            </CardContent>
+          </Card>
+        </div>
+
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+          Other Training
+        </h2>
+
+        <Card className="bg-white w-full mt-5 max-h-[600px] overflow-y-auto">
+          <CardContent>
+            <DynamicFormBuilder
+              config={otherTrainingConfig}
+              onSubmit={agentForm.handleSubmit}
+            />
+            {/* some form inputs */}
+          </CardContent>
+        </Card>
       </div>
     </div>
-
   )
 }
 

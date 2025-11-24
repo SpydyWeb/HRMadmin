@@ -1,12 +1,11 @@
 import React, { useState } from 'react'
-import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { FloatedTextFeild } from '../form/floated-text-field'
 import { Switch } from "@/components/ui/switch"
-import { FloatedSelectField } from '../form/dropdown-fields'
 import { FloatedDateTimeField } from '../form/field-datetime-picker'
+// import  FloatedSelectFeild  from '../form/dropdown-fields'
 
 
 const License = ({ agent }: { agent: IAgent }) => {
@@ -18,32 +17,22 @@ const License = ({ agent }: { agent: IAgent }) => {
 
   const licenseForm = useAppForm({
     defaultValues: {
-      licenseNo: agent.agentCode,
-      licenseType: agent.title,
-      licenseIssueDate: agent.agentTypeCode,
-      licenseExpiryDate: agent.agentId,
-      contatctPersonName: agent.firstName,
-      agentTypeCategory: agent.middleName,
-      agentClassification: agent.lastName,
-      ulipFlag: agent.agentName,
-      trainingGroupType: agent.email,
-      ifs: agent.maritalStatusCode,
-      refresherTrainingCompleted: agent.nationality,
-      isMigrated: agent.panNumber,
-      mainPartnerClientCode: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
-      agentMaincodevwEid: agent.preferredLanguage,
-      registrationDate: agent.employeeCode,
-      vertical: agent.father_Husband_Nm,
-      applicationDocketNo: agent.applicationDocketNo,
-      candidateType: agent.candidateType,
-      startDate: agent.startDate,
-      appointmentDate: agent.appointmentDate,
-      incorporationDate: agent.incorporationDate,
-      licneseStatus: agent.agentTypeCategory,
-      cmsAgentType: agent.cmsAgentType,
-      channel_Name: agent.channel_Name,
-      sub_Channel: agent.sub_Channel,
+      licenseNo: agent.licenseNo,
+      licenseType: agent.licenseType,
+      licenseIssueDate: agent.licenseIssueDate,
+      licenseExpiryDate: agent.licenseExpiryDate,
+      cnctPersonName: agent.cnctPersonName,
+      agentTypeCategory: agent.agentTypeCategory,
+      agentClassification: agent.agentClassification,
+      ulipFlag: agent.ulipFlag,
+      trainingGroupType: agent.trainingGroupType,
+      ifs: agent.ifs,
+      refresherTrainingCompleted: agent.refresherTrainingCompleted,
+      isMigrated: agent.isMigrated,
+      mainPartnerClientCode: agent.mainPartnerClientCode,
+      agentMaincodevwEid: agent.agentMaincodevwEid,
+      registrationDate: agent.registrationDate,
+      vertical: agent.vertical,
 
     },
     onSubmit: async ({ value }) => {
@@ -120,7 +109,7 @@ const License = ({ agent }: { agent: IAgent }) => {
                         value: string
                         onChange: (v: string) => void
                       }) => (
-                        <FloatedSelectField
+                        <FloatedTextField
                           label="License Type"
                           value={value}
                           onChange={onChange}
@@ -171,7 +160,7 @@ const License = ({ agent }: { agent: IAgent }) => {
                         value: string
                         onChange: (v: string) => void
                       }) => (
-                        <FloatedSelectFeild
+                        <FloatedTextFeild
                           label="Licnese Status"
                           value={value}
                           onChange={onChange}
@@ -229,7 +218,7 @@ const License = ({ agent }: { agent: IAgent }) => {
 
                   <f.AppField name="trainingGroupType">
                     {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedSelectFeild
+                      <FloatedTextFeild
                         label="Training Group Type"
                         value={value}
                         onChange={onChange}

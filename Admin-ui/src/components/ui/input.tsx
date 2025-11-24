@@ -2,13 +2,13 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 interface InputProps extends React.ComponentProps<"input"> {
-  variant?: "outlined" | "filled" | "standard"
+  variant?: "outlined" | "filled" | "standard"| "custom"
 }
 
 function Input({
   className,
   type,
-  variant = "outlined",
+  variant = "custom",
   ...props
 }: InputProps) {
   return (
@@ -31,6 +31,10 @@ function Input({
         variant === "standard" &&
           "border-0 border-b-[2px] border-gray-400 rounded-none px-1 pb-1 \
            focus-visible:border-b-[3px] focus-visible:border-b-ring focus-visible:ring-0",
+
+        // Standard (thin bottom line)
+        variant === "custom" &&
+          "input-text font-poppins text-[24px] font-semibold text-black-500 border-none shadow-none rounded-none px-1 pb-1 \ text-black-500 focus-visible:border-b-[3px] focus-visible:border-b-ring focus-visible:ring-0",
 
         // Error state
         "aria-invalid:ring-destructive/20 aria-invalid:border-destructive dark:aria-invalid:ring-destructive/40",
