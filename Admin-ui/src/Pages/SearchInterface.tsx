@@ -144,6 +144,7 @@ export default function SearchInterface() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Agent Code, Name, Mobile Number, Email, PAN"
                 className="w-full !pl-10 !pr-[9rem] !py-5 "
+                variant='standard'
               />
               <div className="absolute  inset-y-0 right-1 pl-3 flex items-center">
                 <Button

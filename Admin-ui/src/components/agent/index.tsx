@@ -93,6 +93,7 @@ const Agent = () => {
           <Input
             type="text"
             value={searchInput}
+            variant="standard"
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by Agent Code, Name, Mobile Number"
             className="w-full !pr-[9rem] !py-6"

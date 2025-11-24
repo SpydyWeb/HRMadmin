@@ -54,7 +54,7 @@ export default function DatePicker({
     setOpen(false); 
 
     if (selectedDate) {
-      onChange?.(format(selectedDate, "yyyy-MM-dd"));
+      onChange?.(format(selectedDate, "dd LLL yyyy"));
     } else {
       onChange?.(null);
     }
@@ -105,7 +105,7 @@ export default function DatePicker({
     "input-text font-poppins text-[24px] font-semibold",
     disabled ? "text-gray-500" : "text-black-500"
   )}>
-              {date ? format(date, "PPP") : placeholder}
+              {date ? format(date, "dd LLL yyyy") : placeholder}
             </span>
             <CalendarIcon className="h-4 w-4 ml-auto" />
           </button>

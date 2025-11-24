@@ -103,7 +103,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       agentClassification: z.string().optional(),
       cmsAgentType: z.string().optional(),
     }),
-    
+
     fields: [
       {
         name: 'agentCode',
@@ -112,7 +112,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'employeeCode',
@@ -121,7 +120,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-       
       },
       {
         name: 'agentId',
@@ -130,7 +128,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-       
       },
       {
         name: 'applicationDocketNo',
@@ -147,7 +144,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-      
       },
       {
         name: 'candidateType',
@@ -156,7 +152,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'startDate',
@@ -165,7 +160,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'appointmentDate',
@@ -174,7 +168,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'incorporationDate',
@@ -183,7 +176,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'agentTypeCategory',
@@ -192,7 +184,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'agentClassification',
@@ -201,7 +192,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
       {
         name: 'cmsAgentType',
@@ -210,7 +200,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        
       },
     ],
 
@@ -223,7 +212,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               type: 'submit',
               variant: 'orange',
               colSpan: 1,
-              size: 'sm',
+              size: 'lg',
             },
           ],
         }
@@ -264,7 +253,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         variant: 'standard',
       },
       {
-
         name: 'firstName',
         label: 'First Name',
         type: 'text',
@@ -331,8 +319,9 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               label: 'Save Changes',
               type: 'submit',
               variant: 'orange',
-              colSpan: 1,
-              size: 'sm',
+              colSpan: 2,
+              size: 'lg',
+              className: 'whitespace-nowrap'
             },
           ],
         }
@@ -380,7 +369,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               type: 'submit',
               variant: 'orange',
               colSpan: 1,
-              size: 'sm',
+              size: 'lg',
             },
           ],
         }
@@ -418,9 +407,9 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               <div className="flex flex-col items-center text-center">
                 {/* Profile Image */}
                 <img
-                  src="/api/placeholder/300/300"
+                  src="/person.jpg"
                   alt="Agent Profile"
-                  className="aspect-3/2 object-cover mb-3 rounded-lg"
+                  className="aspect-3/2 object-cover mb-3 rounded-lg min-h-[380px]"
                   onError={(e) => {
                     ;(e.target as HTMLImageElement).src =
                       'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjE1MCIgY3k9IjEyMCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAyMDBDMTAwIDE3Mi4zODYgMTIyLjM4NiAxNTAgMTUwIDE1MFMyMDAgMTcyLjM4NiAyMDAgMjAwVjIyMEgxMDBWMjAwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K'
@@ -457,26 +446,23 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </Card>
         </div>
 
-
-             <div className="flex justify-between">
+        <div className="flex justify-between">
           <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
-           Employment Details
+            Employment Details
           </h2>
         </div>
         <div className="flex gap-2">
-   <Card className="bg-white w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
-          <CardContent>
-            <DynamicFormBuilder
-              config={agentFormConfig}
-              onSubmit={agentForm.handleSubmit}
-            />
-            {/* some form inputs here */}
-          </CardContent>
-        </Card>
+          <Card className="bg-white w-full mt-5 max-h-[590px] overflow-y-auto overflow-x-hidden">
+            <CardContent>
+              <DynamicFormBuilder
+                config={agentFormConfig}
+                onSubmit={agentForm.handleSubmit}
+              />
+              {/* some form inputs here */}
+            </CardContent>
+          </Card>
         </div>
 
-     
- 
         <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
           Channel
         </h2>
@@ -488,7 +474,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               onSubmit={agentForm.handleSubmit}
             />
             {/* some form inputs */}
-
           </CardContent>
         </Card>
       </div>
