@@ -6,7 +6,6 @@ import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
-import region from 'public/region.png'
 // import { BiIdCard } from 'react-icons/bi'
 import DisplaySection from '../ui/displaySection'
 
@@ -113,7 +112,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'employeeCode',
@@ -122,7 +121,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'agentId',
@@ -131,7 +130,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'applicationDocketNo',
@@ -140,7 +139,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
       },
       {
         name: 'agentTypeCode',
@@ -149,7 +147,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+      
       },
       {
         name: 'candidateType',
@@ -158,7 +156,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'startDate',
@@ -167,7 +165,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'appointmentDate',
@@ -176,7 +174,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'incorporationDate',
@@ -185,7 +183,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'agentTypeCategory',
@@ -194,7 +192,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'agentClassification',
@@ -203,7 +201,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
       {
         name: 'cmsAgentType',
@@ -212,7 +210,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+        
       },
     ],
 
