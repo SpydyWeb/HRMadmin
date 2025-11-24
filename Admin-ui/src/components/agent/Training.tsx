@@ -6,7 +6,6 @@ import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
-import region from 'public/region.png'
 // import { BiIdCard } from 'react-icons/bi'
 import DisplaySection from '../ui/displaySection'
 
@@ -67,7 +66,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'incrementDate',
@@ -76,7 +75,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'lastPromotionDate',
@@ -85,7 +84,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'hRDoj',
@@ -94,7 +93,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
       {
         name: 'lastWorkingDate',
@@ -103,7 +102,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        icon: region,
+       
       },
 
 
