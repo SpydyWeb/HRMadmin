@@ -1,9 +1,9 @@
 const axios = require("axios");
-const { DOTNET_API_URL } = require("../config");
+const { dotnetApiUrl } = require("../config");
 
 // Create axios instance
 const api = axios.create({
-  baseURL: DOTNET_API_URL,
+  baseURL: dotnetApiUrl,
   headers: { "Content-Type": "application/json" },
   validateStatus: () => true, // so 400/401 don't throw
 });
