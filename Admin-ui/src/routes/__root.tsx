@@ -17,6 +17,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { RoutePaths } from '@/utils/constant'
 import { ToastProvider } from '@/components/ui/sonner'
 import { useEncryptionReady } from '@/hooks/useEncryptionReady'
+import { I18nextProvider } from "react-i18next"
+import i18n from "@/i18n"
+import "../i18n"
+
 
 interface MyRouterContext {
   queryClient: any
@@ -67,6 +71,7 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body>
+         <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           {token && location.pathname !== RoutePaths.LOGIN ? (
             <Layout>
@@ -78,6 +83,7 @@ function RootComponent() {
             <Outlet />
           )}
         </QueryClientProvider>
+        </I18nextProvider>
         <ToastProvider />
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />

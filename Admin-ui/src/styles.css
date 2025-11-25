@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,7 +12,10 @@ body {
 
 code {
   font-family:
-    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace,Poppins;
+}
+@theme {
+  --font-poppins: "Poppins", sans-serif;
 }
 
 :root {
@@ -127,6 +132,21 @@ code {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@layer utilities {
+  .font-poppins {
+   font-family: var(--font-poppins);
+  }
+
+  .label-text {
+    @apply font-poppins text-[20px] font-normal;
+  }
+
+  .input-text {
+    @apply font-poppins text-[24px] font-semibold;
+  }
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -135,6 +155,8 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+
 
 @keyframes slide-up {
   from {

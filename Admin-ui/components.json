@@ -8,14 +8,17 @@
     "css": "src/style.css",
     "baseColor": "neutral",
     "cssVariables": false,
-    "prefix": ""
+    "prefix": "",
+    "fontFamily": {
+        "poppins": ["Poppins", "sans-serif"]
+      }
   },
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
-    "hooks": "@/hooks"
+  "hooks": "@/hooks"
   },
   "iconLibrary": "lucide"
 }

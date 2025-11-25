@@ -20,7 +20,7 @@ interface selectFieldProps {
   readOnly?: boolean;
 }
 
-export const FloatedSelectField = ({
+const FloatedSelectField = ({
   label,
   name,
   value,
@@ -63,12 +63,12 @@ export const FloatedSelectField = ({
         <SelectTrigger
           id={currentName}
           className={`
-            peer w-full border-0 border-b-2 pt-9.5 rounded-none bg-transparent
+            input-text peer w-full border-0 border-b-1 pt-9.5 rounded-none bg-transparent
             focus:border-orange-500 focus:ring-0 text-orange-500 text-sm
             ${readOnly ? "cursor-not-allowed opacity-100" : "border-gray-400"}
           `}
         >
-          <SelectValue className="text-black opacity-100" placeholder="" />
+          <SelectValue className="input-text text-black opacity-100" placeholder="" />
         </SelectTrigger>
 
         <SelectContent>
@@ -83,9 +83,9 @@ export const FloatedSelectField = ({
       {/* floating label */}
       <label
         className={`
-          absolute left-0 transition-all duration-200 pointer-events-none
-          ${hasValue ? "top-0 text-xs text-black-600" : "top-4 text-sm"}
-          peer-focus:top-0 peer-focus:text-xs peer-focus:text-black-600
+          label-text absolute left-0 transition-all duration-200 pointer-events-none
+          ${hasValue ? "top-0 text-xs text-gray-600" : "top-4 text-sm"}
+          peer-focus:top-0 peer-focus:text-xs peer-focus:text-gray-600
         `}
       >
         {label}
@@ -95,3 +95,6 @@ export const FloatedSelectField = ({
     </div>
   );
 };
+
+export default FloatedSelectField;
+

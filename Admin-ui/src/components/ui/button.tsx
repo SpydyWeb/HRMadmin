@@ -19,7 +19,7 @@ type ButtonProps = {
     | 'outline-blue'
     | 'ghost'
   size?: 'sm' | 'md' | 'lg'
-  onClick?: () => void
+onClick?: React.MouseEventHandler<HTMLButtonElement>
   className?: string
   loadingText?: string
   icon?: React.ReactNode
@@ -27,6 +27,8 @@ type ButtonProps = {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   isLoading?: boolean // ✅ for manual loading state without form
+  ref?: React.Ref<HTMLButtonElement>
+  id?: string
 }
 
 export default function Button({
@@ -41,6 +43,7 @@ export default function Button({
   type = 'button',
   disabled = false,
   isLoading = false,
+  id
 }: ButtonProps) {
   let form: any = null
   try {
@@ -79,7 +82,7 @@ export default function Button({
     'outline-blue':
       'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
     ghost:
-      'bg-[var(--brand-blue)]/10 text-[var(--brand-blue)] hover:bg-[var(--brand-blue)]/20',
+      'bg-[var(--brand-blue)]/10 text-black-400 hover:bg-[var(--brand-blue)]/20',
   }
 
   const isButtonDisabled = disabled || (!canSubmit && form) || isSubmitting
@@ -89,6 +92,7 @@ export default function Button({
     <button
       type={type}
       disabled={isButtonDisabled}
+      id={id}
       onClick={onClick}
       className={clsx(
         baseStyles,

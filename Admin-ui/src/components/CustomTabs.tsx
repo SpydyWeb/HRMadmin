@@ -25,7 +25,7 @@ export default function CustomTabs({
           <TabsTrigger
             key={tab.value}
             value={tab.value}
-            className=" px-8 py-6 rounded-none text-gray-600 data-[state=active]:bg-white data-[state=active]:shadow-none data-[state=active]:text-black transition-all"
+            className="px-8 py-6 rounded-none text-gray-600 data-[state=active]:bg-white data-[state=active]:shadow-none data-[state=active]:text-black transition-all data-[state=active]:rounded-t-md"
           >
             {tab.icon && <span className="text-lg">{tab.icon}</span>}
             <span>{tab.label}</span>

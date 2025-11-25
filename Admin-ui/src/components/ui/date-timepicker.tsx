@@ -1,44 +1,106 @@
-// components/ui/datetime-picker.tsx
-import React from "react"
-import Button from "@/components/ui/button"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { TimePicker } from "@/components/ui/time-picker"
-import { format } from "date-fns"
+import * as React from "react";
+import { ChevronDownIcon } from "lucide-react";
 
-export function DateTimePicker({ value, onChange }) {
-  const [open, setOpen] = React.useState(false)
+import Button from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-  const date = value?.date ? new Date(value.date) : null
-  const time = value?.time || ""
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
-  function updateDate(d) {
-    onChange({ date: d, time })
-  }
+import { useLocalizedDate } from "@/utils/date";
 
-  function updateTime(t) {
-    onChange({ date, time: t })
-  }
+export function DateTimePicker({
+  value,
+  onChange,
+}: {
+  value?: Date;
+  onChange?: (value: Date | undefined) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [date, setDate] = React.useState<Date | undefined>(value);
+  const [time, setTime] = React.useState("");
+
+  const { formatDate, formatTime } = useLocalizedDate();
+
+  // Combine date + time
+  React.useEffect(() => {
+    if (!date || !time) return;
+
+    const [h, m] = time.split(":");
+    const final = new Date(date);
+    final.setHours(Number(h));
+    final.setMinutes(Number(m));
+    final.setSeconds(0);
+
+    onChange?.(final);
+  }, [date, time]);
+
+  const displayValue =
+    date && time
+      ? `${formatDate(date)} ${formatTime(date)}`
+      : "Select date & time";
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          {date || time
-            ? `${date ? format(date, "PPP") : ""} ${time ? time : ""}`
-            : "Pick date & time"}
-        </Button>
-      </PopoverTrigger>
+    <div className="flex flex-col gap-2 w-full">
+      <Label className="px-1">Date & Time</Label>
 
-      <PopoverContent className="p-3 flex flex-col gap-4">
-        <Calendar
-          mode="single"
-          selected={date || undefined}
-          onSelect={(d) => updateDate(d)}
-        />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-56 justify-between font-normal">
+            {displayValue}
+            <ChevronDownIcon className="ml-2" />
+          </Button>
+        </PopoverTrigger>
 
-        <TimePicker value={time} onChange={updateTime} />
-      </PopoverContent>
-    </Popover>
-  )
+        <PopoverContent className="w-auto p-3 flex gap-4" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => setDate(d || undefined)}
+            captionLayout="dropdown"
+          />
+
+          {/* TIME */}
+          <div className="flex flex-col gap-2 w-32">
+            <Label className="text-xs px-1">Time</Label>
+
+            <Select onValueChange={setTime}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+
+              <SelectContent className="max-h-60">
+                {generateTimes().map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function generateTimes() {
+  const result: string[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      result.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+  return result;
 }

@@ -1,10 +1,10 @@
 
 export interface IAgentSearchRequest {
-    searchCondition: string;
-    zone: string;
+  searchCondition: string;
+  zone: string;
 }
 export interface IAgentSearchByCodeRequest {
-   searchCondition?: string
+  searchCondition?: string
   zone?: string
   agentId?: number
   agentCode?: string
@@ -56,9 +56,9 @@ export interface IAgent {
   panNumber: string;
   email: string | null;
   mobileNo: string | null;
-  supervisors?: Array<IAgent> | null; 
-  reportees?: Array<IAgent>| null;  
-  agentAuditTrail?: Array<IAgentAuditTrail>;     
+  supervisors?: Array<IAgent> | null;
+  reportees?: Array<IAgent> | null;
+  agentAuditTrail?: Array<IAgentAuditTrail>;
   peopleHeirarchy?: Array<IPeopleHierarchy> | null;
   total_count?: number;
   title: string | null;
@@ -66,9 +66,9 @@ export interface IAgent {
   employeeCode?: string | null;
   applicationDocketNo?: string | null;
   candidateType?: string | null;
-  startDate?: string | Date;
-  appointmentDate?: string | Date;
-  incorporationDate?: string | Date;
+  startDate?: string;
+  appointmentDate?: string;
+  incorporationDate?: string;
   agentTypeCategory?: string;
   agentClassification?: string;
   cmsAgentType?: string;
@@ -76,17 +76,45 @@ export interface IAgent {
   sub_Channel?: string;
   sec206abFlag?: boolean;
   panAadharLinkFlag?: Boolean;
+  branchCode: string;
+  branchName: string;
+  confirmationDate: string,
+  hrDoj: string,
+  fgValueTrngDate: string,
+  itSecPolicyTrngDate: string,
+  npsTrngCompletionDate: string,
+  whistleBlowerTrngDate: string,
+  govPolicyTrngDate: string,
+  inductionTrngDate: string,
+  incrementDate: string,
+  lastWorkingDate: string,
+  lastPromotionDate: string,
+  hSecPolicyTrngDate: string,
+  licenseNo: string,
+  licenseType: string,
+  licenseIssueDate: string,
+  licenseExpiryDate: string,
+  cnctPersonName: string,
+  ulipFlag: string,
+  trainingGroupType: string,
+  ifs: string,
+  refresherTrainingCompleted: string,
+  isMigrated: string,
+  mainPartnerClientCode: string,
+  agentMaincodevwEid: string,
+  registrationDate: string,
+  vertical: string,
 }
-export interface IAgentAuditTrail{
-   agentCode : number;
-   agentId : string;
-   changedOn:string;
-   filedName:string;
-   oldValue:string;
-   newValue:string;
-   modifiedBy:string;
-   modifiedDate:string;
-   changeDescription:string;
+export interface IAgentAuditTrail {
+  agentCode: number;
+  agentId: string;
+  changedOn: string;
+  filedName: string;
+  oldValue: string;
+  newValue: string;
+  modifiedBy: string;
+  modifiedDate: string;
+  changeDescription: string;
 }
 export interface IPeopleHierarchy {
   agentId: number;
