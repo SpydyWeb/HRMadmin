@@ -14,6 +14,7 @@ import { useEncryption } from '@/store/encryptionStore'
 import AuditLog from './AuditLog'
 import Training from './Training'
 import License from './License'
+import Financial from './Financial'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal' },
@@ -88,20 +89,20 @@ const Agent = () => {
   return (
     <>
       <div className="space-y-2 my-6">
-        <Label className="text-gray-500">Search Agent</Label>
+        {/* <Label className="text-gray-500">Search Agent</Label> */}
         <div className="flex max-w-md relative">
           <Input
             type="text"
             value={searchInput}
-            variant="standard"
+            variant="outlined"
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by Agent Code, Name, Mobile Number"
-            className="w-full !pr-[9rem] !py-6"
+            placeholder="Search by Agent Code, Name, Mobile Number...."
+            className="w-full !pr-[9rem] !py-6 bg-white"
           />
           <div className="absolute inset-y-0 right-1 pl-3 flex items-center">
             <Button
               variant="blue"
-              size="sm"
+              size="md"
               onClick={() => {
                 // Trigger a search by code/name/phone if needed
                 // e.g., refetch with searchInput or navigate to a new route
@@ -133,6 +134,8 @@ const Agent = () => {
         <Training agent={firstAgent} />
       ) : activeTab === 'licensedetails' ? (
         <License agent={firstAgent} />
+      ) : activeTab === 'financialdetails' ? (
+        <Financial agent={firstAgent} />
       ) : (
         <ComingSoon />
       )}
