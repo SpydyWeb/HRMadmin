@@ -1,7 +1,7 @@
 import { BiBuilding } from 'react-icons/bi'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent } from '../ui/card'
-import DynamicFormBuilder from '../form/DynamicFormBuilder'
+import DynamicFormBuilderLogin from '../form/DynamicFormBuilderLogin'
 import { showToast } from '../ui/sonner'
 import { loginSchema } from '@/schema/authSchema'
 import { auth } from '@/auth'
@@ -106,7 +106,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
   return (
     <Card className="animate-slide-up">
       <CardContent>
-        <DynamicFormBuilder
+        <DynamicFormBuilderLogin
           config={loginformConfig}
           onSubmit={handleSubmit}
           onFieldClick={handleFieldClick}

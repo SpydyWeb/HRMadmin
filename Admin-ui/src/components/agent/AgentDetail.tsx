@@ -6,13 +6,15 @@ import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
+import { User } from 'lucide-react'
+import { changeLanguage } from 'i18next'
+import { channel } from 'diagnostics_channel'
 // import { BiIdCard } from 'react-icons/bi'
-import DisplaySection from '../ui/displaySection'
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
-  // console.log('agent', agent)
+  console.log('agent', agent)
   const genderOptions = ['Male', 'Female', 'Other']
   const genderDropdown = genderOptions.map((g) => ({
     label: g,
@@ -219,7 +221,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       : null,
   }
   const agentPersonalInfoConfig = {
-    gridCols: 2,
+    gridCols: 3,
 
     defaultValues: {
       title: agent.title,
@@ -228,8 +230,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       lastName: agent.lastName,
       father_Husband_Nm: agent.father_Husband_Nm,
       gender: agent.gender,
-      panAadharLinkFlag: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
     },
 
     schema: z.object({
@@ -239,8 +239,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       lastName: z.string().optional(),
       father_Husband_Nm: z.string().optional(),
       gender: z.string().optional(),
-      panAadharLinkFlag: z.string().optional(),
-      sec206abFlag: z.string().optional(),
     }),
 
     fields: [
@@ -293,22 +291,6 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-      {
-        name: 'panAadharLinkFlag',
-        label: 'Pan Aadhar Link Flag',
-        type: 'boolean',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'sec206abFlag',
-        label: 'Sec 206ab Flag',
-        type: 'boolean',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
     ],
 
     buttons: isEdit
@@ -321,7 +303,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               variant: 'orange',
               colSpan: 2,
               size: 'lg',
-              className: 'whitespace-nowrap'
+              className: 'whitespace-nowrap',
             },
           ],
         }
@@ -334,6 +316,8 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
     defaultValues: {
       channel_Name: agent.channel_Name,
       sub_Channel: agent.sub_Channel,
+      panAadharLinkFlag: agent.panAadharLinkFlag,
+      sec206abFlag: agent.sec206abFlag,
     },
 
     schema: z.object({
@@ -358,18 +342,34 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
+      {
+        name: 'panAadharLinkFlag',
+        label: 'Pan Aadhar Link Flag',
+        type: 'boolean',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'sec206abFlag',
+        label: 'Sec 206ab Flag',
+        type: 'boolean',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
     ],
 
     buttons: isEdit
       ? {
-          gridCols: 6,
+          gridCols: 4,
           items: [
             {
               label: 'Save Changes',
               type: 'submit',
               variant: 'orange',
-              colSpan: 1,
-              size: 'lg',
+              colSpan: 2,
+              size: 'md',
             },
           ],
         }
@@ -399,17 +399,19 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
             />
           </div>
         </div>
+        {/* -----------1st part------------------- */}
 
         <div className="flex gap-10">
           {/* Left Column - Agent Profile */}
-          <Card className="bg-white w-lg">
+          <Card className="bg-white w-sm bg-[#F2F2F7]">
             <CardContent>
               <div className="flex flex-col items-center text-center">
                 {/* Profile Image */}
                 <img
                   src="/person.jpg"
+                  // src="/api/placeholder/300/300"
                   alt="Agent Profile"
-                  className="aspect-3/2 object-cover mb-3 rounded-lg min-h-[380px]"
+                  className="aspect-3/2 object-cover mb-3 rounded-lg"
                   onError={(e) => {
                     ;(e.target as HTMLImageElement).src =
                       'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjE1MCIgY3k9IjEyMCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAyMDBDMTAwIDE3Mi4zODYgMTIyLjM4NiAxNTAgMTUwIDE1MFMyMDAgMTcyLjM4NiAyMDAgMjAwVjIyMEgxMDBWMjAwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K'
@@ -417,7 +419,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
                 />
 
                 {/* Agent Info Card */}
-                <div className="bg-orange-400 text-white rounded-lg p-4 w-full max-w-xs">
+                <div className="bg-orange-400 text-white rounded-lg p-3 w-full max-w-xs">
                   <div className="flex items-center gap-3">
                     <BiUser className="h-8 w-8 text-white" />
                     <div className="text-left">
@@ -434,10 +436,10 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
             </CardContent>{' '}
           </Card>
 
-          <Card className="bg-white w-full overflow-y-auto">
+          <Card className="flex justify-center items-center bg-white w-full  !m-0 !py-0 !rounded-md overflow-y-auto bg-[#F2F2F7]">
             <CardContent>
               <DynamicFormBuilder
-                config={agentPersonalInfoConfig}
+                config={agentChannelConfig}
                 onSubmit={agentForm.handleSubmit}
               />
 
@@ -446,14 +448,16 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </Card>
         </div>
 
-        <div className="flex justify-between">
+        {/* --------------1st part----------------- */}
+
+        {/* <div className="flex justify-between">
           <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
             Employment Details
           </h2>
-        </div>
+        </div> */}
         <div className="flex gap-2">
-          <Card className="bg-white w-full mt-5 max-h-[590px] overflow-y-auto overflow-x-hidden">
-            <CardContent>
+          <Card className="bg-white w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden  bg-[#F2F2F7]">
+            <CardContent className="!px-0 !py-0">
               <DynamicFormBuilder
                 config={agentFormConfig}
                 onSubmit={agentForm.handleSubmit}
@@ -463,19 +467,20 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </Card>
         </div>
 
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+        {/* <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
           Channel
-        </h2>
-
-        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
-          <CardContent>
-            <DynamicFormBuilder
-              config={agentChannelConfig}
-              onSubmit={agentForm.handleSubmit}
-            />
-            {/* some form inputs */}
-          </CardContent>
-        </Card>
+        </h2> */}
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <DynamicFormBuilder
+                config={agentPersonalInfoConfig}
+                onSubmit={agentForm.handleSubmit}
+              />
+              {/* some form inputs */}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

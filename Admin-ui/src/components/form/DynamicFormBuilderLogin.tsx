@@ -2,8 +2,8 @@ import React from 'react'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { FieldError } from './field-error'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Login_Input } from '@/components/ui/login-input'
+import { Login_Label } from '@/components/ui/login-label'
 import Button from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -19,13 +19,13 @@ import DatePicker from '../ui/date-picker'
 import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
 
-interface DynamicFormBuilderProps {
+interface DynamicFormBuilderLoginProps {
   config: any
   onSubmit: (data: Record<string, any>) => void
   onFieldClick?: (fieldName: string, data?: Array<any>) => void
   defaultValues?: Record<string, any>
 }
-const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
+const DynamicFormBuilderLogin: React.FC<DynamicFormBuilderLoginProps> = ({
   config,
   onSubmit,
   onFieldClick = () => {},
@@ -77,160 +77,22 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
           }
 
           return (
-  //           <div
-  //               className="flex flex-col gap-1 bg-white border border-gray-200 rounded-xs p-4 shadow-sm w-full"
-  //             style={{
-  //   gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
-  // }}
-  //           >
-  //             {field.type !== 'checkbox' && field.type !== 'link' && (
-  //               <Label htmlFor={field.name} className="label-text">
-  //                 {field.label}
-  //               </Label>
-  //             )}
-  //             {['text', 'email', 'password', 'number'].includes(field.type) && (
-  //                 <div className="relative flex items-center">
-
-  //               <Input
-  //                 id={field.name}
-  //                 type={field.type}
-  //                 placeholder={field.placeholder}
-  //                 value={fieldApi.state.value}
-  //                 onChange={(e) =>
-  //                   fieldApi.handleChange(
-  //                     field.type === 'number'
-  //                       ? Number(e.target.value)
-  //                       : e.target.value,
-  //                   )
-  //                 }
-  //                 readOnly={field.readOnly}
-  //                 disabled={field.readOnly}
-  //                 variant={field.custom}
-                  
-  //               />
-  //               </div>
-  //             )}
-
-  //             {field.type === 'textarea' && (
-  //               <Textarea
-  //                 id={field.name}
-  //                 placeholder={field.placeholder}
-  //                 value={fieldApi.state.value}
-  //                 onChange={(e) => handleChange(e.target.value)}
-  //                 className="w-full min-h-24"
-  //                 readOnly={field.readOnly}
-  //                 disabled={field.readOnly}
-                  
-  //               />
-  //             )}
-
-  //             {field.type === 'select' && (
-  //               <Select
-  //                 value={fieldApi.state.value}
-  //                 onValueChange={handleChange}
-  //                 disabled={field.readOnly}
-  //               >
-  //                 <SelectTrigger className="w-full">
-  //                   <SelectValue placeholder={field.placeholder} />
-  //                 </SelectTrigger>
-  //                 <SelectContent>
-  //                   {field.options?.map((option: any) => (
-  //                     <SelectItem key={option.value} value={option.value}>
-  //                       {option.label}
-  //                     </SelectItem>
-  //                   ))}
-  //                 </SelectContent>
-  //               </Select>
-  //             )}
-
-  //             {field.type === 'checkbox' && (
-  //               <div className="flex items-center space-x-2">
-  //                 <Checkbox
-  //                   id={field.name}
-  //                   checked={fieldApi.state.value}
-  //                   onCheckedChange={handleChange}
-  //                   disabled={field.readOnly}
-  //                 />
-  //                 <Label
-  //                   htmlFor={field.name}
-  //                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-  //                 >
-  //                   {field.label}
-  //                 </Label>
-  //               </div>
-  //             )}
-  //             {/* DATE PICKER */}
-  //             {field.type === 'date' && (
-                
-  //               <DatePicker
-  //                 value={fieldApi.state.value}
-  //                 onChange={(d) => fieldApi.handleChange(d)}
-  //                 icon={field.icon}
-  //                 disabled={field.readOnly}
-  //               />
-  //             )}
-       
-
-  //             {/* TIME PICKER */}
-  //             {field.type === 'time' && (
-  //               <TimePicker
-  //                 value={fieldApi.state.value}
-  //                 onChange={(t: any) => fieldApi.handleChange(t)}
-  //               />
-  //             )}
-
-  //             {/* DATE + TIME PICKER */}
-  //             {field.type === 'datetime' && (
-  //               <DateTimePicker
-  //                 value={fieldApi.state.value}
-  //                 onChange={(v: any) => fieldApi.handleChange(v)}
-  //               />
-  //             )}
-
-  //             {field.type === 'link' && (
-  //               <span
-  //                 onClick={() => onFieldClick(field.name)}
-  //                 className={
-  //                   field.className ||
-  //                   'text-blue-600 hover:underline text-sm cursor-pointer'
-  //                 }
-  //               >
-  //                 {field.label}
-  //               </span>
-  //             )}
-
-  //             {field.type === 'boolean' && (
-  //               <div className="flex items-center justify-between py-2">
-  //                 <Switch
-  //                   id={field.name}
-  //                   checked={fieldApi.state.value ?? false}
-  //                   onCheckedChange={(val) => fieldApi.handleChange(val)}
-  //                   disabled={field.readOnly}
-  //                   className="h-5 w-9 data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-300 [&>span]:h-3 [&>span]:w-3 [&>span]:translate-x-0 data-[state=checked]:[&>span]:translate-x-5 transition-all duration-200"
-  //                 />
-  //               </div>
-  //             )}
-
-  //             {/* {fieldApi.state.meta.errors.length > 0 && (
-  //               <FieldError field={fieldApi.state.meta} />
-  //             )} */}
-  //           </div>
-
   <div
-  className="flex flex-col gap-1 bg-white border border-gray-200 rounded-xs p-4 shadow-sm w-full"
+  className="flex flex-col gap-1 w-full"
   style={{
     gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
   }}
 >
+
   {field.type !== 'checkbox' && field.type !== 'link' && (
-    <Label htmlFor={field.name} className="label-text">
+    <Login_Label htmlFor={field.name}>
       {field.label}
-    </Label>
+    </Login_Label>
   )}
   
   {['text', 'email', 'password', 'number'].includes(field.type) && (
     <div className="relative flex items-center">
-      <Input
+      <Login_Input
         id={field.name}
         type={field.type}
         placeholder={field.placeholder}
@@ -245,7 +107,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         readOnly={field.readOnly}
         disabled={field.readOnly}
         variant={field.custom}
-        className="w-full h-10 px-3 py-2"
+        className="w-full h-10 px-3 py-2" 
       />
     </div>
   )}
@@ -290,12 +152,12 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         disabled={field.readOnly}
         className="h-4 w-4" // Added consistent size
       />
-      <Label
+      <Login_Label
         htmlFor={field.name}
         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         {field.label}
-      </Label>
+      </Login_Label>
     </div>
   )}
 
@@ -376,7 +238,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   return (
     <>
       <div
-        className="grid gap-6 mb-6 bg-[#F2F2F7]"
+        className="grid gap-6 mb-6"
         style={{
           gridTemplateColumns: `repeat(${config.gridCols}, minmax(0, 1fr))`,
         }}
@@ -421,4 +283,4 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   )
 }
 
-export default DynamicFormBuilder
+export default DynamicFormBuilderLogin

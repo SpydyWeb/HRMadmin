@@ -1,25 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
+import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
-import { FloatedTextFeild } from '../form/floated-text-field'
-import { Switch } from "@/components/ui/switch"
-import { FloatedDateTimeField } from '../form/field-datetime-picker'
-// import  FloatedSelectFeild  from '../form/dropdown-fields'
-
+import { Switch } from '@/components/ui/switch'
+import z from 'zod'
+import DisplaySection from '../ui/displaySection'
 
 const License = ({ agent }: { agent: IAgent }) => {
-  const [isEdit, setIsEdit] = useState(false)
+  const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
-  console.log("agent", agent);
+  // console.log('agent', agent)
+  const genderOptions = ['Male', 'Female', 'Other']
+  const genderDropdown = genderOptions.map((g) => ({
+    label: g,
+    value: g,
+  }))
 
-  if (!agent) return null;
+  if (!agent) return null
 
   const licenseForm = useAppForm({
     defaultValues: {
       licenseNo: agent.licenseNo,
       licenseType: agent.licenseType,
       licenseIssueDate: agent.licenseIssueDate,
+      licenseStatus: agent.licenseStatus,
       licenseExpiryDate: agent.licenseExpiryDate,
       cnctPersonName: agent.cnctPersonName,
       agentTypeCategory: agent.agentTypeCategory,
@@ -33,15 +39,329 @@ const License = ({ agent }: { agent: IAgent }) => {
       agentMaincodevwEid: agent.agentMaincodevwEid,
       registrationDate: agent.registrationDate,
       vertical: agent.vertical,
-
     },
     onSubmit: async ({ value }) => {
       console.log('Updated agent:', value)
     },
   })
 
+  const licenseConfig = {
+    gridCols: 3,
+    defaultValues: {
+      cnctPersonName: agent.cnctPersonName,
+      agentTypeCategory: agent.agentTypeCategory,
+      agentClassification: agent.agentClassification,
+      licenseStatus: agent.licenseStatus,
+      licenseExpiryDate: agent.licenseExpiryDate,
+      licenseIssueDate: agent.licenseIssueDate,
+      licenseType: agent.licenseType,
+      licenseNo: agent.licenseNo,
+    },
+    schema: z.object({
+         cnctPersonName:  z.string().optional(),
+      agentTypeCategory:  z.string().optional(),
+      agentClassification:  z.string().optional(),
+      licenseStatus:  z.string().optional(),
+      licenseExpiryDate:  z.string().optional(),
+      licenseIssueDate:  z.string().optional(),
+      licenseType:  z.string().optional(),
+      licenseNo:  z.string().optional(),
+    }),
 
-  const f = licenseForm as any;
+    fields: [
+      {
+        name: 'cnctPersonName',
+        label: 'Contact Person Name',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentTypeCategory',
+        label: 'Agent Type Category',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentClassification',
+        label: 'Agent Classification',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'licenseStatus',
+        label: 'License Status',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'licenseExpiryDate',
+        label: 'license Expiry Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'licenseIssueDate',
+        label: 'License Issue Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'licenseType',
+        label: 'License Type',
+        type: 'date',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'licenseNo',
+        label: 'License No',
+        type: 'date',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'lg',
+            },
+          ],
+        }
+      : null,
+  }
+  const licenseTrainingConfig = {
+    gridCols: 2,
+
+    defaultValues: {
+       trainingGroupType: agent.trainingGroupType,
+      refresherTrainingCompleted: agent.refresherTrainingCompleted,
+
+    },
+
+    schema: z.object({
+           trainingGroupType:  z.string().optional(),
+      refresherTrainingCompleted:  z.string().optional(),
+    }),
+
+    fields: [
+      {
+        name: 'trainingGroupType',
+        label: 'Training Group Type',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'refresherTrainingCompleted',
+        label: 'Refresher Training Completed',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 2,
+              size: 'lg',
+              className: 'whitespace-nowrap',
+            },
+          ],
+        }
+      : null,
+  }
+
+  const licenseProductConfig = {
+    gridCols: 2,
+
+    defaultValues: {
+            ulipFlag: agent.ulipFlag,
+
+    },
+
+    schema: z.object({
+      ulipFlag: z.string().optional(),
+      
+    }),
+
+    fields: [
+      {
+        name: 'ulipFlag',
+        label: 'Ulip Flag',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'lg',
+            },
+          ],
+        }
+      : null,
+  }
+  const licenseFinancialConfig = {
+    gridCols: 2,
+
+    defaultValues: {
+       ifs: agent.ifs,
+    },
+
+    schema: z.object({
+      ifs: z.string().optional(),
+      
+    }),
+
+    fields: [
+      {
+        name: 'ifs',
+        label: 'Channel Name',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'lg',
+            },
+          ],
+        }
+      : null,
+  }
+  const licenseOthersConfig = {
+    gridCols: 2,
+
+    defaultValues: {
+      isMigrated: agent.isMigrated,
+      mainPartnerClientCode: agent.mainPartnerClientCode,
+      agentMaincodevwEid: agent.agentMaincodevwEid,
+      registrationDate: agent.registrationDate,
+      vertical: agent.vertical,
+    },
+
+    schema: z.object({
+       isMigrated: z.string().optional(),
+      mainPartnerClientCode: z.string().optional(),
+      agentMaincodevwEid: z.string().optional(),
+      registrationDate: z.string().optional(),
+      vertical: z.string().optional(),
+     
+    }),
+
+    fields: [
+      {
+        name: 'isMigrated',
+        label: 'Is Migrated',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'mainPartnerClientCode',
+        label: 'Main Partner Client Code',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentMaincodevwEid',
+        label: 'Agent Main codevwE id',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'registrationDate',
+        label: 'Registration Date',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'vertical',
+        label: 'vertical',
+        type: 'text',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    ],
+
+    buttons: isEdit
+      ? {
+          gridCols: 6,
+          items: [
+            {
+              label: 'Save Changes',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 1,
+              size: 'lg',
+            },
+          ],
+        }
+      : null,
+  }
+
+  // console.log("agentFormConfig", agentFormConfig)
+
+  const f = licenseForm as any
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -49,367 +369,100 @@ const License = ({ agent }: { agent: IAgent }) => {
   return (
     <div className="bg-white p-10">
       <div className="mb-6">
-        <div className="flex flex-col justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+
+        
+        <div className="flex justify-between">
+
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 font-poppins font-semibold text-[20px]">
             License Details
           </h2>
-          <div className="flex gap-10">
-
-            <div className='absolute right-20 top-82'>
-              <div className="flex items-center gap-3 pr-5">
-                {/* Label before the switch */}
-                <span className="font-medium text-gray-700">Edit</span>
-
-                {/* The switch itself */}
-                <Switch
-                  checked={isEdit}
-                  onCheckedChange={setIsEdit}
-                  className="data-[state=checked]:bg-orange-500"
-                />
-
-                {/* Dynamic On/Off text */}
-                <span
-                  className={`font-medium ${isEdit ? "text-gray-500" : "text-gray-500"
-                    } transition-colors`}
-                >
-                  {isEdit ? "On" : "Off"}
-                </span>
-              </div>
-
-            </div>
-
-            <Card className="bg-gray-100 w-full max-h-[400px] overflow-y-auto">
-              <CardContent>
-                <f.AppForm>
-                  <div className="grid grid-cols-3 gap-6 w-full mt-4">
-
-                    <f.AppField name="licenseNo">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedTextFeild
-                          label="License No"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-
-                    <f.AppField name="licenseType">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedTextField
-                          label="License Type"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-                    <f.AppField name="licenseIssueDate">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedDateTimeField
-                          label="License Issue Date"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-                    <f.AppField name="licenseExpiryDate">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedDateTimeField
-                          label="License Expiry Date"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-                    <f.AppField name="licneseStatus">
-                      {({
-                        value,
-                        onChange,
-                      }: {
-                        value: string
-                        onChange: (v: string) => void
-                      }) => (
-                        <FloatedTextFeild
-                          label="Licnese Status"
-                          value={value}
-                          onChange={onChange}
-                          readOnly={!isEdit}
-                        />
-                      )}
-                    </f.AppField>
-
-                    {/* Repeat for other fields */}
-                  </div>
-
-                  {isEdit && (
-                    <licenseForm.Button
-                      onClick={licenseForm.handleSubmit}
-                      className="mt-4"
-                      size="md"
-                      variant="orange"
-                    >
-                      Save Changes
-                    </licenseForm.Button>
-                  )}
-                </f.AppForm>
-              </CardContent>
-            </Card>
-
+          <div className="flex gap-2">
+            <span className="font-medium text-gray-700">Edit</span>
+            <Switch
+              checked={isEdit}
+              onCheckedChange={setIsEdit}
+              className="data-[state=checked]:bg-orange-500"
+            />
           </div>
-
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-            Training Details
-          </h2>
-
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
+        </div>
+        {/* license */}
+        <div className="flex gap-10">
+          <Card className="bg-white w-full overflow-y-auto">
             <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
+              <DynamicFormBuilder
+                config={licenseConfig}
+                onSubmit={licenseForm.handleSubmit}
+              />
 
-                  <f.AppField name="refresherTrainingCompleted">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <div className="flex items-center gap-3 mt-3">
-                        <label className="text-xs text-black-500">Refresher Training Completed</label>
-
-                        <Switch
-                          checked={Boolean(value)}
-                          onCheckedChange={(v) => onChange(v)}
-                          disabled={!isEdit}
-                          className="data-[state=checked]:bg-orange-500 h-[1rem] w-10"
-                        />
-
-                        <span className="text-xs text-orange-500">
-                          {value ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    )}
-                  </f.AppField>
-
-                  <f.AppField name="trainingGroupType">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Training Group Type"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
-            </CardContent>
-          </Card>
-
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-            Financial          </h2>
-
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
-
-                  <f.AppField name="ifs">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Ifs"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
-            </CardContent>
-          </Card>
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-            Product          </h2>
-
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
-
-                  <f.AppField name="ulipFlag">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <div className="flex items-center gap-3 mt-3">
-                        <label className="text-xs text-black-500">Ulip Flag</label>
-
-                        <Switch
-                          checked={Boolean(value)}
-                          onCheckedChange={(v) => onChange(v)}
-                          disabled={!isEdit}
-                          className="data-[state=checked]:bg-orange-500 h-[1rem] w-10"
-                        />
-
-                        <span className="text-xs text-orange-500">
-                          {value ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    )}
-                  </f.AppField>
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
-            </CardContent>
-          </Card>
-          <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6">
-            Others          </h2>
-
-          <Card className="bg-gray-100 w-full mt-5 max-h-[400px] overflow-y-auto">
-            <CardContent>
-              <f.AppForm>
-                <div className="grid grid-cols-3 gap-6 w-full mt-4">
-
-                  <f.AppField name="isMigrated">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <div className="flex items-center gap-3 mt-3">
-                        <label className="text-xs text-black-500">Is Migrated</label>
-
-                        <Switch
-                          checked={Boolean(value)}
-                          onCheckedChange={(v) => onChange(v)}
-                          disabled={!isEdit}
-                          className="data-[state=checked]:bg-orange-500 h-[1rem] w-10"
-                        />
-
-                        <span className="text-xs text-orange-500">
-                          {value ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    )}
-                  </f.AppField>
-                  <f.AppField name="mainPartnerClientCode">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Main Partner Client Code"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="Agent Maincodevw Eid ">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedTextFeild
-                        label="Agent Maincodevw Eid"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="registrationDate">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedDateTimeField
-                        label="Registration Date"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-                  <f.AppField name="vertical">
-                    {({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-                      <FloatedSelectField
-                        label="Vertical"
-                        value={value}
-                        onChange={onChange}
-                        readOnly={!isEdit}
-                      />
-                    )}
-                  </f.AppField>
-
-                  {/* Repeat for other fields */}
-                </div>
-
-                {/* {isEdit && (
-                <agentForm.Button
-                  onClick={agentForm.handleSubmit}
-                  className="mt-4"
-                  size="md"
-                  variant="orange"
-                >
-                  Save Changes
-                </agentForm.Button>
-              )} */}
-              </f.AppForm>
+              {/* some form inputs here */}
             </CardContent>
           </Card>
         </div>
+{/* Training Details */}
+        <div className="flex justify-between">
+          <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
+            Training Details
+          </h2>
+        </div>
+        <div className="flex gap-2">
+          <Card className="bg-white w-full mt-5 max-h-[590px] overflow-y-auto overflow-x-hidden">
+            <CardContent>
+              <DynamicFormBuilder
+                config={licenseTrainingConfig}
+                onSubmit={licenseForm.handleSubmit}
+              />
+              {/* some form inputs here */}
+            </CardContent>
+          </Card>
+        </div>
+{/* Financial */}
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+          Financial Details
+        </h2>
+
+        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+          <CardContent>
+            <DynamicFormBuilder
+              config={licenseFinancialConfig}
+              onSubmit={licenseForm.handleSubmit}
+            />
+            {/* some form inputs */}
+          </CardContent>
+        </Card>
+
+{/*Product Details */}
+
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+          Product Details
+        </h2>
+
+        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+          <CardContent>
+            <DynamicFormBuilder
+              config={licenseProductConfig}
+              onSubmit={licenseForm.handleSubmit}
+            />
+            {/* some form inputs */}
+          </CardContent>
+        </Card>
+
+
+        {/*others Details */}
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+          Others Details
+        </h2>
+
+        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+          <CardContent>
+            <DynamicFormBuilder
+              config={licenseOthersConfig}
+              onSubmit={licenseForm.handleSubmit}
+            />
+            {/* some form inputs */}
+          </CardContent>
+        </Card>
       </div>
     </div>
-
   )
 }
 
