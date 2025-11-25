@@ -1,4 +1,4 @@
-export const IpAddress = {
+const IpAddress = {
   _wer: (_jp) => {
     return IpAddress._mQ(_jp);
   },
@@ -29,3 +29,5 @@ export const IpAddress = {
     return input.substr(0, 16);
   },
 };
+
+module.exports = { IpAddress };

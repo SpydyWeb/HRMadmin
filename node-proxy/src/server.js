@@ -10,6 +10,7 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const config = require("./config");
 const { encryptionService } = require("./services/encryptionService");
+const apiService = require("./services/apiService");
 const apiRoutes = require("./routes/proxyRoutes");
 
 const numCPUs = os.cpus().length;
@@ -108,8 +109,9 @@ if (cluster.isMaster) {
   // Routes
   app.use("/api", apiRoutes);
 
-  app.post("/getOasisChunks", (req, res) => {
-    res.json({ OasisChunks: encryptionService.getOasis_Key() });
+
+  app.get("/getHRMChunks", (req, res) => {
+    res.json(apiService.getHRMChunks());
   });
 
   app.get("/", (req, res) => {
@@ -128,21 +130,5 @@ if (cluster.isMaster) {
     res.status(500).json({ error: "Internal Server Error" });
   });
 
-  // Graceful Shutdown
-  const gracefulShutdown = () => {
-    console.log(`Worker ${process.pid} received kill signal, shutting down gracefully`);
-    server.close(() => {
-      console.log(`Worker ${process.pid} closed remaining connections`);
-      process.exit(0);
-    });
-
-    // Force close server after 10 seconds
-    setTimeout(() => {
-      console.error(`Worker ${process.pid} could not close connections in time, forcefully shutting down`);
-      process.exit(1);
-    }, 10000);
-  };
-
-  process.on("SIGTERM", gracefulShutdown);
-  process.on("SIGINT", gracefulShutdown);
+  
 }
