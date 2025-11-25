@@ -15,20 +15,6 @@ const apiRoutes = require("./routes/proxyRoutes");
 
 const numCPUs = os.cpus().length;
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
-
-  // Fork workers.
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
-    // Restart the worker
-    cluster.fork();
-  });
-} else {
   const app = express();
   app.set('trust proxy', 1);
 
@@ -130,5 +116,4 @@ if (cluster.isMaster) {
     res.status(500).json({ error: "Internal Server Error" });
   });
 
-  
-}
+
