@@ -38,15 +38,12 @@ const tabs = [
   },
 ]
 
-
-
-
 const CodeMovement = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
- const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1)
   const toggleRowSelection = (srno: number) => {
     setSelectedRows((prev) =>
       prev.includes(srno)
@@ -79,9 +76,14 @@ const CodeMovement = () => {
       ),
       width: '5rem',
     },
-    { header: 'Agent ID', accessor: (row: any) => (
-       <Link to="" className="text-blue-700 underline font-medium">{row.agentid}</Link>
-      ), },
+    {
+      header: 'Agent ID',
+      accessor: (row: any) => (
+        <Link to="" className="text-blue-700 underline font-medium">
+          {row.agentid}
+        </Link>
+      ),
+    },
     { header: 'Requested By', accessor: 'requestedby' },
     { header: 'Date', accessor: 'date' },
     {
@@ -124,7 +126,8 @@ const CodeMovement = () => {
             searchPlaceholder="Enter Agent ID"
             dropdownLabel="Channel"
             dropdownOptions={['All', 'Email', 'Phone', 'Chat', 'Social Media']}
-            allSelected={selectedRows.length === tableData.length}
+            searchValue={searchTerm}
+            selectedOption={selectedChannel}
             onSearchChange={(value) => setSearchTerm(value)}
             onDropdownChange={(value) => setSelectedChannel(value)}
             onResetFilter={() => {
@@ -132,7 +135,7 @@ const CodeMovement = () => {
               setSelectedChannel('All')
               setSelectedRows([])
             }}
-            onAdvancedSearch={() => console.log('Advanced search toggled')}
+            onAdvancedToggle={() => console.log('Advanced search toggled')}
             onAcceptAll={() => console.log('Accept All clicked')}
             onRejectAll={() => console.log('Reject All clicked')}
             onExcelDownload={() => console.log('Excel download clicked')}
@@ -155,7 +158,11 @@ const CodeMovement = () => {
 
           {/* Right Section */}
           <div className="flex gap-3">
-            <Button variant="blue" size={'sm'} onClick={()=>navigate({ to: RoutePaths.BULKACTION })}>
+            <Button
+              variant="blue"
+              size={'sm'}
+              onClick={() => navigate({ to: RoutePaths.BULKACTION })}
+            >
               <FaClipboardList className="h-4 w-4" />
               Bulk Action
             </Button>
@@ -170,13 +177,9 @@ const CodeMovement = () => {
           </div>
         </Card>
       </div>
-      <div className='flex justify-between items-center'>
-        <span className='font-semibold text-lg text-gray-700'>Page 1/6</span>
-       <Pagination
-        totalPages={4}
-        currentPage={page}
-        onPageChange={setPage}
-      />
+      <div className="flex justify-between items-center">
+        <span className="font-semibold text-lg text-gray-700">Page 1/6</span>
+        <Pagination totalPages={4} currentPage={page} onPageChange={setPage} />
       </div>
     </div>
   )

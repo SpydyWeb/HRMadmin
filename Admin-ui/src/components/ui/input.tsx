@@ -4,7 +4,7 @@ import clsx from 'clsx'
 
 interface InputProps extends React.ComponentProps<'input'> {
   variant?: 'outlined' | 'filled' | 'standard' | 'custom'
-  label: string
+  label?: string
 }
 
 function Input({
@@ -15,16 +15,17 @@ function Input({
   ...props
 }: InputProps) {
   const variantsLabel = {
-    outlined:'',
+    outlined: '',
     filled: '',
     standard: 'mb-2  font-medium',
     custom: 'label-text text-[#9B9B9B] pt-[1%] pr-[1%] pb-[1%] pl-0',
   }
-  const variantsContainer={
-    outlined:'',
+  const variantsContainer = {
+    outlined: '',
     filled: '',
     standard: '',
-    custom: ' bg-white border border-gray-200 rounded-xs p-6 shadow-sm w-full after:relative ',
+    custom:
+      ' bg-white border border-gray-200 rounded-xs p-6 shadow-sm w-full after:relative ',
   }
   const variantsInput = {
     outlined:
@@ -39,11 +40,7 @@ function Input({
 
   return (
     <div className={clsx(variantsContainer[variant])}>
-      <Label
-        htmlFor={props.name}
-        className={clsx( 
-          variantsLabel[variant])}
-      >
+      <Label htmlFor={props.name} className={clsx(variantsLabel[variant])}>
         {label}
       </Label>
       <input
