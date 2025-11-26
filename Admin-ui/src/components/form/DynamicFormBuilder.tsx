@@ -217,19 +217,19 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   //           </div>
 
   <div
-  className="flex flex-col gap-1 bg-white border border-gray-200 rounded-xs p-4 shadow-sm w-full"
+  className="flex flex-col gap-1 bg-white border border-gray-200 rounded-xs p-4 shadow-sm w-full w-[100%]"
   style={{
     gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
   }}
 >
   {field.type !== 'checkbox' && field.type !== 'link' && (
-    <Label htmlFor={field.name} className="label-text">
+    <Label htmlFor={field.name} className="label-text pt-[1%] pr-[1%] pb-[1%] pl-0">
       {field.label}
     </Label>
   )}
   
   {['text', 'email', 'password', 'number'].includes(field.type) && (
-    <div className="relative flex items-center">
+    <div className="relative  pt-[3%] pr-[3%] pb-[3%] pl-0">
       <Input
         id={field.name}
         type={field.type}
@@ -245,7 +245,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         readOnly={field.readOnly}
         disabled={field.readOnly}
         variant={field.custom}
-        className="w-full h-10 px-3 py-2"
+        className="w-full h-10 pl-0 pr-3 py-2"
       />
     </div>
   )}
@@ -344,7 +344,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   )}
 
   {field.type === 'boolean' && (
-    <div className="flex items-center justify-between py-3">
+    <div className="flex items-center justify-between  pt-[5%] pr-[5%] pb-[5%] pl-0">
       <Switch
         id={field.name}
         checked={fieldApi.state.value ?? false}
@@ -376,7 +376,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   return (
     <>
       <div
-        className="grid gap-6 mb-6 bg-[#F2F2F7]"
+        className="grid gap-6 bg-[#F2F2F7] w-[100%]"
         style={{
           gridTemplateColumns: `repeat(${config.gridCols}, minmax(0, 1fr))`,
         }}

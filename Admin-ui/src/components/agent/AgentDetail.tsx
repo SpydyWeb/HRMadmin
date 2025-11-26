@@ -369,7 +369,8 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               type: 'submit',
               variant: 'orange',
               colSpan: 2,
-              size: 'md',
+              size: 'lg',
+              className:"mt-4"
             },
           ],
         }
@@ -403,7 +404,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
 
         <div className="flex gap-10">
           {/* Left Column - Agent Profile */}
-          <Card className="bg-white w-sm bg-[#F2F2F7]">
+          <Card className="bg-white w-lg bg-[#F2F2F7] !rounded-sm">
             <CardContent>
               <div className="flex flex-col items-center text-center">
                 {/* Profile Image */}
@@ -411,7 +412,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
                   src="/person.jpg"
                   // src="/api/placeholder/300/300"
                   alt="Agent Profile"
-                  className="aspect-3/2 object-cover mb-3 rounded-lg"
+                  className="aspect-3/2 object-cover mb-3 h-[12rem] rounded-lg"
                   onError={(e) => {
                     ;(e.target as HTMLImageElement).src =
                       'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjE1MCIgY3k9IjEyMCIgcj0iNDAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAyMDBDMTAwIDE3Mi4zODYgMTIyLjM4NiAxNTAgMTUwIDE1MFMyMDAgMTcyLjM4NiAyMDAgMjAwVjIyMEgxMDBWMjAwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K'
@@ -436,8 +437,8 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
             </CardContent>{' '}
           </Card>
 
-          <Card className="flex justify-center items-center bg-white w-full  !m-0 !py-0 !rounded-md overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
+          <Card className="flex justify-center items-center bg-white w-full  !m-0  p-4 w-[100%] !rounded-sm overflow-y-auto bg-[#F2F2F7] w-[100%]">
+            <CardContent className='w-[100%] p-0'>
               <DynamicFormBuilder
                 config={agentChannelConfig}
                 onSubmit={agentForm.handleSubmit}
@@ -456,8 +457,8 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </h2>
         </div> */}
         <div className="flex gap-2">
-          <Card className="bg-white w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden  bg-[#F2F2F7]">
-            <CardContent className="!px-0 !py-0">
+          <Card className="bg-white w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
+            <CardContent className="!px-0 !py-0 w-[100%]">
               <DynamicFormBuilder
                 config={agentFormConfig}
                 onSubmit={agentForm.handleSubmit}
