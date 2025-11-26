@@ -332,7 +332,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
       {
         name: 'sub_Channel',
@@ -340,7 +340,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
       {
         name: 'panAadharLinkFlag',
@@ -348,7 +348,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         type: 'boolean',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
       {
         name: 'sec206abFlag',
@@ -356,7 +356,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
         type: 'boolean',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
     ],
 
