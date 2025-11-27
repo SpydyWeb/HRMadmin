@@ -215,6 +215,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               variant: 'orange',
               colSpan: 1,
               size: 'lg',
+              className:"mt-4"
             },
           ],
         }
@@ -303,7 +304,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               variant: 'orange',
               colSpan: 2,
               size: 'lg',
-              className: 'whitespace-nowrap',
+              className: 'whitespace-nowrap, mt-4',
             },
           ],
         }
@@ -391,7 +392,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           <h2 className="text-xl font-semibold text-gray-900 mb-6 font-poppins font-semibold text-[20px]">
             Individual Agent Action
           </h2>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             <span className="font-medium text-gray-700">Edit</span>
             <Switch
               checked={isEdit}

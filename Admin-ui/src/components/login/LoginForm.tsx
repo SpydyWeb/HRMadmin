@@ -1,7 +1,7 @@
 import { BiBuilding } from 'react-icons/bi'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent } from '../ui/card'
-import DynamicFormBuilderLogin from '../form/DynamicFormBuilderLogin'
+import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import { showToast } from '../ui/sonner'
 import { loginSchema } from '@/schema/authSchema'
 import { auth } from '@/auth'
@@ -34,6 +34,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         type: 'text',
         placeholder: 'Enter user name',
         colSpan: 1,
+        variant: 'standardone',
       },
       {
         name: 'password',
@@ -41,6 +42,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         type: 'password',
         placeholder: 'Enter password',
         colSpan: 1,
+        variant: 'standardone',
       },
       {
         name: 'remember',
@@ -48,6 +50,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         type: 'checkbox',
         placeholder: '',
         colSpan: 1,
+        variant: 'standardone',
       },
       {
         name: 'forgot-password',
@@ -55,6 +58,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         type: 'link',
         placeholder: '',
         colSpan: 1,
+        variant: 'standardone',
       },
     ],
   }
@@ -106,10 +110,11 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
   return (
     <Card className="animate-slide-up">
       <CardContent>
-        <DynamicFormBuilderLogin
+        <DynamicFormBuilder
           config={loginformConfig}
           onSubmit={handleSubmit}
           onFieldClick={handleFieldClick}
+         
         />
       </CardContent>
     </Card>

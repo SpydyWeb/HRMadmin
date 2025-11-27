@@ -140,11 +140,12 @@ export default function SearchInterface() {
               </div>
               <Input
                 type="text"
+                label=''
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Agent Code, Name, Mobile Number, Email, PAN"
-                className="w-full !pl-10 !pr-[9rem] !py-5 "
-                variant='standard'
+                className="!w-full !pl-10 !pr-[9rem] !py-5 "
+                variant='standardone'
               />
               <div className="absolute  inset-y-0 right-1 pl-3 flex items-center">
                 <Button

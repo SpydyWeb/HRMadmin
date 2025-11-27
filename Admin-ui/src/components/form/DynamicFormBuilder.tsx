@@ -82,10 +82,10 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {!(['text', 'email', 'password', 'number','checkbox','link'].includes(field.type)) && (
+              {!(['text', 'email', 'password', 'number','checkbox','link','boolean'].includes(field.type)) && (
                 <Label
                   htmlFor={field.name}
-                  className="label-text pt-[1%] pr-[1%] pb-[1%] pl-0"
+                  className="label-text text-gray-400 font-semibold pt-[1%] pr-[1%] pb-[1%] pl-0"
                 >
                   {field.label}
                 </Label>
@@ -129,6 +129,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   value={fieldApi.state.value}
                   onValueChange={handleChange}
                   disabled={field.readOnly}
+               
                 >
                   <SelectTrigger className="w-full h-10 px-3 py-2">
                     {' '}
@@ -208,7 +209,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   onClick={() => onFieldClick(field.name)}
                   className={
                     field.className ||
-                    'text-blue-600 hover:underline text-sm cursor-pointer py-2' // Added vertical padding
+                    'text-blue-600 hover:underline text-sm cursor-pointer py-2'
                   }
                 >
                   {field.label}
@@ -216,15 +217,23 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'boolean' && (
-                <div className="flex items-center justify-between  pt-[5%] pr-[5%] pb-[5%] pl-0">
+              <div className='bg-white p-[1rem] shadow-sm'>
+                 <Label
+                  htmlFor={field.name}
+                  className="label-text !text-[#9B9B9B] pt-[2%] pr-[1%] pb-[1%] pl-0"
+                >
+                  {field.label}
+                </Label>
+             
                   <Switch
                     id={field.name}
                     checked={fieldApi.state.value ?? false}
                     onCheckedChange={(val) => fieldApi.handleChange(val)}
                     disabled={field.readOnly}
-                    className="h-5 w-9 data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-300 [&>span]:h-3 [&>span]:w-3 [&>span]:translate-x-0 data-[state=checked]:[&>span]:translate-x-5 transition-all duration-200"
+                    containerClassName="font-poppins pt-[2%] pr-[5%] pb-[5%] pl-0"
+                    // className="h-5 w-9 data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-300 [&>span]:h-3 [&>span]:w-3 [&>span]:translate-x-0 data-[state=checked]:[&>span]:translate-x-5 transition-all duration-200"
                   />
-                </div>
+                 </div>
               )}
 
               {/* {fieldApi.state.meta.errors.length > 0 && (
@@ -248,7 +257,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   return (
     <>
       <div
-        className="grid gap-6 bg-[#F2F2F7] w-[100%]"
+        className="grid gap-6 w-[100%]"
         style={{
           gridTemplateColumns: `repeat(${config.gridCols}, minmax(0, 1fr))`,
         }}
