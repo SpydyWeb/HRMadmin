@@ -2,7 +2,7 @@ export const TOKEN_KEY = 'auth_token'
 export const APIRoutes = {
   // BASEURL:"https://hrmadmin-nodeproxxy.onrender.com/",
   BASEURL: import.meta.env.VITE_API_URL,
-  PROXY: 'api/proxy',
+  PROXY: '/api/proxy',
   CHUNKS: 'getHRMChunks',
   SEARCH: 'search',
   SEARCHBYCODE: 'searchbycode',

@@ -18,7 +18,11 @@ import { Pagination } from '@/components/table/Pagination'
 import { Link } from '@tanstack/react-router'
 
 const tabs = [
-  { value: 'new', label: 'New Certification Requests', icon: <FaNetworkWired /> },
+  {
+    value: 'new',
+    label: 'New Certification Requests',
+    icon: <FaNetworkWired />,
+  },
   {
     value: 'movement',
     label: 'Movements in Existing Certificates',
@@ -80,7 +84,7 @@ const CertificationUpdate = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
- const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1)
   const toggleRowSelection = (srno: number) => {
     setSelectedRows((prev) =>
       prev.includes(srno)
@@ -113,9 +117,14 @@ const CertificationUpdate = () => {
       ),
       width: '5rem',
     },
-    { header: 'Agent ID', accessor: (row: any) => (
-      <Link to="" className="text-blue-700 underline font-medium">{row.agentid}</Link>
-      ), },
+    {
+      header: 'Agent ID',
+      accessor: (row: any) => (
+        <Link to="" className="text-blue-700 underline font-medium">
+          {row.agentid}
+        </Link>
+      ),
+    },
     { header: 'Requested By', accessor: 'requestedby' },
     { header: 'Date', accessor: 'date' },
     {
@@ -158,7 +167,8 @@ const CertificationUpdate = () => {
             searchPlaceholder="Enter Agent ID"
             dropdownLabel="Channel"
             dropdownOptions={['All', 'Email', 'Phone', 'Chat', 'Social Media']}
-            allSelected={selectedRows.length === tableData.length}
+            searchValue={searchTerm}
+            selectedOption={selectedChannel}
             onSearchChange={(value) => setSearchTerm(value)}
             onDropdownChange={(value) => setSelectedChannel(value)}
             onResetFilter={() => {
@@ -166,7 +176,7 @@ const CertificationUpdate = () => {
               setSelectedChannel('All')
               setSelectedRows([])
             }}
-            onAdvancedSearch={() => console.log('Advanced search toggled')}
+            onAdvancedToggle={() => console.log('Advanced search toggled')}
             onAcceptAll={() => console.log('Accept All clicked')}
             onRejectAll={() => console.log('Reject All clicked')}
             onExcelDownload={() => console.log('Excel download clicked')}
@@ -176,15 +186,10 @@ const CertificationUpdate = () => {
           />
         </div>
         <DataTable columns={columns} data={tableData} />
-    
       </div>
-      <div className='flex justify-between items-center'>
-        <span className='font-semibold text-lg text-gray-700'>Page 1/6</span>
-       <Pagination
-        totalPages={4}
-        currentPage={page}
-        onPageChange={setPage}
-      />
+      <div className="flex justify-between items-center">
+        <span className="font-semibold text-lg text-gray-700">Page 1/6</span>
+        <Pagination totalPages={4} currentPage={page} onPageChange={setPage} />
       </div>
     </div>
   )

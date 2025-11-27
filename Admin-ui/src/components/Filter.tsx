@@ -1,11 +1,5 @@
 import React, { useState } from 'react'
-import {
-  BiCheckSquare,
-  BiChevronDown,
-  BiDownload,
-  BiSearch,
-  BiSquare,
-} from 'react-icons/bi'
+import { BiDownload, BiSearch } from 'react-icons/bi'
 import { Input } from './ui/input'
 import Button from './ui/button'
 import { LuSlidersHorizontal } from 'react-icons/lu'
@@ -18,9 +12,46 @@ import {
   SelectValue,
 } from './ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { cn } from '@/lib/utils' // Assuming utils exists, if not I'll define cn locally or use clsx/twMerge
+
+// Define types for the props
+interface FilterProps {
+  // Visibility controls
+  showSearchBox?: boolean
+  showDropdown?: boolean
+  showAcceptAll?: boolean
+  showRejectAll?: boolean
+  showExcelDownload?: boolean
+  showPdfDownload?: boolean
+  showResetFilter?: boolean
+  showAdvancedSearch?: boolean
+
+  // Data & State
+  searchPlaceholder?: string
+  dropdownLabel?: string
+  dropdownOptions?: string[]
+  searchValue?: string
+  selectedOption?: string
+
+  // Callbacks
+  onSearchChange?: (value: string) => void
+  onDropdownChange?: (value: string) => void
+  onAcceptAll?: () => void
+  onRejectAll?: () => void
+  onExcelDownload?: () => void
+  onPdfDownload?: () => void
+  onResetFilter?: () => void
+
+  // Advanced Search
+  advancedSearchContent?: React.ReactNode
+  isAdvancedOpen?: boolean
+  onAdvancedToggle?: () => void
+
+  // Styling
+  className?: string
+}
 
 export const Filter = ({
-  // Control visibility props
   showSearchBox = true,
   showDropdown = true,
   showAcceptAll = true,
@@ -30,75 +61,52 @@ export const Filter = ({
   showResetFilter = true,
   showAdvancedSearch = true,
 
-  // Props for functionality
   searchPlaceholder = 'Enter search term...',
   dropdownLabel = 'Channel',
   dropdownOptions = ['All', 'Option 1', 'Option 2', 'Option 3'],
   searchValue = '',
   selectedOption = 'All',
-  allSelected = false,
 
-  // Event handlers
-  onSearchChange = () => {},
-  onDropdownChange = () => {},
-  onAcceptAll = () => {},
-  onRejectAll = () => {},
-  onExcelDownload = () => {},
-  onPdfDownload = () => {},
-  onResetFilter = () => {},
-  onAdvancedSearch = () => {},
+  onSearchChange,
+  onDropdownChange,
+  onAcceptAll,
+  onRejectAll,
+  onExcelDownload,
+  onPdfDownload,
+  onResetFilter,
 
-  // Styling props
-  className = '',
-  searchBoxClassName = '',
-  dropdownClassName = '',
-  buttonClassName = '',
-}) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
-  const [localSearch, setLocalSearch] = useState(searchValue)
-  const [localSelected, setLocalSelected] = useState(selectedOption)
-  const [localAllSelected, setLocalAllSelected] = useState(allSelected)
+  advancedSearchContent,
+  isAdvancedOpen: controlledIsAdvancedOpen,
+  onAdvancedToggle,
 
-  const handleSearchChange = (e) => {
-    setLocalSearch(e.target.value)
-    onSearchChange(e.target.value)
-  }
+  className,
+}: FilterProps) => {
+  // Internal state for advanced search if not controlled
+  const [internalIsAdvancedOpen, setInternalIsAdvancedOpen] = useState(false)
+  const isAdvancedOpen = controlledIsAdvancedOpen ?? internalIsAdvancedOpen
 
-  const handleDropdownSelect = (option) => {
-    setLocalSelected(option)
-    setIsDropdownOpen(false)
-    onDropdownChange(option)
-  }
-
-  const handleResetFilter = () => {
-    setLocalSearch('')
-    setLocalSelected('All')
-    setLocalAllSelected(false)
-    onResetFilter()
-  }
-
-  const handleAdvancedSearch = () => {
-    setIsAdvancedOpen(!isAdvancedOpen)
-    onAdvancedSearch()
+  const handleAdvancedToggle = () => {
+    if (onAdvancedToggle) {
+      onAdvancedToggle()
+    } else {
+      setInternalIsAdvancedOpen(!internalIsAdvancedOpen)
+    }
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {/* Main Filter Row */}
       <div className="flex flex-wrap items-center gap-4">
         {/* Search Box */}
         {showSearchBox && (
-          <div
-            className={`relative flex-1 min-w-64 max-w-72 ${searchBoxClassName}`}
-          >
+          <div className="relative flex-1 min-w-64 max-w-72">
             <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 transition-all duration-300 ease-in-out hover:text-blue-500 hover:scale-110" />
             <Input
               type="text"
               placeholder={searchPlaceholder}
-              value={localSearch}
-              onChange={handleSearchChange}
-              className=" w-full  pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 ease-in-out hover:shadow-md hover:border-gray-400 focus:shadow-lg"
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-10 pr-4 py-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:shadow-md hover:border-gray-400 focus:shadow-lg"
             />
           </div>
         )}
@@ -107,24 +115,23 @@ export const Filter = ({
         {showResetFilter && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <FiRotateCcw
-                onClick={handleResetFilter}
-                className="w-5 h-5 cursor-pointer transition-all duration-300 ease-in-out hover:rotate-180 hover:text-red-600"
-              />
+              <button
+                onClick={onResetFilter}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <FiRotateCcw className="w-5 h-5 cursor-pointer transition-all duration-300 ease-in-out hover:rotate-180 hover:text-red-600" />
+              </button>
             </TooltipTrigger>
-            <TooltipContent>
-              Reset Filter
-            </TooltipContent>
+            <TooltipContent>Reset Filter</TooltipContent>
           </Tooltip>
         )}
+
         {/* Dropdown */}
         {showDropdown && (
-          <div className={` ${dropdownClassName}`}>
-            <Select defaultValue={dropdownOptions[0]}>
+          <div>
+            <Select value={selectedOption} onValueChange={onDropdownChange}>
               <SelectTrigger className="w-40 border-gray-400">
-                <SelectValue
-                  placeholder={`${dropdownLabel} - ${localSelected}`}
-                />
+                <SelectValue placeholder={dropdownLabel} />
               </SelectTrigger>
               <SelectContent>
                 {dropdownOptions.map((option, index) => (
@@ -143,6 +150,7 @@ export const Filter = ({
             <span>Reject All</span>
           </Button>
         )}
+
         {/* Accept All Button */}
         {showAcceptAll && (
           <Button onClick={onAcceptAll} variant="green">
@@ -159,7 +167,7 @@ export const Filter = ({
                 variant="outline-green"
                 size="sm"
               >
-                <BiDownload className="w-4 h-4 " />
+                <BiDownload className="w-4 h-4" />
                 <span>Excel</span>
               </Button>
             )}
@@ -172,85 +180,43 @@ export const Filter = ({
             )}
           </div>
         )}
+
         {/* Advanced Search Button */}
         {showAdvancedSearch && (
-          <Button onClick={handleAdvancedSearch} variant="default" >
-           
-            <Tooltip>
+          <Tooltip>
             <TooltipTrigger asChild>
-              <LuSlidersHorizontal
-              className={`w-4 h-4 transition-all duration-300 ease-in-out hover:text-blue-600 ${isAdvancedOpen ? 'rotate-180 text-blue-600' : ''}`}
-            />
+              <Button
+                onClick={handleAdvancedToggle}
+                variant="default"
+                className="px-3"
+              >
+                <LuSlidersHorizontal
+                  className={cn(
+                    'w-4 h-4 transition-all duration-300 ease-in-out hover:text-blue-600',
+                    isAdvancedOpen && 'rotate-180 text-blue-600',
+                  )}
+                />
+              </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              Advance Filter
-            </TooltipContent>
+            <TooltipContent>Advance Filter</TooltipContent>
           </Tooltip>
-          </Button>
         )}
       </div>
 
-      {/* Advanced Search Panel with Smooth Slide Animation */}
+      {/* Advanced Search Panel */}
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+        className={cn(
+          'overflow-hidden transition-all duration-500 ease-in-out',
           isAdvancedOpen && showAdvancedSearch
             ? 'max-h-96 opacity-100'
-            : 'max-h-0 opacity-0'
-        }`}
+            : 'max-h-0 opacity-0',
+        )}
       >
-        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transform transition-all duration-300 ease-in-out hover:shadow-md">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 transition-colors duration-200">
-            Advanced Search
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="transition-all duration-300 ease-in-out hover:transform hover:scale-105">
-              <label className="block text-xs font-medium text-gray-600 mb-1 transition-colors duration-200">
-                Date Range
-              </label>
-              <select className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 ease-in-out hover:shadow-md hover:border-gray-400">
-                <option>All Time</option>
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-              </select>
-            </div>
-            <div className="transition-all duration-300 ease-in-out hover:transform hover:scale-105">
-              <label className="block text-xs font-medium text-gray-600 mb-1 transition-colors duration-200">
-                Status
-              </label>
-              <select className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 ease-in-out hover:shadow-md hover:border-gray-400">
-                <option>All Status</option>
-                <option>Approved</option>
-                <option>Pending</option>
-                <option>Rejected</option>
-              </select>
-            </div>
-            <div className="transition-all duration-300 ease-in-out hover:transform hover:scale-105">
-              <label className="block text-xs font-medium text-gray-600 mb-1 transition-colors duration-200">
-                Priority
-              </label>
-              <select className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-300 ease-in-out hover:shadow-md hover:border-gray-400">
-                <option>All Priority</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
-              </select>
-            </div>
+        {advancedSearchContent && (
+          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transform transition-all duration-300 ease-in-out hover:shadow-md">
+            {advancedSearchContent}
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              onClick={() => setIsAdvancedOpen(false)}
-              className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 outline-none transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-md active:scale-95"
-            >
-              <span className="transition-colors duration-200">Cancel</span>
-            </button>
-            <button className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 outline-none transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg active:scale-95 hover:brightness-110">
-              <span className="transition-colors duration-200">
-                Apply Filters
-              </span>
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )
