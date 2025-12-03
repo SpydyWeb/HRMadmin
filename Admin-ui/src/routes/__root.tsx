@@ -80,12 +80,7 @@ function RootComponent() {
               <Outlet />
             </Layout>
           ) : (
-             <Layout>
-              <ScrollToTop />
-              <BreadcrumbCustom />
-              <Outlet />
-            </Layout>
-            // <Outlet />
+            <Outlet />
           )}
         </QueryClientProvider>
         </I18nextProvider>

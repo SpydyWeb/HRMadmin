@@ -12,7 +12,7 @@ export function useAutoAccordion(threshold = 0.1) {
       (entries) => {
         const entry = entries[0];
         if (entry.isIntersecting) setOpen(true);
-        else setOpen(false);
+        // else setOpen(false);
       },
       { threshold }
     );
