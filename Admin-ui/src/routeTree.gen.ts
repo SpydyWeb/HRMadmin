@@ -18,6 +18,7 @@ import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
 import { Route as AuthSearchIndexRouteImport } from './routes/_auth/search/index'
 import { Route as AuthSearchAgentIdRouteImport } from './routes/_auth/search/$agentId'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
+import { Route as AuthDashboardCreateBulkRouteImport } from './routes/_auth/dashboard/create-bulk'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
 import { Route as AuthDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/dashboard/code-movement/bulk-action'
@@ -75,6 +76,11 @@ const AuthDashboardTerminationRoute =
     path: '/dashboard/termination',
     getParentRoute: () => AuthRoute,
   } as any)
+const AuthDashboardCreateBulkRoute = AuthDashboardCreateBulkRouteImport.update({
+  id: '/dashboard/create-bulk',
+  path: '/dashboard/create-bulk',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthDashboardCertificationUpdateRoute =
   AuthDashboardCertificationUpdateRouteImport.update({
     id: '/dashboard/certification-update',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/termination': typeof AuthTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_auth/termination': typeof AuthTerminationRoute
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
+  '/_auth/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
   '/_auth/search/': typeof AuthSearchIndexRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
+    | '/dashboard/create-bulk'
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
+    | '/dashboard/create-bulk'
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_auth/termination'
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
+    | '/_auth/dashboard/create-bulk'
     | '/_auth/dashboard/termination'
     | '/_auth/search/$agentId'
     | '/_auth/search/'
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardTerminationRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/create-bulk': {
+      id: '/_auth/dashboard/create-bulk'
+      path: '/dashboard/create-bulk'
+      fullPath: '/dashboard/create-bulk'
+      preLoaderRoute: typeof AuthDashboardCreateBulkRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/certification-update': {
       id: '/_auth/dashboard/certification-update'
       path: '/dashboard/certification-update'
@@ -300,6 +319,7 @@ interface AuthRouteChildren {
   AuthTerminationRoute: typeof AuthTerminationRoute
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
+  AuthDashboardCreateBulkRoute: typeof AuthDashboardCreateBulkRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
   AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
   AuthSearchIndexRoute: typeof AuthSearchIndexRoute
@@ -312,6 +332,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthTerminationRoute: AuthTerminationRoute,
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
+  AuthDashboardCreateBulkRoute: AuthDashboardCreateBulkRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
   AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
   AuthSearchIndexRoute: AuthSearchIndexRoute,

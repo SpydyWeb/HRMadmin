@@ -104,7 +104,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'licenseExpiryDate',
         label: 'license Expiry Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -112,7 +112,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'licenseIssueDate',
         label: 'License Issue Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -120,7 +120,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'licenseType',
         label: 'License Type',
-        type: 'date',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -128,7 +128,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'licenseNo',
         label: 'License No',
-        type: 'date',
+        type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -328,7 +328,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'registrationDate',
         label: 'Registration Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -387,7 +387,7 @@ const License = ({ agent }: { agent: IAgent }) => {
         </div>
         {/* license */}
         <div className="flex gap-10">
-          <Card className="bg-white w-full overflow-y-auto">
+          <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
             <CardContent>
               <DynamicFormBuilder
                 config={licenseConfig}
@@ -405,7 +405,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Card className="bg-white w-full mt-5 max-h-[590px] overflow-y-auto overflow-x-hidden">
+          <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[590px] overflow-y-auto overflow-x-hidden">
             <CardContent>
               <DynamicFormBuilder
                 config={licenseTrainingConfig}
@@ -420,7 +420,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           Financial Details
         </h2>
 
-        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+        <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[400px] overflow-y-auto">
           <CardContent>
             <DynamicFormBuilder
               config={licenseFinancialConfig}
@@ -436,7 +436,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           Product Details
         </h2>
 
-        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+        <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[400px] overflow-y-auto">
           <CardContent>
             <DynamicFormBuilder
               config={licenseProductConfig}
@@ -452,7 +452,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           Others Details
         </h2>
 
-        <Card className="bg-white w-full mt-5 max-h-[400px] overflow-y-auto">
+        <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[400px] overflow-y-auto">
           <CardContent>
             <DynamicFormBuilder
               config={licenseOthersConfig}

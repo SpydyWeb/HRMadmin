@@ -17,15 +17,15 @@ console.log('agent in financial', agent)
   const financialForm = useAppForm({
 
     defaultValues: {
-  bankName: agent.bankDetails?.bankName,
-  ifscCode: agent.bankDetails?.ifsc,
-  micrCode: agent.bankDetails?.micr,
-  bankBranchName: agent.bankDetails?.branchName,
-  bankAccountNo: agent.bankDetails?.accountNumber,
-  bankAccountType: agent.bankDetails?.accountType,
-  paymentMode: agent.bankDetails?.paymentMode,
-  factoringHouse: agent.bankDetails?.factoringHouse,
-  payeeName: agent.bankDetails?.accountHolderName,
+  bankName: agent.bankAccounts?.[0]?.bankName,
+  ifsc: agent.bankAccounts?.[0]?.ifsc,
+  micr: agent.bankAccounts?.[0]?.micr,
+  branchName: agent.bankAccounts?.[0]?.branchName,
+  accountNumber: agent.bankAccounts?.[0]?.accountNumber,
+  accountType: agent.bankAccounts?.[0]?.accountType,
+  preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
+  factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
+  accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
 },
 
     onSubmit: async ({ value }) => {
@@ -36,39 +36,35 @@ console.log('agent in financial', agent)
   const financialConfig = {
     gridCols: 3,
     defaultValues: {
-          bank: agent.bank,
-    factoringHouse: agent.factoringHouse,
-    payeeName: agent.payeeName,
-    panNo: agent.panNo,
-    bankName: agent.bankName,
-    bankBranchName: agent.bankBranchName,
-    bankAccountNo: agent.bankAccountNo,
-    bankAccountType: agent.bankAccountType,
-    micrCode: agent.micrCode,
-    ifscCode: agent.ifscCode,
-    paymentMode: agent.paymentMode,
-    serviceTaxNo: agent.serviceTaxNo,
+  bankName: agent.bankAccounts?.[0]?.bankName,
+  ifsc: agent.bankAccounts?.[0]?.ifsc,
+  micr: agent.bankAccounts?.[0]?.micr,
+  branchName: agent.bankAccounts?.[0]?.branchName,
+  accountNumber: agent.bankAccounts?.[0]?.accountNumber,
+  accountType: agent.bankAccounts?.[0]?.accountType,
+  preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
+  factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
+  accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
     },
 
     schema: z.object({
-          bank: z.string().optional(),
-  factoringHouse: z.string().optional(),
-  payeeName: z.string().optional(),
-  panNo: z.string().optional(),
-  bankName: z.string().optional(),
-  bankBranchName: z.string().optional(),
-  bankAccountNo: z.string().optional(),
-  bankAccountType: z.string().optional(),
-  micrCode: z.string().optional(),
-  ifscCode: z.string().optional(),
-  paymentMode: z.string().optional(),
-  serviceTaxNo: z.string().optional(),
+         bankName: z.string().optional(),
+      ifsc: z.string().optional(),
+      micr: z.string().optional(),
+      branchName: z.string().optional(),
+      accountNumber: z.string().optional(),
+      AccountType: z.string().optional(),
+      accountType: z.string().optional(),
+      factoringHouse: z.string().optional(),
+      accountHolderName: z.string().optional(),
+      preferredPaymentMode: z.string().optional(),
+    
     }),
 
     fields: [
       {
-    name: 'bank',
-    label: 'IFS Bank',
+    name: 'bankName',
+    label: 'Bank Name',
     type: 'text',
     colSpan: 1,
     readOnly: !isEdit,
@@ -83,21 +79,21 @@ console.log('agent in financial', agent)
     variant: 'standard',
   },
   {
-    name: 'payeeName',
+    name: 'accountHolderName',
     label: 'Payee Name',
     type: 'text',
     colSpan: 1,
     readOnly: !isEdit,
     variant: 'standard',
   },
-  {
-    name: 'panNo',
-    label: 'PAN No',
-    type: 'text',
-    colSpan: 1,
-    readOnly: !isEdit,
-    variant: 'standard',
-  },
+  // {
+  //   name: 'panNo',
+  //   label: 'PAN No',
+  //   type: 'text',
+  //   colSpan: 1,
+  //   readOnly: !isEdit,
+  //   variant: 'standard',
+  // },
   {
     name: 'bankName',
     label: 'Bank Name',
@@ -106,16 +102,9 @@ console.log('agent in financial', agent)
     readOnly: !isEdit,
     variant: 'standard',
   },
+
   {
-    name: 'bankBranchName',
-    label: 'Bank Branch Name',
-    type: 'text',
-    colSpan: 1,
-    readOnly: !isEdit,
-    variant: 'standard',
-  },
-  {
-    name: 'bankAccountNo',
+    name: 'accountNumber',
     label: 'Bank Account No',
     type: 'text',
     colSpan: 1,
@@ -123,7 +112,7 @@ console.log('agent in financial', agent)
     variant: 'standard',
   },
   {
-    name: 'bankAccountType',
+    name: 'accountType',
     label: 'Bank Account Type',
     type: 'text',
     colSpan: 1,
@@ -131,7 +120,7 @@ console.log('agent in financial', agent)
     variant: 'standard',
   },
   {
-    name: 'micrCode',
+    name: 'micr',
     label: 'MICR Code',
     type: 'text',
     colSpan: 1,
@@ -139,7 +128,7 @@ console.log('agent in financial', agent)
     variant: 'standard',
   },
   {
-    name: 'ifscCode',
+    name: 'ifsc',
     label: 'IFSC Code',
     type: 'text',
     colSpan: 1,
@@ -147,21 +136,21 @@ console.log('agent in financial', agent)
     variant: 'standard',
   },
   {
-    name: 'paymentMode',
+    name: 'preferredPaymentMode',
     label: 'Payment Mode',
     type: 'text',
     colSpan: 1,
     readOnly: !isEdit,
     variant: 'standard',
   },
-  {
-    name: 'serviceTaxNo',
-    label: 'Service Tax No',
-    type: 'text',
-    colSpan: 1,
-    readOnly: !isEdit,
-    variant: 'standard',
-  },
+  // {
+  //   name: 'serviceTaxNo',
+  //   label: 'Service Tax No',
+  //   type: 'text',
+  //   colSpan: 1,
+  //   readOnly: !isEdit,
+  //   variant: 'standard',
+  // },
     ],
 
     buttons: isEdit
@@ -208,7 +197,7 @@ console.log('agent in financial', agent)
         </div>
         {/* license */}
         <div className="flex gap-10">
-          <Card className="bg-white w-full overflow-y-auto">
+          <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
             <CardContent>
               <DynamicFormBuilder
                 config={financialConfig}

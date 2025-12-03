@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
@@ -6,9 +6,7 @@ import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
-import { User } from 'lucide-react'
-import { changeLanguage } from 'i18next'
-import { channel } from 'diagnostics_channel'
+import AutoAccordionSection from '../ui/autoAccordianSection'
 // import { BiIdCard } from 'react-icons/bi'
 
 const AgentDetail = ({ agent }: { agent: IAgent }) => {
@@ -23,205 +21,212 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
 
   if (!agent) return null
 
+  console.log("agent", agent)
+  
+  
+  
+// Transform keyValueEntry for bank account types dropdown
+const bankAccountTypeOptions = agent?.keyValueEntry
+  ?.filter(entry => entry.entryCategory === 'BANK_ACC_TYP' && entry.activeStatus)
+  ?.map(entry => ({
+    label: entry.entryDesc,
+    value: entry.entryIdentity.toString(),
+  })) || [];
+
+
   const agentForm = useAppForm({
     defaultValues: {
-      agentCode: agent.agentCode,
-      title: agent.title,
-      agentTypeCode: agent.agentTypeCode,
+      // ---- Already existing fields ----
+
+      //Employment details
       agentId: agent.agentId,
-      firstName: agent.firstName,
-      middleName: agent.middleName,
-      lastName: agent.lastName,
-      agentName: agent.agentName,
-      email: agent.email,
-      gender: agent.gender,
-      maritalStatusCode: agent.maritalStatusCode,
-      nationality: agent.nationality,
-      panNumber: agent.panNumber,
-      panAadharLinkFlag: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
-      preferredLanguage: agent.preferredLanguage,
-      employeeCode: agent.employeeCode,
-      father_Husband_Nm: agent.father_Husband_Nm,
       applicationDocketNo: agent.applicationDocketNo,
+      agentCode: agent.agentCode,
       candidateType: agent.candidateType,
+      agentTypeCode: agent.agentTypeCode,
+      employeeCode: agent.employeeCode,
       startDate: agent.startDate,
       appointmentDate: agent.appointmentDate,
       incorporationDate: agent.incorporationDate,
       agentTypeCategory: agent.agentTypeCategory,
       agentClassification: agent.agentClassification,
       cmsAgentType: agent.cmsAgentType,
+
+      title: agent.title,
+      firstName: agent.firstName,
+      middleName: agent.middleName,
+      lastName: agent.lastName,
+      agentName: agent.agentName,
+      email: agent.email,
+      gender: agent.gender,
+
+      nationality: agent.nationality,
+
+      preferredLanguage: agent.preferredLanguage,
+      father_Husband_Nm: agent.father_Husband_Nm,
+
       channel_Name: agent.channel_Name,
       sub_Channel: agent.sub_Channel,
+
+      // ---- NEW FIELDS ADDED BELOW ----
+
+      // --- contact DETAILS ---
+      mobileNo:agent?.personalInfo?.[0]?.mobileNo,
+      workContactNo:agent?.personalInfo?.[0]?.workContactNo,
+      // --- EMPLOYMENT DETAILS ---
+
+      pob: agent.pob,
+      aadharNumber: agent.aadharNumber,
+      educationQualification: agent.educationQualification,
+      educationSpecialization: agent.educationSpecialization,
+      educationalInstitute: agent.educationalInstitute,
+      passingYear: agent.passingYear,
+      criminalRecord: agent.criminalRecord,
+      employmentType: agent.employmentType,
+      employmentStatus: agent.employmentStatus,
+      experienceYears: agent.experienceYears,
+      uanNumber: agent.uanNumber,
+      reportingToName: agent.reportingToName,
+      reportingToDesignation: agent.reportingToDesignation,
+
+      // --- CHANNEL DETAILS ---
+      channelRegion: agent.channelRegion,
+      commissionClass: agent.commissionClass,
+      cluster: agent.cluster,
+      branchCode: agent.branchCode,
+      baseLocation: agent.baseLocation,
+      zone: agent.zone,
+      irdaTrainingOrganization: agent.irdaTrainingOrganization,
+
+      // --- HIERARCHY ---
+      rmName: agent.rmName,
+      rmMobile: agent.rmMobile,
+      rmEmail: agent.rmEmail,
+      smName: agent.smName,
+      smMobile: agent.smMobile,
+      smEmail: agent.smEmail,
+      asmName: agent.asmName,
+      asmMobile: agent.asmMobile,
+      asmEmail: agent.asmEmail,
+      branchManagerMobile: agent.branchManagerMobile,
+      branchManagerEmail: agent.branchManagerEmail,
+
+      // --- OTHER PERSONAL INFO ---
+      religion: agent.religion,
+      caste: agent.caste,
+      physicallyChallenged: agent.physicallyChallenged,
+
+      // --- FINANCIAL DETAILS ---
+      panAadharLinkFlag: agent.panAadharLinkFlag,
+      sec206abFlag: agent.sec206abFlag,
+      taxStatus: agent.taxStatus,
+      serviceTaxNo: agent.serviceTaxNo,
+      //Acct Activation Date missing
+      factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
+      accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
+      panNumber: agent.personalInfo?.[0]?.panNumber,
+      bankName: agent.bankAccounts?.[0]?.bankName,
+      branchName: agent.bankAccounts?.[0]?.branchName,
+      accountNumber: agent.bankAccounts?.[0]?.accountNumber,
+      accountType: agent.bankAccounts?.[0]?.accountType,
+      micr: agent.bankAccounts?.[0]?.micr,
+      ifsc: agent.bankAccounts?.[0]?.ifsc,
+      preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
+
+      // --- Other Personal Details ---
+      dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
+      martialStatus: agent.martialStatus,
+      educationCode: agent.educationCode,
+      educationLevel: agent.educationLevel,
+      workProfile: agent.workProfile,
+      annualIncome: agent.annualIncome,
+      nomineeName: agent.nomineeName,
+      relationship: agent.relationship,
+      nomineeAge: agent.nomineeAge,
+      occupation: agent.occupation,
+      urn: agent.urn,
+      additionalComment: agent.additionalComment,
+      workExpMonths: agent.personalInfo?.[0]?.workExpMonths,
+      bloodGroup: agent.personalInfo?.[0]?.bloodGroup,
+      birthPlace: agent.personalInfo?.[0]?.birthPlace,
+
+      // --- ADDRESS INFO ---
+      stateEid: agent.stateEid,
+      addressType: agent?.permanentAddres?.[0].addressType,
+      addressLine1: agent?.permanentAddres?.[0].addressLine1,
+      addressLine2: agent?.permanentAddres?.[0].addressLine2,
+      addressLine3: agent?.permanentAddres?.[0].addressLine3,
+      city: agent?.permanentAddres?.[0].city,
+      state: agent?.permanentAddres?.[0].state,
+      country: agent?.permanentAddres?.[0].country,
+      pin: agent?.permanentAddres?.[0].pin,
     },
+
     onSubmit: async ({ value }) => {
       console.log('Updated agent:', value)
     },
   })
 
-  const agentFormConfig = {
-    gridCols: 3,
+  const agentChannelConfig = {
+    gridCols: 2,
+
     defaultValues: {
-      agentCode: agent.agentCode,
-      agentTitle: agent.title,
-      agentTypeCode: agent.agentTypeCode,
-      agentId: agent.agentId,
-      firstName: agent.firstName,
-      middleName: agent.middleName,
-      lastName: agent.lastName,
-      agentName: agent.agentName,
-      email: agent.email,
-      gender: agent.gender,
-      maritalStatusCode: agent.maritalStatusCode,
-      nationality: agent.nationality,
-      panNumber: agent.panNumber,
-      panAadharLinkFlag: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
-      preferredLanguage: agent.preferredLanguage,
-      employeeCode: agent.employeeCode,
-      father_Husband_Nm: agent.father_Husband_Nm,
-      applicationDocketNo: agent.applicationDocketNo,
-      candidateType: agent.candidateType,
-      startDate: agent.startDate,
-      appointmentDate: agent.appointmentDate,
-      incorporationDate: agent.incorporationDate,
-      agentTypeCategory: agent.agentTypeCategory,
-      agentClassification: agent.agentClassification,
-      cmsAgentType: agent.cmsAgentType,
       channel_Name: agent.channel_Name,
       sub_Channel: agent.sub_Channel,
+      commissionClass: agent.commissionClass,
     },
+
     schema: z.object({
-      agentCode: z.string().optional(),
-      employeeCode: z.string().optional(),
-      agentId: z.string().optional(),
-      applicationDocketNo: z.string().optional(),
-      agentTypeCode: z.string().optional(),
-      candidateType: z.string().optional(),
-      startDate: z.string().optional(),
-      appointmentDate: z.string().optional(),
-      incorporationDate: z.string().optional(),
-      agentTypeCategory: z.string().optional(),
-      agentClassification: z.string().optional(),
-      cmsAgentType: z.string().optional(),
+      channel_Name: z.string().optional(),
+      sub_Channel: z.string().optional(),
+      commissionClass: z.string().optional(),
     }),
 
     fields: [
       {
-        name: 'agentCode',
-        label: 'Agent Code',
+        name: 'channel_Name',
+        label: 'Channel Name',
         type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
       {
-        name: 'employeeCode',
-        label: 'Employee Code',
+        name: 'sub_Channel',
+        label: 'Sub Channel',
         type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
       {
-        name: 'agentId',
-        label: 'Agent Id',
+        name: 'commissionClass',
+        label: 'Commission Class',
         type: 'text',
         colSpan: 1,
         readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'applicationDocketNo',
-        label: 'Application Docket No',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'agentTypeCode',
-        label: 'Agent Type',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'candidateType',
-        label: 'Candidate Type',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'startDate',
-        label: 'Start Date',
-        type: 'date',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'appointmentDate',
-        label: 'Appointment Date',
-        type: 'date',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'incorporationDate',
-        label: 'Incorpation Date',
-        type: 'date',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'agentTypeCategory',
-        label: 'Agent Type Category',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'agentClassification',
-        label: 'Agent Classification',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
-      },
-      {
-        name: 'cmsAgentType',
-        label: 'CMS Agent Type',
-        type: 'text',
-        colSpan: 1,
-        readOnly: !isEdit,
-        variant: 'standard',
+        variant: 'custom',
       },
     ],
 
     buttons: isEdit
       ? {
-          gridCols: 6,
+          gridCols: 4,
           items: [
             {
               label: 'Save Changes',
               type: 'submit',
               variant: 'orange',
-              colSpan: 1,
+              colSpan: 2,
               size: 'lg',
-              className:"mt-4"
+              className: 'mt-4',
             },
           ],
         }
       : null,
   }
-  const agentPersonalInfoConfig = {
+
+  const PersonalDetailsConfig = {
     gridCols: 3,
 
     defaultValues: {
@@ -311,53 +316,100 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
       : null,
   }
 
-  const agentChannelConfig = {
-    gridCols: 2,
+  // ne
+  const contactInformationConfig = {
+    gridCols: 12,
 
     defaultValues: {
-      channel_Name: agent.channel_Name,
-      sub_Channel: agent.sub_Channel,
-      panAadharLinkFlag: agent.panAadharLinkFlag,
-      sec206abFlag: agent.sec206abFlag,
+      mobileNo:agent?.personalInfo?.[0]?.mobileNo,
+      residenceContactNo: agent?.personalInfo?.[0]?.residenceContactNo,
+      workContactNo: agent?.personalInfo?.[0]?.workContactNo,
+      email: agent?.personalInfo?.[0]?.email,
+      cnctPersonName: agent.cnctPersonName,
+      cnctPersonMobileNo: agent.cnctPersonMobileNo,
+      cnctPersonEmail: agent.cnctPersonEmail,
+      cnctPersonDesig: agent.cnctPersonDesig,
     },
-
     schema: z.object({
-      channel_Name: z.string().optional(),
-      sub_Channel: z.string().optional(),
+      mobileNo: z.string().optional(),
+      residenceContactNo: z.string().optional(),
+      workContactNo: z.string().optional(),
+      email: z.string().optional(),
+      cnctPersonName: z.string().optional(),
+      cnctPersonMobileNo: z.string().optional(),
+      cnctPersonEmail: z.string().optional(),
+      cnctPersonDesig: z.string().optional(),
     }),
 
     fields: [
+      // ROW 1
       {
-        name: 'channel_Name',
-        label: 'Channel Name',
+        name: 'mobileNo',
+        label: 'Mobile Phone No',
         type: 'text',
-        colSpan: 1,
+        colSpan: 4,
         readOnly: !isEdit,
-        variant: 'custom',
+        variant: 'standard',
       },
       {
-        name: 'sub_Channel',
-        label: 'Sub Channel',
+        name: 'residenceContactNo',
+        label: 'Home Phone No',
         type: 'text',
-        colSpan: 1,
+        colSpan: 4,
         readOnly: !isEdit,
-        variant: 'custom',
+        variant: 'standard',
       },
       {
-        name: 'panAadharLinkFlag',
-        label: 'Pan Aadhar Link Flag',
-        type: 'boolean',
-        colSpan: 1,
+        name: 'workContactNo',
+        label: 'Work Phone No',
+        type: 'text',
+        colSpan: 4,
         readOnly: !isEdit,
-        variant: 'custom',
+        variant: 'standard',
+      },
+
+      // ROW 2
+      {
+        name: 'email',
+        label: 'Email ID',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
       },
       {
-        name: 'sec206abFlag',
-        label: 'Sec 206ab Flag',
-        type: 'boolean',
-        colSpan: 1,
+        name: 'cnctPersonName',
+        label: 'Contact Person Name',
+        type: 'text',
+        colSpan: 4,
         readOnly: !isEdit,
-        variant: 'custom',
+        variant: 'standard',
+      },
+      {
+        name: 'cnctPersonMobileNo',
+        label: 'Contact Person Mobile No',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      // ROW 3
+      {
+        name: 'cnctPersonEmail',
+        label: 'Contact Person Email',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'cnctPersonDesig',
+        label: 'Contact Person Designation',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
       },
     ],
 
@@ -371,11 +423,900 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
               variant: 'orange',
               colSpan: 2,
               size: 'lg',
-              className:"mt-4"
+              className: 'mt-4',
             },
           ],
         }
       : null,
+  }
+
+  const employeeInformationConfig = {
+    gridCols: 12,
+
+    // DEFAULT VALUES
+    defaultValues: {
+      agentId: agent.agentId,
+      applicationDocketNo: agent.applicationDocketNo,
+      agentCode: agent.agentCode,
+      candidateType: agent.candidateType,
+      agentTypeCode: agent.agentTypeCode,
+      employeeCode: agent.employeeCode,
+      startDate: agent.startDate,
+      appointmentDate: agent.appointmentDate,
+      incorporationDate: agent.incorporationDate,
+      agentTypeCategory: agent.agentTypeCategory,
+      agentClassification: agent.agentClassification,
+      cmsAgentType: agent.cmsAgentType,
+    },
+    // ZOD SCHEMA
+    schema: z.object({
+      channelType: z.string().optional(),
+      agentId: z.string().optional(),
+      applicationDocketNo: z.string().optional(),
+      agentCode: z.string().optional(),
+      candidateType: z.string().optional(),
+      agentTypeCode: z.string().optional(),
+      employeeCode: z.string().optional(),
+      startDate: z.string().optional(),
+      appointmentDate: z.string().optional(),
+      incorporationDate: z.string().optional(),
+      agentTypeCategory: z.string().optional(),
+      agentClassification: z.string().optional(),
+      cmsAgentType: z.string().optional(),
+    }),
+
+    // FIELDS
+    fields: [
+      {
+        name: 'agentId',
+        label: 'Agent ID',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'applicationDocketNo',
+        label: 'Application Docket No',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentCode',
+        label: 'Agent Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'candidateType',
+        label: 'Candidate Type',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentTypeCode',
+        label: 'Agent Type',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'employeeCode',
+        label: 'Employee Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'startDate',
+        label: 'Start Date',
+        type: 'date',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'appointmentDate',
+        label: 'Appointment Date',
+        type: 'date',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'incorporationDate',
+        label: 'Incorporation Date',
+        type: 'date',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'agentTypeCategory',
+        label: 'Agent Type Category',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'agentClassification',
+        label: 'Agent Classification',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'cmsAgentType',
+        label: 'CMS Agent Type',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      // {
+      //   name: 'createUpdateResponseDescription',
+      //   label: 'Create/Update Agent API Response Description',
+      //   type: 'textarea',
+      //   colSpan: 12,
+      //   variant:"white",
+      // },
+    ],
+    // BUTTONS
+
+    buttons: {
+      submit: {
+        label: 'Save Channel Info',
+        variant: 'default',
+      },
+    },
+  }
+
+  const financialDetailsConfig = {
+    gridCols: 12,
+    // DEFAULT VALUES
+    defaultValues: {
+      panAadharLinkFlag: agent.panAadharLinkFlag,
+      sec206abFlag: agent.sec206abFlag,
+      taxStatus: agent.taxStatus,
+      serviceTaxNo: agent.serviceTaxNo,
+      //Acct Activation Date missing
+      factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
+      accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
+      panNumber: agent.personalInfo?.[0]?.panNumber,
+     bankName: agent.bankAccounts?.[0]?.bankName,
+      branchName: agent.bankAccounts?.[0]?.branchName,
+
+      accountNumber: agent.bankAccounts?.[0]?.accountNumber,
+      accountType: agent.bankAccounts?.[0]?.accountType,
+      micr: agent.bankAccounts?.[0]?.micr,
+      ifsc: agent.bankAccounts?.[0]?.ifsc,
+      preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
+    },
+    // SCHEMA
+    schema: z.object({
+      taxStatus: z.string().optional(),
+      panAadharLinkFlag: z.string().optional(),
+      sec206abFlag: z.string().optional(),
+      serviceTaxNo: z.string().optional(),
+      //Acct Activation Date missing
+      factoringHouse: z.string().optional(),
+      accountHolderName: z.string().optional(),
+      panNumber: z.string().optional(),
+      bankName: z.string().optional(),
+      branchName: z.string().optional(),
+      accountNumber: z.string().optional(),
+      accountType: z.string().optional(),
+      micr: z.string().optional(),
+      ifsc: z.string().optional(),
+      preferredPaymentMode: z.string().optional(),
+    }),
+
+    // FIELDS
+    fields: [
+      {
+        name: 'panAadharLinkFlag',
+        label: 'Pan Aadhar Link Flag',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'sec206abFlag',
+        label: 'Sec 206ab Flag',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'taxStatus',
+        label: 'Tax Status',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'serviceTaxNo',
+        label: 'Service Tax No',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      // {
+      //   name: 'acctActivationDate',
+      //   label: 'Acct Activation Date',
+      //   type: 'date',
+      //   colSpan: 4,
+      // readOnly: !isEdit,
+      //   variant: 'standard',
+      // },
+      {
+        name: 'factoringHouse',
+        label: 'Factoring House',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'accountHolderName',
+        label: 'Payee Name',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'panNumber',
+        label: 'PAN No',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'bankName',
+        label: 'Bank Name',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'branchName',
+        label: 'Bank Branch Name',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'accountNumber',
+        label: 'Bank Account No',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'accountType',
+        label: 'Bank Account Type',
+        type: 'select',
+  options: bankAccountTypeOptions,
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+        // options: ['Saving', 'Current', 'Salary', 'Other'],
+      },
+
+      {
+        name: 'micr',
+        label: 'MICR Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'ifsc',
+        label: 'IFSC Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'preferredPaymentMode',
+        label: 'Payment Mode',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+        // options: ['Bank Transfer', 'Cheque', 'Cash', 'UPI'],
+      },
+    ],
+
+    // BUTTONS
+    buttons: {
+      submit: {
+        label: 'Save Financial Details',
+        variant: 'default',
+      },
+      cancel: {
+        label: 'Cancel',
+        variant: 'outline',
+      },
+    },
+  }
+
+  // const hierarchyInformationConfig = {
+  //   gridCols: 12,
+
+  //   // -----------------------------------------
+  //   // DEFAULT VALUES
+  //   // -----------------------------------------
+  //   defaultValues: {
+  //     reportingToName: '',
+  //     reportingToCode: '',
+  //     reportingToDesignation: '',
+  //     reportingToMobile: '',
+  //     reportingToEmail: '',
+
+  //     zonalHeadName: '',
+  //     zonalHeadCode: '',
+  //     zonalHeadDesignation: '',
+  //     zonalHeadMobile: '',
+  //     zonalHeadEmail: '',
+
+  //     regionalHeadName: '',
+  //     regionalHeadCode: '',
+  //     regionalHeadDesignation: '',
+  //     regionalHeadMobile: '',
+  //     regionalHeadEmail: '',
+
+  //     branchManagerName: '',
+  //     branchManagerCode: '',
+  //     branchManagerDesignation: '',
+  //     branchManagerMobile: '',
+  //     branchManagerEmail: '',
+  //   },
+
+  //   // -----------------------------------------
+  //   // ZOD SCHEMA
+  //   // -----------------------------------------
+  //   schema: z.object({
+  //     reportingToName: z.string().optional(),
+  //     reportingToCode: z.string().optional(),
+  //     reportingToDesignation: z.string().optional(),
+  //     reportingToMobile: z.string().optional(),
+  //     reportingToEmail: z.string().email().optional(),
+
+  //     zonalHeadName: z.string().optional(),
+  //     zonalHeadCode: z.string().optional(),
+  //     zonalHeadDesignation: z.string().optional(),
+  //     zonalHeadMobile: z.string().optional(),
+  //     zonalHeadEmail: z.string().email().optional(),
+
+  //     regionalHeadName: z.string().optional(),
+  //     regionalHeadCode: z.string().optional(),
+  //     regionalHeadDesignation: z.string().optional(),
+  //     regionalHeadMobile: z.string().optional(),
+  //     regionalHeadEmail: z.string().email().optional(),
+
+  //     branchManagerName: z.string().optional(),
+  //     branchManagerCode: z.string().optional(),
+  //     branchManagerDesignation: z.string().optional(),
+  //     branchManagerMobile: z.string().optional(),
+  //     branchManagerEmail: z.string().email().optional(),
+  //   }),
+
+  //   // -----------------------------------------
+  //   // FIELDS
+  //   // -----------------------------------------
+  //   fields: [
+  //     // ---- REPORTING TO ----
+  //     {
+  //       name: 'reportingToName',
+  //       label: 'Reporting To Name',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'reportingToCode',
+  //       label: 'Reporting To Code',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'reportingToDesignation',
+  //       label: 'Reporting To Designation',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'reportingToMobile',
+  //       label: 'Reporting To Mobile',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'reportingToEmail',
+  //       label: 'Reporting To Email',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+
+  //     // ---- ZONAL HEAD ----
+  //     {
+  //       name: 'zonalHeadName',
+  //       label: 'Zonal Head Name',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'zonalHeadCode',
+  //       label: 'Zonal Head Code',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'zonalHeadDesignation',
+  //       label: 'Zonal Head Designation',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'zonalHeadMobile',
+  //       label: 'Zonal Head Mobile',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'zonalHeadEmail',
+  //       label: 'Zonal Head Email',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+
+  //     // ---- REGIONAL HEAD ----
+  //     {
+  //       name: 'regionalHeadName',
+  //       label: 'Regional Head Name',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'regionalHeadCode',
+  //       label: 'Regional Head Code',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'regionalHeadDesignation',
+  //       label: 'Regional Head Designation',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'regionalHeadMobile',
+  //       label: 'Regional Head Mobile',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'regionalHeadEmail',
+  //       label: 'Regional Head Email',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+
+  //     // ---- BRANCH MANAGER ----
+  //     {
+  //       name: 'branchManagerName',
+  //       label: 'Branch Manager Name',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'branchManagerCode',
+  //       label: 'Branch Manager Code',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'branchManagerDesignation',
+  //       label: 'Branch Manager Designation',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'branchManagerMobile',
+  //       label: 'Branch Manager Mobile',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //     {
+  //       name: 'branchManagerEmail',
+  //       label: 'Branch Manager Email',
+  //       type: 'text',
+  //       colSpan: 4,
+  //       variant: 'standard',
+  //     },
+  //   ],
+
+  //   // -----------------------------------------
+  //   // BUTTONS
+  //   // -----------------------------------------
+  //   buttons: {
+  //     submit: {
+  //       label: 'Save Hierarchy Information',
+  //       variant: 'default',
+  //     },
+  //     cancel: {
+  //       label: 'Cancel',
+  //       variant: 'outline',
+  //     },
+  //   },
+  // }
+
+  const otherPersonalDetailsConfig = {
+    gridCols: 12,
+
+    // -----------------------------------------
+    // DEFAULT VALUES
+    // -----------------------------------------
+    defaultValues: {
+      dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
+      maritalStatusCode: agent.maritalStatusCode,
+      educationCode: agent.personalInfo?.[0]?.educationCode,
+      educationLevel: agent.personalInfo?.[0]?.educationLevel,
+      workProfile: agent.personalInfo?.[0]?.workProfile,
+      annualIncome: agent.personalInfo?.[0]?.annualIncome,
+      nomineeName: agent.nominees?.[0]?.nomineeName,
+      relationship: agent.nominees?.[0]?.relationship,
+      nomineeAge: agent.nominees?.[0]?.nomineeAge,
+      occupation: agent.occupation,
+      urn: agent.urn,
+      additionalComment: agent.additionalComment,
+      // workExpMonths: agent.personalInfo?[0]?.workExpMonths,
+      bloodGroup: agent.personalInfo?.[0]?.bloodGroup,
+      birthPlace: agent.personalInfo?.[0]?.birthPlace,
+    },
+
+    // -----------------------------------------
+    // SCHEMA
+    // -----------------------------------------
+    schema: z.object({
+      dateOfBirth: z.string().optional(),
+      maritalStatusCode: z.string().optional(),
+      educationCode: z.string().optional(),
+      educationLevel: z.string().optional(),
+      workProfile: z.string().optional(),
+      annualIncome: z.string().optional(),
+      nomineeAge: z.string().optional(),
+      nomineeName: z.string().optional(),
+      relationship: z.string().optional(),
+      occupation: z.string().optional(),
+      urn: z.string().optional(),
+      additionalComment: z.string().optional(),
+      // workExpMonths: z.string().optional(),
+      bloodGroup: z.string().optional(),
+      birthPlace: z.string().optional(),
+    }),
+
+    // -----------------------------------------
+    // FIELDS
+    // -----------------------------------------
+    fields: [
+      {
+        name: 'dateOfBirth',
+        label: 'Date of Birth',
+        type: 'date',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'maritalStatusCode',
+        label: 'Marital Status',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+        // options: ['Single', 'Married', 'Widowed', 'Divorced', 'Separated'],
+      },
+
+      {
+        name: 'educationCode',
+        label: 'Education Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+        // options: ['01', '02', '03', '04', '05'],
+      },
+      {
+        name: 'educationLevel',
+        label: 'Education Level',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'workProfile',
+        label: 'Work Profile',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'annualIncome',
+        label: 'Annual Income',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'nomineeName',
+        label: 'Nominee Name',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'relationship',
+        label: 'Nominee Relation',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'nomineeAge',
+        label: 'Nominee Age',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'occupation',
+        label: 'Occupation',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+        
+      },
+
+      {
+        name: 'urn',
+        label: 'URN',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'additionalComment',
+        label: 'Additional Comment',
+        type: 'textarea',
+        colSpan: 12,
+        variant:"white",
+      },
+      // {
+      //   name: 'workExperience',
+      //   label: 'Work Experience',
+      //   type: 'text',
+      //   colSpan: 4,
+      //   readOnly: !isEdit,
+      //   variant: 'standard',
+      // },
+      {
+        name: 'bloodGroup',
+        label: 'Blood Group',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'birthPlace',
+        label: 'Birth Place',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    ],
+
+    // -----------------------------------------
+    // BUTTONS
+    // -----------------------------------------
+    buttons: {
+      submit: {
+        label: 'Save Personal Details',
+        variant: 'default',
+      },
+      cancel: {
+        label: 'Cancel',
+        variant: 'outline',
+      },
+    },
+  }
+  const addressConfig = {
+    gridCols: 12,
+
+    // -----------------------------------------
+    // DEFAULT VALUES
+    // -----------------------------------------
+    defaultValues: {
+      stateEid: agent.stateEid,
+            addressType: agent?.permanentAddres?.[0].addressType,
+      addressLine1: agent.permanentAddres?.[0].addressLine1,
+      addressLine2: agent.permanentAddres?.[0].addressLine2,
+      addressLine3: agent.permanentAddres?.[0].addressLine3,
+      city: agent.permanentAddres?.[0].city,
+      state: agent.permanentAddres?.[0].state,
+      pin: agent.permanentAddres?.[0].pin,
+      country: agent.permanentAddres?.[0].country,
+    },
+
+    // -----------------------------------------
+    // SCHEMA
+    // -----------------------------------------
+    schema: z.object({
+      addressLine1: z.string().optional(),
+      addressLine2: z.string().optional(),
+      addressLine3: z.string().optional(),
+      city: z.string().optional(),
+      district: z.string().optional(),
+      stateEid: z.string().optional(),
+      state: z.string().optional(),
+      pin: z.string().optional(),
+      country: z.string().optional(),
+      addressType: z.string().optional(),
+    }),
+
+    // -----------------------------------------
+    // FIELDS
+    // -----------------------------------------
+    fields: [
+      {
+        name: 'addressType',
+        label: 'Address Type',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'addressLine1',
+        label: 'Address 1',
+        type: 'text',
+        colSpan:4,
+                variant: 'standard',
+
+      },
+      {
+        name: 'addressLine2',
+        label: 'Address 2',
+        type: 'text',
+        colSpan:4,
+                variant: 'standard',
+
+      },
+      {
+        name: 'addressLine3',
+        label: 'Address 3',
+        type: 'text',
+        colSpan:4,
+                variant: 'standard',
+
+      },
+
+      {
+        name: 'city',
+        label: 'City',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'state',
+        label: 'State',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'stateEid',
+        label: 'State',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+
+      {
+        name: 'country',
+        label: 'Country',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+      {
+        name: 'pin',
+        label: 'PIN Code',
+        type: 'text',
+        colSpan: 4,
+        readOnly: !isEdit,
+        variant: 'standard',
+      },
+    ],
+
+    // -----------------------------------------
+    // BUTTONS
+    // -----------------------------------------
+    buttons: {
+      submit: {
+        label: 'Save Address',
+        variant: 'default',
+      },
+      cancel: {
+        label: 'Cancel',
+        variant: 'outline',
+      },
+    },
   }
 
   // console.log("agentFormConfig", agentFormConfig)
@@ -439,7 +1380,7 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </Card>
 
           <Card className="flex justify-center items-center bg-white w-full  !m-0  p-4 w-[100%] !rounded-sm overflow-y-auto bg-[#F2F2F7] w-[100%]">
-            <CardContent className='w-[100%] p-0'>
+            <CardContent className="w-[100%] p-0">
               <DynamicFormBuilder
                 config={agentChannelConfig}
                 onSubmit={agentForm.handleSubmit}
@@ -450,39 +1391,130 @@ const AgentDetail = ({ agent }: { agent: IAgent }) => {
           </Card>
         </div>
 
-        {/* --------------1st part----------------- */}
+        {/* --------------Personal Details----------------- */}
 
-        {/* <div className="flex justify-between">
+         <div className="flex justify-between">
           <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
-            Employment Details
+            Personal Details
           </h2>
-        </div> */}
-        <div className="flex gap-2">
-          <Card className="bg-white w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
-            <CardContent className="!px-0 !py-0 w-[100%]">
-              <DynamicFormBuilder
-                config={agentFormConfig}
-                onSubmit={agentForm.handleSubmit}
-              />
-              {/* some form inputs here */}
-            </CardContent>
-          </Card>
         </div>
+        <div className="flex gap-2">
+           <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
+             <CardContent className="!px-0 !py-0 w-[100%]">
+               <AutoAccordionSection id="sec-1">
+                 <DynamicFormBuilder
+                   config={PersonalDetailsConfig}
+                   onSubmit={agentForm.handleSubmit}
+                 />
+               </AutoAccordionSection>
+             </CardContent>
+           </Card>
+         </div> 
 
-        {/* <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
-          Channel
-        </h2> */}
+        {/* --------------Contact Information----------------- */}
+
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Contact Information
+        </h2>
         <div className="flex gap-2">
           <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
             <CardContent>
-              <DynamicFormBuilder
-                config={agentPersonalInfoConfig}
-                onSubmit={agentForm.handleSubmit}
-              />
-              {/* some form inputs */}
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={contactInformationConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
             </CardContent>
           </Card>
         </div>
+                {/* -------------------hirarchy Information Config------------------------------- */}
+
+
+        {/* <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Hierarchy Information
+        </h2>
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <AutoAccordionSection title="Agent Basic Info" id="sec-1">
+                <DynamicFormBuilder
+                  config={hierarchyInformationConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+           
+            </CardContent>
+          </Card>
+        </div> */}
+
+        {/* -------------------employee Information Config------------------------------- */}
+
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Employee Information Config
+        </h2>
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={employeeInformationConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+            </CardContent>
+          </Card>
+        </div>
+        {/* ---------------financialDetailsConfig--------------- */}
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Financial Details
+        </h2>
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={financialDetailsConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+            </CardContent>
+          </Card>
+        </div>
+        {/*  Other Personal Details Config */}
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Other Personal Details
+        </h2>
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={otherPersonalDetailsConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+             
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* addressConfig */}
+        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+          Address Config
+        </h2>
+        <div className="flex gap-2">
+          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+            <CardContent>
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={addressConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+            </CardContent>
+          </Card>
+        </div> 
       </div>
     </div>
   )

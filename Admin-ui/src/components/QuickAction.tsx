@@ -3,13 +3,21 @@ import { LuSquareUserRound } from 'react-icons/lu'
 import { RxDownload, RxUpload } from 'react-icons/rx'
 import { ActionItem } from '@/utils/models'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { useNavigate } from '@tanstack/react-router'
+import {  RoutePaths } from '@/utils/constant'
 
-const actions: Array<ActionItem> = [
+
+
+
+const QuickActions = () => {
+  const navigate = useNavigate()
+
+  const actions: Array<ActionItem> = [
   {
     icon: FaPlus,
     title: 'Bulk Create Entity',
     subtitle: 'Create multiple entities at once',
-    onClick: () => alert('Bulk Create Entity clicked'),
+    onClick: () => navigate({ to: RoutePaths.CREATEBULK }),
   },
   {
     icon: LuSquareUserRound,
@@ -30,8 +38,6 @@ const actions: Array<ActionItem> = [
     onClick: () => alert('Import Hierarchy clicked'),
   },
 ]
-
-const QuickActions = () => {
   return (
     <Card className="px-2 gap-0 rounded-md">
       <CardHeader>
@@ -44,6 +50,7 @@ const QuickActions = () => {
             <div
               key={index}
               className="flex items-center justify-start gap-3 rounded-md border border-gray-100 bg-gray-100 hover:bg-white hover:shadow-lg text-left p-3  shadow-sm transition cursor-pointer"
+              onClick={action.onClick}
             >
               <div className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-900 hover:border-blue-700 ">
                 <Icon className="h-5 w-5 text-gray-700 hover:text-blue-700" />

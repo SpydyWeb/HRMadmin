@@ -5,6 +5,7 @@ import PendingActionsTable from '@/components/PendingActionsTable'
 import CompanyOverview from '@/components/CompanyOverview'
 import ResourcesCard from '@/components/ResourcesCard'
 import GoToCard from '@/components/GoToCard'
+import { useNavigate } from '@tanstack/react-router'
 const metrics = [
   {
     title: 'Total Entities',

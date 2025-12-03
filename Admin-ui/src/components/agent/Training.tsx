@@ -62,7 +62,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
       {
         name: 'confirmationDate',
         label: 'Confirmation Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -71,7 +71,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
       {
         name: 'incrementDate',
         label: 'Increment Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -80,7 +80,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
       {
         name: 'lastPromotionDate',
         label: 'Last Promotion Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -89,7 +89,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
       {
         name: 'hRDoj',
         label: 'HR Doj',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -98,7 +98,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
       {
         name: 'lastWorkingDate',
         label: 'Last Working Date',
-        type: 'text',
+        type: 'date',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -318,7 +318,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
         <div className="flex gap-10">
      
 
-          <Card className="bg-white w-full overflow-y-auto">
+          <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
             <CardContent>
               <DynamicFormBuilder
                 config={branchConfig}
@@ -336,7 +336,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Card className="bg-white w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
+          <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
             <CardContent>
               <DynamicFormBuilder
                 config={organisationConfig}
@@ -351,7 +351,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
           Other Training
         </h2>
 
-        <Card className="bg-white w-full mt-5 max-h-[600px] overflow-y-auto">
+        <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[600px] overflow-y-auto">
           <CardContent>
             <DynamicFormBuilder
               config={otherTrainingConfig}

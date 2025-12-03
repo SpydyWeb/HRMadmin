@@ -19,6 +19,7 @@ import DatePicker from '../ui/date-picker'
 import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
 
+
 interface DynamicFormBuilderProps {
   config: any
   onSubmit: (data: Record<string, any>) => void
@@ -121,6 +122,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   className="w-full min-h-24 px-3 py-2" // Added consistent padding
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
+                  variant={field.variant}
                 />
               )}
 
