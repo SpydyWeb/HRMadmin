@@ -142,7 +142,7 @@ code {
   }
 
   .input-text {
-    @apply font-poppins text-[18px] font-semibold;
+    @apply font-poppins text-[18px] font-medium;
   }
 }
 

@@ -23,8 +23,16 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
           variant: 'orange',
           colSpan: 1,
           icon: <BiBuilding className="w-5 h-5" />,
-          size: 'lg',
+          size: 'md',
         },
+   {
+        name: 'forgot-password',
+        label: 'Forgot Password?',
+        type: 'link',
+        placeholder: '',
+        colSpan: 1,
+        variant: 'standardone',
+      },
       ],
     },
     fields: [
@@ -52,14 +60,14 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         colSpan: 1,
         variant: 'standardone',
       },
-      {
-        name: 'forgot-password',
-        label: 'Forgot Password?',
-        type: 'link',
-        placeholder: '',
-        colSpan: 1,
-        variant: 'standardone',
-      },
+      // {
+      //   name: 'forgot-password',
+      //   label: 'Forgot Password?',
+      //   type: 'link',
+      //   placeholder: '',
+      //   colSpan: 1,
+      //   variant: 'standardone',
+      // },
     ],
   }
   const handleSubmit = async (data: any) => {
@@ -114,6 +122,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
           config={loginformConfig}
           onSubmit={handleSubmit}
           onFieldClick={handleFieldClick}
+
          
         />
       </CardContent>

@@ -9,7 +9,7 @@ import {
 const ZoneList = () => {
   return (
     <Select defaultValue="all">
-      <SelectTrigger className='!text-sm border-gray-200 bg-gray-200 !h-auto font-semibold w-40 px-5'>
+      <SelectTrigger className='rounded !text-sm border-gray-200 bg-gray-200 py-5.5 mt-2 font-semibold w-50 px-4'>
         <SelectValue placeholder="Select zone" />
       </SelectTrigger>
       <SelectContent className='text-md'>

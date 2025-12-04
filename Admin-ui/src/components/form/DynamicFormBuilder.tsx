@@ -57,6 +57,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   })
   // console.log('config', config)
 
+  const linkField = config.fields.find((field: any) => field.type === 'link');
+  const fieldsToRender = config.fields.filter((field: any) => field.type !== 'link');
+
   const renderField = (field: any) => {
     const fieldSchema = config.schema.shape[field.name]
 
@@ -83,7 +86,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {!(['text', 'email', 'password', 'number','checkbox','link','boolean'].includes(field.type)) && (
+              {!(['text', 'email', 'password', 'number','checkbox','link'].includes(field.type)) && (
                 <Label
                   htmlFor={field.name}
                   className="label-text text-gray-400 font-semibold pt-[1%] pr-[1%] pb-[1%] pl-0"
@@ -219,21 +222,13 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'boolean' && (
-              <div className='bg-white p-[1rem] shadow-sm'>
-                 <Label
-                  htmlFor={field.name}
-                  className="label-text !text-[#9B9B9B] pt-[2%] pr-[1%] pb-[1%] pl-0"
-                >
-                  {field.label}
-                </Label>
-             
+              <div className='bg-tranparent px-1 py-2'>
                   <Switch
                     id={field.name}
                     checked={fieldApi.state.value ?? false}
                     onCheckedChange={(val) => fieldApi.handleChange(val)}
                     disabled={field.readOnly}
-                    containerClassName="font-poppins pt-[2%] pr-[5%] pb-[5%] pl-0"
-                    // className="h-5 w-9 data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-gray-300 [&>span]:h-3 [&>span]:w-3 [&>span]:translate-x-0 data-[state=checked]:[&>span]:translate-x-5 transition-all duration-200"
+                    containerClassName="font-poppins"
                   />
                  </div>
               )}
@@ -297,6 +292,16 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               {ele.label}
             </Button>
           ))}
+        </div>
+      )}
+      {linkField && (
+        <div className="!text-end mt-4">
+          <span
+            onClick={() => onFieldClick(linkField.name)}
+            className={linkField.className || 'text-blue-600 hover:underline text-sm cursor-pointer'}
+          >
+            {linkField.label}
+          </span>
         </div>
       )}
     </>

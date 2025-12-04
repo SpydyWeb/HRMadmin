@@ -25,6 +25,11 @@ export default function SearchInterface() {
   const handleClick = (agentid: string) => {
     navigate({ to: '/search/$agentId', params: { agentId: agentid } })
   }
+  const handleModuleClick = (route: string) => {
+  if (route) {
+    navigate({ to: route })
+  }
+}
   const moduleCards = [
     {
       id: 'hms',
@@ -32,6 +37,7 @@ export default function SearchInterface() {
       icon: MdMonitor,
       color: 'bg-blue-600 hover:bg-blue-700',
       isActive: true,
+      route:'/dashboard'
     },
     {
       id: 'commissions',
@@ -132,26 +138,26 @@ export default function SearchInterface() {
               Powered by :- {user ? user.username : ' Not Logged In'}
             </p>
           </div>
-          <div className=" flex justify-center  gap-4">
+          <div className=" flex justify-center items-center  gap-4">
             {/* Search Input */}
-            <div className="flex min-w-2xl relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="relative w-[500px]">
+              {/* <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <BiSearch className="h-6 w-6 text-gray-400" />
-              </div>
+              </div> */}
               <Input
                 type="text"
                 label=''
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by Agent Code, Name, Mobile Number, Email, PAN"
-                className="!w-full !pl-10 !pr-[9rem] !py-5 "
+                className="pr-24 py-5.5"
                 variant='standardone'
               />
-              <div className="absolute  inset-y-0 right-1 pl-3 flex items-center">
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                 <Button
                   variant="blue"
                   onClick={() => handleSearch()}
-                  className={`px-10`}
+                  className={`"h-full  border-l-0 px-6 mt-2`}
                   size="sm"
                   disabled={isFetching}
                 >
@@ -169,6 +175,7 @@ export default function SearchInterface() {
               return (
                 <div
                   key={module.id}
+                  onClick={() => handleModuleClick(module.route)}
                   className="bg-gray-200 p-2 max-w-52 w-full rounded-md cursor-pointer hover:bg-[var(--brand-blue)] hover:text-white"
                 >
                   <div className="flex items-center justify-between">

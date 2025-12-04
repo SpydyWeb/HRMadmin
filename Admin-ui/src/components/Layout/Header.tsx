@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 export default function Header() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  
 
   const handleLogout = () => {
     auth.logout()
@@ -25,7 +26,9 @@ export default function Header() {
           <Separator orientation="vertical" className="h-6" />
 
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-orange-400 to-orange-500 w-10 h-10 font-bold text-white flex items-center justify-center rounded-lg">
+            <div className="bg-gradient-to-br from-orange-400 to-orange-500 w-10 h-10 font-bold text-white cursor-pointer flex items-center justify-center rounded-lg"
+            onClick={() => navigate({to:RoutePaths.SEARCH})}
+>
               HM
             </div>
             <span className="text-xl font-bold">Hierarchy Management</span>

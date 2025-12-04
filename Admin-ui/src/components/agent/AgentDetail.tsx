@@ -638,7 +638,7 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'sec206abFlag',
         label: 'Sec 206ab Flag',
-        type: 'text',
+        type: 'boolean',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',

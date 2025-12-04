@@ -30,9 +30,9 @@ function Switch({
           // Base styling
           "peer inline-flex h-[1.5rem] w-10 shrink-0 cursor-pointer items-center rounded-full border border-neutral-300 shadow-xs transition-all outline-none",
           // Checked (ON) and unchecked (OFF) colors
-          "data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-neutral-200",
+          "data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-neutral-200",
           // Focus & disabled states
-          "focus-visible:ring-[3px] focus-visible:ring-blue-500/40 focus-visible:border-blue-600 disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-visible:ring-[3px] focus-visible:ring-orange-500/40 focus-visible:border-orange-600 disabled:cursor-not-allowed disabled:opacity-50",
           // Dark mode
           "dark:data-[state=checked]:bg-neutral-50 dark:data-[state=unchecked]:bg-neutral-800 dark:border-neutral-700",
           className
