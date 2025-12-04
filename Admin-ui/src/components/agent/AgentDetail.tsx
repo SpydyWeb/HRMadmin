@@ -7,33 +7,62 @@ import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import AutoAccordionSection from '../ui/autoAccordianSection'
-import type { IAgentCategoryEntry } from '@/models/master'
 // import { BiIdCard } from 'react-icons/bi'
 
-const AgentDetail = ({ agent, masterData }: { agent: IAgent; masterData?: IAgentCategoryEntry[] }) => {
-  const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
+const AgentDetail = ({ agent }: { agent: IAgent; }) => {
+  const [isEdit, setIsEdit] = useState(false) 
+
+  const toOptions = (list?: IkeyValueEntry[] ) => {
+  return list?.filter(x => x.activeStatus).map(x => ({
+    label: x.entryDesc,
+    value: String(x.entryIdentity)
+  })) || []
+}
+
+const genderOptions = toOptions(agent.genders)
+const titleOptions = toOptions(agent.titles)
+const occupationOptions = toOptions(agent.occupations)
+const maritalOptions = toOptions(agent.maritalStatuses)
+const educationOptions = toOptions(agent.educationCodes)
+const stateOptions = toOptions(agent.stateNames)
+const countryOptions = toOptions(agent.countries)
+const channelOptions = toOptions(agent.channelNames)
+const subChannelOptions = toOptions(agent.subChannels)
+const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
+const agentClassificationOptions = toOptions(agent.agentClassifications)
+const bankAccountTypeOptions = toOptions(agent.bankAccType)
+
+const genderId = agent.genders?.find(g => g.entryDesc === agent.gender)?.entryIdentity;
+const titleId = agent.titles?.find(t => t.entryDesc === agent.title)?.entryIdentity;
+const occupationId = agent.occupations?.find(o => o.entryDesc === "Student")?.entryIdentity;
+// const occupationId = agent.occupations?.find(o => o.entryDesc === agent.occupation)?.entryIdentity;
+// const maritalStatusId = agent.maritalStatuses?.find(m => m.entryDesc === agent.maritalStatusCode)?.entryIdentity;
+const maritalStatusId = agent.maritalStatuses
+  ?.find(m => m.entryDesc?.[0]?.toUpperCase() === agent.maritalStatusCode?.[0]?.toUpperCase())
+  ?.entryIdentity;
+// const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === agent.educationCode)?.entryIdentity;
+const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === "Doctorate (Ph.D.)")?.entryIdentity;
+const educationLevelId = agent.educationCodes?.find(e => e.entryDesc === "Doctorate (Ph.D.)")?.entryIdentity;
+const stateId = agent.stateNames?.find(s => s.entryDesc === "Karnataka")?.entryIdentity;
+// const stateId = agent.stateNames?.find(s => s.entryDesc === agent.state)?.entryIdentity;
+const countryId = agent.countries?.find(c => c.entryDesc === "India")?.entryIdentity;
+// const countryId = agent.countries?.find(c => c.entryDesc === agent.country)?.entryIdentity;
+// const channelId = agent.channelNames?.find(c => c.entryDesc === agent.channel_Name)?.entryIdentity;
+const channelId = agent.channelNames?.find(c => c.entryDesc === "Broker")?.entryIdentity;
+const subChannelId = agent.subChannels?.find(s => s.entryDesc === "Field Agent")?.entryIdentity;
+// const subChannelId = agent.subChannels?.find(s => s.entryDesc === agent.sub_Channel)?.entryIdentity;
+const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === "Individual")?.entryIdentity;
+// const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === agent.agentTypeCategory)?.entryIdentity;
+const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc === agent.agentClassification)?.entryIdentity;
+const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
+// const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === agent.bankAccounts?.[0]?.accountType)?.entryIdentity;
+
 
   console.log('agent', agent)
-  const genderOptions = ['Male', 'Female', 'Other']
-  const genderDropdown = genderOptions.map((g) => ({
-    label: g,
-    value: g,
-  }))
 
   if (!agent) return null
 
   console.log("agent", agent)
-  
-  
-  
-// Transform keyValueEntry for bank account types dropdown
-const bankAccountTypeOptions = agent?.keyValueEntry
-  ?.filter(entry => entry.entryCategory === 'BANK_ACC_TYP' && entry.activeStatus)
-  ?.map(entry => ({
-    label: entry.entryDesc,
-    value: entry.entryIdentity.toString(),
-  })) || [];
-
 
   const agentForm = useAppForm({
     defaultValues: {
@@ -137,8 +166,10 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       // --- Other Personal Details ---
       dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
       martialStatus: agent.martialStatus,
-      educationCode: agent.educationCode,
-      educationLevel: agent.educationLevel,
+      // educationCode: agent.educationCode,
+      educationCode: String(educationCodeId),
+      educationLevel: String(educationLevelId),
+      // educationLevel: agent.educationLevel,
       workProfile: agent.workProfile,
       annualIncome: agent.annualIncome,
       nomineeName: agent.nomineeName,
@@ -172,8 +203,10 @@ const bankAccountTypeOptions = agent?.keyValueEntry
     gridCols: 2,
 
     defaultValues: {
-      channel_Name: agent.channel_Name,
-      sub_Channel: agent.sub_Channel,
+      // channel_Name: agent.channel_Name,
+      channel_Name: String(channelId),
+      // sub_Channel: agent.sub_Channel,
+      sub_Channel: String(subChannelId),
       commissionClass: agent.commissionClass,
     },
 
@@ -187,18 +220,20 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'channel_Name',
         label: 'Channel Name',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
+        options:channelOptions,
       },
       {
         name: 'sub_Channel',
         label: 'Sub Channel',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
+        options:subChannelOptions,
       },
       {
         name: 'commissionClass',
@@ -231,12 +266,14 @@ const bankAccountTypeOptions = agent?.keyValueEntry
     gridCols: 3,
 
     defaultValues: {
-      title: agent.title,
+      // title: agent.title,
+      title: String(titleId),
       firstName: agent.firstName,
       middleName: agent.middleName,
       lastName: agent.lastName,
       father_Husband_Nm: agent.father_Husband_Nm,
-      gender: agent.gender,
+      // gender: agent.gender,
+      gender: String(genderId),
     },
 
     schema: z.object({
@@ -252,10 +289,11 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'title',
         label: 'Title',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options:titleOptions,
       },
       {
         name: 'firstName',
@@ -293,7 +331,7 @@ const bankAccountTypeOptions = agent?.keyValueEntry
         name: 'gender',
         label: 'Agent Gender',
         type: 'select',
-        options: genderDropdown,
+        options: genderOptions,
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -445,8 +483,10 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       startDate: agent.startDate,
       appointmentDate: agent.appointmentDate,
       incorporationDate: agent.incorporationDate,
-      agentTypeCategory: agent.agentTypeCategory,
-      agentClassification: agent.agentClassification,
+      // agentTypeCategory: agent.agentTypeCategory,
+      agentTypeCategory: String(agentTypeCategoryId),
+      // agentClassification: agent.agentClassification,
+      agentClassification: String(agentClassificationId),
       cmsAgentType: agent.cmsAgentType,
     },
     // ZOD SCHEMA
@@ -546,18 +586,20 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'agentTypeCategory',
         label: 'Agent Type Category',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options:agentTypeCategoryOptions,
       },
       {
         name: 'agentClassification',
         label: 'Agent Classification',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options:agentClassificationOptions,
       },
       {
         name: 'cmsAgentType',
@@ -602,7 +644,7 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       branchName: agent.bankAccounts?.[0]?.branchName,
 
       accountNumber: agent.bankAccounts?.[0]?.accountNumber,
-      accountType: agent.bankAccounts?.[0]?.accountType,
+      accountType: String(bankAccountTypeId),
       micr: agent.bankAccounts?.[0]?.micr,
       ifsc: agent.bankAccounts?.[0]?.ifsc,
       preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
@@ -727,7 +769,6 @@ const bankAccountTypeOptions = agent?.keyValueEntry
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: ['Saving', 'Current', 'Salary', 'Other'],
       },
 
       {
@@ -1007,7 +1048,8 @@ const bankAccountTypeOptions = agent?.keyValueEntry
     // -----------------------------------------
     defaultValues: {
       dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
-      maritalStatusCode: agent.maritalStatusCode,
+      maritalStatusCode: String(maritalStatusId),
+      // maritalStatusCode: agent.maritalStatusCode,
       educationCode: agent.personalInfo?.[0]?.educationCode,
       educationLevel: agent.personalInfo?.[0]?.educationLevel,
       workProfile: agent.personalInfo?.[0]?.workProfile,
@@ -1015,7 +1057,8 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       nomineeName: agent.nominees?.[0]?.nomineeName,
       relationship: agent.nominees?.[0]?.relationship,
       nomineeAge: agent.nominees?.[0]?.nomineeAge,
-      occupation: agent.occupation,
+      // occupation: agent.occupation,
+      occupation: String(occupationId),
       urn: agent.urn,
       additionalComment: agent.additionalComment,
       // workExpMonths: agent.personalInfo?[0]?.workExpMonths,
@@ -1059,29 +1102,31 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'maritalStatusCode',
         label: 'Marital Status',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: ['Single', 'Married', 'Widowed', 'Divorced', 'Separated'],
+        options: maritalOptions,
       },
 
       {
         name: 'educationCode',
         label: 'Education Code',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: ['01', '02', '03', '04', '05'],
+        options: educationOptions,
       },
       {
         name: 'educationLevel',
         label: 'Education Level',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+                options: educationOptions,
+
       },
       {
         name: 'workProfile',
@@ -1127,10 +1172,11 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'occupation',
         label: 'Occupation',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
-        variant: 'standard',
+        // variant: 'standard',
+        options:occupationOptions,
         
       },
 
@@ -1203,9 +1249,11 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       addressLine2: agent.permanentAddres?.[0].addressLine2,
       addressLine3: agent.permanentAddres?.[0].addressLine3,
       city: agent.permanentAddres?.[0].city,
-      state: agent.permanentAddres?.[0].state,
+      // state: agent.permanentAddres?.[0].state,
+      state: String(stateId),
       pin: agent.permanentAddres?.[0].pin,
-      country: agent.permanentAddres?.[0].country,
+      country:String(countryId),
+      // country: agent.permanentAddres?.[0].country,
     },
 
     // -----------------------------------------
@@ -1272,10 +1320,11 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'state',
         label: 'State',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options:stateOptions,
       },
 
       {
@@ -1290,10 +1339,11 @@ const bankAccountTypeOptions = agent?.keyValueEntry
       {
         name: 'country',
         label: 'Country',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options:countryOptions,
       },
       {
         name: 'pin',

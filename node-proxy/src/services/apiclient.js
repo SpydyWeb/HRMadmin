@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { dotnetApiUrl } = require("../config");
-const { resource } = require("../app");
 
 // Create axios instance
 const api = axios.create({
@@ -13,7 +12,7 @@ const api = axios.create({
 const request = async (method, url, data, config = {}) => {
   try {
     // Encrypt payload if data is provided
-    const payload = data ? data: undefined;
+    const payload = data ? data : undefined;
 
     // Forward Authorization header if exists
     const headers = {

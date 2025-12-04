@@ -1,9 +1,9 @@
 const express = require("express");
-const apiService = require("../services/apiService");
 const { encryptionService } = require("../services/encryptionService");
 const { isEncryptionEnabled } = require("../config/encryptionConfig");
 const e = require("express");
 const router = express.Router();
+const apiService = require("../services/apiService");
 
 router.post("/proxy", async (req, res) => {
   try {
@@ -17,7 +17,9 @@ router.post("/proxy", async (req, res) => {
       decryptedBody = req.body;
     }
     const { fn, args = [], headers = {} } = decryptedBody;
-
+console.log('====================================');
+console.log(decryptedBody,apiService);
+console.log('====================================');
     if (!fn || typeof apiService[fn] !== "function") {
       return res.status(400).json({ error: "Invalid function name" });
     }

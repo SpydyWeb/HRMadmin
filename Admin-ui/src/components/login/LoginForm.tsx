@@ -31,7 +31,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         type: 'link',
         placeholder: '',
         colSpan: 1,
-        variant: 'standardone',
+        variant: 'btnlink',
       },
       ],
     },

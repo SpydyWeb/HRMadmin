@@ -17,6 +17,8 @@ const loadEncryptionConfig = () => {
   return enabled;
 };
 const login = (data) => {
+  console.log(data);
+  
   return apiClient.post(APIRoutes.LOGIN, data);
 };
 const search = (data, headers = {}) => {

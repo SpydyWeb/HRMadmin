@@ -3,6 +3,7 @@ export interface IAgentCategoryEntry {
   entryCategory: string
   entryIdentity: string
   entryDesc: string
+  activeStatus:boolean
 }
 
 export interface IAgentCategoryResponse {

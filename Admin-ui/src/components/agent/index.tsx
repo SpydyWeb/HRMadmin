@@ -117,9 +117,7 @@ const Agent = () => {
   if (error) return <div className="text-red-500">Error: {error}</div>
 
   const firstAgent = agentData?.responseBody?.agents?.[0]
-  const masterData = agentData?.responseBody
   console.log("firstAgent",firstAgent)
-  console.log("masterData",masterData)
 
   return (
     <>
