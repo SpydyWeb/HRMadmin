@@ -7,9 +7,10 @@ import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import AutoAccordionSection from '../ui/autoAccordianSection'
+import type { IAgentCategoryEntry } from '@/models/master'
 // import { BiIdCard } from 'react-icons/bi'
 
-const AgentDetail = ({ agent }: { agent: IAgent }) => {
+const AgentDetail = ({ agent, masterData }: { agent: IAgent; masterData?: IAgentCategoryEntry[] }) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
   console.log('agent', agent)

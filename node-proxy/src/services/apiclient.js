@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { dotnetApiUrl } = require("../config");
+const { resource } = require("../app");
 
 // Create axios instance
 const api = axios.create({
@@ -31,7 +32,6 @@ const request = async (method, url, data, config = {}) => {
     if (response.data && response.data.data) {
       return JSON.parse(response.data.data);
     }
-
     return response.data;
   } catch (error) {
     console.error("API Client Error:", error.message);

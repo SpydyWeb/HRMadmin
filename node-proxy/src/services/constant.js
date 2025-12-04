@@ -3,4 +3,5 @@ export const APIRoutes = {
   AGENTSEARCH: '/api/Agent/Search',
   AGENTBYCODE: "/api/Agent/AgentByCode", 
   AGENTBYID: "/api/Agent/AgentByid", 
+  GETMASTERS: "/api/AppMasters/get", 
 }

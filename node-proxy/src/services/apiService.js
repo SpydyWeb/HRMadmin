@@ -31,6 +31,9 @@ const Agentbyid = (data, headers = {}) => {
 const AgentByCode = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
+const GetMasters = ( headers = {}) => {
+  return apiClient.post(`${APIRoutes.MASTER_GET}/${key}`, {}, { headers });
+};
 
 module.exports = {
   login,
@@ -39,5 +42,6 @@ module.exports = {
   loadEncryptionConfig,
   getHRMChunks,
   Agentbyid,
-  AgentByCode
+  AgentByCode,
+  GetMasters
 };
