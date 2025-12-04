@@ -18,6 +18,7 @@ type ButtonProps = {
     | 'outline-orange'
     | 'outline-blue'
     | 'ghost'
+    | 'btnlink',
   size?: 'sm' | 'md' | 'lg'
 onClick?: React.MouseEventHandler<HTMLButtonElement>
   className?: string
@@ -83,6 +84,8 @@ export default function Button({
       'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
     ghost:
       'bg-[var(--brand-blue)]/10 text-black-400 hover:bg-[var(--brand-blue)]/20',
+    btnlink:
+      '!bg-transparent  !hover:bg-transparent',
   }
 
   const isButtonDisabled = disabled || (!canSubmit && form) || isSubmitting

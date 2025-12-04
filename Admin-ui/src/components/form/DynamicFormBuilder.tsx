@@ -10,7 +10,9 @@ import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -18,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import DatePicker from '../ui/date-picker'
 import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
+import { Variable } from 'lucide-react'
 
 
 interface DynamicFormBuilderProps {
@@ -86,7 +89,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {!(['text', 'email', 'password', 'number','checkbox','link'].includes(field.type)) && (
+              {!(['text', 'email', 'password', 'number','checkbox','link','select'].includes(field.type)) && (
                 <Label
                   htmlFor={field.name}
                   className="label-text text-gray-400 font-semibold pt-[1%] pr-[1%] pb-[1%] pl-0"
@@ -129,19 +132,17 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 />
               )}
 
-              {field.type === 'select' && (
+              {/* {field.type === 'select' && (
+                <div className={field.variant==='custom' ? `!bg-red`:''}>
                 <Select
                   value={fieldApi.state.value}
                   onValueChange={handleChange}
                   disabled={field.readOnly}
-               
                 >
-                  <SelectTrigger className="w-full h-10 px-3 py-2">
-                    {' '}
-                    {/* Added consistent height and padding */}
-                    <SelectValue placeholder={field.placeholder} />
+                  <SelectTrigger className='!w-full !h-10 px-3 py-2' variant={field.variant}>
+                    <SelectValue  placeholder={field.placeholder} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent >
                     {field.options?.map((option: any) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
@@ -149,7 +150,35 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-              )}
+                </div>
+              )} */}
+{field.type === 'select' && (
+  <div className={field.variant === 'custom' ? "bg-white rounded-sm p-[3.5%] shadow-sm border border-gray-200" : ""}>
+    <Select
+      value={fieldApi.state.value}
+      // onValueChange={handleChange}
+      onValueChange={(val) => fieldApi.handleChange(val)}
+      disabled={field.readOnly}
+    >
+      <SelectGroup>
+        <SelectLabel variant={field.variant}>
+          {field.label}
+        </SelectLabel>
+        <SelectTrigger className={field.variant === 'custom' ? '!w-full !h-10 px-1 py-1' : '!w-full !h-10 px-3 py-3'} variant={field.variant}>
+          <SelectValue placeholder={field.placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          
+          {field.options?.map((option: any) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectGroup>
+    </Select>
+  </div>
+)}
 
               {field.type === 'checkbox' && (
                 <div className="flex items-center space-x-2 py-2">
@@ -180,7 +209,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     onChange={(d) => fieldApi.handleChange(d)}
                     icon={field.icon}
                     disabled={field.readOnly}
-                    className="w-full h-10" // Added consistent height
+                    // className="w-full h-10" // Added consistent height
                   />
                 </div>
               )}
