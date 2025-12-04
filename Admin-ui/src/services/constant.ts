@@ -9,7 +9,7 @@ export const APIRoutes = {
   LOGIN: 'login',
   AGENTBYID: 'Agentbyid',
   AGENTBYCODE: 'AgentByCode',
-  GETMASTERS: 'AppMasters/get/AgentTypeCategory',
+  GETMASTERS: 'GetMasters',
 }
 
 export const LoginConstants = {

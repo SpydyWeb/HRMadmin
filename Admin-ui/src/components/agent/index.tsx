@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 import ComingSoon from '../comming-soon'
 import { Hierarchy } from './hierarchy'
 import { agentService } from '@/services/agentService'
-import { masterService } from '@/services/masterService'
 import Loader from '@/components/Loader'
 import { useParams } from '@tanstack/react-router'
 import encryptionService from '@/services/encryptionService'
@@ -16,6 +15,7 @@ import Training from './Training'
 import License from './License'
 import Financial from './Financial'
 import type { ApiResponse } from '@/models/api'
+import { masterService } from '@/services/masterService'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal' },
@@ -95,7 +95,8 @@ const Agent = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true)
-        const categories = await agentService.GetMasters()
+        const data = { key: 'gender' }
+        const categories = await masterService.getmasters(data)
         if (categories) {
           setAgentCategories(categories)
         }

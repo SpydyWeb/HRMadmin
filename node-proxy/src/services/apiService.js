@@ -31,7 +31,7 @@ const Agentbyid = (data, headers = {}) => {
 const AgentByCode = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
-const GetMasters = ( headers = {}) => {
+const GetMasters = (key, headers = {}) => {
   return apiClient.post(`${APIRoutes.MASTER_GET}/${key}`, {}, { headers });
 };
 
