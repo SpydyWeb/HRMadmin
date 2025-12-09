@@ -23,7 +23,7 @@ export const masterService = {
     }
   },
     getMastersBulk: async (keys: string[]) => {
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       keys.map(async (key) => {
         const res = await callApi<ApiResponse<IAgentCategoryResponse>>(
         APIRoutes.GETMASTERS,
