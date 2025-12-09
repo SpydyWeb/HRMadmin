@@ -23,80 +23,20 @@ const AgentDetail = ({
     getOptions,
     isLoading: masterLoading,
   } = useMasterData(Object.values(MASTER_DATA_KEYS))
-  //   const toOptions = (list?: IkeyValueEntry[] ) => {
-  //   return list?.filter(x => x.activeStatus).map(x => ({
-  //     label: x.entryDesc,
-  //     value: String(x.entryIdentity)
-  //   })) || []
-  // }
 
-  // const genderOptions = toOptions(agent.genders)
-  // const titleOptions = toOptions(agent.titles)
-  // const occupationOptions = toOptions(agent.occupations)
-  // const maritalOptions = toOptions(agent.maritalStatuses)
-  // const educationOptions = toOptions(agent.educationCodes)
-  // const stateOptions = toOptions(agent.stateNames)
-  // const countryOptions = toOptions(agent.countries)
-  // const channelOptions = toOptions(agent.channelNames)
-  // const subChannelOptions = toOptions(agent.subChannels)
-  // const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
-  // const agentClassificationOptions = toOptions(agent.agentClassifications)
-  // const bankAccountTypeOptions = toOptions(agent.bankAccType)
-
-  const genderId = agent.genders?.find(
-    (g) => g.entryDesc === agent.gender,
-  )?.entryIdentity
-  const titleId = agent.titles?.find(
-    (t) => t.entryDesc === agent.title,
-  )?.entryIdentity
-  const occupationId = agent.occupations?.find(
-    (o) => o.entryDesc === 'Student',
-  )?.entryIdentity
-  // const occupationId = agent.occupations?.find(o => o.entryDesc === agent.occupation)?.entryIdentity;
-  // const maritalStatusId = agent.maritalStatuses?.find(m => m.entryDesc === agent.maritalStatusCode)?.entryIdentity;
-  const maritalStatusId = agent.maritalStatuses?.find(
-    (m) =>
-      m.entryDesc?.[0]?.toUpperCase() ===
-      agent.maritalStatusCode?.[0]?.toUpperCase(),
-  )?.entryIdentity
-  // const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === agent.educationCode)?.entryIdentity;
-  const educationCodeId = agent.educationCodes?.find(
-    (e) => e.entryDesc === 'Doctorate (Ph.D.)',
-  )?.entryIdentity
-  const educationLevelId = agent.educationCodes?.find(
-    (e) => e.entryDesc === 'Doctorate (Ph.D.)',
-  )?.entryIdentity
-  const stateId = agent.stateNames?.find(
-    (s) => s.entryDesc === 'Karnataka',
-  )?.entryIdentity
-  // const stateId = agent.stateNames?.find(s => s.entryDesc === agent.state)?.entryIdentity;
-  const countryId = agent.countries?.find(
-    (c) => c.entryDesc === 'India',
-  )?.entryIdentity
-  // const countryId = agent.countries?.find(c => c.entryDesc === agent.country)?.entryIdentity;
-  // const channelId = agent.channelNames?.find(c => c.entryDesc === agent.channel_Name)?.entryIdentity;
   const channelId = agent.channelNames?.find(
     (c) => c.entryDesc === 'Broker',
   )?.entryIdentity
   const subChannelId = agent.subChannels?.find(
     (s) => s.entryDesc === 'Field Agent',
   )?.entryIdentity
-  // const subChannelId = agent.subChannels?.find(s => s.entryDesc === agent.sub_Channel)?.entryIdentity;
-  const agentTypeCategoryId = agent.agentTypeCategories?.find(
-    (a) => a.entryDesc === 'Individual',
-  )?.entryIdentity
-  // const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === agent.agentTypeCategory)?.entryIdentity;
-  const agentClassificationId = agent.agentClassifications?.find(
-    (a) => a.entryDesc === agent.agentClassification,
-  )?.entryIdentity
-  // const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
-  // const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === agent.bankAccounts?.[0]?.accountType)?.entryIdentity;
 
   console.log('agent', agent)
 
   if (!agent) return null
 
   console.log('agent', agent)
+  console.log('------------title', agent.title)
 
   const agentForm = useAppForm({
     defaultValues: {
@@ -112,8 +52,8 @@ const AgentDetail = ({
       startDate: agent.startDate,
       appointmentDate: agent.appointmentDate,
       incorporationDate: agent.incorporationDate,
-      agentTypeCategory: agent.agentTypeCategory,
-      agentClassification: agent.agentClassification,
+      agentTypeCat: agent.agentTypeCat,
+      agentClass: agent.agentClass,
       cmsAgentType: agent.cmsAgentType,
 
       title: agent.title,
@@ -129,11 +69,8 @@ const AgentDetail = ({
       preferredLanguage: agent.preferredLanguage,
       father_Husband_Nm: agent.father_Husband_Nm,
 
-      channel_Name: agent.channel_Name,
-      sub_Channel: agent.sub_Channel,
-
-      // ---- NEW FIELDS ADDED BELOW ----
-
+    channel: agent.channel,
+      subChannel: agent.subChannel,
       // --- contact DETAILS ---
       mobileNo: agent?.personalInfo?.[0]?.mobileNo,
       workContactNo: agent?.personalInfo?.[0]?.workContactNo,
@@ -141,7 +78,7 @@ const AgentDetail = ({
 
       pob: agent.pob,
       aadharNumber: agent.aadharNumber,
-      educationQualification: agent.educationQualification,
+      education: agent.education,
       educationSpecialization: agent.educationSpecialization,
       educationalInstitute: agent.educationalInstitute,
       passingYear: agent.passingYear,
@@ -200,10 +137,8 @@ const AgentDetail = ({
       // --- Other Personal Details ---
       dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
       martialStatus: agent.martialStatus,
-      // educationCode: agent.educationCode,
-      educationCode: String(educationCodeId),
-      educationLevel: String(educationLevelId),
-      // educationLevel: agent.educationLevel,
+ 
+      educationLevel: agent.educationLevel,
       workProfile: agent.workProfile,
       annualIncome: agent.annualIncome,
       nomineeName: agent.nomineeName,
@@ -224,7 +159,8 @@ const AgentDetail = ({
       addressLine3: agent?.permanentAddres?.[0].addressLine3,
       city: agent?.permanentAddres?.[0].city,
       state: agent?.permanentAddres?.[0].state,
-      country: agent?.permanentAddres?.[0].country,
+      // country: agent?.permanentAddres?.[0].country,
+      country: agent?.country,
       pin: agent?.permanentAddres?.[0].pin,
     },
 
@@ -237,37 +173,35 @@ const AgentDetail = ({
     gridCols: 2,
 
     defaultValues: {
-      // channel_Name: agent.channel_Name,
-      channel_Name: String(channelId),
-      // sub_Channel: agent.sub_Channel,
-      sub_Channel: String(subChannelId),
-      commissionClass: agent.commissionClass,
+      channel: agent.channel,
+      subChannel: agent.subChannel,
+      commissionClass: agent.commissionClass ?? "N/A",
     },
 
     schema: z.object({
-      channel_Name: z.string().optional(),
-      sub_Channel: z.string().optional(),
+      channel: z.string().optional(),
+      subChannel: z.string().optional(),
       commissionClass: z.string().optional(),
     }),
 
     fields: [
       {
-        name: 'channel_Name',
+        name: 'channel',
         label: 'Channel Name',
         type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        // options:channelOptions,
+        options: getOptions(MASTER_DATA_KEYS.SALES_CHANNELS),
       },
       {
-        name: 'sub_Channel',
+        name: 'subChannel',
         label: 'Sub Channel',
         type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        // options:subChannelOptions,
+        options: getOptions(MASTER_DATA_KEYS.SALES_SUB_CHANNELS),
       },
       {
         name: 'commissionClass',
@@ -300,14 +234,13 @@ const AgentDetail = ({
     gridCols: 3,
 
     defaultValues: {
-      // title: agent.title,
-      title: String(titleId),
+      title: agent.title,
       firstName: agent.firstName,
       middleName: agent.middleName,
       lastName: agent.lastName,
-      father_Husband_Nm: agent.father_Husband_Nm,
-      // gender: agent.gender,
-      gender: String(genderId),
+      father_Husband_Nm: agent.father_Husband_Nm ?? "N/a",
+      gender: agent.gender,
+  
     },
 
     schema: z.object({
@@ -324,10 +257,10 @@ const AgentDetail = ({
         name: 'title',
         label: 'Title',
         type: 'select',
+        options: getOptions(MASTER_DATA_KEYS.SALUTATION),
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        // options:titleOptions,
       },
       {
         name: 'firstName',
@@ -509,18 +442,16 @@ const AgentDetail = ({
     // DEFAULT VALUES
     defaultValues: {
       agentId: agent.agentId,
-      applicationDocketNo: agent.applicationDocketNo,
+      applicationDocketNo: agent.applicationDocketNo ?? "N/A",
       agentCode: agent.agentCode,
       candidateType: agent.candidateType,
       agentTypeCode: agent.agentTypeCode,
-      employeeCode: agent.employeeCode,
+      employeeCode: agent.employeeCode ?? "N/A",
       startDate: agent.startDate,
       appointmentDate: agent.appointmentDate,
       incorporationDate: agent.incorporationDate,
-      // agentTypeCategory: agent.agentTypeCategory,
-      agentTypeCategory: String(agentTypeCategoryId),
-      // agentClassification: agent.agentClassification,
-      agentClassification: String(agentClassificationId),
+      agentTypeCat: agent.agentTypeCat,
+      agentClass: agent.agentClass,
       cmsAgentType: agent.cmsAgentType,
     },
     // ZOD SCHEMA
@@ -535,8 +466,8 @@ const AgentDetail = ({
       startDate: z.string().optional(),
       appointmentDate: z.string().optional(),
       incorporationDate: z.string().optional(),
-      agentTypeCategory: z.string().optional(),
-      agentClassification: z.string().optional(),
+      agentTypeCat: z.string().optional(),
+      agentClass: z.string().optional(),
       cmsAgentType: z.string().optional(),
     }),
 
@@ -570,18 +501,21 @@ const AgentDetail = ({
       {
         name: 'candidateType',
         label: 'Candidate Type',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.CANDIDATE_TYPE),
+
       },
       {
         name: 'agentTypeCode',
         label: 'Agent Type',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.AGENT_TYPE),
       },
       {
         name: 'employeeCode',
@@ -618,22 +552,22 @@ const AgentDetail = ({
       },
 
       {
-        name: 'agentTypeCategory',
+        name: 'agentTypeCat',
         label: 'Agent Type Category',
         type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options:agentTypeCategoryOptions,
-      },
+ options: getOptions(MASTER_DATA_KEYS.AGENT_TYPE_CATEGORY),      
+},
       {
-        name: 'agentClassification',
+        name: 'agentClass',
         label: 'Agent Classification',
         type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options:agentClassificationOptions,
+        options:getOptions(MASTER_DATA_KEYS.AGENT_CLASS),
       },
       {
         name: 'cmsAgentType',
@@ -669,7 +603,7 @@ const AgentDetail = ({
     defaultValues: {
       panAadharLinkFlag: agent.panAadharLinkFlag,
       sec206abFlag: agent.sec206abFlag,
-      taxStatus: agent.taxStatus,
+      taxStatus: agent.taxStatus ?? "N/A",
       serviceTaxNo: agent.serviceTaxNo,
       //Acct Activation Date missing
       factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
@@ -679,7 +613,7 @@ const AgentDetail = ({
       branchName: agent.bankAccounts?.[0]?.branchName,
 
       accountNumber: agent.bankAccounts?.[0]?.accountNumber,
-      accountType: agent.bankAccounts?.[0]?.bankAccType,
+      accountType: agent.bankAccounts?.[0]?.accountType,
       micr: agent.bankAccounts?.[0]?.micr,
       ifsc: agent.bankAccounts?.[0]?.ifsc,
       preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
@@ -800,7 +734,6 @@ const AgentDetail = ({
         name: 'accountType',
         label: 'Bank Account Type',
         type: 'select',
-        // options: bankAccountTypeOptions,
         options: getOptions(MASTER_DATA_KEYS.BANK_ACC_TYPE),
         colSpan: 4,
         readOnly: !isEdit,
@@ -1084,18 +1017,15 @@ const AgentDetail = ({
     // -----------------------------------------
     defaultValues: {
       dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
-      maritalStatusCode: String(maritalStatusId),
-      // maritalStatusCode: agent.maritalStatusCode,
-      educationCode: agent.personalInfo?.[0]?.educationCode,
-      educationLevel: agent.personalInfo?.[0]?.educationLevel,
+      maritalStatus: agent.maritalStatus,
+      education: agent.education,
       workProfile: agent.personalInfo?.[0]?.workProfile,
       annualIncome: agent.personalInfo?.[0]?.annualIncome,
       nomineeName: agent.nominees?.[0]?.nomineeName,
       relationship: agent.nominees?.[0]?.relationship,
       nomineeAge: agent.nominees?.[0]?.nomineeAge,
-      // occupation: agent.occupation,
-      occupation: String(occupationId),
-      urn: agent.urn,
+      occupation: agent.occupation,
+      urn: agent.urn ?? "N/A",
       additionalComment: agent.additionalComment,
       // workExpMonths: agent.personalInfo?[0]?.workExpMonths,
       bloodGroup: agent.personalInfo?.[0]?.bloodGroup,
@@ -1107,9 +1037,8 @@ const AgentDetail = ({
     // -----------------------------------------
     schema: z.object({
       dateOfBirth: z.string().optional(),
-      maritalStatusCode: z.string().optional(),
-      educationCode: z.string().optional(),
-      educationLevel: z.string().optional(),
+      maritalStatus: z.string().optional(),
+      education: z.string().optional(),
       workProfile: z.string().optional(),
       annualIncome: z.string().optional(),
       nomineeAge: z.string().optional(),
@@ -1136,32 +1065,23 @@ const AgentDetail = ({
         variant: 'standard',
       },
       {
-        name: 'maritalStatusCode',
+        name: 'maritalStatus',
         label: 'Marital Status',
         type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: maritalOptions,
+        options: getOptions(MASTER_DATA_KEYS.MARITAL_STATUS),
       },
 
       {
-        name: 'educationCode',
-        label: 'Education Code',
-        type: 'select',
-        colSpan: 4,
-        readOnly: !isEdit,
-        variant: 'standard',
-        // options: educationOptions,
-      },
-      {
-        name: 'educationLevel',
+        name: 'education',
         label: 'Education Level',
         type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: educationOptions,
+        options: getOptions(MASTER_DATA_KEYS.EDUCATION_QUALIFICATION),
       },
       {
         name: 'workProfile',
@@ -1211,7 +1131,7 @@ const AgentDetail = ({
         colSpan: 4,
         readOnly: !isEdit,
         // variant: 'standard',
-        // options:occupationOptions,
+       options: getOptions(MASTER_DATA_KEYS.OCCUPATIONS),
       },
 
       {
@@ -1283,11 +1203,9 @@ const AgentDetail = ({
       addressLine2: agent.permanentAddres?.[0].addressLine2,
       addressLine3: agent.permanentAddres?.[0].addressLine3,
       city: agent.permanentAddres?.[0].city,
-      // state: agent.permanentAddres?.[0].state,
-      state: String(stateId),
+      state: agent.permanentAddres?.[0].state,
       pin: agent.permanentAddres?.[0].pin,
-      country: String(countryId),
-      // country: agent.permanentAddres?.[0].country,
+      country: agent.permanentAddres?.[0].country,
     },
 
     // -----------------------------------------
@@ -1351,16 +1269,16 @@ const AgentDetail = ({
       {
         name: 'state',
         label: 'State',
-        type: 'select',
+        type: 'text',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options:stateOptions,
+        //  options: getOptions(MASTER_DATA_KEYS.STATE),
       },
 
       {
         name: 'stateEid',
-        label: 'State',
+        label: 'StateEid',
         type: 'text',
         colSpan: 4,
         readOnly: !isEdit,
@@ -1374,7 +1292,7 @@ const AgentDetail = ({
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options:countryOptions,
+         options: getOptions(MASTER_DATA_KEYS.COUNTRY),
       },
       {
         name: 'pin',

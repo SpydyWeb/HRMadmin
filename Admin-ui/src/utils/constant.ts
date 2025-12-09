@@ -38,4 +38,6 @@ export const MASTER_DATA_KEYS = {
   SALES_CHANNELS: 'SalesChannels',
   AGENT_TYPE_CATEGORY: 'AgentTypeCategory',
   SALUTATION: 'Salutation',
+  CANDIDATE_TYPE: 'CandidateType',
+  AGENT_TYPE: 'AgentType',
 }

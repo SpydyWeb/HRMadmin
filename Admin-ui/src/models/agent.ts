@@ -26,7 +26,7 @@ export interface IAgent {
   firstName: string | null
   middleName: string | null
   lastName: string | null
-  prefix: string | null
+  title: string | null
   suffix: string | null
   gender: string | null
   commissionClass: string | null
@@ -70,7 +70,6 @@ export interface IAgent {
   peopleHeirarchy?: any[]
   total_count?: number
 
-  title?: string | null
   father_Husband_Nm?: string | null
 
   employeeCode?: string | null
@@ -84,7 +83,7 @@ export interface IAgent {
   agentClassification?: string | null
   cmsAgentType?: string | null
 
-  channel_Name?: string | null
+  channel?: string | null
   sub_Channel?: string | null
 
   // Flags & Metadata
@@ -202,8 +201,8 @@ export interface IAgent {
   //Other personal details
   dob: string | null
   martialStatus: string | null
-  educationCode: string | null
   educationLevel: string | null
+  education: string | null
   workProfile: string | null
   annualIncome: string | null
   // Nominees
@@ -242,7 +241,6 @@ occupations?: IkeyValueEntry[]
 agentTypeCategories?: IkeyValueEntry[]
 agentClassifications?: IkeyValueEntry[]
 maritalStatuses?: IkeyValueEntry[]
-educationCodes?: IkeyValueEntry[]
 stateNames?: IkeyValueEntry[]
 countries?: IkeyValueEntry[]
 
@@ -297,8 +295,8 @@ export interface IPersonalInfo {
   bloodGroup: string
   birthPlace: string
   martialStatus: string
-  educationCode: string
   educationLevel: string
+  education: string
   workProfile: string
   annualIncome: string
   workExpMonths: number
