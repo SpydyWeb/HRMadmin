@@ -25,7 +25,7 @@ export const useMasterData = (keys: string[]) => {
   const masterData = data ?? {}
   const getOptions = (key: string) => {
     const items = masterData[key] || []
-    console.log(masterData,key,items.map((x: any) => ({
+    console.log("see",masterData,key,items.map((x: any) => ({
       label: x.entryDesc ?? x.name ?? '',
       value: x.entryIdentity ?? x.id,
     })));
