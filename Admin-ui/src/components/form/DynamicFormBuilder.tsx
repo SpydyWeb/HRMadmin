@@ -201,7 +201,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'date' && (
-                <div className="py-1">
+                <div className="">
                   {' '}
                   {/* Added vertical padding */}
                   <DatePicker

@@ -87,7 +87,7 @@ export default function DatePicker({
 
   return (
     <div className="w-full relative">
-      {label && <Label htmlFor={id} className="mb-1 block">{label}</Label>}
+      {label && <Label htmlFor={id} className="mb-2 block">{label}</Label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild={false}>
           <button
@@ -96,7 +96,7 @@ export default function DatePicker({
             disabled={disabled}
             onClick={() => setOpen(!open)}
             className={cn(
-              "w-full flex items-center px-3 py-2 gap-2 font-normal",
+              "w-full flex items-center px-3 py-1 gap-2 font-normal",
               "justify-start text-left border border-gray-400 shadow-none rounded-md bg-white",
               "hover:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300"
             )}
