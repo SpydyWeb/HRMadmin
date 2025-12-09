@@ -16,13 +16,17 @@ import License from './License'
 import Financial from './Financial'
 import type { ApiResponse } from '@/models/api'
 import { masterService } from '@/services/masterService'
+import { MASTER_DATA_KEYS } from '@/utils/constant';
+import { useMasterData } from '@/hooks/useMasterData'
+
+
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal' },
   { value: 'peoplehierarchy', label: 'People Hierarchy' },
   { value: 'geographicalhierarchy', label: 'Geographical Hierarchy' },
   { value: 'partnersmapped', label: 'Partners Mapped' },
-  { value: 'auditlog', label: 'Audit Log' }, // typo fixed
+  { value: 'auditlog', label: 'Audit Log' },
   { value: 'licensedetails', label: 'License' },
   { value: 'financialdetails', label: 'Financial' },
   { value: 'entity360', label: 'Entity 360°' },
@@ -45,6 +49,11 @@ const Agent = () => {
    // --- NEW STATE FOR CATEGORIES ---
   const [agentCategories, setAgentCategories] = useState<ApiResponse<AgentResponse> | null>(null)
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+
+const { masterData, getDescription, getOptions } = useMasterData(
+  Object.values(MASTER_DATA_KEYS)
+);
+
 
 
   // Adjust the "from" path to your actual route, e.g. '/agent/$agentId'
@@ -95,8 +104,9 @@ const Agent = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true)
-        const data = { key: 'gender' }
-        const categories = await masterService.getmasters(data)
+        const key =  'BankAccType' 
+        const categories = await masterService.getmasters(key)
+        console.log("Fetched agent categories:", categories)
         if (categories) {
           setAgentCategories(categories)
         }
@@ -109,6 +119,7 @@ const Agent = () => {
 
     fetchCategories()
   }, []) 
+  
 
   if (loading) return <Loader />
   if (error) return <div className="text-red-500">Error: {error}</div>
@@ -118,6 +129,12 @@ const Agent = () => {
 
   const firstAgent = agentData?.responseBody?.agents?.[0]
   console.log("firstAgent",firstAgent)
+
+   // Example of how to use the getDescription function
+  const bankAccTypeDescription = getDescription(
+    MASTER_DATA_KEYS.BANK_ACC_TYPE, 
+    firstAgent?.bankAccType
+  );
 
   return (
     <>
@@ -155,7 +172,9 @@ const Agent = () => {
 
       {activeTab === 'personaldetails' ? (
         firstAgent ? (
-          <AgentDetail agent={firstAgent} />
+          <AgentDetail agent={firstAgent} masterData={masterData}
+    getOptions={getOptions}
+    getDescription={getDescription} />
         ) : (
           <div>No agent found.</div>
         )

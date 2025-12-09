@@ -274,7 +274,7 @@ export interface IBankAccount {
   preferredPaymentMode: string
 }
 export interface IkeyValueEntry {
-  orgId: number
+  orgid: number
   entryCategory: string
   entryIdentity: number
   entryDesc: string

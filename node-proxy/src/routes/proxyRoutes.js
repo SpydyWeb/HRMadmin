@@ -24,6 +24,8 @@ console.log('====================================');
       return res.status(400).json({ error: "Invalid function name" });
     }
     const result = await apiService[fn](...args, headers);
+    console.log("result here:", result);
+    console.log("fn",fn)
     const safeData = { ...result };
     console.log("Safe Data:", safeData,decryptedBody);
     if (encryptionEnabled) {

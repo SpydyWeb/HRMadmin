@@ -34,7 +34,15 @@ const AgentByCode = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
 const GetMasters = (key, headers = {}) => {
-  return apiClient.post(`${APIRoutes.MASTER_GET}/${key}`, {}, { headers });
+  
+  const response= apiClient.post(`${APIRoutes.GETMASTERS}/${key}`, {}, {
+    headers,
+
+  }
+);
+
+console.log("sdfs",`${JSON.stringify(key)}`);
+  return response;
 };
 
 module.exports = {

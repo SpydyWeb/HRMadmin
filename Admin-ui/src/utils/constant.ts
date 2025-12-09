@@ -24,3 +24,18 @@ export const NOTIFICATION_CONSTANTS = {
   WARNING: 'warning' as const,
   ACTION: 'action' as const,
 }
+
+export const MASTER_DATA_KEYS = {
+  BANK_ACC_TYPE: 'BankAccType',
+  // AGENT_CLASS: 'AgentClass',
+  // SALES_SUB_CHANNELS: 'SalesSubChannels',
+  // STATE: 'State',
+  // OCCUPATIONS: 'Occupations',
+  // MARITAL_STATUS: 'MaritalStatus',
+  // GENDER: 'Gender',
+  // EDUCATION_QUALIFICATION: 'EducationQualification',
+  // COUNTRY: 'Country',
+  // SALES_CHANNELS: 'SalesChannels',
+  // AGENT_TYPE_CATEGORY: 'AgentTypeCategory',
+  // SALUTATION: 'Salutation',
+}

@@ -7,30 +7,47 @@ import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import AutoAccordionSection from '../ui/autoAccordianSection'
-// import { BiIdCard } from 'react-icons/bi'
+import { MASTER_DATA_KEYS } from '@/utils/constant';
 
-const AgentDetail = ({ agent }: { agent: IAgent; }) => {
+// import { BiIdCard } from 'react-icons/bi'
+type AgentDetailProps = {
+  agent: any;
+  masterData: Record<string, any[]>;
+  getDescription: (key: string, id: string | number) => string;
+  getOptions: (key: string) => { label: string; value: string }[];
+};
+
+const AgentDetail = ({ agent, masterData, getDescription,getOptions }:AgentDetailProps )=>{
   const [isEdit, setIsEdit] = useState(false) 
 
-  const toOptions = (list?: IkeyValueEntry[] ) => {
-  return list?.filter(x => x.activeStatus).map(x => ({
-    label: x.entryDesc,
-    value: String(x.entryIdentity)
-  })) || []
-}
+ const genderOptions = getOptions("GENDER");
+ console.log("genderOptions",genderOptions)
+const educationOptions = getOptions("EDUCATION");
+const maritalOptions = getOptions("MARITAL_STATUS");
+const bankOptions = getOptions("BANK_ACC_TYPE");
 
-const genderOptions = toOptions(agent.genders)
-const titleOptions = toOptions(agent.titles)
-const occupationOptions = toOptions(agent.occupations)
-const maritalOptions = toOptions(agent.maritalStatuses)
-const educationOptions = toOptions(agent.educationCodes)
-const stateOptions = toOptions(agent.stateNames)
-const countryOptions = toOptions(agent.countries)
-const channelOptions = toOptions(agent.channelNames)
-const subChannelOptions = toOptions(agent.subChannels)
-const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
-const agentClassificationOptions = toOptions(agent.agentClassifications)
-const bankAccountTypeOptions = toOptions(agent.bankAccType)
+
+
+
+//   const toOptions = (list?: IkeyValueEntry[] ) => {
+//   return list?.filter(x => x.activeStatus).map(x => ({
+//     label: x.entryDesc,
+//     value: String(x.entryIdentity)
+//   })) || []
+// }
+
+// const genderOptions = toOptions(agent.genders)
+// const titleOptions = toOptions(agent.titles)
+// const occupationOptions = toOptions(agent.occupations)
+// const maritalOptions = toOptions(agent.maritalStatuses)
+// const educationOptions = toOptions(agent.educationCodes)
+// const stateOptions = toOptions(agent.stateNames)
+// const countryOptions = toOptions(agent.countries)
+// const channelOptions = toOptions(agent.channelNames)
+// const subChannelOptions = toOptions(agent.subChannels)
+// const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
+// const agentClassificationOptions = toOptions(agent.agentClassifications)
+// const bankAccountTypeOptions = toOptions(agent.bankAccType)
 
 const genderId = agent.genders?.find(g => g.entryDesc === agent.gender)?.entryIdentity;
 const titleId = agent.titles?.find(t => t.entryDesc === agent.title)?.entryIdentity;
@@ -54,7 +71,7 @@ const subChannelId = agent.subChannels?.find(s => s.entryDesc === "Field Agent")
 const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === "Individual")?.entryIdentity;
 // const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === agent.agentTypeCategory)?.entryIdentity;
 const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc === agent.agentClassification)?.entryIdentity;
-const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
+// const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
 // const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === agent.bankAccounts?.[0]?.accountType)?.entryIdentity;
 
 
@@ -224,7 +241,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options:channelOptions,
+        // options:channelOptions,
       },
       {
         name: 'sub_Channel',
@@ -233,7 +250,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options:subChannelOptions,
+        // options:subChannelOptions,
       },
       {
         name: 'commissionClass',
@@ -293,7 +310,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
-        options:titleOptions,
+        // options:titleOptions,
       },
       {
         name: 'firstName',
@@ -590,7 +607,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options:agentTypeCategoryOptions,
+        // options:agentTypeCategoryOptions,
       },
       {
         name: 'agentClassification',
@@ -599,7 +616,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options:agentClassificationOptions,
+        // options:agentClassificationOptions,
       },
       {
         name: 'cmsAgentType',
@@ -631,6 +648,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
   const financialDetailsConfig = {
     gridCols: 12,
     // DEFAULT VALUES
+    
     defaultValues: {
       panAadharLinkFlag: agent.panAadharLinkFlag,
       sec206abFlag: agent.sec206abFlag,
@@ -644,7 +662,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
       branchName: agent.bankAccounts?.[0]?.branchName,
 
       accountNumber: agent.bankAccounts?.[0]?.accountNumber,
-      accountType: String(bankAccountTypeId),
+       accountType: agent.bankAccounts?.[0]?.bankAccType,
       micr: agent.bankAccounts?.[0]?.micr,
       ifsc: agent.bankAccounts?.[0]?.ifsc,
       preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
@@ -765,7 +783,11 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         name: 'accountType',
         label: 'Bank Account Type',
         type: 'select',
-  options: bankAccountTypeOptions,
+  // options: bankAccountTypeOptions,
+   options: getOptions(MASTER_DATA_KEYS.BANK_ACC_TYPE).map(item => ({
+          value: String(item.id), // Ensure value is a string
+          label: item.description,
+        })),
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
@@ -1106,7 +1128,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options: maritalOptions,
+        // options: maritalOptions,
       },
 
       {
@@ -1116,7 +1138,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options: educationOptions,
+        // options: educationOptions,
       },
       {
         name: 'educationLevel',
@@ -1125,7 +1147,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-                options: educationOptions,
+                // options: educationOptions,
 
       },
       {
@@ -1176,7 +1198,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         // variant: 'standard',
-        options:occupationOptions,
+        // options:occupationOptions,
         
       },
 
@@ -1324,7 +1346,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options:stateOptions,
+        // options:stateOptions,
       },
 
       {
@@ -1343,7 +1365,7 @@ const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options:countryOptions,
+        // options:countryOptions,
       },
       {
         name: 'pin',

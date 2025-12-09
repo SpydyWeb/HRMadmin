@@ -1,5 +1,5 @@
 export interface IAgentCategoryEntry {
-  orgId: number
+  orgid: number
   entryCategory: string
   entryIdentity: string
   entryDesc: string
