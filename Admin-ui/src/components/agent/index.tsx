@@ -16,10 +16,8 @@ import License from './License'
 import Financial from './Financial'
 import type { ApiResponse } from '@/models/api'
 import { masterService } from '@/services/masterService'
-import { MASTER_DATA_KEYS } from '@/utils/constant';
+import { MASTER_DATA_KEYS } from '@/utils/constant'
 import { useMasterData } from '@/hooks/useMasterData'
-
-
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal' },
@@ -46,25 +44,19 @@ const Agent = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-   // --- NEW STATE FOR CATEGORIES ---
-  const [agentCategories, setAgentCategories] = useState<ApiResponse<AgentResponse> | null>(null)
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-
-const { masterData, getDescription, getOptions } = useMasterData(
-  Object.values(MASTER_DATA_KEYS)
-);
-
-
+  // --- NEW STATE FOR CATEGORIES ---
 
   // Adjust the "from" path to your actual route, e.g. '/agent/$agentId'
-  const { agentId } = useParams({ from: "/_auth/search/$agentId" }) as { agentId?: string }
+  const { agentId } = useParams({ from: '/_auth/search/$agentId' }) as {
+    agentId?: string
+  }
 
   // Only fetch when encryption is ready (if encryption is enabled)
   const encryptionEnabled = useEncryption()
   const keyReady = !!encryptionService.getHrm_Key()
   const canFetch = !encryptionEnabled || keyReady
 
-  
+
 
   useEffect(() => {
     let cancelled = false
@@ -98,29 +90,6 @@ const { masterData, getDescription, getOptions } = useMasterData(
     }
   }, [agentId, canFetch])
 
-
-  // --- NEW EFFECT FOR FETCHING CATEGORIES ---
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true)
-        const key =  'BankAccType' 
-        const categories = await masterService.getmasters(key)
-        console.log("Fetched agent categories:", categories)
-        if (categories) {
-          setAgentCategories(categories)
-        }
-      } catch (e: any) {
-        console.error("Failed to fetch agent categories:", e)
-      } finally {
-        setCategoriesLoading(false)
-      }
-    }
-
-    fetchCategories()
-  }, []) 
-  
-
   if (loading) return <Loader />
   if (error) return <div className="text-red-500">Error: {error}</div>
 
@@ -128,13 +97,6 @@ const { masterData, getDescription, getOptions } = useMasterData(
   if (error) return <div className="text-red-500">Error: {error}</div>
 
   const firstAgent = agentData?.responseBody?.agents?.[0]
-  console.log("firstAgent",firstAgent)
-
-   // Example of how to use the getDescription function
-  const bankAccTypeDescription = getDescription(
-    MASTER_DATA_KEYS.BANK_ACC_TYPE, 
-    firstAgent?.bankAccType
-  );
 
   return (
     <>
@@ -148,7 +110,7 @@ const { masterData, getDescription, getOptions } = useMasterData(
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by Agent Code, Name, Mobile Number...."
             className="w-full !pr-[9rem] !py-6 bg-white"
-            label=''
+            label=""
           />
           <div className="absolute inset-y-0 right-1 pl-3 flex items-center">
             <Button
@@ -158,7 +120,9 @@ const { masterData, getDescription, getOptions } = useMasterData(
                 // Trigger a search by code/name/phone if needed
                 // e.g., refetch with searchInput or navigate to a new route
               }}
-            > Search
+            >
+              {' '}
+              Search
             </Button>
           </div>
         </div>
@@ -172,16 +136,14 @@ const { masterData, getDescription, getOptions } = useMasterData(
 
       {activeTab === 'personaldetails' ? (
         firstAgent ? (
-          <AgentDetail agent={firstAgent} masterData={masterData}
-    getOptions={getOptions}
-    getDescription={getDescription} />
+          <AgentDetail agent={firstAgent} />
         ) : (
           <div>No agent found.</div>
         )
       ) : activeTab === 'peoplehierarchy' ? (
         <Hierarchy Agent={firstAgent} />
       ) : activeTab === 'auditlog' ? (
-        <AuditLog Agentcode={agentId||""} />
+        <AuditLog Agentcode={agentId || ''} />
       ) : activeTab === 'training' ? (
         <Training agent={firstAgent} />
       ) : activeTab === 'licensedetails' ? (

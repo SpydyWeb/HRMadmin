@@ -1,79 +1,56 @@
 
-import { masterService } from "@/services/masterService";
-import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { masterService } from '@/services/masterService'
 
-interface MasterDataItem {
-  entryIdentity: number | string;
-  entryDesc: string;
-}
+type MasterMap = Record<string, any[]>
 
-type MasterDataMap = Record<string, MasterDataItem[]>;
+export const useMasterData = (keys: string[]) => {
+  console.log('renderr.....................');
+  
+  const sortedKeys = useMemo(() => [...keys].sort(), [keys])
 
-export function useMasterData(keys: string[]) {
-  const [masterData, setMasterData] = useState<MasterDataMap>({});
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<MasterMap, Error>({
+    queryKey: ['master-data', sortedKeys],
+    queryFn: () => masterService.getMastersBulk(sortedKeys),
+    staleTime: 1000 * 60 * 60,      // 1 hour
+    gcTime: 1000 * 60 * 60 * 6,     // keep in cache
+  })
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchMasterData = async () => {
-      if (keys.length === 0) {
-        if (isMounted) setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const promises = keys.map(key =>
-          masterService.getmasters(key).then(res => ({
-            key,
-            data: (res?.responseBody as MasterDataItem[]) || []
-          }))
-        );
-
-        const results = await Promise.all(promises);
-
-        // 2. Transform the results into the desired map format
-        const newMasterData: MasterDataMap = {};
-        for (const result of results) {
-          newMasterData[result.key] = result.data;
-        }
-
-        if (isMounted) {
-          setMasterData(newMasterData);
-        }
-      } catch (e: any) {
-        console.error("Failed to fetch master data:", e);
-        if (isMounted) {
-          setError(e?.message || "An unknown error occurred while fetching master data.");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchMasterData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [JSON.stringify(keys)]);
-
-  const getDescription = (key: string, id: number | string): string => {
-    return masterData[key]?.find(item => item.entryIdentity == id)?.entryDesc || "";
-  };
-
+  const masterData = data ?? {}
   const getOptions = (key: string) => {
-    return masterData[key]?.map(item => ({
-      label: item.entryDesc,
-      value: String(item.entryIdentity)
-    })) || [];
-  };
+    const items = masterData[key] || []
+    console.log(masterData,key,items.map((x: any) => ({
+      label: x.entryDesc ?? x.name ?? '',
+      value: x.entryIdentity ?? x.id,
+    })));
+    
+    return items.map((x: any) => ({
+      label: x.entryDesc ?? x.name ?? '',
+      value: x.entryIdentity ?? x.id,
+    }))
+  }
 
-  return { masterData, loading, error, getDescription, getOptions };
+  const getDescription = (key: string, value: any) => {
+    if (value == null) return ''
+    const items = masterData[key] || []
+    const item = items.find(
+      (x: any) => (x.entryIdentity ?? x.id)?.toString() === value?.toString()
+    )
+    return item?.entryDesc ?? item?.name ?? ''
+  }
+
+  return {
+    masterData,
+    isLoading,
+    isError,
+    error,
+    getOptions,
+    getDescription,
+  }
 }

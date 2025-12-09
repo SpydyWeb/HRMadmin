@@ -11,18 +11,28 @@ import type { IAgentCategoryResponse, IMasterRequest } from '@/models/master'
 
 export const masterService = {
   getmasters: async (data: IMasterRequest) => {
-    console.log(data)
     try {
       const response = await callApi<ApiResponse<IAgentCategoryResponse>>(
         APIRoutes.GETMASTERS,
         [data]
       )
-      console.log(response)
       return response
     } catch (error) {
       console.error(error)
       throw error
     }
-  }
+  },
+    getMastersBulk: async (keys: string[]) => {
+    const results = await Promise.all(
+      keys.map(async (key) => {
+        const res = await callApi<ApiResponse<IAgentCategoryResponse>>(
+        APIRoutes.GETMASTERS,
+        [key]
+      )
+        return [key, res.responseBody.master] as const
+      })
+    )
+    return Object.fromEntries(results) as Record<string, any[]>
+  },
 }
 

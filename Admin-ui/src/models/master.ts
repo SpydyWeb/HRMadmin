@@ -7,7 +7,7 @@ export interface IAgentCategoryEntry {
 }
 
 export interface IAgentCategoryResponse {
-  agentCategory: Array<IAgentCategoryEntry>
+  master: Array<IAgentCategoryEntry>
 }
 
 export interface IMasterRequest {

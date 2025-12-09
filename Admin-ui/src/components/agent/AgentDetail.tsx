@@ -7,79 +7,96 @@ import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import AutoAccordionSection from '../ui/autoAccordianSection'
-import { MASTER_DATA_KEYS } from '@/utils/constant';
+import { MASTER_DATA_KEYS } from '@/utils/constant'
+import { useMasterData } from '@/hooks/useMasterData'
 
 // import { BiIdCard } from 'react-icons/bi'
 type AgentDetailProps = {
-  agent: any;
-  masterData: Record<string, any[]>;
-  getDescription: (key: string, id: string | number) => string;
-  getOptions: (key: string) => { label: string; value: string }[];
-};
+  agent: any
+}
 
-const AgentDetail = ({ agent, masterData, getDescription,getOptions }:AgentDetailProps )=>{
-  const [isEdit, setIsEdit] = useState(false) 
+const AgentDetail = ({
+  agent,
+}: AgentDetailProps) => {
+  const [isEdit, setIsEdit] = useState(false)
+  const {
+    getOptions,
+    isLoading: masterLoading,
+  } = useMasterData(Object.values(MASTER_DATA_KEYS))
+  //   const toOptions = (list?: IkeyValueEntry[] ) => {
+  //   return list?.filter(x => x.activeStatus).map(x => ({
+  //     label: x.entryDesc,
+  //     value: String(x.entryIdentity)
+  //   })) || []
+  // }
 
- const genderOptions = getOptions("GENDER");
- console.log("genderOptions",genderOptions)
-const educationOptions = getOptions("EDUCATION");
-const maritalOptions = getOptions("MARITAL_STATUS");
-const bankOptions = getOptions("BANK_ACC_TYPE");
+  // const genderOptions = toOptions(agent.genders)
+  // const titleOptions = toOptions(agent.titles)
+  // const occupationOptions = toOptions(agent.occupations)
+  // const maritalOptions = toOptions(agent.maritalStatuses)
+  // const educationOptions = toOptions(agent.educationCodes)
+  // const stateOptions = toOptions(agent.stateNames)
+  // const countryOptions = toOptions(agent.countries)
+  // const channelOptions = toOptions(agent.channelNames)
+  // const subChannelOptions = toOptions(agent.subChannels)
+  // const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
+  // const agentClassificationOptions = toOptions(agent.agentClassifications)
+  // const bankAccountTypeOptions = toOptions(agent.bankAccType)
 
-
-
-
-//   const toOptions = (list?: IkeyValueEntry[] ) => {
-//   return list?.filter(x => x.activeStatus).map(x => ({
-//     label: x.entryDesc,
-//     value: String(x.entryIdentity)
-//   })) || []
-// }
-
-// const genderOptions = toOptions(agent.genders)
-// const titleOptions = toOptions(agent.titles)
-// const occupationOptions = toOptions(agent.occupations)
-// const maritalOptions = toOptions(agent.maritalStatuses)
-// const educationOptions = toOptions(agent.educationCodes)
-// const stateOptions = toOptions(agent.stateNames)
-// const countryOptions = toOptions(agent.countries)
-// const channelOptions = toOptions(agent.channelNames)
-// const subChannelOptions = toOptions(agent.subChannels)
-// const agentTypeCategoryOptions = toOptions(agent.agentTypeCategories)
-// const agentClassificationOptions = toOptions(agent.agentClassifications)
-// const bankAccountTypeOptions = toOptions(agent.bankAccType)
-
-const genderId = agent.genders?.find(g => g.entryDesc === agent.gender)?.entryIdentity;
-const titleId = agent.titles?.find(t => t.entryDesc === agent.title)?.entryIdentity;
-const occupationId = agent.occupations?.find(o => o.entryDesc === "Student")?.entryIdentity;
-// const occupationId = agent.occupations?.find(o => o.entryDesc === agent.occupation)?.entryIdentity;
-// const maritalStatusId = agent.maritalStatuses?.find(m => m.entryDesc === agent.maritalStatusCode)?.entryIdentity;
-const maritalStatusId = agent.maritalStatuses
-  ?.find(m => m.entryDesc?.[0]?.toUpperCase() === agent.maritalStatusCode?.[0]?.toUpperCase())
-  ?.entryIdentity;
-// const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === agent.educationCode)?.entryIdentity;
-const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === "Doctorate (Ph.D.)")?.entryIdentity;
-const educationLevelId = agent.educationCodes?.find(e => e.entryDesc === "Doctorate (Ph.D.)")?.entryIdentity;
-const stateId = agent.stateNames?.find(s => s.entryDesc === "Karnataka")?.entryIdentity;
-// const stateId = agent.stateNames?.find(s => s.entryDesc === agent.state)?.entryIdentity;
-const countryId = agent.countries?.find(c => c.entryDesc === "India")?.entryIdentity;
-// const countryId = agent.countries?.find(c => c.entryDesc === agent.country)?.entryIdentity;
-// const channelId = agent.channelNames?.find(c => c.entryDesc === agent.channel_Name)?.entryIdentity;
-const channelId = agent.channelNames?.find(c => c.entryDesc === "Broker")?.entryIdentity;
-const subChannelId = agent.subChannels?.find(s => s.entryDesc === "Field Agent")?.entryIdentity;
-// const subChannelId = agent.subChannels?.find(s => s.entryDesc === agent.sub_Channel)?.entryIdentity;
-const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === "Individual")?.entryIdentity;
-// const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === agent.agentTypeCategory)?.entryIdentity;
-const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc === agent.agentClassification)?.entryIdentity;
-// const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
-// const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === agent.bankAccounts?.[0]?.accountType)?.entryIdentity;
-
+  const genderId = agent.genders?.find(
+    (g) => g.entryDesc === agent.gender,
+  )?.entryIdentity
+  const titleId = agent.titles?.find(
+    (t) => t.entryDesc === agent.title,
+  )?.entryIdentity
+  const occupationId = agent.occupations?.find(
+    (o) => o.entryDesc === 'Student',
+  )?.entryIdentity
+  // const occupationId = agent.occupations?.find(o => o.entryDesc === agent.occupation)?.entryIdentity;
+  // const maritalStatusId = agent.maritalStatuses?.find(m => m.entryDesc === agent.maritalStatusCode)?.entryIdentity;
+  const maritalStatusId = agent.maritalStatuses?.find(
+    (m) =>
+      m.entryDesc?.[0]?.toUpperCase() ===
+      agent.maritalStatusCode?.[0]?.toUpperCase(),
+  )?.entryIdentity
+  // const educationCodeId = agent.educationCodes?.find(e => e.entryDesc === agent.educationCode)?.entryIdentity;
+  const educationCodeId = agent.educationCodes?.find(
+    (e) => e.entryDesc === 'Doctorate (Ph.D.)',
+  )?.entryIdentity
+  const educationLevelId = agent.educationCodes?.find(
+    (e) => e.entryDesc === 'Doctorate (Ph.D.)',
+  )?.entryIdentity
+  const stateId = agent.stateNames?.find(
+    (s) => s.entryDesc === 'Karnataka',
+  )?.entryIdentity
+  // const stateId = agent.stateNames?.find(s => s.entryDesc === agent.state)?.entryIdentity;
+  const countryId = agent.countries?.find(
+    (c) => c.entryDesc === 'India',
+  )?.entryIdentity
+  // const countryId = agent.countries?.find(c => c.entryDesc === agent.country)?.entryIdentity;
+  // const channelId = agent.channelNames?.find(c => c.entryDesc === agent.channel_Name)?.entryIdentity;
+  const channelId = agent.channelNames?.find(
+    (c) => c.entryDesc === 'Broker',
+  )?.entryIdentity
+  const subChannelId = agent.subChannels?.find(
+    (s) => s.entryDesc === 'Field Agent',
+  )?.entryIdentity
+  // const subChannelId = agent.subChannels?.find(s => s.entryDesc === agent.sub_Channel)?.entryIdentity;
+  const agentTypeCategoryId = agent.agentTypeCategories?.find(
+    (a) => a.entryDesc === 'Individual',
+  )?.entryIdentity
+  // const agentTypeCategoryId = agent.agentTypeCategories?.find(a => a.entryDesc === agent.agentTypeCategory)?.entryIdentity;
+  const agentClassificationId = agent.agentClassifications?.find(
+    (a) => a.entryDesc === agent.agentClassification,
+  )?.entryIdentity
+  // const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === "Savings Account")?.entryIdentity;
+  // const bankAccountTypeId = agent.bankAccType?.find(b => b.entryDesc === agent.bankAccounts?.[0]?.accountType)?.entryIdentity;
 
   console.log('agent', agent)
 
   if (!agent) return null
 
-  console.log("agent", agent)
+  console.log('agent', agent)
 
   const agentForm = useAppForm({
     defaultValues: {
@@ -118,8 +135,8 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
       // ---- NEW FIELDS ADDED BELOW ----
 
       // --- contact DETAILS ---
-      mobileNo:agent?.personalInfo?.[0]?.mobileNo,
-      workContactNo:agent?.personalInfo?.[0]?.workContactNo,
+      mobileNo: agent?.personalInfo?.[0]?.mobileNo,
+      workContactNo: agent?.personalInfo?.[0]?.workContactNo,
       // --- EMPLOYMENT DETAILS ---
 
       pob: agent.pob,
@@ -348,7 +365,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         name: 'gender',
         label: 'Agent Gender',
         type: 'select',
-        options: genderOptions,
+        options: getOptions(MASTER_DATA_KEYS.GENDER),
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -377,7 +394,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
     gridCols: 12,
 
     defaultValues: {
-      mobileNo:agent?.personalInfo?.[0]?.mobileNo,
+      mobileNo: agent?.personalInfo?.[0]?.mobileNo,
       residenceContactNo: agent?.personalInfo?.[0]?.residenceContactNo,
       workContactNo: agent?.personalInfo?.[0]?.workContactNo,
       email: agent?.personalInfo?.[0]?.email,
@@ -648,7 +665,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
   const financialDetailsConfig = {
     gridCols: 12,
     // DEFAULT VALUES
-    
+
     defaultValues: {
       panAadharLinkFlag: agent.panAadharLinkFlag,
       sec206abFlag: agent.sec206abFlag,
@@ -658,11 +675,11 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
       factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
       accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
       panNumber: agent.personalInfo?.[0]?.panNumber,
-     bankName: agent.bankAccounts?.[0]?.bankName,
+      bankName: agent.bankAccounts?.[0]?.bankName,
       branchName: agent.bankAccounts?.[0]?.branchName,
 
       accountNumber: agent.bankAccounts?.[0]?.accountNumber,
-       accountType: agent.bankAccounts?.[0]?.bankAccType,
+      accountType: agent.bankAccounts?.[0]?.bankAccType,
       micr: agent.bankAccounts?.[0]?.micr,
       ifsc: agent.bankAccounts?.[0]?.ifsc,
       preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
@@ -783,11 +800,8 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         name: 'accountType',
         label: 'Bank Account Type',
         type: 'select',
-  // options: bankAccountTypeOptions,
-   options: getOptions(MASTER_DATA_KEYS.BANK_ACC_TYPE).map(item => ({
-          value: String(item.id), // Ensure value is a string
-          label: item.description,
-        })),
+        // options: bankAccountTypeOptions,
+        options: getOptions(MASTER_DATA_KEYS.BANK_ACC_TYPE),
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
@@ -1147,8 +1161,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-                // options: educationOptions,
-
+        // options: educationOptions,
       },
       {
         name: 'workProfile',
@@ -1199,7 +1212,6 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         readOnly: !isEdit,
         // variant: 'standard',
         // options:occupationOptions,
-        
       },
 
       {
@@ -1215,7 +1227,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         label: 'Additional Comment',
         type: 'textarea',
         colSpan: 12,
-        variant:"white",
+        variant: 'white',
       },
       // {
       //   name: 'workExperience',
@@ -1266,7 +1278,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
     // -----------------------------------------
     defaultValues: {
       stateEid: agent.stateEid,
-            addressType: agent?.permanentAddres?.[0].addressType,
+      addressType: agent?.permanentAddres?.[0].addressType,
       addressLine1: agent.permanentAddres?.[0].addressLine1,
       addressLine2: agent.permanentAddres?.[0].addressLine2,
       addressLine3: agent.permanentAddres?.[0].addressLine3,
@@ -1274,7 +1286,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
       // state: agent.permanentAddres?.[0].state,
       state: String(stateId),
       pin: agent.permanentAddres?.[0].pin,
-      country:String(countryId),
+      country: String(countryId),
       // country: agent.permanentAddres?.[0].country,
     },
 
@@ -1310,25 +1322,22 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
         name: 'addressLine1',
         label: 'Address 1',
         type: 'text',
-        colSpan:4,
-                variant: 'standard',
-
+        colSpan: 4,
+        variant: 'standard',
       },
       {
         name: 'addressLine2',
         label: 'Address 2',
         type: 'text',
-        colSpan:4,
-                variant: 'standard',
-
+        colSpan: 4,
+        variant: 'standard',
       },
       {
         name: 'addressLine3',
         label: 'Address 3',
         type: 'text',
-        colSpan:4,
-                variant: 'standard',
-
+        colSpan: 4,
+        variant: 'standard',
       },
 
       {
@@ -1466,23 +1475,23 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
 
         {/* --------------Personal Details----------------- */}
 
-         <div className="flex justify-between">
+        <div className="flex justify-between">
           <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
             Personal Details
           </h2>
         </div>
         <div className="flex gap-2">
-           <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
-             <CardContent className="!px-0 !py-0 w-[100%]">
-               <AutoAccordionSection id="sec-1">
-                 <DynamicFormBuilder
-                   config={PersonalDetailsConfig}
-                   onSubmit={agentForm.handleSubmit}
-                 />
-               </AutoAccordionSection>
-             </CardContent>
-           </Card>
-         </div> 
+          <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
+            <CardContent className="!px-0 !py-0 w-[100%]">
+              <AutoAccordionSection id="sec-1">
+                <DynamicFormBuilder
+                  config={PersonalDetailsConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
+              </AutoAccordionSection>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* --------------Contact Information----------------- */}
 
@@ -1501,8 +1510,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
             </CardContent>
           </Card>
         </div>
-                {/* -------------------hirarchy Information Config------------------------------- */}
-
+        {/* -------------------hirarchy Information Config------------------------------- */}
 
         {/* <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
           Hierarchy Information
@@ -1567,7 +1575,6 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
                   onSubmit={agentForm.handleSubmit}
                 />
               </AutoAccordionSection>
-             
             </CardContent>
           </Card>
         </div>
@@ -1587,7 +1594,7 @@ const agentClassificationId = agent.agentClassifications?.find(a => a.entryDesc 
               </AutoAccordionSection>
             </CardContent>
           </Card>
-        </div> 
+        </div>
       </div>
     </div>
   )
