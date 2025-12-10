@@ -206,10 +206,11 @@ const AgentDetail = ({
       {
         name: 'commissionClass',
         label: 'Commission Class',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
+        options:getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
       },
     ],
 
