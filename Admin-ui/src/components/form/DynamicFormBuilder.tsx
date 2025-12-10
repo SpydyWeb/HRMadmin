@@ -209,7 +209,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     onChange={(d) => fieldApi.handleChange(d)}
                     icon={field.icon}
                     disabled={field.readOnly}
-                    // className="w-full h-10" // Added consistent height
+                    // className="w-full h-7" // Added consistent height
                   />
                 </div>
               )}
