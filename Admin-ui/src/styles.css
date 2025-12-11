@@ -138,11 +138,11 @@ code {
   }
 
   .label-text {
-    @apply font-poppins text-[16px] font-normal;
+    @apply font-poppins text-[13px] font-normal;
   }
 
   .input-text {
-    @apply font-poppins text-[18px] font-medium;
+    @apply font-poppins text-[15px] font-normal;
   }
 }
 
