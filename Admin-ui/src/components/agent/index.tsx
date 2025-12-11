@@ -42,10 +42,7 @@ const Agent: React.FC = () => {
   const [searchInput, setSearchInput] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
 
-  const { agentId } = useParams({ from: '/_auth/search/$agentId' }) as {
-    agentId?: string
-  }
-
+  const { agentId } = useParams({ from: '/_auth/search/$agentId' })
   const navigate = useNavigate()
 
   // encryption gating
