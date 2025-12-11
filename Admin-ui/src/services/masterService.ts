@@ -14,7 +14,7 @@ export const masterService = {
     try {
       const response = await callApi<ApiResponse<IAgentCategoryResponse>>(
         APIRoutes.GETMASTERS,
-        [data]
+        [data],
       )
       return response
     } catch (error) {
@@ -22,17 +22,10 @@ export const masterService = {
       throw error
     }
   },
-    getMastersBulk: async (keys: string[]) => {
-    const results = await Promise.all(
-      keys.map(async (key) => {
-        const res = await callApi<ApiResponse<IAgentCategoryResponse>>(
-        APIRoutes.GETMASTERS,
-        [key]
-      )
-        return [key, res.responseBody.master] as const
-      })
-    )
-    return Object.fromEntries(results) as Record<string, any[]>
+  getMastersBulk: async (keys: string[]) => {
+    const response = await callApi<Record<string, any[]>>('GetMastersBulk', [
+      keys,
+    ])
+    return response
   },
 }
-
