@@ -33,15 +33,29 @@ const Agentbyid = (data, headers = {}) => {
 const AgentByCode = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
 };
-const GetMasters = (key, headers = {}) => {
-  const response = apiClient.post(
-    `${APIRoutes.GETMASTERS}/${key}`,
-    {},
-    {
-      headers,
+const GetMasters = (data, headers = {}) => {
+  return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
+};
+
+const GetMastersBulk = async (keys, headers = {}) => {
+  const promises = keys.map(async (key) => {
+    try {
+      const res = await apiClient.post(
+        `${APIRoutes.GETMASTERS}/${key}`,
+        {},
+        {
+          headers,
+        }
+      );
+      return [key, res?.responseBody?.master || []];
+    } catch (err) {
+      console.error(`Error fetching master ${key}`, err);
+      return [key, []];
     }
-  );
-  return response;
+  });
+
+  const results = await Promise.all(promises);
+  return Object.fromEntries(results);
 };
 
 module.exports = {
@@ -53,4 +67,5 @@ module.exports = {
   Agentbyid,
   AgentByCode,
   GetMasters,
+  GetMastersBulk,
 };
