@@ -1,23 +1,23 @@
+// src/components/agent/index.tsx
+import React, { useEffect, useState } from 'react'
 import CustomTabs from '../CustomTabs'
 import { Input } from '../ui/input'
 import Button from '../ui/button'
 import AgentDetail from './AgentDetail'
-import { useEffect, useState } from 'react'
 import ComingSoon from '../comming-soon'
 import { Hierarchy } from './hierarchy'
-import { agentService } from '@/services/agentService'
 import Loader from '@/components/Loader'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import encryptionService from '@/services/encryptionService'
 import { useEncryption } from '@/store/encryptionStore'
 import AuditLog from './AuditLog'
 import Training from './Training'
 import License from './License'
 import Financial from './Financial'
-import type { ApiResponse } from '@/models/api'
-import { masterService } from '@/services/masterService'
 import { MASTER_DATA_KEYS } from '@/utils/constant'
 import { useMasterData } from '@/hooks/useMasterData'
+import { useQuery } from '@tanstack/react-query'
+import { agentService } from '@/services/agentService'
 
 const tabs = [
   { value: 'personaldetails', label: 'Personal' },
@@ -37,77 +37,79 @@ type AgentResponse = {
   }
 }
 
-const Agent = () => {
+const Agent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('personaldetails')
   const [searchInput, setSearchInput] = useState('')
-  const [agentData, setAgentData] = useState<AgentResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [localError, setLocalError] = useState<string | null>(null)
 
-  // --- NEW STATE FOR CATEGORIES ---
-
-  // Adjust the "from" path to your actual route, e.g. '/agent/$agentId'
   const { agentId } = useParams({ from: '/_auth/search/$agentId' }) as {
     agentId?: string
   }
 
-  // Only fetch when encryption is ready (if encryption is enabled)
+  const navigate = useNavigate()
+
+  // encryption gating
   const encryptionEnabled = useEncryption()
   const keyReady = !!encryptionService.getHrm_Key()
   const canFetch = !encryptionEnabled || keyReady
 
+  // master data hook (instant if loader prefetched + hydrated)
+  const { getOptions, isLoading: masterLoading } = useMasterData(
+    Object.values(MASTER_DATA_KEYS),
+  )
 
+  // Agent query: same key & signature used by loader
+  const {
+    data: agentData,
+    isLoading: agentLoading,
+    isError: agentQueryError,
+    error: agentQueryErrorObj,
+  } = useQuery<AgentResponse>({
+    queryKey: ['agent-search', agentId ?? ''],
+    enabled: !!canFetch && !!agentId,
+    queryFn: () =>
+      agentService.searchbycode({
+        searchCondition: '',
+        zone: '',
+        agentId: 0,
+        agentCode: agentId ?? '',
+        pageNo: 1,
+        pageSize: 10,
+        sortColumn: '',
+        sortDirection: 'asc',
+      }),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  })
 
   useEffect(() => {
-    let cancelled = false
-
-    const fetchAgent = async () => {
-      if (!canFetch) return
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await agentService.searchbycode({
-          searchCondition: '',
-          zone: '',
-          agentId: 0,
-          agentCode: agentId ?? '', // ensure correct type expected by API
-          pageNo: 1,
-          pageSize: 10,
-          sortColumn: '',
-          sortDirection: 'asc',
-        })
-        if (!cancelled) setAgentData(res)
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message ?? 'Failed to fetch agent')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+    if (agentQueryError) {
+      setLocalError((agentQueryErrorObj as any)?.message ?? 'Failed to fetch agent')
+    } else {
+      setLocalError(null)
     }
+  }, [agentQueryError, agentQueryErrorObj])
 
-    fetchAgent()
-    return () => {
-      cancelled = true
-    }
-  }, [agentId, canFetch])
-
+  const loading = masterLoading || agentLoading
   if (loading) return <Loader />
-  if (error) return <div className="text-red-500">Error: {error}</div>
+  if (localError) return <div className="p-4 text-red-600">Error: {localError}</div>
 
-  if (loading) return <Loader />
-  if (error) return <div className="text-red-500">Error: {error}</div>
-
-  const firstAgent = agentData?.responseBody?.agents?.[0]
+  const firstAgent = (agentData?.responseBody?.agents ?? [])[0] ?? null
 
   return (
     <>
       <div className="space-y-2 my-6">
-        {/* <Label className="text-gray-500">Search Agent</Label> */}
         <div className="flex max-w-md relative">
           <Input
             type="text"
             value={searchInput}
             variant="outlined"
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              setSearchInput(e.target.value)
+              setLocalError(null)
+            }}
             placeholder="Search by Agent Code, Name, Mobile Number...."
             className="w-full !pr-[9rem] !py-6 bg-white"
             label=""
@@ -117,11 +119,19 @@ const Agent = () => {
               variant="blue"
               size="md"
               onClick={() => {
-                // Trigger a search by code/name/phone if needed
-                // e.g., refetch with searchInput or navigate to a new route
+                if (!searchInput) {
+                  setLocalError('Please enter an agent code to search')
+                  return
+                }
+
+                // Navigate to the same route with agentId param.
+                // This lets route loader prefetch + hydrate and avoids duplicate API calls.
+                navigate({
+                  to: '/_auth/search/$agentId',
+                  params: { agentId: searchInput },
+                })
               }}
             >
-              {' '}
               Search
             </Button>
           </div>
@@ -136,9 +146,9 @@ const Agent = () => {
 
       {activeTab === 'personaldetails' ? (
         firstAgent ? (
-          <AgentDetail agent={firstAgent} />
+          <AgentDetail agent={firstAgent} getOptions={getOptions} />
         ) : (
-          <div>No agent found.</div>
+          <div className="p-4 text-gray-600">No agent found.</div>
         )
       ) : activeTab === 'peoplehierarchy' ? (
         <Hierarchy Agent={firstAgent} />

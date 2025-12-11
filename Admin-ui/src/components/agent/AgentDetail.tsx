@@ -12,24 +12,16 @@ import { useMasterData } from '@/hooks/useMasterData'
 
 // import { BiIdCard } from 'react-icons/bi'
 type AgentDetailProps = {
-  agent: any
+  agent: any,
+  getOptions:any
 }
 
 const AgentDetail = ({
   agent,
+  getOptions
 }: AgentDetailProps) => {
   const [isEdit, setIsEdit] = useState(false)
-  const {
-    getOptions,
-    isLoading: masterLoading,
-  } = useMasterData(Object.values(MASTER_DATA_KEYS))
 
-  const channelId = agent.channelNames?.find(
-    (c) => c.entryDesc === 'Broker',
-  )?.entryIdentity
-  const subChannelId = agent.subChannels?.find(
-    (s) => s.entryDesc === 'Field Agent',
-  )?.entryIdentity
 
   console.log('agent', agent)
 
