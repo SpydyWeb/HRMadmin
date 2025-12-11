@@ -1,11 +1,9 @@
 import { ImArrowDown2, ImArrowUp2 } from "react-icons/im";
-import { alpha, useTheme } from "@mui/material";
 import { MiniChart } from "./MiniChart";
 import { Card, CardFooter } from "./ui/card";
 
 export const MetricsCard = () => {
-  const theme = useTheme();
-
+  
   // Centralized data for reusability
   const metrics = [
     {
@@ -70,14 +68,11 @@ export const MetricsCard = () => {
             <CardFooter className="flex items-center gap-1 p-0">
               {isPositive && (
                 <div
-                  className="flex items-center font-bold"
-                  style={{ color: theme.palette.success.main }}
+                  className="flex items-center font-bold text-[--brand-orange] bg-[--brand-orange]"
                 >
                   <ImArrowUp2
                     className="w-4 h-4 rounded-full mr-1 p-1"
-                    style={{
-                      backgroundColor: alpha(theme.palette.success.main, 0.3),
-                    }}
+                 
                   />
                   <span className="text-sm">{metric.change}</span>
                 </div>
@@ -89,9 +84,7 @@ export const MetricsCard = () => {
                 >
                   <ImArrowDown2
                     className="w-4 h-4 rounded-full mr-1 p-1"
-                    style={{
-                      backgroundColor: alpha(theme.palette.error.dark, 0.3),
-                    }}
+                  
                   />
                   <span className="text-sm">{metric.change}</span>
                 </div>

@@ -1,8 +1,7 @@
 import { TbCertificate } from 'react-icons/tb'
 import { BsWindowDock } from 'react-icons/bs'
 import { LuSquareUserRound } from 'react-icons/lu'
-import { CardContent } from '@mui/material'
-import { Card, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import Button from './ui/button'
 
 const alerts = [
