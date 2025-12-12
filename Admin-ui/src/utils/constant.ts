@@ -15,6 +15,7 @@ export const RoutePaths = {
   TERMINATION: '/dashboard/termination',
   BULKACTION: '/dashboard/code-movement/bulk-action',
   CREATEBULK: '/dashboard/create-bulk',
+  COMMISSION: '/commission',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {

@@ -18,6 +18,7 @@ type ButtonProps = {
     | 'outline-orange'
     | 'outline-blue'
     | 'ghost'
+    | 'white'
     | 'btnlink',
   size?: 'sm' | 'md' | 'lg'
 onClick?: React.MouseEventHandler<HTMLButtonElement>
@@ -73,6 +74,7 @@ export default function Button({
     green: 'bg-[var(--brand-green)] text-white hover:brightness-110',
     orange: 'bg-[var(--brand-orange)] text-white hover:brightness-110',
     blue: 'bg-[var(--brand-blue)] text-white hover:brightness-110',
+    white: 'bg-[var(--brand-white)] text-black hover:brightness-110',
 
     outline: 'border border-gray-700 bg-gray-50 text-gray-700',
     'outline-red': 'border border-red-400 text-red-500 hover:bg-red-50',
@@ -82,6 +84,8 @@ export default function Button({
       'border border-[var(--brand-orange)] text-[var(--brand-orange)] hover:bg-orange-50',
     'outline-blue':
       'border border-[var(--brand-blue)] text-[var(--brand-blue)] hover:bg-blue-50',
+    'outline-white':
+      'border border-[var(--brand-white)] text-[var(--brand-black)] hover:bg-blue-50',
     ghost:
       'bg-[var(--brand-blue)]/10 text-black-400 hover:bg-[var(--brand-blue)]/20',
     btnlink:

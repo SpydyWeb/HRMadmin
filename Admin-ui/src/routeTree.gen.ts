@@ -21,12 +21,22 @@ import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/das
 import { Route as AuthDashboardCreateBulkRouteImport } from './routes/_auth/dashboard/create-bulk'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
+import { Route as AuthCommissionTerminationRouteImport } from './routes/_auth/commission/termination'
+import { Route as AuthCommissionCreateBulkRouteImport } from './routes/_auth/commission/create-bulk'
+import { Route as AuthCommissionCertificationUpdateRouteImport } from './routes/_auth/commission/certification-update'
+import { Route as AuthCommissionNotFoundRouteImport } from './routes/_auth/commission/$not-found'
 import { Route as AuthDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/dashboard/code-movement/bulk-action'
+import { Route as AuthCommissionCodeMovementBulkActionRouteImport } from './routes/_auth/commission/code-movement/bulk-action'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
 const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
+const AuthCommissionIndexLazyRouteImport =
+  createFileRoute('/_auth/commission/')()
 const AuthDashboardCodeMovementIndexLazyRouteImport = createFileRoute(
   '/_auth/dashboard/code-movement/',
+)()
+const AuthCommissionCodeMovementIndexLazyRouteImport = createFileRoute(
+  '/_auth/commission/code-movement/',
 )()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
@@ -60,6 +70,13 @@ const AuthDashboardIndexLazyRoute = AuthDashboardIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_auth/dashboard/index.lazy').then((d) => d.Route),
 )
+const AuthCommissionIndexLazyRoute = AuthCommissionIndexLazyRouteImport.update({
+  id: '/commission/',
+  path: '/commission/',
+  getParentRoute: () => AuthRoute,
+} as any).lazy(() =>
+  import('./routes/_auth/commission/index.lazy').then((d) => d.Route),
+)
 const AuthSearchIndexRoute = AuthSearchIndexRouteImport.update({
   id: '/search/',
   path: '/search/',
@@ -92,6 +109,29 @@ const AuthDashboardNotFoundRoute = AuthDashboardNotFoundRouteImport.update({
   path: '/dashboard/$not-found',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthCommissionTerminationRoute =
+  AuthCommissionTerminationRouteImport.update({
+    id: '/commission/termination',
+    path: '/commission/termination',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthCommissionCreateBulkRoute =
+  AuthCommissionCreateBulkRouteImport.update({
+    id: '/commission/create-bulk',
+    path: '/commission/create-bulk',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthCommissionCertificationUpdateRoute =
+  AuthCommissionCertificationUpdateRouteImport.update({
+    id: '/commission/certification-update',
+    path: '/commission/certification-update',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthCommissionNotFoundRoute = AuthCommissionNotFoundRouteImport.update({
+  id: '/commission/$not-found',
+  path: '/commission/$not-found',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthDashboardCodeMovementIndexLazyRoute =
   AuthDashboardCodeMovementIndexLazyRouteImport.update({
     id: '/dashboard/code-movement/',
@@ -102,10 +142,26 @@ const AuthDashboardCodeMovementIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+const AuthCommissionCodeMovementIndexLazyRoute =
+  AuthCommissionCodeMovementIndexLazyRouteImport.update({
+    id: '/commission/code-movement/',
+    path: '/commission/code-movement/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/commission/code-movement/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const AuthDashboardCodeMovementBulkActionRoute =
   AuthDashboardCodeMovementBulkActionRouteImport.update({
     id: '/dashboard/code-movement/bulk-action',
     path: '/dashboard/code-movement/bulk-action',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthCommissionCodeMovementBulkActionRoute =
+  AuthCommissionCodeMovementBulkActionRouteImport.update({
+    id: '/commission/code-movement/bulk-action',
+    path: '/commission/code-movement/bulk-action',
     getParentRoute: () => AuthRoute,
   } as any)
 
@@ -114,14 +170,21 @@ export interface FileRoutesByFullPath {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
+  '/commission/$not-found': typeof AuthCommissionNotFoundRoute
+  '/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
+  '/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
+  '/commission/termination': typeof AuthCommissionTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
+  '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
+  '/commission/code-movement/bulk-action': typeof AuthCommissionCodeMovementBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/commission/code-movement': typeof AuthCommissionCodeMovementIndexLazyRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesByTo {
@@ -129,14 +192,21 @@ export interface FileRoutesByTo {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
+  '/commission/$not-found': typeof AuthCommissionNotFoundRoute
+  '/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
+  '/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
+  '/commission/termination': typeof AuthCommissionTerminationRoute
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
+  '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
+  '/commission/code-movement/bulk-action': typeof AuthCommissionCodeMovementBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/commission/code-movement': typeof AuthCommissionCodeMovementIndexLazyRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesById {
@@ -146,14 +216,21 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
   '/_auth/termination': typeof AuthTerminationRoute
+  '/_auth/commission/$not-found': typeof AuthCommissionNotFoundRoute
+  '/_auth/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
+  '/_auth/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
+  '/_auth/commission/termination': typeof AuthCommissionTerminationRoute
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/_auth/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
   '/_auth/search/': typeof AuthSearchIndexRoute
+  '/_auth/commission/': typeof AuthCommissionIndexLazyRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
+  '/_auth/commission/code-movement/bulk-action': typeof AuthCommissionCodeMovementBulkActionRoute
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/_auth/commission/code-movement/': typeof AuthCommissionCodeMovementIndexLazyRoute
   '/_auth/dashboard/code-movement/': typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRouteTypes {
@@ -163,14 +240,21 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/login'
     | '/termination'
+    | '/commission/$not-found'
+    | '/commission/certification-update'
+    | '/commission/create-bulk'
+    | '/commission/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
+    | '/commission'
     | '/dashboard'
+    | '/commission/code-movement/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/commission/code-movement'
     | '/dashboard/code-movement'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -178,14 +262,21 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/login'
     | '/termination'
+    | '/commission/$not-found'
+    | '/commission/certification-update'
+    | '/commission/create-bulk'
+    | '/commission/termination'
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
+    | '/commission'
     | '/dashboard'
+    | '/commission/code-movement/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/commission/code-movement'
     | '/dashboard/code-movement'
   id:
     | '__root__'
@@ -194,14 +285,21 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/login'
     | '/_auth/termination'
+    | '/_auth/commission/$not-found'
+    | '/_auth/commission/certification-update'
+    | '/_auth/commission/create-bulk'
+    | '/_auth/commission/termination'
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
     | '/_auth/dashboard/create-bulk'
     | '/_auth/dashboard/termination'
     | '/_auth/search/$agentId'
     | '/_auth/search/'
+    | '/_auth/commission/'
     | '/_auth/dashboard/'
+    | '/_auth/commission/code-movement/bulk-action'
     | '/_auth/dashboard/code-movement/bulk-action'
+    | '/_auth/commission/code-movement/'
     | '/_auth/dashboard/code-movement/'
   fileRoutesById: FileRoutesById
 }
@@ -256,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/commission/': {
+      id: '/_auth/commission/'
+      path: '/commission'
+      fullPath: '/commission'
+      preLoaderRoute: typeof AuthCommissionIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/search/': {
       id: '/_auth/search/'
       path: '/search'
@@ -298,11 +403,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardNotFoundRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/commission/termination': {
+      id: '/_auth/commission/termination'
+      path: '/commission/termination'
+      fullPath: '/commission/termination'
+      preLoaderRoute: typeof AuthCommissionTerminationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/commission/create-bulk': {
+      id: '/_auth/commission/create-bulk'
+      path: '/commission/create-bulk'
+      fullPath: '/commission/create-bulk'
+      preLoaderRoute: typeof AuthCommissionCreateBulkRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/commission/certification-update': {
+      id: '/_auth/commission/certification-update'
+      path: '/commission/certification-update'
+      fullPath: '/commission/certification-update'
+      preLoaderRoute: typeof AuthCommissionCertificationUpdateRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/commission/$not-found': {
+      id: '/_auth/commission/$not-found'
+      path: '/commission/$not-found'
+      fullPath: '/commission/$not-found'
+      preLoaderRoute: typeof AuthCommissionNotFoundRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/code-movement/': {
       id: '/_auth/dashboard/code-movement/'
       path: '/dashboard/code-movement'
       fullPath: '/dashboard/code-movement'
       preLoaderRoute: typeof AuthDashboardCodeMovementIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/commission/code-movement/': {
+      id: '/_auth/commission/code-movement/'
+      path: '/commission/code-movement'
+      fullPath: '/commission/code-movement'
+      preLoaderRoute: typeof AuthCommissionCodeMovementIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/dashboard/code-movement/bulk-action': {
@@ -312,33 +452,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardCodeMovementBulkActionRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/commission/code-movement/bulk-action': {
+      id: '/_auth/commission/code-movement/bulk-action'
+      path: '/commission/code-movement/bulk-action'
+      fullPath: '/commission/code-movement/bulk-action'
+      preLoaderRoute: typeof AuthCommissionCodeMovementBulkActionRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
   AuthTerminationRoute: typeof AuthTerminationRoute
+  AuthCommissionNotFoundRoute: typeof AuthCommissionNotFoundRoute
+  AuthCommissionCertificationUpdateRoute: typeof AuthCommissionCertificationUpdateRoute
+  AuthCommissionCreateBulkRoute: typeof AuthCommissionCreateBulkRoute
+  AuthCommissionTerminationRoute: typeof AuthCommissionTerminationRoute
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
   AuthDashboardCreateBulkRoute: typeof AuthDashboardCreateBulkRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
   AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
   AuthSearchIndexRoute: typeof AuthSearchIndexRoute
+  AuthCommissionIndexLazyRoute: typeof AuthCommissionIndexLazyRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
+  AuthCommissionCodeMovementBulkActionRoute: typeof AuthCommissionCodeMovementBulkActionRoute
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
+  AuthCommissionCodeMovementIndexLazyRoute: typeof AuthCommissionCodeMovementIndexLazyRoute
   AuthDashboardCodeMovementIndexLazyRoute: typeof AuthDashboardCodeMovementIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthTerminationRoute: AuthTerminationRoute,
+  AuthCommissionNotFoundRoute: AuthCommissionNotFoundRoute,
+  AuthCommissionCertificationUpdateRoute:
+    AuthCommissionCertificationUpdateRoute,
+  AuthCommissionCreateBulkRoute: AuthCommissionCreateBulkRoute,
+  AuthCommissionTerminationRoute: AuthCommissionTerminationRoute,
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
   AuthDashboardCreateBulkRoute: AuthDashboardCreateBulkRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
   AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
   AuthSearchIndexRoute: AuthSearchIndexRoute,
+  AuthCommissionIndexLazyRoute: AuthCommissionIndexLazyRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
+  AuthCommissionCodeMovementBulkActionRoute:
+    AuthCommissionCodeMovementBulkActionRoute,
   AuthDashboardCodeMovementBulkActionRoute:
     AuthDashboardCodeMovementBulkActionRoute,
+  AuthCommissionCodeMovementIndexLazyRoute:
+    AuthCommissionCodeMovementIndexLazyRoute,
   AuthDashboardCodeMovementIndexLazyRoute:
     AuthDashboardCodeMovementIndexLazyRoute,
 }
