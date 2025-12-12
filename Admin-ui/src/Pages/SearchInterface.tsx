@@ -45,6 +45,7 @@ export default function SearchInterface() {
       icon: MdMonitor,
       color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
       isActive: false,
+       route:'/commission'
     },
     {
       id: 'incentive',

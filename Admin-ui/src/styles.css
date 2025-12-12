@@ -21,6 +21,8 @@ code {
   --brand-orange: #ff9f4a;
   --brand-green: #12a312;
   --brand-blue: #4a5eff;
+  --brand-red: #FFDDD6;
+  --brand-white: #FFFFFF;
   font-size: 1vw;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
