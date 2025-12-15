@@ -1,4 +1,3 @@
-import { CommissionCard } from '@/components/CommissionMetricsCard'
 import { AlertCard } from '@/components/AlertCard'
 import QuickAction from '@/components/QuickAction'
 import PendingActionsTable from '@/components/PendingActionsTable'
@@ -6,6 +5,7 @@ import CommissionOverview from '@/components/CommissionOverview'
 import ResourcesCard from '@/components/ResourcesCard'
 import GoToCard from '@/components/GoToCard'
 import { useNavigate } from '@tanstack/react-router'
+import { CommissionCard } from '@/components/CommissionCard'
 const metrics = [
   {
     title: 'Total Entities',

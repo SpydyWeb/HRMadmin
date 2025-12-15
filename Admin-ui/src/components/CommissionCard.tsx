@@ -2,7 +2,7 @@ import { ImArrowDown2, ImArrowUp2 } from "react-icons/im";
 import { MiniChart } from "./MiniChart";
 import { Card, CardFooter } from "./ui/card";
 
-export const CommissionMetricsCard = () => {
+export const CommissionCard = () => {
   
   // Centralized data for reusability
   const metrics = [
