@@ -75,7 +75,7 @@ export default function DataTable({
                 {columns.map((col, colIdx) => (
                   <TableCell
                     key={colIdx}
-                    className="px-4 py-2 text-left"
+                    className="px-4 py-4 text-left"
                     style={{ width: col.width || defaultWidth }}
                   >
                     {typeof col.accessor === "function"

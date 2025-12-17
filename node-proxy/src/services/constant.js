@@ -4,6 +4,7 @@ const APIRoutes = {
   AGENTBYCODE: "/api/Agent/AgentByCode",
   AGENTBYID: "/api/Agent/AgentByid",
   GETMASTERS: "/api/AppMasters/get",
+  GETCOMMISSION: "/api/CommissionMgmt/Dashboard",
 };
 
 module.exports = { APIRoutes };

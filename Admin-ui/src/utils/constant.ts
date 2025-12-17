@@ -16,6 +16,10 @@ export const RoutePaths = {
   BULKACTION: '/dashboard/code-movement/bulk-action',
   CREATEBULK: '/dashboard/create-bulk',
   COMMISSION: '/commission',
+   PROCESS_COMMISSION: '/commission/processcommission',
+  HOLD_COMMISSION: '/commission/holdcommission',
+  ADJUST_COMMISSION: '/commission/adjustcommission',
+  APPROVE_COMMISSION: '/commission/approvecommission',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {

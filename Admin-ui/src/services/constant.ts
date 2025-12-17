@@ -9,6 +9,7 @@ export const APIRoutes = {
   LOGIN: 'login',
   AGENTBYID: 'Agentbyid',
   AGENTBYCODE: 'AgentByCode',
+  GETCOMMISSIONDATA: 'getCommissionData',
   GETMASTERS: 'GetMasters',
 }
 

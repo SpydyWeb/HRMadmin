@@ -58,6 +58,12 @@ const GetMastersBulk = async (keys, headers = {}) => {
   return Object.fromEntries(results);
 };
 
+const getCommissionData = (data = {}, headers = {}) => {
+  console.log("Fetching commission data with:", data);
+  return apiClient.post(APIRoutes.GETCOMMISSION, data, { headers });
+};
+
+
 module.exports = {
   login,
   search,
@@ -68,4 +74,5 @@ module.exports = {
   AgentByCode,
   GetMasters,
   GetMastersBulk,
+  getCommissionData
 };

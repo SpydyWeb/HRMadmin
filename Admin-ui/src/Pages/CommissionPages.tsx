@@ -48,13 +48,13 @@ const metrics = [
   },
 ]
 
-type CommissionResponse = {
+type CommissionPagesResponse = {
   responseBody?: {
     commissionMgmtDashboards: any[]
   }
 }
 
-const Commission: React.FC = () => {
+const CommissionPages: React.FC = () => {
   const [localError, setLocalError] = useState<string | null>(null)
   const navigate = useNavigate()
   const encryptionEnabled = useEncryption()
@@ -66,7 +66,7 @@ const Commission: React.FC = () => {
     isLoading: commissionLoading,
     isError: commissionQueryError,
     error: commissionQueryErrorObj,
-  } = useQuery<CommissionResponse>({
+  } = useQuery<CommissionPagesResponse>({
     queryKey: ['commission-dashboard'],
     enabled: canFetch,
     queryFn: () => commissionService.commissionDashboard(),
@@ -99,6 +99,7 @@ console.log('Dashboard Data:', dashboardData)
   return (
     <div className="flex gap-6">
       <div className="w-full space-y-3">
+        <h1>commission page</h1>
         <CommissionOverview dashboardData={dashboardData} />
         <CommissionCard dashboardData={dashboardData} />
       </div>
@@ -106,4 +107,4 @@ console.log('Dashboard Data:', dashboardData)
   )
 }
 
-export default Commission
+export default CommissionPages
