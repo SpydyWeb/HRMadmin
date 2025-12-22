@@ -9,7 +9,7 @@ import {
   ICommissionMgmtDashboard,
   IIndividualCommission,
   ICycleCommission,
-  IAdhocCommission,
+  IAdhocCommission, 
   IPerformanceSnapshot,
   TCommissionStatus
 } from "@/models/commission"; // Adjust the import path as needed

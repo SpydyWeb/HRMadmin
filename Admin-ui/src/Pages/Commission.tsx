@@ -9,9 +9,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
 import { commissionService } from '@/services/commissionService'
-import { Loader } from 'lucide-react'
 import { CommissionOverview } from '@/components/commission/CommissionOverview'
 import { CommissionCard } from '@/components/commission/CommissionCard'
+import Loader from '@/components/Loader'
 
 const metrics = [
   {

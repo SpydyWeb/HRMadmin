@@ -195,6 +195,48 @@ export interface ICommissionMgmtDashboard {
 
 }
 
+// ================================
+
+// Commission process 
+
+// ================================
+export interface IProcessedRecordsLog {
+  processId: number
+  processedDate: string // ISO date string
+  period: string
+  recordsCount: number
+  status: 'In Process' | 'Completed' | string
+  canDownload: boolean
+  canViewDetails: boolean
+}
+export interface IHoldRecords {
+  holdId: number
+  agentName: string 
+  reason: string
+  amount: number
+  status: 'Released' | 'Hold' | string
+  heldOn: string // ISO date string
+  canRelease: boolean
+}
+export interface IAdjustRecords {
+  adjustmentId: number
+  date:string // ISO date string
+  period: string 
+  adjustmentType: string
+  uploadedBy: string
+  status: 'Rejected' | 'Approved' | string
+  recordsCount: number 
+}
+export interface IApproveRecords {
+  approvalId: number
+  date:string // ISO date string
+  period: string 
+  submittedBy: string
+  amount:number
+  status: 'Pending' | 'Approved' | string
+  canApprove: Boolean
+  canDownload: Boolean 
+}
 
 
 // ================================
@@ -206,6 +248,38 @@ export interface ICommissionMgmtDashboard {
 export interface ICommissionMgmtResponseBody {
 
  commissionMgmtDashboards: ICommissionMgmtDashboard[];
+
+}
+export interface IProcessCommissionResponseBody {
+
+orgId: number
+  periodType: string
+  processedRecordsLog: IProcessedRecordsLog[]
+
+}
+export interface IHoldCommissionResponseBody {
+  orgId: number
+  amountOnHold: number
+  currentlyOnHold: number
+  releasedThisMonth:number
+  records: IHoldRecords[]
+
+}
+export interface IAdjustCommissionResponseBody {
+  orgId: number
+  approved: number
+  pendingReview: number
+  rejected:number
+  totalRecords:number
+  records: IAdjustRecords[]
+
+}
+export interface IApproveCommissionResponseBody {
+  orgId: number
+  totalAmountApproved: number
+  totalRecords: number
+  pendingApproval:number
+  records: IApproveRecords[]
 
 }
 

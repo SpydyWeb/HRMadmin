@@ -17,9 +17,14 @@ export const RoutePaths = {
   CREATEBULK: '/dashboard/create-bulk',
   COMMISSION: '/commission',
    PROCESS_COMMISSION: '/commission/processcommission',
-  HOLD_COMMISSION: '/commission/holdcommission',
-  ADJUST_COMMISSION: '/commission/adjustcommission',
-  APPROVE_COMMISSION: '/commission/approvecommission',
+  HOLD_COMMISSION: '/commission/processcommission',
+  ADJUST_COMMISSION: '/commission/processcommission',
+  APPROVE_COMMISSION: '/commission/processcommission',
+// Update your route paths
+// PROCESS_COMMISSION: '/commission/processcommission/new',
+// HOLD_COMMISSION: '/commission/processcommission/hold',
+// ADJUST_COMMISSION: '/commission/processcommission/adjust',
+// APPROVE_COMMISSION: '/commission/processcommission/approve',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {
