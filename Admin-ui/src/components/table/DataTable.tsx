@@ -7,7 +7,7 @@ interface Column {
   width?: string; // Optional column width like "150px" or "20%"
 }
 
-interface DataTableProps {
+interface DataTableProps {  
   columns: Array<Column>;
   data: Array<any>;
   loading?: boolean;      // 👈 new prop

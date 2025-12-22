@@ -11,6 +11,10 @@ export const APIRoutes = {
   AGENTBYCODE: 'AgentByCode',
   GETCOMMISSIONDATA: 'getCommissionData',
   GETMASTERS: 'GetMasters',
+  PROCESSCOMMISSION: 'processCommission',
+  HOLDCOMMISSION: 'holdCommission',
+  ADJUSTCOMMISSION: 'adjustCommission',
+  APPROVECOMMISSION: 'approveCommission',
 }
 
 export const LoginConstants = {

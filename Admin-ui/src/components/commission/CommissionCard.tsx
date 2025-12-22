@@ -15,6 +15,7 @@ import { RoutePaths } from '@/utils/constant'
 import Button from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { ActionItem } from '@/utils/models'
+import { Eye } from 'lucide-react'
 
 interface CommissionCardProps {
   dashboardData: any
@@ -138,39 +139,155 @@ const CommissionCard: React.FC<CommissionCardProps> = ({ dashboardData }) => {
     },
   ]
 
-  const columns = [
-    { header: 'Cycle', accessor: 'channel' },
-    {
-      header: 'Rev()',
-      accessor: (row: any) => (
-        <span className="px-2 py-1 rounded-md bg-green-100 text-green-800 font-medium">
-          {row.pending.toString().padStart(2, '0')}
-        </span>
-      ),
-    },
-    {
-      header: 'Comm()',
-      accessor: (row: any) => (
-        <span
-          className={`px-2 py-1 rounded-md font-medium ${priorityColor(
-            row.priority,
-          )}`}
-        >
-          {row.priority}
-        </span>
-      ),
-    },
-    { header: '%', accessor: 'updated' },
+  // const columns = [
+  //   { header: 'Cycle', accessor: 'channel' },
+  //   {
+  //     header: 'Rev()',
+  //     accessor: (row: any) => (
+  //       <span className="px-2 py-1 rounded-md bg-green-100 text-green-800 font-medium">
+  //         {row.pending.toString().padStart(2, '0')}
+  //       </span>
+  //     ),
+  //   },
+  //   {
+  //     header: 'Comm()',
+  //     accessor: (row: any) => (
+  //       <span
+  //         className={`px-2 py-1 rounded-md font-medium ${priorityColor(
+  //           row.priority,
+  //         )}`}
+  //       >
+  //         {row.priority}
+  //       </span>
+  //     ),
+  //   },
+  //   { header: '%', accessor: 'updated' },
 
-    // {
-    //   header: 'Actions',
-    //   accessor: (row: any) => (
-    //     <Button variant="blue" onClick={() => handleRedirect(row.path)}>
-    //       Process Now
-    //     </Button>
-    //   ),
-    // },
-  ]
+  //   // {
+  //   //   header: 'Actions',
+  //   //   accessor: (row: any) => (
+  //   //     <Button variant="blue" onClick={() => handleRedirect(row.path)}>
+  //   //       Process Now
+  //   //     </Button>
+  //   //   ),
+  //   // },
+  // ]
+  const columns = [
+  { header: 'Cycle', accessor: 'channel' },
+
+  {
+    header: 'Rev (₹)',
+    accessor: (row: any) => (
+      <span className="px-2 py-1 rounded-md bg-green-100 text-green-800 font-medium">
+        ₹{row.pending.toLocaleString()}
+      </span>
+    ),
+  },
+
+  {
+    header: 'Comm (₹)',
+    accessor: (row: any) => (
+      <span
+        className={`px-2 py-1 rounded-md font-medium ${priorityColor(
+          row.priority,
+        )}`}
+      >
+        {row.priority}
+      </span>
+    ),
+  },
+
+  { header: '%', accessor: 'updated' },
+]
+const mapToTableData = (list: any[]) =>
+  (list || []).map((item: any) => ({
+    channel: `Request ${item.requestId}`,
+    pending: item.commissionAmount ?? 0,
+    priority: item.status,
+    updated: item.status === 'Pending' ? '—' : '100%',
+    path: RoutePaths.PROCESS_COMMISSION,
+  }))
+const channelTables = [
+  {
+    title: 'Performance Snapshot',
+    data: mapToTableData(dashboardData?.performanceSnapshot),
+  },
+  {
+    title: 'Current Business Cycle',
+    data: mapToTableData(dashboardData?.cycleCommissions),
+  },
+  {
+    title: 'Renewal',
+    data: mapToTableData(dashboardData?.renewalCommissions),
+  },
+  {
+    title: 'On-Hold',
+    data: mapToTableData(dashboardData?.adhocCommissions),
+  },
+]
+
+  const forecastScenarios = [
+  {
+    id: 1,
+    label: 'SCENARIO 1',
+    type: 'OPTIMISTIC',
+    amount: '₹12.5 Cr',
+    description: 'Projected Commission',
+    color: 'text-green-600',
+  },
+  {
+    id: 2,
+    label: 'SCENARIO 2',
+    type: 'REALISTIC',
+    amount: '₹10.8 Cr',
+    description: 'Projected Commission',
+    color: 'text-orange-500',
+  },
+  {
+    id: 3,
+    label: 'SCENARIO 3',
+    type: 'PESSIMISTIC',
+    amount: '₹9.2 Cr',
+    description: 'Projected Commission',
+    color: 'text-blue-600',
+  },
+]
+ const downloadItems = [
+  {
+    id: 1,
+    title: 'Commission Paid',
+    period: 'Aug - 2025',
+    type: 'COMMISSION_PAID',
+    onClick: () => console.log('Download Commission Paid'),
+  },
+  {
+    id: 2,
+    title: 'TDS Paid',
+    period: 'Aug - 2025',
+    type: 'TDS_PAID',
+    onClick: () => console.log('Download TDS Paid'),
+  },
+  {
+    id: 3,
+    title: 'GST Reports',
+    period: 'Aug - 2025',
+    type: 'GST_REPORTS',
+    onClick: () => console.log('Download GST Reports'),
+  },
+  {
+    id: 4,
+    title: 'Agent Balances',
+    period: 'Aug - 2025',
+    type: 'AGENT_BALANCES',
+    onClick: () => console.log('Download Agent Balances'),
+  },
+]
+ const periodOptions = [
+  { label: 'Monthly', value: 'MONTHLY' },
+  { label: 'Quarterly', value: 'QUARTERLY' },
+  { label: 'Yearly', value: 'YEARLY' },
+]
+
   const buttons = [
     {
       id: 1,
@@ -197,14 +314,7 @@ const CommissionCard: React.FC<CommissionCardProps> = ({ dashboardData }) => {
   return (
     <div className="flex gap-6">
       <div className="w-full space-y-4">
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {buttons.map((data, id) => (
-            <Button key={id} onClick={() => navigate({ to: data.path })}>
-              {data.title}
-            </Button>
-          ))}
-        </CardContent>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 mb-16 gap-8">
           {companyData.map((data, index) => (
             <Card
               className="rounded-md p-5 flex-1 min-w-0 bg-white"
@@ -224,88 +334,135 @@ const CommissionCard: React.FC<CommissionCardProps> = ({ dashboardData }) => {
             </Card>
           ))}
         </CardContent>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold">
+            Commission Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {buttons.map((data, id) => (
+            <Button key={id} onClick={() => navigate({ to: data.path,state: data.state })}>
+              {data.title}
+            </Button>
+          ))}
+        </CardContent>
+    
 
+        {/* <Card className="shadow-md rounded-md grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Channel</CardTitle>
+              <DataTable columns={columns} data={tableData} />
+            </CardHeader>
+          </CardContent>
+          <CardContent>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Channel</CardTitle>
+              <DataTable columns={columns} data={tableData} />
+            </CardHeader>
+          </CardContent>
+          <CardContent>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Channel</CardTitle>
+              <DataTable columns={columns} data={tableData} />
+            </CardHeader>
+          </CardContent>
+          <CardContent>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Channel</CardTitle>
+              <DataTable columns={columns} data={tableData} />
+            </CardHeader>
+          </CardContent>
+        </Card> */}
         <Card className="shadow-md rounded-md grid grid-cols-1 md:grid-cols-2 gap-4">
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-        </Card>
+  {channelTables.map((table, index) => (
+    <CardContent key={index}>
+      <CardHeader>
+        <CardTitle className="text-lg font-bold">
+          {table.title}
+        </CardTitle>
+      </CardHeader>
+
+      <DataTable columns={columns} data={table.data} />
+    </CardContent>
+  ))}
+</Card>
+
       </div>
 
       <div className="max-w-[18rem] w-full space-y-3">
-        <Card className="px-2 gap-0 rounded-md">
-          <CardContent className="flex flex-col gap-3 p-2">
-            {actions.map((action, index) => {
-              const Icon = action.icon
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-start gap-3 rounded-md border border-gray-100 bg-gray-100 hover:bg-white hover:shadow-lg text-left p-3  shadow-sm transition cursor-pointer"
-                  onClick={action.onClick}
-                >
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-900 hover:border-blue-700 ">
-                    <Icon className="h-5 w-5 text-gray-700 hover:text-blue-700" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-800 font-bold">
-                      {action.title}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {action.subtitle}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-        <Card className="px-2 gap-0  mb-2 rounded-md">
-          <CardContent className="flex flex-col gap-3 p-2">
-            {actions.map((action, index) => {
-              const Icon = action.icon
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-start gap-3 rounded-md border border-gray-100 bg-gray-100 hover:bg-white hover:shadow-lg text-left p-3  shadow-sm transition cursor-pointer"
-                  onClick={action.onClick}
-                >
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-900 hover:border-blue-700 ">
-                    <Icon className="h-5 w-5 text-gray-700 hover:text-blue-700" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-800 font-bold">
-                      {action.title}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {action.subtitle}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
+        <Card className="rounded-md">
+  <CardContent className="flex flex-col gap-3 px-3">
+    {forecastScenarios.map((item, index) => (
+      <div
+        key={index}
+        className="rounded-md bg-gray-100 p-3 shadow-sm"
+      >
+        {/* Scenario label */}
+        <div className="text-[10px] font-semibold text-gray-500 uppercase">
+          {item.label} -{' '}
+          <span className={item.color}>{item.type}</span>
+        </div>
+
+        {/* Amount */}
+        <div className="text-xl font-bold text-gray-900 mt-1">
+          {item.amount}
+        </div>
+
+        {/* Description */}
+        <div className="text-xs text-gray-500">
+          {item.description}
+        </div>
+      </div>
+    ))}
+
+    {/* View Details Button */}
+    <button className="mt-2 flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+      <Eye size={16} /> View Forecast Details
+    </button>
+  </CardContent>
+</Card>
+
+      <Card className="rounded-md mb-2">
+  <CardContent className="flex flex-col gap-3 p-3">
+    {/* Header */}
+    <div className="text-sm font-bold text-gray-900">
+      Downloads
+    </div>
+
+    {/* Period Dropdown */}
+    <select className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+      <option>Period - Monthly</option>
+      <option>Period - Quarterly</option>
+      <option>Period - Yearly</option>
+    </select>
+
+    {/* Download Items */}
+    {downloadItems.map((item, index) => (
+      <div
+        key={index}
+        onClick={item.onClick}
+        className="flex items-center justify-between rounded-md bg-gray-100 p-3 shadow-sm hover:bg-white hover:shadow-md transition cursor-pointer"
+      >
+        {/* Left content */}
+        <div>
+          <div className="text-sm font-semibold text-gray-800">
+            {item.title}
+          </div>
+          <div className="text-xs text-gray-500">
+            {item.period}
+          </div>
+        </div>
+
+        {/* Download icon */}
+        <div className="text-gray-600 hover:text-indigo-600">
+          ⬇️
+        </div>
+      </div>
+    ))}
+  </CardContent>
+</Card>
+
       </div>
     </div>
   )

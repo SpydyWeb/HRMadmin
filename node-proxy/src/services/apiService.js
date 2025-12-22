@@ -59,8 +59,24 @@ const GetMastersBulk = async (keys, headers = {}) => {
 };
 
 const getCommissionData = (data = {}, headers = {}) => {
-  console.log("Fetching commission data with:", data);
+  // console.log("Fetching commission data with:", data);
   return apiClient.post(APIRoutes.GETCOMMISSION, data, { headers });
+};
+const processCommission = (data = {}, headers = {}) => {
+  console.log("Process commission with:", data);
+  return apiClient.post(APIRoutes.PROCESSCOMMISSION, data, { headers });
+};
+const holdCommission = (data = {}, headers = {}) => {
+  console.log("hold commission with:", data);
+  return apiClient.post(APIRoutes.HOLDCOMMISSION, data, { headers });
+};
+const adjustCommission = (data = {}, headers = {}) => {
+  console.log("Adjust commission with:", data);
+  return apiClient.post(APIRoutes.ADJUSTCOMMISSION, data, { headers });
+};
+const approveCommission = (data = {}, headers = {}) => {
+  console.log("Approve commission with:", data);
+  return apiClient.post(APIRoutes.APPROVECOMMISSION, data, { headers });
 };
 
 
@@ -74,5 +90,9 @@ module.exports = {
   AgentByCode,
   GetMasters,
   GetMastersBulk,
-  getCommissionData
+  getCommissionData,
+  processCommission,
+  holdCommission,
+  adjustCommission,
+  approveCommission,
 };
