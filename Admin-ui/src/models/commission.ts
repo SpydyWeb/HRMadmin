@@ -282,6 +282,18 @@ export interface IApproveCommissionResponseBody {
   records: IApproveRecords[]
 
 }
+export interface IConfigCommissionResponseBody {
+  commissionId: number
+  commissionName: string
+  status: string
+}
+export interface IConfigCommissionRequest {
+  commissionName: string
+  triggerCycle: 'DAILY' | 'MONTHLY' | 'YEARLY' | 'QUARTERLY'
+  runFrom: string
+  runTo: string
+}
+
 
 
 

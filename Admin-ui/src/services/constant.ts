@@ -15,6 +15,9 @@ export const APIRoutes = {
   HOLDCOMMISSION: 'holdCommission',
   ADJUSTCOMMISSION: 'adjustCommission',
   APPROVECOMMISSION: 'approveCommission',
+  // CONFIGCOMMISSION: 'configCommission',
+  CONFIG_COMMISSION: 'configcommission',
+
 }
 
 export const LoginConstants = {

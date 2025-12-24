@@ -309,6 +309,11 @@ const channelTables = [
       title: 'Approve Commission',
       path: RoutePaths.APPROVE_COMMISSION,
     },
+    {
+      id: 4,
+      title: 'Config Commission',
+      path: RoutePaths.CONFIG_COMMISSION,
+    },
   ]
 
   return (
@@ -339,12 +344,12 @@ const channelTables = [
             Commission Actions
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {buttons.map((data, id) => (
             <Button key={id} onClick={() => navigate({ to: data.path,state: data.state })}>
               {data.title}
             </Button>
-          ))}
+          ))} 
         </CardContent>
     
 
