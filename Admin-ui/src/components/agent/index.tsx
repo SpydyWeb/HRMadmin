@@ -149,6 +149,8 @@ const Agent: React.FC = () => {
         )
       ) : activeTab === 'peoplehierarchy' ? (
         <Hierarchy Agent={firstAgent} />
+      ) : activeTab === 'geographicalhierarchy' ? (
+        <Hierarchy Agent={firstAgent} />
       ) : activeTab === 'auditlog' ? (
         <AuditLog Agentcode={agentId || ''} />
       ) : activeTab === 'training' ? (

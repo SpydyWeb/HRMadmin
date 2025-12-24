@@ -78,6 +78,10 @@ const approveCommission = (data = {}, headers = {}) => {
   console.log("Approve commission with:", data);
   return apiClient.post(APIRoutes.APPROVECOMMISSION, data, { headers });
 };
+const configcommission = (data = {}, headers = {}) => {
+  console.log("Config commission with:", data);
+  return apiClient.post(APIRoutes.CONFIGCOMMISSION, data, { headers });
+};
 
 
 module.exports = {
@@ -95,4 +99,5 @@ module.exports = {
   holdCommission,
   adjustCommission,
   approveCommission,
+  configcommission
 };

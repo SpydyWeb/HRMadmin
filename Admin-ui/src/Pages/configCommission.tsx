@@ -29,10 +29,10 @@ import encryptionService from '@/services/encryptionService'
 import { useQuery } from '@tanstack/react-query'
 import { commissionService } from '@/services/commissionService'
 import Loader from '@/components/Loader'
-import { ProcessPgCommission } from '@/components/commission/ProcessPgCommission'
 import { HoldCommission } from '@/components/commission/HoldCommission'
 import { AdjustCommission } from '@/components/commission/AdjustCommission'
 import { ApproveCommission } from '@/components/commission/ApproveCommission'
+import { FirstStepFormCommission } from '@/components/commission/FirstStepFormCommission'
 
 const tabs = [
   { value: 'new', label: 'Processed Record Log', icon: <FaNetworkWired /> },
@@ -49,14 +49,14 @@ const tabs = [
   },
 ]
 
-type ProcessCommissionResponse = {
+type ConfigCommissionResponse = {
   responseBody?: {
     processedRecordsLog: any[]
   }
 }
 
 
-const ProcessCommission : React.FC = () => {
+const ConfigCommission : React.FC = () => {
 
     const actions: Array<ActionItem> = [
   {
@@ -193,7 +193,7 @@ const ProcessCommission : React.FC = () => {
       case 'new':
         return (
         
-    <ProcessPgCommission/>
+    <FirstStepFormCommission/>
         )
       case 'movement':
         return (
@@ -227,12 +227,12 @@ const ProcessCommission : React.FC = () => {
       {/* Render different content based on the selected tab */}
       {renderTabContent()}
 
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <span className="font-semibold text-lg text-gray-700">Page 1/6</span>
         <Pagination totalPages={4} currentPage={page} onPageChange={setPage} />
-      </div>
+      </div> */}
     </div>
   )
 }
 
-export default ProcessCommission
+export default ConfigCommission
