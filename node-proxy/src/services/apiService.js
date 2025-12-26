@@ -82,6 +82,10 @@ const configcommission = (data = {}, headers = {}) => {
   console.log("Config commission with:", data);
   return apiClient.post(APIRoutes.CONFIGCOMMISSION, data, { headers });
 };
+const updateConditionConfig = (data = {}, headers = {}) => {
+  console.log("update Condition Config commission with:", data);
+  return apiClient.patch(APIRoutes.UPDATECONDITIONCONFIG, data, { headers });
+};
 
 
 module.exports = {
@@ -99,5 +103,6 @@ module.exports = {
   holdCommission,
   adjustCommission,
   approveCommission,
-  configcommission
+  configcommission,
+  updateConditionConfig
 };

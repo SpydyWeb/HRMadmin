@@ -67,10 +67,27 @@ export const commissionService = {
         APIRoutes.CONFIG_COMMISSION,
         [data],
       )
+      console.log("config 1st step:", response);
       return response     
     } catch (error) {
       
     }
-  }
+  },
+  updateConditionCommissionConfig: async (data: { commissionConfigId: number; condition: string }) => {
+    try {
+       console.log("Making API call to update condition:", data);
+      const response = await callApi<ApiResponse<ICommissionMgmtApiResponse>>(
+        APIRoutes.UPDATE_CONDITION_CONFIG,
+        [data],
+      )
+      console.log("API response received:", response);
+    if (!response || !response.data) {
+      throw new Error("Invalid response structure");
+    }
+      return response     
+    } catch (error) {
+      
+    }
+  },
 
 }
