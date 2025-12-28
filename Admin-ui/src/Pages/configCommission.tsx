@@ -273,7 +273,7 @@ const goToNextStep = () => {
       <div className="flex flex-row justify-between items-center">
         <CustomTabs
           tabs={tabs}
-          defaultValue="new"
+          value={activeTab}
           onValueChange={(value) => setActiveTab(value)}
         />
        

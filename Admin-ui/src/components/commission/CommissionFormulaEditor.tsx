@@ -199,6 +199,7 @@ interface CommissionFormulaEditorProps {
   commissionConfigId: number;
   onSaveSuccess: () => void;
   initialFormula?: string;
+  conditions?: string;
 }
 
 export default function CommissionFormulaEditor({ 
@@ -349,43 +350,6 @@ export default function CommissionFormulaEditor({
     return errors;
   }
 
-//   const handleSave = async () => {
-//     try {
-//       setSaving(true);
-//       setError(null);
-
-//       // Validate the formula
-//       const errors = validateFormulaIdentifiers(formula, objects);
-//       if (errors.length > 0) {
-//         setError(`Formula validation error: ${errors[0].message}`);
-//         return;
-//       }
-
-//       // Prepare payload for API
-//       const payload = {
-//         commissionConfigId,
-//         formula,
-//         createdAt: new Date().toISOString(),
-//       };
-
-//       // Call your API service here
-//       // const response = await commissionService.saveCommissionFormula(payload);
-      
-//       // Simulate API call
-//       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-//       console.log("Saving formula:", payload);
-      
-//       // If successful, move to next step
-//       onSaveSuccess();
-//     } catch (err) {
-//       console.error(err);
-//       setError("Failed to save commission formula");
-//     } finally {
-//       setSaving(false);
-//     }
-//   };
-
 
 const handleSave = async () => {
   try {
@@ -402,20 +366,16 @@ const handleSave = async () => {
     // Call the updateConditionCommissionConfig API
     const response = await commissionService.updateConditionCommissionConfig({
       commissionConfigId,
-      condition: formula
+      conditions: formula
     });
     
     console.log("Updated condition:", response);
     
     // If successful, move to next step
-     if (response && response.success) {
+     if (response?.responseHeader?.errorCode===1101) {
       console.log("Updated condition:", response);
       onSaveSuccess();
-    } else { 
-            const errorMessage = response?.message || "Failed to update commission condition";
-      setError(errorMessage);
-      console.error("API error:", response);
-    }
+    } 
 
   } catch (err) {
     console.error(err);
