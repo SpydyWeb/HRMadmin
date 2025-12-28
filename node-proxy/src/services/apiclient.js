@@ -44,6 +44,7 @@ const apiClient = {
   post: (url, data, config) => request("post", url, data, config),
   put: (url, data, config) => request("put", url, data, config),
   delete: (url, config) => request("delete", url, undefined, config),
+  patch: (url, data, config) => request("patch", url, data, config),
 };
 
 module.exports = { apiClient };

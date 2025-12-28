@@ -289,9 +289,10 @@ export interface IConfigCommissionResponseBody {
 }
 export interface IConfigCommissionRequest {
   commissionName: string
-  triggerCycle: 'DAILY' | 'MONTHLY' | 'YEARLY' | 'QUARTERLY'
+  triggerCycle: 'daily' | 'monthly' | 'yearly' | 'quarterly'
   runFrom: string
   runTo: string
+  createdAt?: string
 }
 
 

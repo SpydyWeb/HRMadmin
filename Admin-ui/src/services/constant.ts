@@ -17,6 +17,7 @@ export const APIRoutes = {
   APPROVECOMMISSION: 'approveCommission',
   // CONFIGCOMMISSION: 'configCommission',
   CONFIG_COMMISSION: 'configcommission',
+  UPDATE_CONDITION_CONFIG: 'updateConditionConfig',
 
 }
 

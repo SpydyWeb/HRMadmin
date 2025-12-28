@@ -33,21 +33,23 @@ import { HoldCommission } from '@/components/commission/HoldCommission'
 import { AdjustCommission } from '@/components/commission/AdjustCommission'
 import { ApproveCommission } from '@/components/commission/ApproveCommission'
 import { FirstStepFormCommission } from '@/components/commission/FirstStepFormCommission'
+import { SecondStepCommissionConfig } from '@/components/commission/SecondStepCommissionConfig'
 
 const tabs = [
-  { value: 'new', label: 'Processed Record Log', icon: <FaNetworkWired /> },
+  { value: 'new', label: 'Step 1', icon: <FaNetworkWired /> },
   {
     value: 'movement',
-    label: 'Hold Record',
+    label: 'Step 2',
     icon: <HiOutlineCodeBracketSquare />,
   },
-  { value: 'pi', label: 'Adjustment History', icon: <LuSquareUserRound /> },
+  { value: 'pi', label: 'Step 3', icon: <LuSquareUserRound /> },
   {
     value: 'status',
-    label: 'Approval History',
+    label: 'Step 4',
     icon: <MdOutlinePublishedWithChanges />,
   },
 ]
+
 
 type ConfigCommissionResponse = {
   responseBody?: {
@@ -122,6 +124,8 @@ const ConfigCommission : React.FC = () => {
   const [page, setPage] = useState(1)
   // Add state to track the currently selected tab
   const [activeTab, setActiveTab] = useState('new')
+  const [commissionConfigId, setCommissionConfigId] = useState<number | null>(null);
+
 
 
     // const loading = processcommissionLoading
@@ -129,6 +133,15 @@ const ConfigCommission : React.FC = () => {
     // if (localError)
     //   return <div className="p-4 text-red-600">Error: {localError}</div>
   
+    
+const STEP_ORDER = ['new', 'movement', 'pi', 'status']
+
+const goToNextStep = () => {
+  const currentIndex = STEP_ORDER.indexOf(activeTab)
+  if (currentIndex < STEP_ORDER.length - 1) {
+    setActiveTab(STEP_ORDER[currentIndex + 1])
+  }
+}
 
   
   const toggleRowSelection = (srno: number) => {
@@ -188,29 +201,71 @@ const ConfigCommission : React.FC = () => {
   ]
 
   // Define different content for each tab
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'new':
-        return (
+  // const renderTabContent = () => {
+  //   switch (activeTab) {
+  //     case 'new':
+  //       return (
         
-    <FirstStepFormCommission/>
-        )
-      case 'movement':
-        return (
-         <HoldCommission/>
-        )
-      case 'pi':
-        return (
-         <AdjustCommission/>
-        )
-      case 'status':
-        return (
-        <ApproveCommission/>
-        )
-      default:
-        return null
-    }
+  //   <FirstStepFormCommission/>
+  //       )
+  //     case 'movement':
+  //       return (
+  //        <HoldCommission/>
+  //       )
+  //     case 'pi':
+  //       return (
+  //        <AdjustCommission/>
+  //       )
+  //     case 'status':
+  //       return (
+  //       <ApproveCommission/>
+  //       )
+  //     default:
+  //       return null
+  //   }
+  // }
+
+  const renderTabContent = () => {
+  switch (activeTab) {
+    case 'new':
+      return (
+        <FirstStepFormCommission
+          onSaveSuccess={(id:any) => {
+             setCommissionConfigId(id)
+            goToNextStep()
+          }}
+        />
+      )
+
+    case 'movement':
+      return (
+        <SecondStepCommissionConfig
+          commissionConfigId={commissionConfigId || 0}
+          onSaveSuccess={() => {
+            console.log("Save successful, moving to next step");
+            goToNextStep();
+          }}
+        />
+      )
+
+    case 'pi':
+      return (
+        <AdjustCommission
+          onSaveSuccess={goToNextStep}
+        />
+      )
+
+    case 'status':
+      return (
+        <ApproveCommission />
+        // last step → no next step
+      )
+
+    default:
+      return null
   }
+}
+
 
   return (
     <div className="py-4">
@@ -218,7 +273,7 @@ const ConfigCommission : React.FC = () => {
       <div className="flex flex-row justify-between items-center">
         <CustomTabs
           tabs={tabs}
-          defaultValue="new"
+          value={activeTab}
           onValueChange={(value) => setActiveTab(value)}
         />
        

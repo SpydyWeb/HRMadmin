@@ -9,17 +9,24 @@ interface TabItem {
 
 interface CustomTabsProps {
   tabs: Array<TabItem>;
-  defaultValue: string;
+  defaultValue?: string;
+  value?: string;
   onValueChange?: (value: string) => void;
 }
 
 export default function CustomTabs({
   tabs,
   defaultValue,
+  value,
   onValueChange,
 }: CustomTabsProps) {
   return (
-    <Tabs defaultValue={defaultValue} onValueChange={onValueChange} className="contents">
+    <Tabs 
+      value={value} 
+      defaultValue={defaultValue} 
+      onValueChange={onValueChange} 
+      className="contents"
+    >
       <TabsList className="rounded-none py-6 bg-transparent shadow-none px-0">
         {tabs.map((tab) => (
           <TabsTrigger
