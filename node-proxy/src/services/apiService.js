@@ -63,23 +63,23 @@ const getCommissionData = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETCOMMISSION, data, { headers });
 };
 const processCommission = (data = {}, headers = {}) => {
-  console.log("Process commission with:", data);
+  // console.log("Process commission with:", data);
   return apiClient.post(APIRoutes.PROCESSCOMMISSION, data, { headers });
 };
 const holdCommission = (data = {}, headers = {}) => {
-  console.log("hold commission with:", data);
+  // console.log("hold commission with:", data);
   return apiClient.post(APIRoutes.HOLDCOMMISSION, data, { headers });
 };
 const adjustCommission = (data = {}, headers = {}) => {
-  console.log("Adjust commission with:", data);
+  // console.log("Adjust commission with:", data);
   return apiClient.post(APIRoutes.ADJUSTCOMMISSION, data, { headers });
 };
 const approveCommission = (data = {}, headers = {}) => {
-  console.log("Approve commission with:", data);
+  // console.log("Approve commission with:", data);
   return apiClient.post(APIRoutes.APPROVECOMMISSION, data, { headers });
 };
 const configcommission = (data = {}, headers = {}) => {
-  console.log("Config commission with:", data);
+  // console.log("Config commission with:", data);
   return apiClient.post(APIRoutes.CONFIGCOMMISSION, data, { headers });
 };
 const updateConditionConfig = (data = {}, headers = {}) => {
