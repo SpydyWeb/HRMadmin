@@ -199,7 +199,7 @@ interface CommissionFormulaEditorProps {
   commissionConfigId: number;
   onSaveSuccess: () => void;
   initialFormula?: string;
-  conditions?: string;
+  condition?: string;
 }
 
 export default function CommissionFormulaEditor({ 
@@ -366,7 +366,7 @@ const handleSave = async () => {
     // Call the updateConditionCommissionConfig API
     const response = await commissionService.updateConditionCommissionConfig({
       commissionConfigId,
-      conditions: formula
+      condition: formula
     });
     
     console.log("Updated condition:", response);
