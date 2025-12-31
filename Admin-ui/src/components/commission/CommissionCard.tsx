@@ -312,7 +312,7 @@ const channelTables = [
     {
       id: 4,
       title: 'Config Commission',
-      path: RoutePaths.CONFIG_COMMISSION,
+      path: RoutePaths.CONFIG_COMMISSION_LIST,
     },
   ]
 

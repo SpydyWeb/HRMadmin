@@ -200,31 +200,6 @@ const goToNextStep = () => {
     },
   ]
 
-  // Define different content for each tab
-  // const renderTabContent = () => {
-  //   switch (activeTab) {
-  //     case 'new':
-  //       return (
-        
-  //   <FirstStepFormCommission/>
-  //       )
-  //     case 'movement':
-  //       return (
-  //        <HoldCommission/>
-  //       )
-  //     case 'pi':
-  //       return (
-  //        <AdjustCommission/>
-  //       )
-  //     case 'status':
-  //       return (
-  //       <ApproveCommission/>
-  //       )
-  //     default:
-  //       return null
-  //   }
-  // }
-
   const renderTabContent = () => {
   switch (activeTab) {
     case 'new':

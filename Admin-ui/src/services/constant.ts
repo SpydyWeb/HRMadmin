@@ -8,16 +8,17 @@ export const APIRoutes = {
   SEARCHBYCODE: 'searchbycode',
   LOGIN: 'login',
   AGENTBYID: 'Agentbyid',
-  AGENTBYCODE: 'AgentByCode',
+  AGENTBYCODE: 'AgentByCode', 
   GETCOMMISSIONDATA: 'getCommissionData',
   GETMASTERS: 'GetMasters',
   PROCESSCOMMISSION: 'processCommission',
   HOLDCOMMISSION: 'holdCommission',
   ADJUSTCOMMISSION: 'adjustCommission',
   APPROVECOMMISSION: 'approveCommission',
-  // CONFIGCOMMISSION: 'configCommission',
   CONFIG_COMMISSION: 'configcommission',
   UPDATE_CONDITION_CONFIG: 'updateConditionConfig',
+  CONFIG_LIST: 'configList',
+  UPDATE_CRON: 'updateCron',
 
 }
 

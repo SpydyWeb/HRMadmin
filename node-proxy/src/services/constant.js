@@ -9,8 +9,10 @@ const APIRoutes = {
   HOLDCOMMISSION: "/api/CommissionMgmt/HoldCommission",
   ADJUSTCOMMISSION: "/api/CommissionMgmt/AdjustCommission",
   APPROVECOMMISSION: "/api/CommissionMgmt/ApproveCommission",
-  CONFIGCOMMISSION: "/api/CommissionConfig/Save",
-  UPDATECONDITIONCONFIG: "/api/CommissionConfig/update-condition",
+  CONFIGCOMMISSION: "/api/CommissionConfig/CreateCommission",
+  UPDATECONDITIONCONFIG: "/api/CommissionConfig/UpdateCommissionFormula",
+  CONFIGLIST: "/api/CommissionConfig/CommissionJobConfigList",
+  UPDATECRON: "/api/CommissionConfig/UpdateCronSetting",
 };
 
 module.exports = { APIRoutes };
