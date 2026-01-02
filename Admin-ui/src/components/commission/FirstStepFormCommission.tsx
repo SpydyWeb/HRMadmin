@@ -20,7 +20,6 @@ interface FirstStepFormCommissionProps {
 const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSaveSuccess}) => {
   const [formValues, setFormValues] = useState<IConfigCommissionRequest>({
     commissionName: '',
-    triggerCycle: 'daily',
     runFrom: '',
     runTo: '',
   })
@@ -45,7 +44,6 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSa
     gridCols: 2,
     schema: z.object({
       commissionName: z.string().min(1),
-      triggerCycle: z.string(),
       runFrom: z.string(),
       runTo: z.string(),
     }),
@@ -56,17 +54,6 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSa
         type: 'text',
         colSpan: 1,
         variant: 'standard',
-      },
-      {
-        name: 'triggerCycle',
-        label: 'Trigger Cycle',
-        type: 'select',
-        colSpan: 1,
-        options: [
-          { label: 'Daily', value: 'daily' },
-          { label: 'Weekly', value: 'weekly' },
-          { label: 'Monthly', value: 'monthly' },
-        ],
       },
       { name: 'runFrom', label: 'Run From', type: 'date', colSpan: 1 },
       { name: 'runTo', label: 'Run To', type: 'date', colSpan: 1 },
@@ -98,7 +85,6 @@ const handleSave = async (data: Record<string, any>) => {
 
     const payload: IConfigCommissionRequest = {
       commissionName: data.commissionName,
-      triggerCycle: data.triggerCycle,
       runFrom: formattedRunFrom,
       runTo: formattedRunTo,
     }
@@ -196,9 +182,7 @@ return (
       <DynamicFormBuilder
         config={{
           ...commissionStepOneFormConfig,
-          defaultValues: {
-            triggerCycle: 'daily',
-          },
+
         }}
         onSubmit={handleSave}
       />

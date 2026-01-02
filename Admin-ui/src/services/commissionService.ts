@@ -2,7 +2,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionResponseBody,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest} from '@/models/commission'
+import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionResponseBody,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest, IUpdateCronRequest, IUpdateStatusRequest} from '@/models/commission'
 
 export const commissionService = {
   commissionDashboard: async (data:ICommissionMgmtResponseBody) => {
@@ -74,20 +74,69 @@ export const commissionService = {
       throw error;
     }
   },
+  updateCron: async (data:IUpdateCronRequest) => {
+    try {
+      const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
+        APIRoutes.UPDATE_CRON,
+        [data],
+      )
+      console.log("config cron response:", response);
+      return response     
+    } catch (error) {
+      console.error("cron error:", error);
+      throw error;
+    }
+  },
   updateConditionCommissionConfig: async (data: { commissionConfigId: number; condition: string }) => {
     try {
-      //  console.log("Making API call to update condition:", data);
       const response = await callApi<ApiResponse<ICommissionMgmtApiResponse>>(
         APIRoutes.UPDATE_CONDITION_CONFIG,
         [data],
       )
-      // console.log("API response received:", response);
     if (!response) {
       throw new Error("Invalid response structure");
     }
       return response     
     } catch (error) {
       
+    }
+  },
+  configCommissionList: async (data:IConfigCommissionRequest) => {
+    try {
+    
+      const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
+        APIRoutes.CONFIG_LIST,
+        [data],
+      )
+
+      if (!response) {
+        console.warn("configCommissionList - Response is undefined or null");
+      }
+      
+      return response     
+    } catch (error) {
+      console.error("configCommission list service error:", error);
+    
+      throw error;
+    }
+  },
+  updateStatus: async (data:IUpdateStatusRequest) => {  // IUpdateStatusRequest is the request body for the enable status api
+    try {
+    
+      const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
+        APIRoutes.UPDATE_STATUS,
+        [data],
+      )
+
+      if (!response) {
+        console.warn("enable status api - Response is undefined or null");
+      }
+      
+      return response     
+    } catch (error) {
+      console.error("enable status api service error:", error);
+    
+      throw error;
     }
   },
 

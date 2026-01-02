@@ -20,6 +20,7 @@ export const RoutePaths = {
   HOLD_COMMISSION: '/commission/processcommission',
   ADJUST_COMMISSION: '/commission/processcommission',
   APPROVE_COMMISSION: '/commission/processcommission',
+  CONFIG_COMMISSION_LIST: '/commission/configcommission-list',
   CONFIG_COMMISSION: '/commission/configcomission',
 // Update your route paths
 // PROCESS_COMMISSION: '/commission/processcommission/new',
