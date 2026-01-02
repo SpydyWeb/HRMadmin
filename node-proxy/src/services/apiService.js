@@ -84,15 +84,19 @@ const configcommission = (data = {}, headers = {}) => {
 };
 const updateConditionConfig = (data = {}, headers = {}) => {
   // console.log("update Condition Config commission with:", data);
-  return apiClient.patch(APIRoutes.UPDATECONDITIONCONFIG, data, { headers });
+  return apiClient.post(APIRoutes.UPDATECONDITIONCONFIG, data, { headers });
 };
 const configList = (data = {}, headers = {}) => {
   console.log("config commission list:", data);
   return apiClient.post(APIRoutes.CONFIGLIST, data, { headers });
 };
 const updateCron = (data = {}, headers = {}) => {
-  console.log("config commission list:", data);
+  console.log("config commission cron:", data);
   return apiClient.post(APIRoutes.UPDATECRON, data, { headers });
+};
+const updateStatus = (data = {}, headers = {}) => {
+  console.log("config commission STATUS:", data);
+  return apiClient.post(APIRoutes.UPDATESTATUS, data, { headers });
 };
 
 
@@ -114,5 +118,6 @@ module.exports = {
   configcommission,
   updateConditionConfig,
   configList,
-  updateCron,                                 
+  updateCron, 
+  updateStatus                                
 };

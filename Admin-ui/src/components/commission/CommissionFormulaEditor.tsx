@@ -372,9 +372,10 @@ const handleSave = async () => {
     console.log("Updated condition:", response);
     
     // If successful, move to next step
-     if (response?.responseHeader?.errorCode===1101) {
-      console.log("Updated condition:", response);
+    if (response?.responseHeader?.errorCode === 1101) {
       onSaveSuccess();
+    } else {
+      setError(response?.responseHeader?.errorMessage || "Failed to update commission condition");
     } 
 
   } catch (err) {

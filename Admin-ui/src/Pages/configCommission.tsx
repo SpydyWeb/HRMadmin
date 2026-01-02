@@ -34,6 +34,8 @@ import { AdjustCommission } from '@/components/commission/AdjustCommission'
 import { ApproveCommission } from '@/components/commission/ApproveCommission'
 import { FirstStepFormCommission } from '@/components/commission/FirstStepFormCommission'
 import { SecondStepCommissionConfig } from '@/components/commission/SecondStepCommissionConfig'
+import { ThirdStepCommissionConfig } from '@/components/commission/ThirdStepCommissionConfig'
+import { FourthStepCommissionConfig } from '@/components/commission/FourthStepCommissionConfig'
 
 const tabs = [
   { value: 'new', label: 'Step 1', icon: <FaNetworkWired /> },
@@ -225,15 +227,18 @@ const goToNextStep = () => {
 
     case 'pi':
       return (
-        <AdjustCommission
+        <ThirdStepCommissionConfig
+          commissionConfigId={commissionConfigId || 0}
           onSaveSuccess={goToNextStep}
         />
       )
 
     case 'status':
       return (
-        <ApproveCommission />
-        // last step → no next step
+        <FourthStepCommissionConfig
+        commissionConfigId={commissionConfigId || 0}
+        onSaveSuccess={goToNextStep}
+      />
       )
 
     default:

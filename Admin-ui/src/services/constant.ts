@@ -19,6 +19,7 @@ export const APIRoutes = {
   UPDATE_CONDITION_CONFIG: 'updateConditionConfig',
   CONFIG_LIST: 'configList',
   UPDATE_CRON: 'updateCron',
+  UPDATE_STATUS: 'updateStatus',
 
 }
 

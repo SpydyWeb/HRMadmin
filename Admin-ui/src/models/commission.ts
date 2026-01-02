@@ -294,6 +294,16 @@ export interface IConfigCommissionRequest {
   runTo: string
   createdAt?: string
 }
+export interface IUpdateCronRequest {
+  commissionConfigId: number
+  jobType: string
+  triggerType: string
+  cronExpression: string
+}
+export interface IUpdateStatusRequest {
+  commissionConfigId: number
+  enabled: boolean
+}
 
 
 
