@@ -7,24 +7,48 @@ import Loader from '../Loader'
 import { IConfigCommissionRequest } from '@/models/commission'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import { z } from 'zod'
+import { showToast } from '@/components/ui/sonner'
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import CommissionFormulaEditorFilter from './ComissionConfigFormulaEditorFilter'
+
 
 
 interface FirstStepFormCommissionProps {
   responseBody?: {
     processedRecordsLog: any[]
   }
+  commissionConfigId?: number | null
+  initialData?: any
+  isEditMode?: boolean
   onSaveSuccess: (id: number) => void
 }
 
+// Helper function to format date in local timezone (YYYY-MM-DD)
+const formatDateToLocal = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSaveSuccess}) => {
+const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({ 
+  commissionConfigId,
+  initialData,
+  isEditMode = false,
+  onSaveSuccess
+}) => {
   const [formValues, setFormValues] = useState<IConfigCommissionRequest>({
-    commissionName: '',
-    runFrom: '',
-    runTo: '',
+    commissionName: initialData?.commissionName || '',
+    runFrom: initialData?.runFrom ? formatDateToLocal(initialData.runFrom) : '',
+    runTo: initialData?.runTo ? formatDateToLocal(initialData.runTo) : '',
+    comments: initialData?.comments || '',
+    filterConditions: initialData?.filterConditions || '',
   })
   const [localError, setLocalError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [filterFormula, setFilterFormula] = useState<string>(initialData?.filterConditions || '')
 
   const handleChange = (key: keyof IConfigCommissionRequest, value: any) => {
     setFormValues((prev) => ({
@@ -33,15 +57,22 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSa
     }))
   }
 
-   const formatDateToISO = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString();
-  }
+  //  const formatDateToISO = (dateString: string) => {
+  //   if (!dateString) return '';
+  //   const date = new Date(dateString);
+  //   return date.toISOString();
+  // }
+  const toYMD = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
 
 
  const commissionStepOneFormConfig = {
-    gridCols: 2,
+    gridCols: 9,
     schema: z.object({
       commissionName: z.string().min(1),
       runFrom: z.string(),
@@ -52,11 +83,18 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSa
         name: 'commissionName',
         label: 'Commission Name',
         type: 'text',
-        colSpan: 1,
+        colSpan: 3,
         variant: 'standard',
       },
-      { name: 'runFrom', label: 'Run From', type: 'date', colSpan: 1 },
-      { name: 'runTo', label: 'Run To', type: 'date', colSpan: 1 },
+      { name: 'runFrom', label: 'Run From', type: 'date', colSpan: 3 },
+      { name: 'runTo', label: 'Run To', type: 'date', colSpan: 3 },
+      {
+        name: 'comments',
+        label: 'Comments',
+        type: 'textarea',
+        colSpan: 12,
+        variant: 'standard',
+      },
     ],
     buttons: {
       gridCols: 6,
@@ -74,45 +112,110 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({  onSa
     },
   }
 
+// Update form values when initialData changes (for edit mode)
+useEffect(() => {
+  if (initialData && isEditMode) {
+    setFormValues({
+      commissionName: initialData.commissionName || '',
+      runFrom: initialData.runFrom ? formatDateToLocal(initialData.runFrom) : '',
+      runTo: initialData.runTo ? formatDateToLocal(initialData.runTo) : '',
+      comments: initialData.comments || '',
+      filterConditions: initialData.filterConditions || '',
+    })
+    setFilterFormula(initialData.filterConditions || '')
+  }
+}, [initialData, isEditMode])
 
 
 // Update the handleSave function
 const handleSave = async (data: Record<string, any>) => {
   try {
     setSaving(true)
-    const formattedRunFrom = data.runFrom ? new Date(data.runFrom).toISOString().split('T')[0] : '';
-    const formattedRunTo = data.runTo ? new Date(data.runTo).toISOString().split('T')[0] : '';
+    // console.log("runFrom",data.runFrom)
+   
 
     const payload: IConfigCommissionRequest = {
       commissionName: data.commissionName,
-      runFrom: formattedRunFrom,
-      runTo: formattedRunTo,
+      runFrom: toYMD(new Date(data.runFrom)),
+      runTo: toYMD(new Date(data.runTo)),
+      comments: data.comments,
     }
+    
+    // Only include filterConditions if it has a value
+    if (filterFormula && filterFormula.trim()) {
+      payload.filterConditions = filterFormula.trim()
+    }
+    
+    // Add commissionConfigId if in edit mode
+    if (isEditMode && commissionConfigId) {
+      (payload as any).commissionConfigId = commissionConfigId
+    }
+    
+    console.log("payload",payload)
 
-    const response = await commissionService.configCommission(payload)
+    // Use editCommissionConfig API if in edit mode, otherwise use configCommission
+    const response = isEditMode && commissionConfigId
+      ? await commissionService.editCommissionConfig(payload)
+      : await commissionService.configCommission(payload)
 
     console.log("Full API Response:", response)
+    console.log("Response Type:", typeof response)
+    console.log("Response Keys:", response ? Object.keys(response) : 'N/A')
+    console.log("Response Header:", response?.responseHeader)
+    console.log("Response Body:", response?.responseBody)
     
-    if (!response) {
-      throw new Error('No response received from API')
+    // Validate response structure
+    if (!response || typeof response !== 'object' || Object.keys(response).length === 0) {
+      throw new Error('Invalid or empty response received from API. The API may have failed or returned an unexpected format.')
+    }
+    
+    if (!response.responseHeader) {
+      console.error('Response structure:', JSON.stringify(response, null, 2))
+      throw new Error('Invalid response structure: missing responseHeader. The API response format may have changed.')
     }
     
     // Check for success - errorCode 1101 or 0 (common success codes)
-    const isSuccess = response?.responseHeader?.errorCode === 1101 || response?.responseHeader?.errorMessage === "SUCCESS"
+    const errorCode = response?.responseHeader?.errorCode
+    const errorMessage = response?.responseHeader?.errorMessage
+    const isSuccess = errorCode === 1101 || errorCode === 0 || errorMessage === "SUCCESS"
+    
+    console.log("Success Check:", { errorCode, errorMessage, isSuccess })
     
     if (isSuccess) {
       // Handle both possible response structures (array or single object)
       const responseBody = response.responseBody as any
-      const commissionConfigId = 
-        responseBody?.commissionConfig?.[0]?.commissionConfigId
+      let returnedCommissionConfigId: number
+      
+      if (isEditMode && commissionConfigId) {
+        // In edit mode, use the existing commissionConfigId
+        returnedCommissionConfigId = commissionConfigId
+      } else {
+        // In create mode, get the ID from the response
+        // Try different possible response structures
+        returnedCommissionConfigId = 
+          responseBody?.commissionConfig?.[0]?.commissionConfigId ||
+          responseBody?.commissionConfig?.[0]?.commissionId ||
+          responseBody?.commissionId ||
+          (responseBody as any)?.commissionConfigId
+      }
       
       // ✅ MOVE TO STEP 2
-      if (!commissionConfigId) {
+      if (!returnedCommissionConfigId) {
         console.error('Response body:', response.responseBody)
+        console.error('Could not find commissionConfigId in response. Available keys:', Object.keys(responseBody || {}))
         throw new Error('Commission ID not returned from API')
       }
+      // Show success toast
+      const successMessage = isEditMode 
+        ? 'Step 1 updated successfully!' 
+        : 'Step 1 saved successfully!'
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, successMessage, {
+        description: isEditMode 
+          ? 'Commission configuration has been updated.' 
+          : 'Commission configuration has been saved.'
+      })
       // Pass the commissionConfigId to the onSaveSuccess callback
-      onSaveSuccess(commissionConfigId);
+      onSaveSuccess(returnedCommissionConfigId);
     } else {
       const errorCode = response?.responseHeader?.errorCode
       const errorMessage = response?.responseHeader?.errorMessage || 'Failed to save commission configuration'
@@ -121,12 +224,16 @@ const handleSave = async (data: Record<string, any>) => {
         errorMessage,
         fullResponse: response
       })
-      alert(`Error ${errorCode || 'Unknown'}: ${errorMessage}`)
+      showToast(NOTIFICATION_CONSTANTS.ERROR, `Error ${errorCode || 'Unknown'}`, {
+        description: errorMessage
+      })
     }
   } catch (error: any) {
     console.error('Error saving commission config:', error)
     const errorMessage = error?.message || error?.response?.data?.message || 'Something went wrong while saving'
-    alert(errorMessage)
+    showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
+      description: errorMessage
+    })
   } finally {
     setSaving(false)
   }
@@ -142,12 +249,11 @@ const handleSave = async (data: Record<string, any>) => {
     isLoading: processcommissionLoading,
     isError: processcommissionQueryError,
     error: processcommissionQueryErrorObj,
-  } = useQuery<FirstStepFormCommissionProps>({
+  } = useQuery({
     queryKey: ['process-commission'],
     enabled: canFetch,
-    queryFn: () => commissionService.processCommission(),
+    queryFn: () => commissionService.processCommission({} as any),
     staleTime: 1000 * 60 * 60, // 1 hour
-    keepPreviousData: true,
     refetchOnWindowFocus: false,
     retry: 1,
   })
@@ -177,15 +283,23 @@ return (
           Step 1: Commission Config Setup
         </h4>
       </div>
+      <CommissionFormulaEditorFilter
+        commissionConfigId={commissionConfigId || undefined}
+        onFormulaChange={(formula) => setFilterFormula(formula)}
+        initialFormula={filterFormula || initialData?.filterConditions || ''}
+      />
 
       {/* Dynamic Form */}
       <DynamicFormBuilder
         config={{
           ...commissionStepOneFormConfig,
-
+          defaultValues: formValues,
         }}
         onSubmit={handleSave}
       />
+
+   
+
     </div>
   )
 

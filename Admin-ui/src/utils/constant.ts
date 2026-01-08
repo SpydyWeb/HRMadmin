@@ -22,10 +22,11 @@ export const RoutePaths = {
   APPROVE_COMMISSION: '/commission/processcommission',
   CONFIG_COMMISSION_LIST: '/commission/configcommission-list',
   CONFIG_COMMISSION: '/commission/configcomission',
+  COMMISSION_HISTORY: '/commission/configcommission-list/history',
 // Update your route paths
 // PROCESS_COMMISSION: '/commission/processcommission/new',
 // HOLD_COMMISSION: '/commission/processcommission/hold',
-// ADJUST_COMMISSION: '/commission/processcommission/adjust',
+// ADJUST_COMMISSION: '/commission/processcommission/adjust', 
 // APPROVE_COMMISSION: '/commission/processcommission/approve',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'

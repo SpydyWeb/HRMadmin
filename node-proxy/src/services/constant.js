@@ -13,7 +13,11 @@ const APIRoutes = {
   UPDATECONDITIONCONFIG: "/api/CommissionConfig/UpdateCommissionFormula",
   CONFIGLIST: "/api/CommissionConfig/CommissionJobConfigList",
   UPDATECRON: "/api/CommissionConfig/UpdateCronSetting",
-  UPDATESTATUS: "api/CommissionConfig/EnableDisableJob",
+  UPDATESTATUS: "/api/CommissionConfig/EnableDisableJob",
+  COMMISSIONSEARCHFIELDS: "/api/CommissionConfig/CommissionSearchFieldsJson",
+  EXECUTIVEHISTORYLIST: "/api/CommissionConfig/JobExecutionHistory",
+  EDITAGENT: "/api/Agent/UpdateAgent",
+  UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",
 };
 
 module.exports = { APIRoutes };

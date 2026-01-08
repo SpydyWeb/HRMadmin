@@ -44,6 +44,8 @@ const AuthCommissionConfigcommissionListIndexLazyRouteImport = createFileRoute(
 const AuthCommissionConfigcomissionIndexLazyRouteImport = createFileRoute(
   '/_auth/commission/configcomission/',
 )()
+const AuthCommissionConfigcommissionListHistoryLazyRouteImport =
+  createFileRoute('/_auth/commission/configcommission-list/history')()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
   id: '/login',
@@ -178,6 +180,16 @@ const AuthCommissionConfigcomissionIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+const AuthCommissionConfigcommissionListHistoryLazyRoute =
+  AuthCommissionConfigcommissionListHistoryLazyRouteImport.update({
+    id: '/commission/configcommission-list/history',
+    path: '/commission/configcommission-list/history',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/commission/configcommission-list/history.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const AuthDashboardCodeMovementBulkActionRoute =
   AuthDashboardCodeMovementBulkActionRouteImport.update({
     id: '/dashboard/code-movement/bulk-action',
@@ -210,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -234,6 +247,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -260,6 +274,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/_auth/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/commission/configcomission/': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/_auth/commission/configcommission-list/': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/_auth/commission/processcommission/': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -286,6 +301,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/commission/configcommission-list/history'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -310,6 +326,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/commission/configcommission-list/history'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -335,6 +352,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/'
     | '/_auth/commission/processcommission/bulk-action'
     | '/_auth/dashboard/code-movement/bulk-action'
+    | '/_auth/commission/configcommission-list/history'
     | '/_auth/commission/configcomission/'
     | '/_auth/commission/configcommission-list/'
     | '/_auth/commission/processcommission/'
@@ -497,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionConfigcomissionIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/commission/configcommission-list/history': {
+      id: '/_auth/commission/configcommission-list/history'
+      path: '/commission/configcommission-list/history'
+      fullPath: '/commission/configcommission-list/history'
+      preLoaderRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/code-movement/bulk-action': {
       id: '/_auth/dashboard/code-movement/bulk-action'
       path: '/dashboard/code-movement/bulk-action'
@@ -530,6 +555,7 @@ interface AuthRouteChildren {
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthCommissionProcesscommissionBulkActionRoute: typeof AuthCommissionProcesscommissionBulkActionRoute
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
+  AuthCommissionConfigcommissionListHistoryLazyRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   AuthCommissionConfigcomissionIndexLazyRoute: typeof AuthCommissionConfigcomissionIndexLazyRoute
   AuthCommissionConfigcommissionListIndexLazyRoute: typeof AuthCommissionConfigcommissionListIndexLazyRoute
   AuthCommissionProcesscommissionIndexLazyRoute: typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -555,6 +581,8 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthCommissionProcesscommissionBulkActionRoute,
   AuthDashboardCodeMovementBulkActionRoute:
     AuthDashboardCodeMovementBulkActionRoute,
+  AuthCommissionConfigcommissionListHistoryLazyRoute:
+    AuthCommissionConfigcommissionListHistoryLazyRoute,
   AuthCommissionConfigcomissionIndexLazyRoute:
     AuthCommissionConfigcomissionIndexLazyRoute,
   AuthCommissionConfigcommissionListIndexLazyRoute:

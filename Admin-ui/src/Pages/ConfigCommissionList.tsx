@@ -10,13 +10,7 @@ import { commissionService } from '@/services/commissionService'
 import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
 import Loader from '@/components/Loader'
-import { Switch } from '@/components/ui/switch'
-
-type ConfigCommissionListResponse = {
-  responseBody?: {
-    commissionConfig: any[]
-  }
-}
+import { Checkbox } from '@/components/ui/checkbox'
 
 
 const ConfigCommissionList: React.FC = () => {
@@ -75,6 +69,18 @@ const ConfigCommissionList: React.FC = () => {
 
   const columns = [
     {
+      header: 'Enabled',
+      width: '5rem',
+      accessor: (row: any) => (
+        <div className="w-fit">
+          <Checkbox
+            checked={row.enabled === true || row.enabled === 'true' || row.enabled === 1}
+            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
+          />
+        </div>
+      ),
+    },
+    {
       header: 'Commission Name',
       accessor: (row: any) => (
         <span className="font-medium text-gray-900 upperCase">{row.commissionName}</span>
@@ -104,22 +110,51 @@ const ConfigCommissionList: React.FC = () => {
         <span className="text-gray-700">{row.jobType}</span>
       ),
     },
-    {
-      header: 'Enabled',
-      accessor: (row: any) => (
-        <Switch className="text-gray-700">{row.enabled}</Switch>
-      ),
-    },
+    // {
+    //   header: 'Enabled',
+    //   accessor: (row: any) => (
+    //     <Switch className="text-gray-700">{row.enabled}</Switch>
+    //   ),
+    // },
 
     {
       header: 'Actions',
       accessor: (_row: any) => (
+        <div className='flex gap-2'>
+
+       
+       
+         
+            <Button
+              variant="blue"
+              onClick={() =>
+                navigate({
+                  to: RoutePaths.CONFIG_COMMISSION,
+                  search: {
+                    commissionConfigId: _row.commissionConfigId || '',
+                  },
+                })
+              }
+            >
+              Edit 
+            </Button>
+     
+  
         <Button
           variant="blue"
-          // onClick={() => navigate({ to: RoutePaths.CONFIG_COMMISSION })}
+          onClick={() =>
+            navigate({
+              to: RoutePaths.COMMISSION_HISTORY,
+              search: {
+                // commissionName: _row.commissionName || '',
+                commissionId:  _row.commissionConfigId || '',
+              },
+            })
+          }
         >
-         Edit 
+          History
         </Button>
+         </div>
       ),
     },
   ]
@@ -144,7 +179,7 @@ const ConfigCommissionList: React.FC = () => {
                 variant="blue"
                 onClick={() => navigate({ to: RoutePaths.CONFIG_COMMISSION })}
               >
-                Config Data
+                New
               </Button>
             </div>
           </div>

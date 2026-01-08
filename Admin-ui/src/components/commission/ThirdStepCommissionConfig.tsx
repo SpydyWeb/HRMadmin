@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { commissionService } from '@/services/commissionService'
+import { showToast } from '@/components/ui/sonner'
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 
 interface ThirdStepCommissionConfigProps {
   commissionConfigId?: number; 
@@ -96,10 +98,17 @@ const ThirdStepCommissionConfig: React.FC<ThirdStepCommissionConfigProps> = ({
       
       await commissionService.updateCron(payload);
       
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 3 saved successfully!', {
+        description: 'Schedule configuration has been saved.'
+      });
       onSaveSuccess();
     } catch (err: any) {
       console.error('Error saving cron schedule:', err);
-      setError(err?.message || 'Failed to save schedule. Please try again.');
+      const errorMessage = err?.message || 'Failed to save schedule. Please try again.';
+      setError(errorMessage);
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save schedule', {
+        description: errorMessage
+      });
     } finally {
       setIsLoading(false);
     }

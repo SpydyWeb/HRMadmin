@@ -116,17 +116,15 @@ const Agent: React.FC = () => {
               variant="blue"
               size="md"
               onClick={() => {
-                if (!searchInput) {
-                  setLocalError('Please enter an agent code to search')
-                  return
-                }
+                // if (!searchInput) {
+                //   setLocalError('Please enter an agent code to search')
+                //   return
+                // }
 
-                // Navigate to the same route with agentId param.
-                // This lets route loader prefetch + hydrate and avoids duplicate API calls.
-                navigate({
-                  to: '/_auth/search/$agentId',
-                  params: { agentId: searchInput },
-                })
+                // navigate({
+                //   to: '/_auth/search/$agentId',
+                //   params: { agentId: searchInput },
+                // })
               }}
             >
               Search

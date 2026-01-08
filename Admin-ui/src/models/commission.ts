@@ -289,10 +289,29 @@ export interface IConfigCommissionResponseBody {
 }
 export interface IConfigCommissionRequest {
   commissionName: string
-  triggerCycle: 'daily' | 'monthly' | 'yearly' | 'quarterly'
   runFrom: string
   runTo: string
   createdAt?: string
+  comments:string
+  filterConditions?: string
+
+}
+export interface IexecutiveJobListResponseBody {
+  jobConfigId: number
+  jobType: string
+  jobExeHistId:number
+  startedAt:string
+  finishedAt:string
+  exeStatus: 'SUCCESS' | 'FAILED' | string
+  downloadLink:string
+  duration:string
+  
+}
+export interface IExecutiveHistoryResponseBody {
+  executiveJobList: IexecutiveJobListResponseBody[]
+}
+export interface IExecutiveHistoryRequest {
+  commissionConfigId: number
 }
 export interface IUpdateCronRequest {
   commissionConfigId: number
@@ -303,6 +322,27 @@ export interface IUpdateCronRequest {
 export interface IUpdateStatusRequest {
   commissionConfigId: number
   enabled: boolean
+}
+export interface ICommissionSearchFieldsRequest {
+  commissionConfigId: number
+}
+
+export interface ICommissionField {
+  name: string
+  description: string
+  dataType: 'number' | 'string' | 'date'
+}
+
+export interface ICommissionMetadata {
+  policy?: ICommissionField[]
+  premium?: ICommissionField[]
+  customer?: ICommissionField[]
+  commission?: ICommissionField[]
+  [key: string]: ICommissionField[] | undefined
+}
+
+export interface ICommissionSearchFieldsResponseBody {
+  commissionMetadata: ICommissionMetadata[]
 }
 
 

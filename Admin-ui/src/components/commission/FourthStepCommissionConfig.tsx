@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { commissionService } from '@/services/commissionService'
 import { RoutePaths } from '@/utils/constant'
+import { showToast } from '@/components/ui/sonner'
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 
 interface FourthStepCommissionConfigProps {
   commissionConfigId?: number; 
@@ -18,6 +20,14 @@ const FourthStepCommissionConfig: React.FC<FourthStepCommissionConfigProps> = ({
   const [error, setError] = useState('')
 
   const handleSave = async () => {
+    if (!commissionConfigId) {
+      setError('Commission Config ID is required')
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Validation error', {
+        description: 'Commission Config ID is required'
+      });
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -27,11 +37,18 @@ const FourthStepCommissionConfig: React.FC<FourthStepCommissionConfigProps> = ({
         enabled,
       })
 
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 4 saved successfully!', {
+        description: `Commission status has been set to ${enabled ? 'Active' : 'Inactive'}.`
+      });
       onSaveSuccess()
       // Navigate to configcommission-list page after successful save
       navigate({ to: RoutePaths.CONFIG_COMMISSION_LIST })
     } catch (err: any) {
-      setError(err?.message || 'Failed to update status')
+      const errorMessage = err?.message || 'Failed to update status';
+      setError(errorMessage);
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save status', {
+        description: errorMessage
+      });
     } finally {
       setLoading(false)
     }
@@ -68,10 +85,10 @@ const FourthStepCommissionConfig: React.FC<FourthStepCommissionConfigProps> = ({
         </label>
       </div>
 
-      <button
+      <button 
         onClick={handleSave}
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded-md disabled:bg-gray-400"
+        className="w-50px bg-blue-600 text-white p-2 rounded-md disabled:bg-gray-400"
       >
         {loading ? 'Saving...' : 'Save Status'}
       </button>

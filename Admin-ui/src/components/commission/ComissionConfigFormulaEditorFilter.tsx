@@ -200,18 +200,20 @@ function RenderTree({ node }) {
    CommissionFormulaEditor Component
 =========================== */
 
-interface CommissionFormulaEditorProps {
-  commissionConfigId: number;
-  onSaveSuccess: () => void;
+interface CommissionFormulaEditorFilterProps {
+  // commissionConfigId?: number | null;
+  onSaveSuccess?: () => void;
   initialFormula?: string;
   condition?: string;
+  onFormulaChange?: (formula: string) => void;
 }
 
-export default function CommissionFormulaEditor({ 
-  commissionConfigId, 
+export default function CommissionFormulaEditorFilter({ 
+  // commissionConfigId, 
   onSaveSuccess,
-  initialFormula = '=IF(policy.pt > 1000, "High Value", "Standard")'
-}: CommissionFormulaEditorProps) {
+  initialFormula = '=IF(policy.pt > 1000, "High Value", "Standard")',
+  onFormulaChange
+}: CommissionFormulaEditorFilterProps) {
   const [formula, setFormula] = useState(initialFormula);
   const [showLeftParsed, setShowLeftParsed] = useState(false);
   const [search, setSearch] = useState("");
@@ -248,9 +250,7 @@ export default function CommissionFormulaEditor({
     const fetchSearchFields = async () => {
       try {
         setLoadingFields(true);
-        const response = await commissionService.commissionSearchFields({
-          commissionConfigId: commissionConfigId
-        });
+        const response = await commissionService.commissionSearchFields({} as any);
         
         if (response?.responseHeader?.errorMessage === "SUCCESS" && response?.responseHeader?.errorCode === 1101) {
           const responseData = response.responseBody?.commissionMetadata?.[0];
@@ -279,10 +279,18 @@ export default function CommissionFormulaEditor({
       }
     };
 
-    if (commissionConfigId) {
+   
       fetchSearchFields();
+    
+  }, []);
+
+  // Notify parent when initialFormula changes
+  useEffect(() => {
+    if (initialFormula !== undefined && initialFormula !== formula) {
+      setFormula(initialFormula);
+      onFormulaChange?.(initialFormula);
     }
-  }, [commissionConfigId]);
+  }, [initialFormula]);
   const { ast } = useMemo(() => ({ ast: parseFormula(formula) }), [formula]);
 
   // Create a flattened list of all fields from all objects with their object prefix
@@ -422,54 +430,54 @@ export default function CommissionFormulaEditor({
   }
 
 
-const handleSave = async () => {
-  try {
-    setSaving(true);
-    setError(null);
+// const handleSave = async () => {
+//   try {
+//     setSaving(true);
+//     setError(null);
 
-    // Validate the formula
-    const errors = validateFormulaIdentifiers(formula, objects);
-    if (errors.length > 0) {
-      setError(`Formula validation error: ${errors[0].message}`);
-      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Formula validation failed', {
-        description: errors[0].message
-      });
-      return;
-    }
+//     // Validate the formula
+//     const errors = validateFormulaIdentifiers(formula, objects);
+//     if (errors.length > 0) {
+//       setError(`Formula validation error: ${errors[0].message}`);
+//       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Formula validation failed', {
+//         description: errors[0].message
+//       });
+//       return;
+//     }
 
-    // Call the updateConditionCommissionConfig API
-    const response = await commissionService.updateConditionCommissionConfig({
-      commissionConfigId,
-      condition: formula
-    });
+//     // Call the updateConditionCommissionConfig API
+//     const response = await commissionService.updateConditionCommissionConfig({
+//       commissionConfigId,
+//       condition: formula
+//     });
     
-    console.log("Updated condition:", response);
+//     console.log("Updated condition:", response);
     
-    // If successful, move to next step
-    if (response?.responseHeader?.errorCode === 1101) {
-      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 2 saved successfully!', {
-        description: 'Commission formula has been saved.'
-      });
-      onSaveSuccess();
-    } else {
-      const errorMessage = response?.responseHeader?.errorMessage || "Failed to update commission condition";
-      setError(errorMessage);
-      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save formula', {
-        description: errorMessage
-      });
-    } 
+//     // If successful, move to next step
+//     if (response?.responseHeader?.errorCode === 1101) {
+//       showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 2 saved successfully!', {
+//         description: 'Commission formula has been saved.'
+//       });
+//       onSaveSuccess();
+//     } else {
+//       const errorMessage = response?.responseHeader?.errorMessage || "Failed to update commission condition";
+//       setError(errorMessage);
+//       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save formula', {
+//         description: errorMessage
+//       });
+//     } 
 
-  } catch (err) {
-    console.error(err);
-    const errorMessage = "Failed to update commission condition";
-    setError(errorMessage);
-    showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
-      description: errorMessage
-    });
-  } finally {
-    setSaving(false);
-  }
-};
+//   } catch (err) {
+//     console.error(err);
+//     const errorMessage = "Failed to update commission condition";
+//     setError(errorMessage);
+//     showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
+//       description: errorMessage
+//     });
+//   } finally {
+//     setSaving(false);
+//   }
+// };
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
     const model = editor.getModel();
@@ -621,7 +629,11 @@ const handleSave = async () => {
             className="mt-5"
             defaultLanguage="plaintext"
             value={formula}
-            onChange={(value) => setFormula(value || '')}
+            onChange={(value) => {
+              const newFormula = value || '';
+              setFormula(newFormula);
+              onFormulaChange?.(newFormula);
+            }}
             onMount={handleEditorDidMount}
             options={{
               fontFamily: "monospace",
@@ -634,7 +646,7 @@ const handleSave = async () => {
         </section>
 
         {/* Save Button */}
-        <div className="flex justify-end mb-4 flex-shrink-0">
+        {/* <div className="flex justify-end mb-4 flex-shrink-0">
           <Button 
             onClick={handleSave}
             disabled={saving}
@@ -643,7 +655,7 @@ const handleSave = async () => {
           >
             {saving ? 'Saving...' : 'Save Formula & Continue'}
           </Button>
-        </div>
+        </div> */}
 
         <div className={`flex-1 ${showLeftParsed ? "flex gap-4" : ""} overflow-hidden`}>
           {showLeftParsed && (
