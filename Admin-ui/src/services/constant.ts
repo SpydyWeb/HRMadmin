@@ -20,6 +20,10 @@ export const APIRoutes = {
   CONFIG_LIST: 'configList',
   UPDATE_CRON: 'updateCron',
   UPDATE_STATUS: 'updateStatus',
+  COMMISSION_SEARCH_FIELDS: 'searchFieldsConfig',
+  EDIT_AGENT: 'editAgentDetails',
+  EXECUTIVE_HISTORY_LIST: 'executiveHistoryList',
+  UPDATE_COMMISSION_CONFIG:'editCommission'
 
 }
 

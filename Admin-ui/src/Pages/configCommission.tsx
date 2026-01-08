@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import Button from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Pagination } from '@/components/table/Pagination'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { RoutePaths } from '@/utils/constant'
 import { tableData } from '@/utils/utilities'
 import { HiOutlineCodeBracketSquare } from 'react-icons/hi2'
@@ -38,16 +38,16 @@ import { ThirdStepCommissionConfig } from '@/components/commission/ThirdStepComm
 import { FourthStepCommissionConfig } from '@/components/commission/FourthStepCommissionConfig'
 
 const tabs = [
-  { value: 'new', label: 'Step 1', icon: <FaNetworkWired /> },
+  { value: 'new', label: 'Name', icon: <FaNetworkWired /> },
   {
     value: 'movement',
-    label: 'Step 2',
+    label: 'Formula',
     icon: <HiOutlineCodeBracketSquare />,
   },
-  { value: 'pi', label: 'Step 3', icon: <LuSquareUserRound /> },
+  { value: 'pi', label: 'Schedule', icon: <LuSquareUserRound /> },
   {
     value: 'status',
-    label: 'Step 4',
+    label: 'Status',
     icon: <MdOutlinePublishedWithChanges />,
   },
 ]
@@ -119,16 +119,51 @@ const ConfigCommission : React.FC = () => {
   },
 ]
   const navigate = useNavigate()
-    const [localError, setLocalError] = useState<string | null>(null)
+  const search = useSearch({ strict: false })
+  const commissionConfigIdFromSearch = (search as any)?.commissionConfigId
+  const isEditMode = !!commissionConfigIdFromSearch
+  
+  const [localError, setLocalError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
   const [page, setPage] = useState(1)
   // Add state to track the currently selected tab
   const [activeTab, setActiveTab] = useState('new')
-  const [commissionConfigId, setCommissionConfigId] = useState<number | null>(null);
+  const [commissionConfigId, setCommissionConfigId] = useState<number | null>(
+    commissionConfigIdFromSearch ? Number(commissionConfigIdFromSearch) : null
+  )
+  const [editModeData, setEditModeData] = useState<any>(null)
 
+  const encryptionEnabled = useEncryption()
+  const keyReady = !!encryptionService.getHrm_Key()
+  const canFetch = !encryptionEnabled || keyReady
 
+  // Fetch commission config data when in edit mode
+  const {
+    data: commissionConfigData,
+    isLoading: commissionConfigLoading,
+  } = useQuery<any>({
+    queryKey: ['config-commission-list'],
+    enabled: canFetch && isEditMode,
+    queryFn: () => commissionService.configCommissionList({} as any),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    refetchOnWindowFocus: false,
+    retry: 1,
+  })
+
+  // Extract and set edit mode data when available
+  useEffect(() => {
+    if (isEditMode && commissionConfigData?.responseBody?.commissionConfig) {
+      const configList = commissionConfigData.responseBody.commissionConfig
+      const foundConfig = configList.find(
+        (config: any) => config.commissionConfigId === commissionConfigId
+      )
+      if (foundConfig) {
+        setEditModeData(foundConfig)
+      }
+    }
+  }, [isEditMode, commissionConfigData, commissionConfigId])
 
     // const loading = processcommissionLoading
     // if (loading) return <Loader />
@@ -207,6 +242,9 @@ const goToNextStep = () => {
     case 'new':
       return (
         <FirstStepFormCommission
+          commissionConfigId={commissionConfigId}
+          initialData={editModeData}
+          isEditMode={isEditMode}
           onSaveSuccess={(id:any) => {
              setCommissionConfigId(id)
             goToNextStep()

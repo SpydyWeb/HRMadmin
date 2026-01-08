@@ -102,11 +102,12 @@ export const Filter = ({
           <div className="relative flex-1 min-w-64 max-w-72">
             <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 transition-all duration-300 ease-in-out hover:text-blue-500 hover:scale-110" />
             <Input
-              type="text"
+              variant="standard"
+              label=""
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-10 pr-4 py-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:shadow-md hover:border-gray-400 focus:shadow-lg"
+              className="!text-sm !pl-10 pr-4 py-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:shadow-md hover:border-gray-400 focus:shadow-lg"
             />
           </div>
         )}
@@ -130,7 +131,7 @@ export const Filter = ({
         {showDropdown && (
           <div>
             <Select value={selectedOption} onValueChange={onDropdownChange}>
-              <SelectTrigger className="w-40 border-gray-400">
+              <SelectTrigger className="w-40 border-gray-400 !text-base">
                 <SelectValue placeholder={dropdownLabel} />
               </SelectTrigger>
               <SelectContent>
