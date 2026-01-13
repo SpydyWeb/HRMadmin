@@ -71,16 +71,35 @@ export const commissionService = {
       console.log("config 1st step service response:", response);
       console.log("configCommission response type:", typeof response);
       console.log("configCommission response keys:", response ? Object.keys(response) : 'null/undefined');
+      console.log("configCommission full response:", JSON.stringify(response, null, 2));
       
-      // Validate response structure
-      if (!response || typeof response !== 'object' || Object.keys(response).length === 0) {
-        console.error("Invalid response received:", response);
-        throw new Error('Invalid or empty response from API. Please check the server logs.');
+      // Validate response structure - be more lenient with validation
+      if (response === null || response === undefined) {
+        console.error("Invalid response received: null or undefined");
+        throw new Error('API returned null or undefined response. Please check the server logs.');
       }
       
+      if (typeof response !== 'object') {
+        console.error("Invalid response received - not an object:", response, "Type:", typeof response);
+        throw new Error(`API returned invalid response type: ${typeof response}. Expected object.`);
+      }
+      
+      // Check if response is an empty object
+      const responseKeys = Object.keys(response);
+      if (responseKeys.length === 0) {
+        console.error("Invalid response received: empty object", response);
+        throw new Error('API returned empty response object. Please check the server logs.');
+      }
+      
+      // Check for responseHeader - but handle cases where it might be nested differently
       if (!response.responseHeader) {
-        console.error("Response missing responseHeader:", JSON.stringify(response, null, 2));
-        throw new Error('API response is missing required responseHeader field.');
+        console.error("Response missing responseHeader. Full response:", JSON.stringify(response, null, 2));
+        console.error("Response structure analysis:", {
+          hasResponseHeader: 'responseHeader' in response,
+          keys: Object.keys(response),
+          firstLevelKeys: Object.keys(response),
+        });
+        throw new Error('API response is missing required responseHeader field. Response structure may have changed.');
       }
       
       return response     
@@ -89,7 +108,8 @@ export const commissionService = {
       console.error("Error details:", {
         message: (error as any)?.message,
         stack: (error as any)?.stack,
-        response: (error as any)?.response
+        response: (error as any)?.response,
+        data: (error as any)?.data
       });
       throw error;
     }
@@ -117,6 +137,7 @@ export const commissionService = {
       throw new Error("Invalid response structure");
     }
       return response     
+      
     } catch (error) {
       
     }
@@ -140,7 +161,7 @@ export const commissionService = {
       throw error;
     }
   },
-  updateStatus: async (data:IUpdateStatusRequest) => {  // IUpdateStatusRequest is the request body for the enable status api
+  updateStatus: async (data:IUpdateStatusRequest) => {  
     try {
     
       const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
@@ -157,7 +178,7 @@ export const commissionService = {
       console.error("enable status api service error:", error);
     
       throw error;
-    }
+    }0
   },
 
   commissionSearchFields: async (data: ICommissionSearchFieldsRequest) => {
@@ -166,6 +187,7 @@ export const commissionService = {
         APIRoutes.COMMISSION_SEARCH_FIELDS,
         [data],
       )
+      console.log("qwe", response)
 
       if (!response) {
         console.warn("COMMISSION_SEARCH_FIELDS Response is undefined or null");
@@ -200,15 +222,56 @@ export const commissionService = {
 
   editCommissionConfig: async (data:IConfigCommissionRequest) => {
     try {
+      console.log("editCommissionConfig request payload:", data);
       const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
         APIRoutes.UPDATE_COMMISSION_CONFIG,
         [data],
       )
       console.log("editCommissionConfig service response:", response);
+      console.log("editCommissionConfig response type:", typeof response);
+      console.log("editCommissionConfig response keys:", response ? Object.keys(response) : 'null/undefined');
+      console.log("editCommissionConfig full response:", JSON.stringify(response, null, 2));
+      
+      // Validate response structure - be more lenient with validation
+      if (response === null || response === undefined) {
+        console.error("Invalid response received: null or undefined");
+        throw new Error('API returned null or undefined response. Please check the server logs.');
+      }
+      
+      if (typeof response !== 'object') {
+        console.error("Invalid response received - not an object:", response, "Type:", typeof response);
+        throw new Error(`API returned invalid response type: ${typeof response}. Expected object.`);
+      }
+      
+      // Check if response is an empty object
+      const responseKeys = Object.keys(response);
+      if (responseKeys.length === 0) {
+        console.error("Invalid response received: empty object", response);
+        throw new Error('API returned empty response object. Please check the server logs.');
+      }
+      
+      // Check for responseHeader - but handle cases where it might be nested differently
+      if (!response.responseHeader) {
+        console.error("Response missing responseHeader. Full response:", JSON.stringify(response, null, 2));
+        console.error("Response structure analysis:", {
+          hasResponseHeader: 'responseHeader' in response,
+          keys: Object.keys(response),
+          firstLevelKeys: Object.keys(response),
+        });
+        throw new Error('API response is missing required responseHeader field. Response structure may have changed.');
+      }
+      
       return response 
 
     } catch (error) {
       console.error("editCommissionConfig service error:", error);
+      console.error("Error details:", {
+        message: (error as any)?.message,
+        stack: (error as any)?.stack,
+        response: (error as any)?.response,
+        data: (error as any)?.data
+      });
+      throw error;
     }
   }
 

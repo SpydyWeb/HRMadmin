@@ -256,6 +256,8 @@ const goToNextStep = () => {
       return (
         <SecondStepCommissionConfig
           commissionConfigId={commissionConfigId || 0}
+          initialData={editModeData}
+          isEditMode={isEditMode}
           onSaveSuccess={() => {
             console.log("Save successful, moving to next step");
             goToNextStep();
@@ -267,6 +269,8 @@ const goToNextStep = () => {
       return (
         <ThirdStepCommissionConfig
           commissionConfigId={commissionConfigId || 0}
+          initialData={editModeData}
+          isEditMode={isEditMode}
           onSaveSuccess={goToNextStep}
         />
       )
