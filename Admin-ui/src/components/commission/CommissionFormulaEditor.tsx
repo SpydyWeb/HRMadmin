@@ -276,43 +276,52 @@ export default function CommissionFormulaEditor({
         });
         
         if (response?.responseHeader?.errorMessage === "SUCCESS" && response?.responseHeader?.errorCode === 1101) {
-          const responseData = response.responseBody?.commissionMetadata?.[0];
+          const responseData = response.responseBody?.metaDataResponse;
           
           console.log("API Response Data:", responseData);
           
           // Map the API response to convert 'name' to 'propertyName' for consistency
-          const mappedData: Record<string, Array<{ propertyName: string; description: string; dataType?: string }>> = {};
+          // const mappedData: Record<string, Array<{ propertyName: string; description: string; dataType?: string }>> = {};
           
-          if (responseData) {
-            Object.keys(responseData).forEach(objectKey => {
-              const fields = responseData[objectKey];
+const processedData: Record<string, any> = {};
+          if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+            Object.keys(responseData).forEach(key => {
+              const fields = responseData[key];
               if (Array.isArray(fields)) {
-                mappedData[objectKey] = fields.map((field: any) => ({
-                  propertyName: field.propertyName || (field as any).propertyName || '',
-                  description: field.description || '',
-                  dataType: field.dataType
-                }));
+                 processedData[key] = fields;
+              
+              }
+               else {
+                console.warn(`Key ${key} is not an array, value:`, value);
+                processedData[key] = [];
               }
             });
           }
-          
-          console.log("Mapped Objects:", mappedData);
-          setObjects(mappedData);
+
+          setObjects(processedData);
         } else {
           // Fallback to default structure if response doesn't match expected format
           setObjects({
-            policy: [],
+           agent: [],
+            commrate: [],
+            insured: [],
+            owner: [],
             customer: [],
-            commission: [],
+            premium: [],
+            policy: [],
           });
         }
         } catch (err) {
         console.error("Error fetching commission search fields:", err);
         // Fallback to default structure on error
         setObjects({
-          policy: [],
-          customer: [],
-          commission: [],
+         agent: [],
+            commrate: [],
+            insured: [],
+            owner: [],
+            customer: [],
+            premium: [],
+            policy: [],
         });
         showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to load fields', {
           description: 'Using default field structure'
@@ -513,6 +522,7 @@ const handleSave = async () => {
     setSaving(false);
   }
 };
+
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
     const model = editor.getModel();

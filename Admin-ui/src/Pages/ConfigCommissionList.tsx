@@ -129,7 +129,7 @@ const ConfigCommissionList: React.FC = () => {
               variant="blue"
               onClick={() =>
                 navigate({
-                  to: RoutePaths.CONFIG_COMMISSION,
+                  to: RoutePaths.CONFIG_COMMISSION_NEW,
                   search: {
                     commissionConfigId: _row.commissionConfigId || '',
                   },

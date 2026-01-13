@@ -275,12 +275,7 @@ export default function CommissionFormulaEditorFilter({
               responseData = {};
             }
           }
-          
-          console.log("Setting objects with data:", responseData);
-          console.log("Policy in responseData:", responseData?.policy);
-          console.log("Policy is array?", Array.isArray(responseData?.policy));
-          console.log("Policy length:", Array.isArray(responseData?.policy) ? responseData.policy.length : "not an array");
-          
+
           // Ensure the data structure is correct - all values should be arrays
           const processedData: Record<string, any> = {};
           if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
@@ -294,11 +289,7 @@ export default function CommissionFormulaEditorFilter({
               }
             });
           }
-          
-          console.log("Processed data before setting:", processedData);
-          console.log("Processed policy:", processedData.policy);
-          console.log("Processed policy length:", Array.isArray(processedData.policy) ? processedData.policy.length : "not an array");
-
+ 
           setObjects(processedData);
         } else {
           // Fallback to default structure if response doesn't match expected format
@@ -337,32 +328,6 @@ export default function CommissionFormulaEditorFilter({
     
   }, []);
 
-
-  // Sync formula state when initialFormula prop changes (for edit mode)
-  // useEffect(() => {
-  //   // Always update if initialFormula prop changed (handles both mount and later updates)
-  //   if (prevInitialFormulaRef.current !== initialFormula) {
-  //     const newFormula = initialFormula !== undefined ? initialFormula : '';
-  //     prevInitialFormulaRef.current = initialFormula;
-  //     setFormula(newFormula);
-      
-  //     // Update Monaco editor value if editor is mounted
-  //     // Use setTimeout to ensure editor is ready (it might not be mounted yet on first render)
-  //     const updateEditor = () => {
-  //       const editor = editorRef.current;
-  //       if (editor && typeof editor.getValue === 'function' && typeof editor.setValue === 'function') {
-  //         const currentValue = editor.getValue();
-  //         if (currentValue !== newFormula) {
-  //           editor.setValue(newFormula);
-  //         }
-  //       }
-  //     };
-      
-  //     // Try immediately, then retry after a short delay if editor not ready
-  //     updateEditor();
-  //     setTimeout(updateEditor, 100);
-  //   }
-  // }, [initialFormula]);
 
   console.log("myobjects", objects);
 

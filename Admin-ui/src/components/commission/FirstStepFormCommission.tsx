@@ -46,6 +46,7 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
   const [saving, setSaving] = useState(false)
   const [filterFormula, setFilterFormula] = useState<string>(initialData?.filterConditions || '')
   const hiddenSubmitButtonRef = useRef<HTMLButtonElement | null>(null)
+  const formDataRef = useRef<Record<string, any> | null>(null)
 
   //  const formatDateToISO = (dateString: string) => {
   //   if (!dateString) return '';
@@ -194,11 +195,14 @@ useEffect(() => {
 }, [isEditMode, commissionConfigId]) // Re-run when edit mode or ID changes
 
 
+
 // Update the handleSave function
 const handleSave = async (data: Record<string, any>) => {
   try {
     setSaving(true)
-    // console.log("runFrom",data.runFrom)
+    
+    // Store the latest form data for fallback use
+    formDataRef.current = data
    
     // Merge submitted data with existing formValues to preserve unchanged fields
     // This ensures that if a user doesn't change a field, the existing value is still saved
@@ -302,13 +306,15 @@ const handleSave = async (data: Record<string, any>) => {
         throw new Error('Commission ID not returned from API. Response structure may have changed.')
       }
       // Update formValues to reflect the saved state (use mergedData to preserve original date format)
-      setFormValues({
+      // This ensures formValues always has the latest values for future saves
+      const updatedFormValues = {
         commissionName: mergedData.commissionName || formValues.commissionName || '',
         runFrom: mergedData.runFrom || formValues.runFrom || '',
         runTo: mergedData.runTo || formValues.runTo || '',
         comments: mergedData.comments !== undefined ? (mergedData.comments || '') : (formValues.comments || ''),
         filterConditions: payload.filterConditions || formValues.filterConditions || '',
-      })
+      }
+      setFormValues(updatedFormValues)
       
       // Show success toast
       const successMessage = isEditMode 
@@ -393,91 +399,153 @@ return (
           variant="orange"
           size="md"
           onClick={async () => {
-            // Try multiple strategies to trigger form submission
-            let submitted = false
+            if (saving) {
+              console.log('Save already in progress, ignoring click')
+              return
+            }
             
-            // Strategy 1: Use stored ref
+            console.log('Save button clicked, attempting to save...')
+            
+            // Try to trigger form submission first - this will call handleSave with current form values
+            let formSubmitted = false
+            
+            // Method 1: Click the hidden submit button via ref
             if (hiddenSubmitButtonRef.current) {
               try {
+                console.log('Trying to click hidden submit button via ref')
                 hiddenSubmitButtonRef.current.click()
-                submitted = true
+                formSubmitted = true
+                // Wait a bit to see if form submission processes
+                await new Promise(resolve => setTimeout(resolve, 100))
+                if (saving) {
+                  console.log('Form submission triggered successfully')
+                  return
+                }
               } catch (e) {
                 console.warn('Failed to click stored button ref:', e)
               }
             }
             
-            // Strategy 2: Find button again if ref failed
-            if (!submitted) {
-              let submitBtn = document.querySelector('button[type="submit"].hidden') as HTMLButtonElement
-              
-              // Try alternative selectors
-              if (!submitBtn) {
-                const buttons = document.querySelectorAll('button[type="submit"]')
-                buttons.forEach((btn) => {
-                  const buttonElement = btn as HTMLButtonElement
-                  if (buttonElement.classList.contains('hidden') || buttonElement.closest('.hidden')) {
-                    submitBtn = buttonElement
-                  }
-                })
-              }
-              
-              // Try finding by text content
-              if (!submitBtn) {
-                const allButtons = document.querySelectorAll('button[type="submit"]')
-                allButtons.forEach((btn) => {
-                  const buttonElement = btn as HTMLButtonElement
-                  const text = buttonElement.textContent?.trim()
-                  if (text === 'Save & Continue') {
-                    submitBtn = buttonElement
-                  }
-                })
-              }
-              
+            // Method 2: Find and click the hidden submit button
+            if (!formSubmitted) {
+              const submitBtn = document.querySelector('button[type="submit"].hidden') as HTMLButtonElement
               if (submitBtn) {
+                console.log('Found hidden submit button, clicking...')
                 hiddenSubmitButtonRef.current = submitBtn
                 submitBtn.click()
-                submitted = true
+                formSubmitted = true
+                await new Promise(resolve => setTimeout(resolve, 100))
+                if (saving) {
+                  console.log('Form submission triggered successfully')
+                  return
+                }
               }
             }
             
-            // Strategy 3: If still not found, try to find form and submit it
-            if (!submitted) {
-              // Find the form element (DynamicFormBuilder might wrap it)
+            // Method 3: Try to find any submit button
+            if (!formSubmitted) {
+              const allSubmitButtons = document.querySelectorAll('button[type="submit"]')
+              for (const btn of allSubmitButtons) {
+                const buttonElement = btn as HTMLButtonElement
+                if (buttonElement.classList.contains('hidden') || buttonElement.closest('.hidden')) {
+                  console.log('Found submit button, clicking...')
+                  hiddenSubmitButtonRef.current = buttonElement
+                  buttonElement.click()
+                  formSubmitted = true
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                  if (saving) {
+                    console.log('Form submission triggered successfully')
+                    return
+                  }
+                  break
+                }
+              }
+            }
+            
+            // Method 4: Use form.requestSubmit (modern browsers)
+            if (!formSubmitted) {
               const formElement = document.querySelector('form') as HTMLFormElement
               if (formElement) {
-                // Create a temporary submit button and click it
-                const tempSubmit = document.createElement('button')
-                tempSubmit.type = 'submit'
-                tempSubmit.style.display = 'none'
-                formElement.appendChild(tempSubmit)
-                tempSubmit.click()
-                formElement.removeChild(tempSubmit)
-                submitted = true
+                console.log('Trying form.requestSubmit...')
+                if (formElement.requestSubmit) {
+                  formElement.requestSubmit()
+                  formSubmitted = true
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                  if (saving) {
+                    console.log('Form submission triggered successfully')
+                    return
+                  }
+                } else {
+                  // Fallback: create temporary submit button
+                  console.log('Creating temporary submit button...')
+                  const tempSubmit = document.createElement('button')
+                  tempSubmit.type = 'submit'
+                  tempSubmit.style.display = 'none'
+                  formElement.appendChild(tempSubmit)
+                  tempSubmit.click()
+                  setTimeout(() => {
+                    if (formElement.contains(tempSubmit)) {
+                      formElement.removeChild(tempSubmit)
+                    }
+                  }, 100)
+                  formSubmitted = true
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                  if (saving) {
+                    console.log('Form submission triggered successfully')
+                    return
+                  }
+                }
               }
             }
             
-            // Strategy 4: Last resort - manually validate and call handleSave
-            if (!submitted) {
-              console.warn('Could not find submit button, attempting manual submission')
-              // Get current form values from the form fields
-              const formData: Record<string, any> = {
-                commissionName: (document.querySelector('input[name="commissionName"]') as HTMLInputElement)?.value || formValues.commissionName,
-                runFrom: (document.querySelector('input[name="runFrom"]') as HTMLInputElement)?.value || formValues.runFrom,
-                runTo: (document.querySelector('input[name="runTo"]') as HTMLInputElement)?.value || formValues.runTo,
-                comments: (document.querySelector('textarea[name="comments"]') as HTMLTextAreaElement)?.value || formValues.comments,
-              }
-              
-              // Basic validation
-              if (!formData.commissionName || !formData.runFrom || !formData.runTo) {
-                showToast(NOTIFICATION_CONSTANTS.ERROR, 'Validation Error', {
-                  description: 'Please fill in all required fields'
-                })
-                return
-              }
-              
-              // Call handleSave directly
-              await handleSave(formData)
+            // Fallback: Direct save if form submission didn't work
+            // Get current form values and call handleSave directly
+            console.log('Form submission methods failed, attempting direct save...')
+            console.log('Current formValues:', formValues)
+            
+            // Get current values from form fields as fallback
+            const getFormValue = (name: string): string => {
+              const input = document.querySelector(`input[name="${name}"], textarea[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement
+              return input?.value || ''
             }
+            
+            // Try to get date values - DatePicker might store them differently
+            const getDateValue = (name: string): string => {
+              // Try multiple selectors for date fields
+              const dateInput = document.querySelector(`input[name="${name}"]`) as HTMLInputElement
+              if (dateInput?.value) return dateInput.value
+              
+              // DatePicker might use a different structure
+              const datePicker = document.querySelector(`[data-field="${name}"]`) as HTMLElement
+              if (datePicker) {
+                const value = datePicker.getAttribute('value') || datePicker.textContent
+                if (value) return value
+              }
+              
+              return ''
+            }
+            
+            const currentData: Record<string, any> = {
+              commissionName: getFormValue('commissionName') || formValues.commissionName || '',
+              runFrom: getDateValue('runFrom') || formValues.runFrom || '',
+              runTo: getDateValue('runTo') || formValues.runTo || '',
+              comments: getFormValue('comments') || formValues.comments || '',
+            }
+            
+            console.log('Current form data to save:', currentData)
+            
+            // Validate required fields
+            if (!currentData.commissionName || !currentData.runFrom || !currentData.runTo) {
+              console.error('Validation failed:', { currentData })
+              showToast(NOTIFICATION_CONSTANTS.ERROR, 'Validation Error', {
+                description: 'Please fill in all required fields (Commission Name, Run From, Run To)'
+              })
+              return
+            }
+            
+            // Call handleSave directly
+            console.log('Calling handleSave directly with:', currentData)
+            await handleSave(currentData)
           }}
           disabled={saving}
           isLoading={saving}
