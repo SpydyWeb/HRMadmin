@@ -177,11 +177,12 @@ const ConfigCommissionList: React.FC = () => {
               />
               <Button
                 variant="blue"
-                onClick={() => navigate({ to: RoutePaths.CONFIG_COMMISSION })}
+                onClick={() => navigate({ to: RoutePaths.CONFIG_COMMISSION_NEW })}
               >
                 New
               </Button>
             </div>
+            
           </div>
         </CardHeader>
         <CardContent>

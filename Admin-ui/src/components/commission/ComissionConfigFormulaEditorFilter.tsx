@@ -214,7 +214,15 @@ export default function CommissionFormulaEditorFilter({
   initialFormula = '=IF(policy.pt > 1000, "High Value", "Standard")',
   onFormulaChange
 }: CommissionFormulaEditorFilterProps) {
-  const [formula, setFormula] = useState(initialFormula);
+  // Initialize state with initialFormula prop value (empty string is valid)
+  // Only use default if initialFormula is actually undefined (not just empty string)
+  // const getInitialValue = () => {
+  //   return initialFormula !== undefined ? initialFormula : '=IF(policy.pt > 1000, "High Value", "Standard")';
+  // };
+  const getInitialValue = () => {
+    return initialFormula !== undefined ? initialFormula : '';
+  };
+  const [formula, setFormula] = useState(getInitialValue());
   const [showLeftParsed, setShowLeftParsed] = useState(false);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
@@ -222,11 +230,13 @@ export default function CommissionFormulaEditorFilter({
   const[loadingFields, setLoadingFields] = useState(true);
 
   // State for API data, loading, and errors
-  const [objects, setObjects] = useState<Record<string, Array<{ name: string; description: string; dataType?: string }>>>({});
+  const [objects, setObjects] = useState<Record<string, Array<{ propertyName: string; columnName:string; description: string; dataType?: string }>>>({});
   // const [fields, setFields] = useState([]);
 
-  const editorRef = useRef(null);
-  const objectsRef = useRef<Record<string, Array<{ name: string; description: string; dataType?: string }>>>({});
+  const editorRef = useRef<any>(null);
+  const objectsRef = useRef<Record<string, Array<{ propertyName: string; columnName:string; description: string; dataType?: string }>>>({});
+  const prevInitialFormulaRef = useRef<string | undefined>(initialFormula);
+  const formulaRef = useRef<string>(getInitialValue());
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -251,25 +261,68 @@ export default function CommissionFormulaEditorFilter({
       try {
         setLoadingFields(true);
         const response = await commissionService.commissionSearchFields({} as any);
+        console.log("opimnj", response);
         
         if (response?.responseHeader?.errorMessage === "SUCCESS" && response?.responseHeader?.errorCode === 1101) {
-          const responseData = response.responseBody?.commissionMetadata?.[0];
-          setObjects(responseData as any);
+          let responseData: any = response.responseBody?.metaDataResponse;
+          
+          // Handle case where metaDataResponse is an array (take first element) or an object
+          if (Array.isArray(responseData)) {
+            console.log("metaDataResponse is an array, length:", responseData.length);
+            if (responseData.length > 0) {
+              responseData = responseData[0]; // Take first element if array
+            } else {
+              responseData = {};
+            }
+          }
+          
+          console.log("Setting objects with data:", responseData);
+          console.log("Policy in responseData:", responseData?.policy);
+          console.log("Policy is array?", Array.isArray(responseData?.policy));
+          console.log("Policy length:", Array.isArray(responseData?.policy) ? responseData.policy.length : "not an array");
+          
+          // Ensure the data structure is correct - all values should be arrays
+          const processedData: Record<string, any> = {};
+          if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+            Object.keys(responseData).forEach(key => {
+              const value = responseData[key];
+              if (Array.isArray(value)) {
+                processedData[key] = value;
+              } else {
+                console.warn(`Key ${key} is not an array, value:`, value);
+                processedData[key] = [];
+              }
+            });
+          }
+          
+          console.log("Processed data before setting:", processedData);
+          console.log("Processed policy:", processedData.policy);
+          console.log("Processed policy length:", Array.isArray(processedData.policy) ? processedData.policy.length : "not an array");
+
+          setObjects(processedData);
         } else {
           // Fallback to default structure if response doesn't match expected format
           setObjects({
-            policy: [],
+            agent: [],
+            commrate: [],
+            insured: [],
+            owner: [],
             customer: [],
-            commission: [],
+            premium: [],
+            policy: [],
           });
         }
         } catch (err) {
         console.error("Error fetching commission search fields:", err);
         // Fallback to default structure on error
         setObjects({
-          policy: [],
+          agent: [],
+          commrate: [],
+          insured: [],
+          owner: [],
           customer: [],
-          commission: [],
+          premium: [],
+          policy: [],
         });
         showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to load fields', {
           description: 'Using default field structure'
@@ -284,20 +337,76 @@ export default function CommissionFormulaEditorFilter({
     
   }, []);
 
-  // Notify parent when initialFormula changes
+
+  // Sync formula state when initialFormula prop changes (for edit mode)
+  // useEffect(() => {
+  //   // Always update if initialFormula prop changed (handles both mount and later updates)
+  //   if (prevInitialFormulaRef.current !== initialFormula) {
+  //     const newFormula = initialFormula !== undefined ? initialFormula : '';
+  //     prevInitialFormulaRef.current = initialFormula;
+  //     setFormula(newFormula);
+      
+  //     // Update Monaco editor value if editor is mounted
+  //     // Use setTimeout to ensure editor is ready (it might not be mounted yet on first render)
+  //     const updateEditor = () => {
+  //       const editor = editorRef.current;
+  //       if (editor && typeof editor.getValue === 'function' && typeof editor.setValue === 'function') {
+  //         const currentValue = editor.getValue();
+  //         if (currentValue !== newFormula) {
+  //           editor.setValue(newFormula);
+  //         }
+  //       }
+  //     };
+      
+  //     // Try immediately, then retry after a short delay if editor not ready
+  //     updateEditor();
+  //     setTimeout(updateEditor, 100);
+  //   }
+  // }, [initialFormula]);
+
+  console.log("myobjects", objects);
+
   useEffect(() => {
-    if (initialFormula !== undefined && initialFormula !== formula) {
-      setFormula(initialFormula);
-      onFormulaChange?.(initialFormula);
+    // Only update if initialFormula prop actually changed (not just a re-render)
+    // This prevents resetting the editor when user is typing
+    if (prevInitialFormulaRef.current !== initialFormula) {
+      const newFormula = initialFormula !== undefined ? initialFormula : '';
+      const currentFormula = formulaRef.current; // Use ref to avoid stale closure
+      
+      // Only update if the new formula is different from current
+      // This prevents resetting when the prop hasn't meaningfully changed
+      if (newFormula !== currentFormula) {
+        prevInitialFormulaRef.current = initialFormula;
+        setFormula(newFormula);
+        formulaRef.current = newFormula; // Update ref
+        
+        const updateEditor = () => {
+          const editor = editorRef.current;
+          if (editor && typeof editor.getValue === 'function' && typeof editor.setValue === 'function') {
+            const editorValue = editor.getValue();
+            // Only update editor if values are actually different
+            if (editorValue !== newFormula) {
+              editor.setValue(newFormula);
+            }
+          }
+        };
+        
+        updateEditor();
+        setTimeout(updateEditor, 100);
+      } else {
+        // Update ref even if we don't update state, to prevent unnecessary checks
+        prevInitialFormulaRef.current = initialFormula;
+      }
     }
-  }, [initialFormula]);
+  }, [initialFormula]); // Only depend on initialFormula prop, not internal formula state
+  
   const { ast } = useMemo(() => ({ ast: parseFormula(formula) }), [formula]);
 
   // Create a flattened list of all fields from all objects with their object prefix
   const allFields = useMemo(() => {
     const fieldsList: Array<{
       objectKey: string;
-      fieldName: string;
+      propertyName: string;
       description: string;
       dataType?: string;
       fullPath: string;
@@ -305,12 +414,13 @@ export default function CommissionFormulaEditorFilter({
     Object.keys(objects).forEach(objectKey => {
       if (Array.isArray(objects[objectKey])) {
         objects[objectKey].forEach(field => {
+          const propertyName = field.propertyName;
           fieldsList.push({
             objectKey,
-            fieldName: field.name,
+            propertyName: propertyName,
             description: field.description,
             dataType: field.dataType,
-            fullPath: `${objectKey}.${field.name}`
+            fullPath: `${objectKey}.${propertyName}`
           });
         });
       }
@@ -329,7 +439,7 @@ export default function CommissionFormulaEditorFilter({
     return allFields.filter(f =>
       f.fullPath.toLowerCase().includes(searchLower) ||
       f.description?.toLowerCase().includes(searchLower) ||
-      f.fieldName.toLowerCase().includes(searchLower) ||
+      f.propertyName.toLowerCase().includes(searchLower) ||
       f.objectKey.toLowerCase().includes(searchLower)
     );
   }, [allFields, search]);
@@ -385,7 +495,9 @@ export default function CommissionFormulaEditorFilter({
       const [full, objectName, propertyName] = match;
       const startIndex = match.index;
 
-      if (!objects[objectName]) {
+      // Case-insensitive object name lookup
+      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+      if (!objectKey) {
         errors.push({
           message: `Unknown object '${objectName}'`,
           start: startIndex,
@@ -394,7 +506,10 @@ export default function CommissionFormulaEditorFilter({
         continue;
       }
 
-      const field = objects[objectName].find(f => f.name === propertyName);
+      const field = objects[objectKey].find(f => 
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
+        (f.columnName && f.columnName.toLowerCase() === propertyName.toLowerCase())
+      );
       if (!field) {
         errors.push({
           message: `Property '${propertyName}' does not exist on '${objectName}'`,
@@ -409,9 +524,14 @@ export default function CommissionFormulaEditorFilter({
       const [full, objectName, propertyName, operator, literal] = match;
       const startIndex = match.index;
 
-      if (!objects[objectName]) continue;
+      // Case-insensitive object name lookup
+      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+      if (!objectKey) continue;
 
-      const field = objects[objectName].find(f => f.name === propertyName);
+      const field = objects[objectKey].find(f => 
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
+        (f.columnName && f.columnName.toLowerCase() === propertyName.toLowerCase())
+      );
       if (!field || !field.dataType) continue;
 
       const literalType = inferLiteralType(literal);
@@ -429,156 +549,116 @@ export default function CommissionFormulaEditorFilter({
     return errors;
   }
 
+  
+const handleEditorDidMount = (editor, monaco) => {
+  editorRef.current = editor;
+  const model = editor.getModel();
 
-// const handleSave = async () => {
-//   try {
-//     setSaving(true);
-//     setError(null);
+  monaco.languages.registerCompletionItemProvider("plaintext", {
+    triggerCharacters: ["."],
 
-//     // Validate the formula
-//     const errors = validateFormulaIdentifiers(formula, objects);
-//     if (errors.length > 0) {
-//       setError(`Formula validation error: ${errors[0].message}`);
-//       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Formula validation failed', {
-//         description: errors[0].message
-//       });
-//       return;
-//     }
-
-//     // Call the updateConditionCommissionConfig API
-//     const response = await commissionService.updateConditionCommissionConfig({
-//       commissionConfigId,
-//       condition: formula
-//     });
-    
-//     console.log("Updated condition:", response);
-    
-//     // If successful, move to next step
-//     if (response?.responseHeader?.errorCode === 1101) {
-//       showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 2 saved successfully!', {
-//         description: 'Commission formula has been saved.'
-//       });
-//       onSaveSuccess();
-//     } else {
-//       const errorMessage = response?.responseHeader?.errorMessage || "Failed to update commission condition";
-//       setError(errorMessage);
-//       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save formula', {
-//         description: errorMessage
-//       });
-//     } 
-
-//   } catch (err) {
-//     console.error(err);
-//     const errorMessage = "Failed to update commission condition";
-//     setError(errorMessage);
-//     showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
-//       description: errorMessage
-//     });
-//   } finally {
-//     setSaving(false);
-//   }
-// };
-  const handleEditorDidMount = (editor, monaco) => {
-    editorRef.current = editor;
-    const model = editor.getModel();
-
-    // Autocomplete setup
-    monaco.languages.registerCompletionItemProvider("plaintext", {
-      triggerCharacters: ['.'],
-      provideCompletionItems: (model, position) => {
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: 1,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column
-        });
-
-        let suggestions: any[] = [];
-
-        // Use ref to get latest objects value
-        const currentObjects = objectsRef.current;
-
-        // Check if user is typing after an object name with a dot (e.g., "policy.")
-        const match = textUntilPosition.match(/([A-Za-z0-9_]+)\.([A-Za-z0-9_]*)$/);
-        if (match) {
-          const objectName = match[1];
-          const typedField = match[2];
-
-          // User is typing a field name after an object (e.g., "policy.pt")
-          if (currentObjects[objectName] && Array.isArray(currentObjects[objectName])) {
-            suggestions = currentObjects[objectName]
-              .filter(f => f.name.startsWith(typedField))
-              .map(f => ({
-                label: f.name,
-                kind: monaco.languages.CompletionItemKind.Field,
-                insertText: f.name,
-                detail: f.description,
-              }));
-          }
-        } else {
-          // User is typing an object name or a full path
-          const genericMatch = textUntilPosition.match(/([A-Za-z0-9_]*)$/);
-          const prefix = genericMatch ? genericMatch[1] : "";
-
-          // First, suggest object names that match the prefix
-          Object.keys(currentObjects).forEach(objectKey => {
-            if (objectKey.startsWith(prefix) && Array.isArray(currentObjects[objectKey])) {
-              suggestions.push({
-                label: objectKey,
-                kind: monaco.languages.CompletionItemKind.Module,
-                insertText: objectKey + ".",
-                detail: `${objectKey} object`,
-              });
-            }
-          });
-
-          // Also suggest full paths (object.field) that match the prefix
-          Object.keys(currentObjects).forEach(objectKey => {
-            if (Array.isArray(currentObjects[objectKey])) {
-              currentObjects[objectKey].forEach(field => {
-                const fullPath = `${objectKey}.${field.name}`;
-                if (fullPath.startsWith(prefix) && prefix.length > 0) {
-                  suggestions.push({
-                    label: fullPath,
-                    kind: monaco.languages.CompletionItemKind.Field,
-                    insertText: fullPath,
-                    detail: field.description,
-                  });
-                }
-              });
-            }
-          });
-        }
-
-        return { suggestions };
-      }
-    });
-
-    // Validation setup
-    const runValidation = () => {
-      const value = model.getValue();
-      const errors = validateFormulaIdentifiers(value, objectsRef.current);
-
-      const markers = errors.map(err => {
-        const start = indexToPosition(model, err.start);
-        const end = indexToPosition(model, err.end);
-
-        return {
-          severity: monaco.MarkerSeverity.Error,
-          message: err.message,
-          startLineNumber: start.lineNumber,
-          startColumn: start.column,
-          endLineNumber: end.lineNumber,
-          endColumn: end.column,
-        };
+    provideCompletionItems: (model, position) => {
+      const textUntilPosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column,
       });
 
-      monaco.editor.setModelMarkers(model, "formula-validation", markers);
-    };
+      const objects = objectsRef.current || {};
+      let suggestions: any[] = [];
 
-    editor.onDidChangeModelContent(runValidation);
-    runValidation();
+      /* =====================================
+         1️⃣ object.property suggestions
+         ===================================== */
+      const objectPropertyMatch = textUntilPosition.match(
+        /([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z0-9_]*)$/
+      );
+
+      if (objectPropertyMatch) {
+        const typedObject = objectPropertyMatch[1];
+        const typedField = objectPropertyMatch[2] || "";
+
+        // Case-insensitive object lookup
+        const objectKey = Object.keys(objects).find(
+          key => key.toLowerCase() === typedObject.toLowerCase()
+        );
+
+        if (objectKey && Array.isArray(objects[objectKey])) {
+          const fields = objects[objectKey]
+            .filter(field =>
+              (field.propertyName || "")
+                .toLowerCase()
+                .startsWith(typedField.toLowerCase())
+            )
+            .map(field => ({
+              label: field.propertyName,
+              kind: monaco.languages.CompletionItemKind.Field,
+              insertText: field.propertyName,
+              detail: field.dataType ? `Type: ${field.dataType}` : undefined,
+              documentation: field.description,
+              range: {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: position.column - typedField.length,
+                endColumn: position.column,
+              },
+            }));
+
+          return { suggestions: fields };
+        }
+
+        return { suggestions: [] };
+      }
+
+      /* =====================================
+         2️⃣ top-level object suggestions
+         ===================================== */
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+
+      suggestions = Object.keys(objects).map(objectKey => ({
+        label: objectKey,
+        kind: monaco.languages.CompletionItemKind.Module,
+        insertText: objectKey,
+        range,
+      }));
+      console.log("suggestions", suggestions);
+
+      return { suggestions };
+    },
+  });
+  // Validation setup
+  const runValidation = () => {
+    const value = model.getValue();
+    const errors = validateFormulaIdentifiers(value, objectsRef.current);
+
+    const markers = errors.map(err => {
+      const start = indexToPosition(model, err.start);
+      const end = indexToPosition(model, err.end);
+
+      return {
+        severity: monaco.MarkerSeverity.Error,
+        message: err.message,
+        startLineNumber: start.lineNumber,
+        startColumn: start.column,
+        endLineNumber: end.lineNumber,
+        endColumn: end.column,
+      };
+    });
+
+    monaco.editor.setModelMarkers(model, "formula-validation", markers);
   };
+
+  editor.onDidChangeModelContent(runValidation);
+  runValidation();
+};
+
 
   return (
     <div className="h-screen flex flex-col bg-background-light dark:bg-background-dark overflow-hidden">
@@ -632,6 +712,7 @@ export default function CommissionFormulaEditorFilter({
             onChange={(value) => {
               const newFormula = value || '';
               setFormula(newFormula);
+              formulaRef.current = newFormula; // Keep ref in sync
               onFormulaChange?.(newFormula);
             }}
             onMount={handleEditorDidMount}
@@ -672,7 +753,7 @@ export default function CommissionFormulaEditorFilter({
                 {filteredFields.length > 0 ? (
                   filteredFields.map((f, index) => (
                     <div
-                      key={`${f.objectKey}-${f.fieldName}-${index}`}
+                      key={`${f.objectKey}-${f.propertyName}-${index}`}
                       onClick={() => insertAtCursor(f.fullPath)}
                       className="cursor-pointer px-3 py-2 rounded bg-gray-100 hover:bg-indigo-100 text-sm"
                     >

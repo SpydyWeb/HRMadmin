@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { RoutePaths } from '@/utils/constant'
 
 function formatLabel(segment: string) {
   return segment

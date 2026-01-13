@@ -14,7 +14,7 @@ const APIRoutes = {
   CONFIGLIST: "/api/CommissionConfig/CommissionJobConfigList",
   UPDATECRON: "/api/CommissionConfig/UpdateCronSetting",
   UPDATESTATUS: "/api/CommissionConfig/EnableDisableJob",
-  COMMISSIONSEARCHFIELDS: "/api/CommissionConfig/CommissionSearchFieldsJson",
+  COMMISSIONSEARCHFIELDS: "/api/MetaData/Fetch",
   EXECUTIVEHISTORYLIST: "/api/CommissionConfig/JobExecutionHistory",
   EDITAGENT: "/api/Agent/UpdateAgent",
   UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",

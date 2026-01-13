@@ -87,7 +87,7 @@ const updateConditionConfig = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATECONDITIONCONFIG, data, { headers });
 };
 const configList = (data = {}, headers = {}) => {
-  console.log("config commission list:", data);
+  // console.log("config commission list:", data);
   return apiClient.post(APIRoutes.CONFIGLIST, data, { headers });
 };
 const updateCron = (data = {}, headers = {}) => {
@@ -99,8 +99,12 @@ const updateStatus = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATESTATUS, data, { headers });
 };
 const searchFieldsConfig = (data = {}, headers = {}) => {
-  console.log("config commission search fields:", data);
-  return apiClient.post(APIRoutes.COMMISSIONSEARCHFIELDS, data, { headers });
+  console.log("### search fields:", data);
+  console.log("### search fields headers:", headers);
+  return apiClient.get(APIRoutes.COMMISSIONSEARCHFIELDS, { 
+    params: data, 
+    headers: headers 
+  });
 };
 
 const editAgentDetails = (data = {}, headers = {}) => {

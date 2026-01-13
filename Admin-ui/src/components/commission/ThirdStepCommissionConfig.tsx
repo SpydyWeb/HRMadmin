@@ -4,26 +4,84 @@ import { showToast } from '@/components/ui/sonner'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 
 interface ThirdStepCommissionConfigProps {
-  commissionConfigId?: number; 
+  commissionConfigId?: number;
+  initialData?: any;
+  isEditMode?: boolean;
   onSaveSuccess: () => void;
 }
 
+// Parse Quartz.NET cron expression to extract schedule details
+// Format: Seconds Minutes Hours Day-of-month Month Day-of-week
+const parseCronExpression = (cron: string) => {
+  if (!cron || !cron.trim()) {
+    return null;
+  }
+
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length < 6) {
+    return null;
+  }
+
+  const [sec, min, hr, dayOfMonth, , dayOfWeek] = parts;
+
+  const parsed = {
+    seconds: parseInt(sec) || 0,
+    minutes: parseInt(min) || 0,
+    hours: parseInt(hr) || 0,
+    frequency: 'DAILY' as 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    daysOfWeek: [] as string[],
+    dayOfMonth: 1
+  };
+
+  // Determine frequency based on pattern
+  if (dayOfMonth === '?' && dayOfWeek !== '?') {
+    // WEEKLY: dayOfMonth is ?, dayOfWeek has values
+    parsed.frequency = 'WEEKLY';
+    parsed.daysOfWeek = dayOfWeek.split(',').filter(d => d);
+  } else if (dayOfMonth !== '*' && dayOfMonth !== '?' && dayOfWeek === '?') {
+    // MONTHLY: dayOfMonth has specific value, dayOfWeek is ?
+    parsed.frequency = 'MONTHLY';
+    parsed.dayOfMonth = parseInt(dayOfMonth) || 1;
+  } else {
+    // DAILY: dayOfMonth is *, dayOfWeek is ?
+    parsed.frequency = 'DAILY';
+  }
+
+  return parsed;
+};
+
 const ThirdStepCommissionConfig: React.FC<ThirdStepCommissionConfigProps> = ({ 
   commissionConfigId = 0,
+  initialData,
+  isEditMode = false,
   onSaveSuccess
 }) => {
-  const [jobType, setJobType] = useState('');
-  const [hours, setHours] = useState<number>(0);
-  const [minutes, setMinutes] = useState<number>(0);
-  const [seconds, setSeconds] = useState<number>(0);
-  const [frequency, setFrequency] = useState('DAILY');
-  const [daysOfWeek, setDaysOfWeek] = useState<string[]>([]);
-  const [dayOfMonth, setDayOfMonth] = useState<number>(1);
+  // Parse initial data to extract values
+  const parsedCron = initialData?.cronExpression ? parseCronExpression(initialData.cronExpression) : null;
+  
+  const initialJobType = initialData?.jobType || '';
+  const initialHours = parsedCron?.hours || 0;
+  const initialMinutes = parsedCron?.minutes || 0;
+  const initialSeconds = parsedCron?.seconds || 0;
+  const initialFrequency = parsedCron?.frequency || 'DAILY';
+  const initialDaysOfWeek = parsedCron?.daysOfWeek || [];
+  const initialDayOfMonth = parsedCron?.dayOfMonth || 1;
+  const initialSimpleTime = initialHours || initialMinutes 
+    ? `${String(initialHours).padStart(2, '0')}:${String(initialMinutes).padStart(2, '0')}`
+    : '12:00';
+
+  const [jobType, setJobType] = useState(initialJobType);
+  const [hours, setHours] = useState<number>(initialHours);
+  const [minutes, setMinutes] = useState<number>(initialMinutes);
+  const [seconds, setSeconds] = useState<number>(initialSeconds);
+  const [frequency, setFrequency] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>(initialFrequency);
+  const [daysOfWeek, setDaysOfWeek] = useState<string[]>(initialDaysOfWeek);
+  const [dayOfMonth, setDayOfMonth] = useState<number>(initialDayOfMonth);
   const [cronExpression, setCronExpression] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [useSimpleMode, setUseSimpleMode] = useState(true);
-  const [simpleTime, setSimpleTime] = useState('12:00');
+  const [simpleTime, setSimpleTime] = useState(initialSimpleTime);
 
   const parseTimeInput = (timeString: string) => {
     const [h, m] = timeString.split(':');
@@ -55,6 +113,29 @@ const ThirdStepCommissionConfig: React.FC<ThirdStepCommissionConfigProps> = ({
         return '';
     }
   };
+
+  // Update state when initialData changes (for edit mode)
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      const parsed = initialData.cronExpression ? parseCronExpression(initialData.cronExpression) : null;
+      
+      if (initialData.jobType) {
+        setJobType(initialData.jobType);
+      }
+      
+      if (parsed) {
+        setHours(parsed.hours);
+        setMinutes(parsed.minutes);
+        setSeconds(parsed.seconds);
+        setFrequency(parsed.frequency);
+        setDaysOfWeek(parsed.daysOfWeek);
+        setDayOfMonth(parsed.dayOfMonth);
+        
+        const timeStr = `${String(parsed.hours).padStart(2, '0')}:${String(parsed.minutes).padStart(2, '0')}`;
+        setSimpleTime(timeStr);
+      }
+    }
+  }, [isEditMode, initialData]);
 
   useEffect(() => {
     const cron = generateCron();

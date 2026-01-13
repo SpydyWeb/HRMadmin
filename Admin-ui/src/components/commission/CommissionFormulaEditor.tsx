@@ -220,27 +220,50 @@ export default function CommissionFormulaEditor({
   const[loadingFields, setLoadingFields] = useState(true);
 
   // State for API data, loading, and errors
-  const [objects, setObjects] = useState<Record<string, Array<{ name: string; description: string; dataType?: string }>>>({});
+  const [objects, setObjects] = useState<Record<string, Array<{ propertyName: string; description: string; dataType?: string }>>>({});
   // const [fields, setFields] = useState([]);
 
   const editorRef = useRef(null);
-  const objectsRef = useRef<Record<string, Array<{ name: string; description: string; dataType?: string }>>>({});
+  const objectsRef = useRef<Record<string, Array<{ propertyName: string; description: string; dataType?: string }>>>({});
+  const prevInitialFormulaRef = useRef<string | undefined>(initialFormula);
   
   // Keep ref in sync with state
   useEffect(() => {
     objectsRef.current = objects;
   }, [objects]);
 
+  // Update formula when initialFormula prop changes (for edit mode)
+  useEffect(() => {
+    if (prevInitialFormulaRef.current !== initialFormula) {
+      const newFormula = initialFormula !== undefined ? initialFormula : '';
+      prevInitialFormulaRef.current = initialFormula;
+      setFormula(newFormula);
+      
+      const updateEditor = () => {
+        const editor = editorRef.current;
+        if (editor && typeof editor.getValue === 'function' && typeof editor.setValue === 'function') {
+          const currentValue = editor.getValue();
+          if (currentValue !== newFormula) {
+            editor.setValue(newFormula);
+          }
+        }
+      };
+      
+      updateEditor();
+      setTimeout(updateEditor, 100);
+    }
+  }, [initialFormula]);
+
   // Available fields for commission formulas
   const fields = [
-    { name: "pt", description: "Number - Policy Threshold" },
-    { name: "name", description: "Text - Policy Holder Name" },
-    { name: "startDate", description: "Date - Policy Start Date" },
-    { name: "endDate", description: "Date - Policy End Date" },
-    { name: "premium", description: "Number - Premium Amount" },
-    { name: "sumAssured", description: "Number - Sum Assured" },
-{name: 'lastName', description: 'Text - Customer Last Name'},
-{name: 'dob', description: 'Date - Date of Birth'}
+    { propertyName: "pt", description: "Number - Policy Threshold" },
+    { propertyName: "name", description: "Text - Policy Holder Name" },
+    { propertyName: "startDate", description: "Date - Policy Start Date" },
+    { propertyName: "endDate", description: "Date - Policy End Date" },
+    { propertyName: "premium", description: "Number - Premium Amount" },
+    { propertyName: "sumAssured", description: "Number - Sum Assured" },
+{propertyName: 'lastName', description: 'Text - Customer Last Name'},
+{propertyName: 'dob', description: 'Date - Date of Birth'}
   ];
 
   // Call API - commissionSearchFields and use response as Objects
@@ -254,7 +277,27 @@ export default function CommissionFormulaEditor({
         
         if (response?.responseHeader?.errorMessage === "SUCCESS" && response?.responseHeader?.errorCode === 1101) {
           const responseData = response.responseBody?.commissionMetadata?.[0];
-          setObjects(responseData as any);
+          
+          console.log("API Response Data:", responseData);
+          
+          // Map the API response to convert 'name' to 'propertyName' for consistency
+          const mappedData: Record<string, Array<{ propertyName: string; description: string; dataType?: string }>> = {};
+          
+          if (responseData) {
+            Object.keys(responseData).forEach(objectKey => {
+              const fields = responseData[objectKey];
+              if (Array.isArray(fields)) {
+                mappedData[objectKey] = fields.map((field: any) => ({
+                  propertyName: field.propertyName || (field as any).propertyName || '',
+                  description: field.description || '',
+                  dataType: field.dataType
+                }));
+              }
+            });
+          }
+          
+          console.log("Mapped Objects:", mappedData);
+          setObjects(mappedData);
         } else {
           // Fallback to default structure if response doesn't match expected format
           setObjects({
@@ -289,7 +332,7 @@ export default function CommissionFormulaEditor({
   const allFields = useMemo(() => {
     const fieldsList: Array<{
       objectKey: string;
-      fieldName: string;
+      propertyName: string;
       description: string;
       dataType?: string;
       fullPath: string;
@@ -299,10 +342,10 @@ export default function CommissionFormulaEditor({
         objects[objectKey].forEach(field => {
           fieldsList.push({
             objectKey,
-            fieldName: field.name,
+            propertyName: field.propertyName,
             description: field.description,
             dataType: field.dataType,
-            fullPath: `${objectKey}.${field.name}`
+            fullPath: `${objectKey}.${field.propertyName}`
           });
         });
       }
@@ -321,7 +364,7 @@ export default function CommissionFormulaEditor({
     return allFields.filter(f =>
       f.fullPath.toLowerCase().includes(searchLower) ||
       f.description?.toLowerCase().includes(searchLower) ||
-      f.fieldName.toLowerCase().includes(searchLower) ||
+      f.propertyName.toLowerCase().includes(searchLower) ||
       f.objectKey.toLowerCase().includes(searchLower)
     );
   }, [allFields, search]);
@@ -386,7 +429,7 @@ export default function CommissionFormulaEditor({
         continue;
       }
 
-      const field = objects[objectName].find(f => f.name === propertyName);
+      const field = objects[objectName].find(f => f.propertyName === propertyName);
       if (!field) {
         errors.push({
           message: `Property '${propertyName}' does not exist on '${objectName}'`,
@@ -403,7 +446,7 @@ export default function CommissionFormulaEditor({
 
       if (!objects[objectName]) continue;
 
-      const field = objects[objectName].find(f => f.name === propertyName);
+      const field = objects[objectName].find(f => f.propertyName === propertyName);
       if (!field || !field.dataType) continue;
 
       const literalType = inferLiteralType(literal);
@@ -499,11 +542,11 @@ const handleSave = async () => {
           // User is typing a field name after an object (e.g., "policy.pt")
           if (currentObjects[objectName] && Array.isArray(currentObjects[objectName])) {
             suggestions = currentObjects[objectName]
-              .filter(f => f.name.startsWith(typedField))
+              .filter(f => f.propertyName.startsWith(typedField))
               .map(f => ({
-                label: f.name,
+                label: f.propertyName,
                 kind: monaco.languages.CompletionItemKind.Field,
-                insertText: f.name,
+                insertText: f.propertyName,
                 detail: f.description,
               }));
           }
@@ -528,7 +571,7 @@ const handleSave = async () => {
           Object.keys(currentObjects).forEach(objectKey => {
             if (Array.isArray(currentObjects[objectKey])) {
               currentObjects[objectKey].forEach(field => {
-                const fullPath = `${objectKey}.${field.name}`;
+                const fullPath = `${objectKey}.${field.propertyName}`;
                 if (fullPath.startsWith(prefix) && prefix.length > 0) {
                   suggestions.push({
                     label: fullPath,
@@ -660,7 +703,7 @@ const handleSave = async () => {
                 {filteredFields.length > 0 ? (
                   filteredFields.map((f, index) => (
                     <div
-                      key={`${f.objectKey}-${f.fieldName}-${index}`}
+                      key={`${f.objectKey}-${f.propertyName}-${index}`}
                       onClick={() => insertAtCursor(f.fullPath)}
                       className="cursor-pointer px-3 py-2 rounded bg-gray-100 hover:bg-indigo-100 text-sm"
                     >

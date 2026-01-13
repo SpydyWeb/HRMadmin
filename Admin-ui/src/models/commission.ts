@@ -328,21 +328,26 @@ export interface ICommissionSearchFieldsRequest {
 }
 
 export interface ICommissionField {
-  name: string
+  propertyName: string
+  columnName: string
   description: string
   dataType: 'number' | 'string' | 'date'
+  isNullable: boolean
 }
 
 export interface ICommissionMetadata {
-  policy?: ICommissionField[]
-  premium?: ICommissionField[]
+  agent?: ICommissionField[]
+  commrate?: ICommissionField[]
+  owner?: ICommissionField[]
+  insured?: ICommissionField[]
   customer?: ICommissionField[]
-  commission?: ICommissionField[]
+  premium?: ICommissionField[]
+  policy?: ICommissionField[]
   [key: string]: ICommissionField[] | undefined
 }
 
 export interface ICommissionSearchFieldsResponseBody {
-  commissionMetadata: ICommissionMetadata[]
+  metaDataResponse: ICommissionMetadata[]
 }
 
 
