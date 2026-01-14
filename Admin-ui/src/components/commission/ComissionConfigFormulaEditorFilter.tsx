@@ -633,10 +633,10 @@ const handleEditorDidMount = (editor, monaco) => {
   <div className="flex items-center justify-between mb-2">
     <div>
       <h1 className="text-xl font-semibold text-gray-900">
-        Commission Formula Editor
+        Commission Filter
       </h1>
       <p className="text-sm text-gray-500">
-        Define conditions to evaluate commission rules
+        Define conditions to filter commission data
       </p>
     </div>
 
