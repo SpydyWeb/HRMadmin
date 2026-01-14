@@ -44,7 +44,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         return acc
       }, {}),
 
-      ...(config.defaultValues || {}), // ⬅ Apply dynamic values
+      ...(config.defaultValues || {}), 
     },
     onSubmit: async ({ value }) => {
       if (onSubmit) {
@@ -125,7 +125,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   placeholder={field.placeholder}
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
-                  className="w-full min-h-24 px-3 py-2" // Added consistent padding
+                  className="w-full min-h-24 px-3 py-2" 
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
                   variant={field.variant}

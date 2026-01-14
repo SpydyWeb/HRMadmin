@@ -127,7 +127,7 @@ export const commissionService = {
       throw error;
     }
   },
-  updateConditionCommissionConfig: async (data: { commissionConfigId: number; condition: string }) => {
+  updateConditionCommissionConfig: async (data: { commissionConfigId: number; formula: string }) => {
     try {
       const response = await callApi<ApiResponse<ICommissionMgmtApiResponse>>(
         APIRoutes.UPDATE_CONDITION_CONFIG,

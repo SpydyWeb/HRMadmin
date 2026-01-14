@@ -223,7 +223,8 @@ export default function CommissionFormulaEditor({
   const [objects, setObjects] = useState<Record<string, Array<{ propertyName: string; description: string; dataType?: string }>>>({});
   // const [fields, setFields] = useState([]);
 
-  const editorRef = useRef(null);
+  // Monaco editor instance ref (typed as any to avoid TS "never" issues)
+  const editorRef = useRef<any>(null);
   const objectsRef = useRef<Record<string, Array<{ propertyName: string; description: string; dataType?: string }>>>({});
   const prevInitialFormulaRef = useRef<string | undefined>(initialFormula);
   
@@ -255,16 +256,16 @@ export default function CommissionFormulaEditor({
   }, [initialFormula]);
 
   // Available fields for commission formulas
-  const fields = [
-    { propertyName: "pt", description: "Number - Policy Threshold" },
-    { propertyName: "name", description: "Text - Policy Holder Name" },
-    { propertyName: "startDate", description: "Date - Policy Start Date" },
-    { propertyName: "endDate", description: "Date - Policy End Date" },
-    { propertyName: "premium", description: "Number - Premium Amount" },
-    { propertyName: "sumAssured", description: "Number - Sum Assured" },
-{propertyName: 'lastName', description: 'Text - Customer Last Name'},
-{propertyName: 'dob', description: 'Date - Date of Birth'}
-  ];
+//   const fields = [
+//     { propertyName: "pt", description: "Number - Policy Threshold" },
+//     { propertyName: "name", description: "Text - Policy Holder Name" },
+//     { propertyName: "startDate", description: "Date - Policy Start Date" },
+//     { propertyName: "endDate", description: "Date - Policy End Date" },
+//     { propertyName: "premium", description: "Number - Premium Amount" },
+//     { propertyName: "sumAssured", description: "Number - Sum Assured" },
+// {propertyName: 'lastName', description: 'Text - Customer Last Name'},
+// {propertyName: 'dob', description: 'Date - Date of Birth'}
+//   ];
 
   // Call API - commissionSearchFields and use response as Objects
   useEffect(() => {
@@ -479,8 +480,23 @@ const handleSave = async () => {
     setSaving(true);
     setError(null);
 
+    // Always read the latest value from Monaco (state can lag behind on fast clicks)
+    const currentFormula =
+      (editorRef.current && typeof editorRef.current.getValue === 'function'
+        ? editorRef.current.getValue()
+        : formula) || '';
+
+    if (!currentFormula.trim()) {
+      const msg = 'Formula cannot be empty';
+      setError(msg);
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save formula', {
+        description: msg,
+      });
+      return;
+    }
+
     // Validate the formula
-    const errors = validateFormulaIdentifiers(formula, objects);
+    const errors = validateFormulaIdentifiers(currentFormula, objects);
     if (errors.length > 0) {
       setError(`Formula validation error: ${errors[0].message}`);
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Formula validation failed', {
@@ -489,13 +505,14 @@ const handleSave = async () => {
       return;
     }
 
+    console.log("formula", currentFormula)
     // Call the updateConditionCommissionConfig API
     const response = await commissionService.updateConditionCommissionConfig({
       commissionConfigId,
-      condition: formula
+      formula: currentFormula
     });
     
-    console.log("Updated condition:", response);
+    console.log("saved condition:", response);
     
     // If successful, move to next step
     if (response?.responseHeader?.errorCode === 1101) {
@@ -628,16 +645,17 @@ const handleSave = async () => {
   return (
     <div className="h-screen flex flex-col bg-background-light dark:bg-background-dark overflow-hidden">
 
-      <main className="flex-1 flex flex-col p-5 overflow-hidden">
-      <section className="w-full bg-white rounded-xl shadow border p-4 mb-4 flex-shrink-0">
+      <main className="flex-1 flex flex-col pt-0 px-4 overflow-hidden">
+      <section className="w-full bg-white rounded-lg shadow border-none p-4 mb-4 flex-shrink-0">
+  
   <div className="flex items-center justify-between mb-2">
     <div>
       <h1 className="text-xl font-semibold text-gray-900">
-        Commission Formula Editor
+      Step 2: Commission Formula Editor
       </h1>
-      <p className="text-sm text-gray-500">
+      {/* <p className="text-sm text-gray-500">
         Define conditions to evaluate commission rules
-      </p>
+      </p> */}
     </div>
 
     <div className="flex items-center gap-3">
@@ -692,7 +710,7 @@ const handleSave = async () => {
             onClick={handleSave}
             disabled={saving}
             variant="orange"
-            size="lg"
+            size="md"
           >
             {saving ? 'Saving...' : 'Save Formula & Continue'}
           </Button>

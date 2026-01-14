@@ -294,6 +294,7 @@ export interface IConfigCommissionRequest {
   createdAt?: string
   comments:string
   filterConditions?: string
+  commissionConfigId?: number
 
 }
 export interface IexecutiveJobListResponseBody {

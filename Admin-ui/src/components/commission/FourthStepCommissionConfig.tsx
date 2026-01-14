@@ -55,8 +55,8 @@ const FourthStepCommissionConfig: React.FC<FourthStepCommissionConfigProps> = ({
   }
 
   return (
-    <div className="bg-white p-6 rounded-md space-y-4">
-      <h2 className="text-lg font-semibold">Commission Status</h2>
+    <div className="bg-white p-4 rounded-md space-y-4">
+      <h1 className="text-lg font-semibold">Step 4: Commission Status</h1>
 
       {error && (
         <div className="p-2 bg-red-100 text-red-700 rounded">
