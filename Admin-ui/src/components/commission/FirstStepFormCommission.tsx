@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/sonner'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import CommissionFormulaEditorFilter from './ComissionConfigFormulaEditorFilter'
 import Button from '@/components/ui/button'
+import Loader from '@/components/Loader'
 
 
 
@@ -17,6 +18,7 @@ interface FirstStepFormCommissionProps {
   commissionConfigId?: number | null
   initialData?: any
   isEditMode?: boolean
+  isLoading?: boolean
   onSaveSuccess: (id: number) => void
 }
 
@@ -34,6 +36,7 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
   commissionConfigId,
   initialData,
   isEditMode = false,
+  isLoading = false,
   onSaveSuccess
 }) => {
   const [formValues, setFormValues] = useState<IConfigCommissionRequest>({
@@ -65,8 +68,6 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-  
-
 
  const commissionStepOneFormConfig = {
     gridCols: 9,
@@ -181,7 +182,13 @@ useEffect(() => {
   }
 }, [isEditMode, commissionConfigId]) // Re-run when edit mode or ID changes
 
-
+  // Show loader when in edit mode and data is loading or not yet available
+  // This check must be AFTER all hooks are called to avoid "Rendered more hooks" error
+  const isDataLoading = isLoading || (isEditMode && !initialData)
+  
+  if (isDataLoading) {
+    return <Loader />
+  }
 
 // Update the handleSave function
 const handleSave = async (data: Record<string, any>) => {

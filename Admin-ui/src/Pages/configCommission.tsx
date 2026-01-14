@@ -245,6 +245,7 @@ const goToNextStep = () => {
           commissionConfigId={commissionConfigId}
           initialData={editModeData}
           isEditMode={isEditMode}
+          isLoading={commissionConfigLoading}
           onSaveSuccess={(id:any) => {
              setCommissionConfigId(id)
             goToNextStep()
