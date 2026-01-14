@@ -261,14 +261,14 @@ export default function CommissionFormulaEditorFilter({
       try {
         setLoadingFields(true);
         const response = await commissionService.commissionSearchFields({} as any);
-        console.log("opimnj", response);
+        // console.log("opimnj", response);
         
         if (response?.responseHeader?.errorMessage === "SUCCESS" && response?.responseHeader?.errorCode === 1101) {
           let responseData: any = response.responseBody?.metaDataResponse;
           
           // Handle case where metaDataResponse is an array (take first element) or an object
           if (Array.isArray(responseData)) {
-            console.log("metaDataResponse is an array, length:", responseData.length);
+            // console.log("metaDataResponse is an array, length:", responseData.length);
             if (responseData.length > 0) {
               responseData = responseData[0]; // Take first element if array
             } else {
@@ -329,7 +329,7 @@ export default function CommissionFormulaEditorFilter({
   }, []);
 
 
-  console.log("myobjects", objects);
+  // console.log("myobjects", objects);
 
   useEffect(() => {
     // Only update if initialFormula prop actually changed (not just a re-render)
@@ -593,7 +593,7 @@ const handleEditorDidMount = (editor, monaco) => {
         insertText: objectKey,
         range,
       }));
-      console.log("suggestions", suggestions);
+      // console.log("suggestions", suggestions);
 
       return { suggestions };
     },

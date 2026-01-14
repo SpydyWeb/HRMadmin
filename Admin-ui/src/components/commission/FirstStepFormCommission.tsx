@@ -111,25 +111,6 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
     },
   }
 
-// Update form values when initialData changes (for edit mode)
-// Update form values when initialData changes (for edit mode)
-// useEffect(() => {
-//   if (initialData && isEditMode) {
-//     const updatedFormValues = {
-//       commissionName: initialData.commissionName || '',
-//       runFrom: initialData.runFrom ? formatDateToLocal(initialData.runFrom) : '',
-//       runTo: initialData.runTo ? formatDateToLocal(initialData.runTo) : '',
-//       comments: initialData.comments || '',
-//       // Fix: Use filterCondition (singular) from API response
-//       filterConditions: initialData.filterCondition || initialData.filterConditions || '',
-//     }
-//     setFormValues(updatedFormValues)
-//     // Fix: Use filterCondition (singular) from API response
-//     setFilterFormula(initialData.filterCondition || initialData.filterConditions || '')
-//   }
-// }, [initialData, isEditMode])
-
-// In FirstStepFormCommission, add this debug line
 useEffect(() => {
   if (initialData && isEditMode) {
     console.log("Initial data received:", initialData);
@@ -206,152 +187,62 @@ useEffect(() => {
 const handleSave = async (data: Record<string, any>) => {
   try {
     setSaving(true)
-    
-    // Store the latest form data for fallback use
-    formDataRef.current = data
-   
-    // Merge submitted data with existing formValues to preserve unchanged fields
-    // This ensures that if a user doesn't change a field, the existing value is still saved
+
+    // 1️⃣ Merge existing + updated values
     const mergedData = {
-      ...formValues,
-      ...data,
+      ...formValues,   // existing DB values
+      ...data,         // edited values
     }
 
-    // Helper function to safely convert date to YMD format
-    const safeDateToYMD = (dateValue: any): string => {
-      if (!dateValue) return ''
-      try {
-        // If it's already a Date object, use it directly
-        if (dateValue instanceof Date) {
-          return toYMD(dateValue)
-        }
-        // If it's a string, convert to Date first
-        if (typeof dateValue === 'string' && dateValue.trim()) {
-          return toYMD(new Date(dateValue))
-        }
-        return ''
-      } catch (error) {
-        console.warn('Error converting date:', dateValue, error)
-        return ''
-      }
-    }
-
+    // 2️⃣ Build payload
     const payload: IConfigCommissionRequest = {
-      commissionName: mergedData.commissionName || formValues.commissionName || '',
-      runFrom: safeDateToYMD(mergedData.runFrom || formValues.runFrom),
-      runTo: safeDateToYMD(mergedData.runTo || formValues.runTo),
-      comments: mergedData.comments !== undefined ? (mergedData.comments || '') : (formValues.comments || ''),
+      commissionName: mergedData.commissionName,
+      runFrom: mergedData.runFrom,
+      runTo: mergedData.runTo,
+      comments: mergedData.comments ?? '',
+      filterConditions: filterFormula?.trim() || '',
     }
-    
-    // Only include filterConditions if it has a value
-    if (filterFormula && filterFormula.trim()) {
-      payload.filterConditions = filterFormula.trim()
-    }
-    
-    // Add commissionConfigId if in edit mode
-    if (isEditMode && commissionConfigId) {
-      (payload as any).commissionConfigId = commissionConfigId
-    }
-    
-    console.log("payload",payload)
 
-    // Use editCommissionConfig API if in edit mode, otherwise use configCommission
-    const response = isEditMode && commissionConfigId
-      ? await commissionService.editCommissionConfig(payload)
-      : await commissionService.configCommission(payload)
+    // 3️⃣ VERY IMPORTANT: add ID in edit
+    if (isEditMode) {
+      if (!commissionConfigId) {
+        throw new Error('commissionConfigId missing in edit mode')
+      }
+      payload.commissionConfigId = commissionConfigId
+    }
 
-    
-    // Validate response structure
-    if (!response || typeof response !== 'object' || Object.keys(response).length === 0) {
-      throw new Error('Invalid or empty response received from API. The API may have failed or returned an unexpected format.')
+    console.log('FINAL PAYLOAD →', payload)
+
+    // 4️⃣ Call SAME API (backend handles create/update)
+    const response = await commissionService.configCommission(payload)
+
+    const isSuccess =
+      response?.responseHeader?.errorCode === 1101 ||
+      response?.responseHeader?.errorMessage === 'SUCCESS'
+
+    if (!isSuccess) {
+      throw new Error(response?.responseHeader?.errorMessage || 'Save failed')
     }
-    
-    if (!response.responseHeader) {
-      console.error('Response structure:', JSON.stringify(response, null, 2))
-      throw new Error('Invalid response structure: missing responseHeader. The API response format may have changed.')
-    }
-    
-    // Check for success - errorCode 1101 or 0 (common success codes)
-    const errorCode = response?.responseHeader?.errorCode
-    const errorMessage = response?.responseHeader?.errorMessage
-    const isSuccess = errorCode === 1101 || errorCode === 0 || errorMessage === "SUCCESS"
-    
-    console.log("Success Check:", { errorCode, errorMessage, isSuccess })
-    
-    if (isSuccess) {
-      // Handle both possible response structures (array or single object)
-      const responseBody = response.responseBody as any
-      let returnedCommissionConfigId: number
-      
-      if (isEditMode && commissionConfigId) {
-        // In edit mode, use the existing commissionConfigId
-        returnedCommissionConfigId = commissionConfigId
-      } else {
-        // In create mode, get the ID from the response
-        // According to IConfigCommissionResponseBody, the response has commissionId (not commissionConfigId)
-        // Try different possible response structures
-        returnedCommissionConfigId = 
-          responseBody?.commissionConfig?.[0]?.commissionConfigId ||
-          responseBody?.commissionConfig?.[0]?.commissionId ||
-          (Array.isArray(responseBody?.commissionConfig) && responseBody.commissionConfig.length > 0 
-            ? responseBody.commissionConfig[0].commissionId || responseBody.commissionConfig[0].commissionConfigId
-            : null) ||
-          responseBody?.commissionId ||
-          (responseBody as any)?.commissionConfigId
-      }
-      
-      // ✅ MOVE TO STEP 2
-      if (!returnedCommissionConfigId) {
-        console.error('Response body:', JSON.stringify(response.responseBody, null, 2))
-        console.error('Could not find commissionId/commissionConfigId in response. Available keys:', Object.keys(responseBody || {}))
-        throw new Error('Commission ID not returned from API. Response structure may have changed.')
-      }
-      // Update formValues to reflect the saved state (use mergedData to preserve original date format)
-      // This ensures formValues always has the latest values for future saves
-      const updatedFormValues = {
-        commissionConfigId: commissionConfigId || returnedCommissionConfigId,
-        commissionName: mergedData.commissionName || formValues.commissionName || '',
-        runFrom: mergedData.runFrom || formValues.runFrom || '',
-        runTo: mergedData.runTo || formValues.runTo || '',
-        comments: mergedData.comments !== undefined ? (mergedData.comments || '') : (formValues.comments || ''),
-        filterConditions: payload.filterConditions || formValues.filterConditions || '',
-      }
-      setFormValues(updatedFormValues)
-      
-      // Show success toast
-      const successMessage = isEditMode 
-        ? 'Step 1 updated successfully!' 
-        : 'Step 1 saved successfully!'
-      showToast(NOTIFICATION_CONSTANTS.SUCCESS, successMessage, {
-        description: isEditMode 
-          ? 'Commission configuration has been updated.' 
-          : 'Commission configuration has been saved.'
-      })
-      // Pass the commissionConfigId to the onSaveSuccess callback
-      onSaveSuccess(returnedCommissionConfigId);
-    } else {
-      const errorCode = response?.responseHeader?.errorCode
-      const errorMessage = response?.responseHeader?.errorMessage || 'Failed to save commission configuration'
-      console.error('API Error Details:', {
-        errorCode,
-        errorMessage,
-        fullResponse: response
-      })
-      showToast(NOTIFICATION_CONSTANTS.ERROR, `Error ${errorCode || 'Unknown'}`, {
-        description: errorMessage
-      })
-    }
-  } catch (error: any) {
-    console.error('Error saving commission config:', error)
-    const errorMessage = error?.message || error?.response?.data?.message || 'Something went wrong while saving'
-    showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
-      description: errorMessage
+
+    // 5️⃣ Persist updated state
+    setFormValues(payload)
+
+    showToast(
+      NOTIFICATION_CONSTANTS.SUCCESS,
+      isEditMode ? 'Commission updated successfully' : 'Commission created successfully'
+    )
+
+    onSaveSuccess(commissionConfigId ?? response?.responseBody?.commissionConfigId)
+
+  } catch (err: any) {
+    console.error(err)
+    showToast(NOTIFICATION_CONSTANTS.ERROR, 'Save failed', {
+      description: err.message || 'Something went wrong',
     })
   } finally {
     setSaving(false)
   }
 }
-
 
   // Reference format for useQuery API calls:
   // const {
@@ -408,105 +299,66 @@ return (
             
             console.log('Save button clicked, attempting to save...')
             
-            // Try to trigger form submission first - this will call handleSave with current form values
-            let formSubmitted = false
+            // Try to trigger form submission first (preferred method for validation)
+            // Try clicking the hidden submit button
+            const submitBtn = hiddenSubmitButtonRef.current || 
+                            (document.querySelector('button[type="submit"].hidden') as HTMLButtonElement)
             
-            // Method 1: Click the hidden submit button via ref
-            if (hiddenSubmitButtonRef.current) {
+            if (submitBtn) {
               try {
-                console.log('Trying to click hidden submit button via ref')
-                hiddenSubmitButtonRef.current.click()
-                formSubmitted = true
-                // If we managed to click a submit button, hand off to the form's onSubmit.
-                // Don't rely on reading `saving` here: state updates won't change this closure's `saving` value.
-                return
-              } catch (e) {
-                console.warn('Failed to click stored button ref:', e)
-              }
-            }
-            
-            // Method 2: Find and click the hidden submit button
-            if (!formSubmitted) {
-              const submitBtn = document.querySelector('button[type="submit"].hidden') as HTMLButtonElement
-              if (submitBtn) {
-                console.log('Found hidden submit button, clicking...')
-                hiddenSubmitButtonRef.current = submitBtn
+                console.log('Attempting to trigger form submission via hidden submit button...')
+                if (!hiddenSubmitButtonRef.current) {
+                  hiddenSubmitButtonRef.current = submitBtn
+                }
+                // Trigger click event
                 submitBtn.click()
-                formSubmitted = true
-                return
-              }
-            }
-            
-            // Method 3: Try to find any submit button
-            if (!formSubmitted) {
-              const allSubmitButtons = document.querySelectorAll('button[type="submit"]')
-              for (const btn of allSubmitButtons) {
-                const buttonElement = btn as HTMLButtonElement
-                if (buttonElement.classList.contains('hidden') || buttonElement.closest('.hidden')) {
-                  console.log('Found submit button, clicking...')
-                  hiddenSubmitButtonRef.current = buttonElement
-                  buttonElement.click()
-                  formSubmitted = true
+                // Wait a bit to see if form submission was triggered
+                await new Promise(resolve => setTimeout(resolve, 200))
+                // If saving state changed, form submission worked
+                if (savingRef.current) {
+                  console.log('Form submission successful')
                   return
                 }
+              } catch (e) {
+                console.warn('Failed to trigger form submission:', e)
               }
             }
             
-            // Method 4: Use form.requestSubmit (modern browsers)
-            if (!formSubmitted) {
-              const formElement = document.querySelector('form') as HTMLFormElement
-              if (formElement) {
-                console.log('Trying form.requestSubmit...')
-                if (formElement.requestSubmit) {
-                  formElement.requestSubmit()
-                  formSubmitted = true
-                  return
-                } else {
-                  // Fallback: create temporary submit button
-                  console.log('Creating temporary submit button...')
-                  const tempSubmit = document.createElement('button')
-                  tempSubmit.type = 'submit'
-                  tempSubmit.style.display = 'none'
-                  formElement.appendChild(tempSubmit)
-                  tempSubmit.click()
-                  setTimeout(() => {
-                    if (formElement.contains(tempSubmit)) {
-                      formElement.removeChild(tempSubmit)
-                    }
-                  }, 100)
-                  formSubmitted = true
-                  return
-                }
-              }
-            }
+            // Fallback: Direct save - read current form values from DOM and call handleSave
+            console.log('Form submission not triggered; reading form values directly...')
             
-            // Fallback: Direct save if form submission didn't work
-            // Get current form values and call handleSave directly
-            console.warn('Form submit trigger not found; falling back to direct save...')
-            console.log('Current formValues:', formValues)
-            
-            // Get current values from form fields as fallback
+            // Helper to get form field values
             const getFormValue = (name: string): string => {
-              const input = document.querySelector(`input[name="${name}"], textarea[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement
-              return input?.value || ''
+              // Try by id first (most reliable)
+              const byId = document.getElementById(name) as HTMLInputElement | HTMLTextAreaElement
+              if (byId?.value) return byId.value
+              
+              // Try by name attribute
+              const byName = document.querySelector(`input[name="${name}"], textarea[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement
+              if (byName?.value) return byName.value
+              
+              return ''
             }
             
-            // Try to get date values - DatePicker might store them differently
+            // Get date values - DatePicker component structure
             const getDateValue = (name: string): string => {
-              // Try multiple selectors for date fields
-              const dateInput = document.querySelector(`input[name="${name}"]`) as HTMLInputElement
-              if (dateInput?.value) return dateInput.value
+              // Try standard input first
+              const input = document.getElementById(name) as HTMLInputElement
+              if (input?.value) return input.value
               
-              // DatePicker might use a different structure
-              const datePicker = document.querySelector(`[data-field="${name}"]`) as HTMLElement
-              if (datePicker) {
-                const value = datePicker.getAttribute('value') || datePicker.textContent
-                if (value) return value
+              // DatePicker might render the value in a button or span
+              // Look for the DatePicker container and try to find the displayed value
+              const container = document.querySelector(`[id*="${name}"], [data-field="${name}"]`) as HTMLElement
+              if (container) {
+                // Check for any input inside
+                const inputInside = container.querySelector('input') as HTMLInputElement
+                if (inputInside?.value) return inputInside.value
               }
               
               return ''
             }
             
+            // Collect current form data
             const currentData: Record<string, any> = {
               commissionName: getFormValue('commissionName') || formValues.commissionName || '',
               runFrom: getDateValue('runFrom') || formValues.runFrom || '',
@@ -514,7 +366,8 @@ return (
               comments: getFormValue('comments') || formValues.comments || '',
             }
             
-            console.log('Current form data to save:', currentData)
+            console.log('Form data collected:', currentData)
+            console.log('Form values state:', formValues)
             
             // Validate required fields
             if (!currentData.commissionName || !currentData.runFrom || !currentData.runTo) {
@@ -525,8 +378,8 @@ return (
               return
             }
             
-            // Call handleSave directly
-            console.log('Calling handleSave directly with:', currentData)
+            // Call handleSave directly with current form data
+            console.log('Calling handleSave with:', currentData)
             await handleSave(currentData)
           }}
           disabled={saving}
