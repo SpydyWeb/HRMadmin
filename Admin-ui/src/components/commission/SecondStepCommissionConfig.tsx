@@ -30,10 +30,10 @@ const SecondStepCommissionConfig: React.FC<SecondStepCommissionConfigProps> = ({
       return initialData.formula;
     }
     
-    // Check for commissionFormula field
-    if (initialData.commissionFormula) {
-      return initialData.commissionFormula;
-    }
+    // // Check for commissionFormula field
+    // if (initialData.commissionFormula) {
+    //   return initialData.commissionFormula;
+    // }
     
     // Return empty string if no condition found
     return '';

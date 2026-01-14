@@ -626,39 +626,36 @@ const handleEditorDidMount = (editor, monaco) => {
 
 
   return (
-    <div className="h-screen flex flex-col bg-background-light dark:bg-background-dark overflow-hidden">
+    <div className="w-full space-y-4">
+      <section className="w-full bg-white rounded-md border border-gray-400 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Commission Filter
+            </h1>
+            <p className="text-sm text-gray-500">
+              Define conditions to filter commission data
+            </p>
+          </div>
 
-      <main className="flex-1 flex flex-col p-5 overflow-hidden">
-      <section className="w-full bg-white rounded-xl shadow border p-4 mb-4 flex-shrink-0">
-  <div className="flex items-center justify-between mb-2">
-    <div>
-      <h1 className="text-xl font-semibold text-gray-900">
-        Commission Filter
-      </h1>
-      <p className="text-sm text-gray-500">
-        Define conditions to filter commission data
-      </p>
-    </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowLeftParsed(!showLeftParsed)}
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600"
+            >
+              <IoIosSettings size={20}/>
 
-    <div className="flex items-center gap-3">
-      <button
-        onClick={() => setShowLeftParsed(!showLeftParsed)}
-        className="flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600"
-      >
-        <IoIosSettings size={20}/>
+            </button>
 
-      </button>
+            <button
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600"
+            >
+              <IoIosHelpCircleOutline size={20}/>
 
-      <button
-        className="flex items-center gap-1 text-sm text-gray-600 hover:text-indigo-600"
-      >
-        <IoIosHelpCircleOutline size={20}/>
-
-        Help
-      </button>
-    </div>
-  </div>
-
+              Help
+            </button>
+          </div>
+        </div>
 
         {/* Error Display */}
         {error && (
@@ -668,10 +665,9 @@ const handleEditorDidMount = (editor, monaco) => {
         )}
 
         {/* Formula Editor */}
-        
+        <div className="mt-4">
           <MonacoEditor
             height="80px"
-            className="mt-5"
             defaultLanguage="plaintext"
             value={formula}
             onChange={(value) => {
@@ -689,68 +685,56 @@ const handleEditorDidMount = (editor, monaco) => {
               wordWrap: "on",
             }}
           />
-        </section>
+        </div>
+      </section>
 
-        {/* Save Button */}
-        {/* <div className="flex justify-end mb-4 flex-shrink-0">
-          <Button 
-            onClick={handleSave}
-            disabled={saving}
-            variant="orange"
-            size="lg"
-          >
-            {saving ? 'Saving...' : 'Save Formula & Continue'}
-          </Button>
-        </div> */}
+      <div className={`w-full ${showLeftParsed ? "flex gap-4" : ""}`}>
+        {showLeftParsed && (
+          <section className={`${showLeftParsed ? "w-1/2" : "w-full"} bg-white rounded-md border border-gray-400 p-4 flex flex-col max-h-96`}>
+            <input
+              type="text"
+              placeholder="Search fields (e.g., policy, customer, premium)..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full mb-4 px-3 py-2 border rounded text-sm text-gray-700 flex-shrink-0"
+            />
 
-        <div className={`flex-1 ${showLeftParsed ? "flex gap-4" : ""} overflow-hidden`}>
-          {showLeftParsed && (
-            <section className="w-1/2 bg-white rounded-xl shadow border p-4 overflow-hidden flex flex-col">
-              <input
-                type="text"
-                placeholder="Search fields (e.g., policy, customer, premium)..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full mb-4 px-3 py-2 border rounded text-sm text-gray-700 flex-shrink-0"
-              />
-
-              <div className="flex-1 overflow-y-auto space-y-2">
-                {filteredFields.length > 0 ? (
-                  filteredFields.map((f, index) => (
-                    <div
-                      key={`${f.objectKey}-${f.propertyName}-${index}`}
-                      onClick={() => insertAtCursor(f.fullPath)}
-                      className="cursor-pointer px-3 py-2 rounded bg-gray-100 hover:bg-indigo-100 text-sm"
-                    >
-                      <div className="font-mono text-indigo-700">
-                        {f.fullPath}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {f.description}
-                      </div>
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {filteredFields.length > 0 ? (
+                filteredFields.map((f, index) => (
+                  <div
+                    key={`${f.objectKey}-${f.propertyName}-${index}`}
+                    onClick={() => insertAtCursor(f.fullPath)}
+                    className="cursor-pointer px-3 py-2 rounded bg-gray-100 hover:bg-indigo-100 text-sm"
+                  >
+                    <div className="font-mono text-indigo-700">
+                      {f.fullPath}
                     </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-gray-400">
-                    {search.trim() !== "" ? "No matching fields" : "No fields available"}
+                    <div className="text-xs text-gray-500">
+                      {f.description}
+                    </div>
                   </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          <section className={`${showLeftParsed ? "w-1/2" : "w-full"} bg-white rounded-xl shadow border p-6 overflow-hidden flex flex-col`}>
-            <h2 className="text-black font-semibold mb-4 flex items-center gap-2 flex-shrink-0">
-              <span className="material-icons text-indigo-500">account_tree</span>
-              Parsed Structure
-            </h2>
-
-            <div className="flex-1 overflow-y-auto font-mono text-sm">
-              <RenderTree node={ast} />
+                ))
+              ) : (
+                <div className="text-sm text-gray-400">
+                  {search.trim() !== "" ? "No matching fields" : "No fields available"}
+                </div>
+              )}
             </div>
           </section>
-        </div>
-      </main>
+        )}
+
+        <section className={`${showLeftParsed ? "w-1/2" : "w-full"} bg-white rounded-md border border-gray-400 p-4 flex flex-col max-h-96`}>
+          <h2 className="text-black font-semibold mb-4 flex items-center gap-2 flex-shrink-0">
+            <span className="material-icons text-indigo-500">account_tree</span>
+            Parsed Structure
+          </h2>
+
+          <div className="flex-1 overflow-y-auto font-mono text-sm">
+            <RenderTree node={ast} />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

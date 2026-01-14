@@ -47,6 +47,12 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
   const [filterFormula, setFilterFormula] = useState<string>(initialData?.filterConditions || '')
   const hiddenSubmitButtonRef = useRef<HTMLButtonElement | null>(null)
   const formDataRef = useRef<Record<string, any> | null>(null)
+  // Keep an up-to-date reference to `saving` for async handlers (avoids stale-closure reads)
+  const savingRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    savingRef.current = saving
+  }, [saving])
 
   //  const formatDateToISO = (dateString: string) => {
   //   if (!dateString) return '';
@@ -84,7 +90,7 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
         name: 'comments',
         label: 'Comments',
         type: 'textarea',
-        colSpan: 12,
+        colSpan: 9,
         variant: 'standard',
       },
     ],
@@ -254,11 +260,6 @@ const handleSave = async (data: Record<string, any>) => {
       ? await commissionService.editCommissionConfig(payload)
       : await commissionService.configCommission(payload)
 
-    console.log("Full API Response:", response)
-    console.log("Response Type:", typeof response)
-    console.log("Response Keys:", response ? Object.keys(response) : 'N/A')
-    console.log("Response Header:", response?.responseHeader)
-    console.log("Response Body:", response?.responseBody)
     
     // Validate response structure
     if (!response || typeof response !== 'object' || Object.keys(response).length === 0) {
@@ -308,6 +309,7 @@ const handleSave = async (data: Record<string, any>) => {
       // Update formValues to reflect the saved state (use mergedData to preserve original date format)
       // This ensures formValues always has the latest values for future saves
       const updatedFormValues = {
+        commissionConfigId: commissionConfigId || returnedCommissionConfigId,
         commissionName: mergedData.commissionName || formValues.commissionName || '',
         runFrom: mergedData.runFrom || formValues.runFrom || '',
         runTo: mergedData.runTo || formValues.runTo || '',
@@ -399,7 +401,7 @@ return (
           variant="orange"
           size="md"
           onClick={async () => {
-            if (saving) {
+            if (savingRef.current) {
               console.log('Save already in progress, ignoring click')
               return
             }
@@ -415,12 +417,9 @@ return (
                 console.log('Trying to click hidden submit button via ref')
                 hiddenSubmitButtonRef.current.click()
                 formSubmitted = true
-                // Wait a bit to see if form submission processes
-                await new Promise(resolve => setTimeout(resolve, 100))
-                if (saving) {
-                  console.log('Form submission triggered successfully')
-                  return
-                }
+                // If we managed to click a submit button, hand off to the form's onSubmit.
+                // Don't rely on reading `saving` here: state updates won't change this closure's `saving` value.
+                return
               } catch (e) {
                 console.warn('Failed to click stored button ref:', e)
               }
@@ -434,11 +433,7 @@ return (
                 hiddenSubmitButtonRef.current = submitBtn
                 submitBtn.click()
                 formSubmitted = true
-                await new Promise(resolve => setTimeout(resolve, 100))
-                if (saving) {
-                  console.log('Form submission triggered successfully')
-                  return
-                }
+                return
               }
             }
             
@@ -452,12 +447,7 @@ return (
                   hiddenSubmitButtonRef.current = buttonElement
                   buttonElement.click()
                   formSubmitted = true
-                  await new Promise(resolve => setTimeout(resolve, 100))
-                  if (saving) {
-                    console.log('Form submission triggered successfully')
-                    return
-                  }
-                  break
+                  return
                 }
               }
             }
@@ -470,11 +460,7 @@ return (
                 if (formElement.requestSubmit) {
                   formElement.requestSubmit()
                   formSubmitted = true
-                  await new Promise(resolve => setTimeout(resolve, 100))
-                  if (saving) {
-                    console.log('Form submission triggered successfully')
-                    return
-                  }
+                  return
                 } else {
                   // Fallback: create temporary submit button
                   console.log('Creating temporary submit button...')
@@ -489,18 +475,14 @@ return (
                     }
                   }, 100)
                   formSubmitted = true
-                  await new Promise(resolve => setTimeout(resolve, 100))
-                  if (saving) {
-                    console.log('Form submission triggered successfully')
-                    return
-                  }
+                  return
                 }
               }
             }
             
             // Fallback: Direct save if form submission didn't work
             // Get current form values and call handleSave directly
-            console.log('Form submission methods failed, attempting direct save...')
+            console.warn('Form submit trigger not found; falling back to direct save...')
             console.log('Current formValues:', formValues)
             
             // Get current values from form fields as fallback

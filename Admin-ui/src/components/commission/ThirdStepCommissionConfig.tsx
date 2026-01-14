@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { commissionService } from '@/services/commissionService'
 import { showToast } from '@/components/ui/sonner'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface ThirdStepCommissionConfigProps {
   commissionConfigId?: number;
@@ -213,16 +214,17 @@ const ThirdStepCommissionConfig: React.FC<ThirdStepCommissionConfigProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-md space-y-6">
-      <h2 className="text-lg font-semibold">Schedule Configuration</h2>
+      <CardContent className="!px-6">
+        <div className="bg-white p-6 rounded-md space-y-6">
+          <h1 className="text-lg font-semibold">Step 3: Schedule Configuration</h1>
 
       {/* Job Type Input */}
       <div>
-        <label className="block mb-2 font-medium">Job Name</label>
+        <label className="block mb-2 font-medium">Job Type</label>
         <input
           type="text"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter job name"
+          placeholder="Enter Job Type"
           value={jobType}
           onChange={(e) => setJobType(e.target.value)}
         />
@@ -489,7 +491,8 @@ const ThirdStepCommissionConfig: React.FC<ThirdStepCommissionConfigProps> = ({
           )}
         </button>
       </div>
-    </div>
+        </div>
+      </CardContent>
   );
 };
 
