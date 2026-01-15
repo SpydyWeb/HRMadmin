@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import CommissionFormulaEditor from '@/components/commission/CommissionFormulaEditor'
 
 
@@ -15,6 +15,12 @@ const SecondStepCommissionConfig: React.FC<SecondStepCommissionConfigProps> = ({
   isEditMode = false,
   onSaveSuccess
 }) => {
+  // Log metadata response on mount
+  useEffect(() => {
+    console.log('SecondStepCommissionConfig - Metadata response on mount:', initialData);
+    console.log('SecondStepCommissionConfig - Full initialData:', JSON.stringify(initialData, null, 2));
+  }, []);
+
   // Extract condition from initialData - check multiple possible field names
   // The condition might be stored as 'condition', 'formula', or other variations
   const initialFormula = useMemo(() => {

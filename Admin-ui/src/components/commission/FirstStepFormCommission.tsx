@@ -45,6 +45,8 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
     runTo: initialData?.runTo ? formatDateToLocal(initialData.runTo) : '',
     comments: initialData?.comments || '',
     filterConditions: initialData?.filterConditions || '',
+    targetType: initialData?.targetType || '',
+    targetMethod: initialData?.targetMethod || '',
   })
   const [saving, setSaving] = useState(false)
   const [filterFormula, setFilterFormula] = useState<string>(initialData?.filterConditions || '')
@@ -88,6 +90,19 @@ const FirstStepFormCommission: React.FC<FirstStepFormCommissionProps> = ({
       { name: 'runFrom', label: 'Run From', type: 'date', colSpan: 3 },
       { name: 'runTo', label: 'Run To', type: 'date', colSpan: 3 },
       {
+        name: 'targetType',
+        label: 'Target Type',
+        type: 'text',
+        colSpan: 3,
+        variant: 'standard',
+      },    {
+        name: 'targetMethod',
+        label: 'Target Method',
+        type: 'text',
+        colSpan: 3,
+        variant: 'standard',
+      },
+      {
         name: 'comments',
         label: 'Comments',
         type: 'textarea',
@@ -123,6 +138,8 @@ useEffect(() => {
       runTo: initialData.runTo ? formatDateToLocal(initialData.runTo) : '',
       comments: initialData.comments || '',
       filterConditions: initialData.filterCondition || initialData.filterConditions || '',
+      targetType: initialData.targetType || '',
+      targetMethod: initialData.targetMethod || '',
     }
     console.log("Updated form values:", updatedFormValues);
     
@@ -190,6 +207,39 @@ useEffect(() => {
     return <Loader />
   }
 
+// Helper function to convert date to YYYY-MM-DD format
+const formatDateToYYYYMMDD = (dateValue: string | Date | null | undefined): string => {
+  if (!dateValue) return '';
+  
+  let date: Date;
+  
+  // If it's already a Date object
+  if (dateValue instanceof Date) {
+    date = dateValue;
+  } 
+  // If it's a string, try to parse it
+  else if (typeof dateValue === 'string') {
+    // Check if it's already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    // Try parsing the date string (handles formats like "15 Jan 2025" from DatePicker)
+    date = new Date(dateValue);
+    // If parsing failed, return empty string
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date format:', dateValue);
+      return '';
+    }
+  } else {
+    return '';
+  }
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Update the handleSave function
 const handleSave = async (data: Record<string, any>) => {
   try {
@@ -201,16 +251,30 @@ const handleSave = async (data: Record<string, any>) => {
       ...data,         // edited values
     }
 
-    // 2️⃣ Build payload
+ 
+
+    // 2️⃣ Format dates to YYYY-MM-DD format
+    const formattedRunFrom = formatDateToYYYYMMDD(mergedData.runFrom);
+    const formattedRunTo = formatDateToYYYYMMDD(mergedData.runTo);
+
+    console.log('Formatted dates:', {
+      runFrom: formattedRunFrom,
+      runTo: formattedRunTo,
+    });
+
+    // 3️⃣ Build payload
     const payload: IConfigCommissionRequest = {
       commissionName: mergedData.commissionName,
-      runFrom: mergedData.runFrom,
-      runTo: mergedData.runTo,
+      runFrom: formattedRunFrom,
+      runTo: formattedRunTo,
       comments: mergedData.comments ?? '',
       filterConditions: filterFormula?.trim() || '',
+      targetType: mergedData.targetType,
+      targetMethod: mergedData.targetMethod,
+      commissionConfigId: 0,
     }
 
-    // 3️⃣ VERY IMPORTANT: add ID in edit
+    // 4️⃣ VERY IMPORTANT: add ID in edit
     if (isEditMode) {
       if (!commissionConfigId) {
         throw new Error('commissionConfigId missing in edit mode')
@@ -218,10 +282,10 @@ const handleSave = async (data: Record<string, any>) => {
       payload.commissionConfigId = commissionConfigId
     }
 
-    console.log('FINAL PAYLOAD →', payload)
 
-    // 4️⃣ Call SAME API (backend handles create/update)
+    // 5️⃣ Call SAME API (backend handles create/update)
     const response = await commissionService.configCommission(payload)
+    console.log("create response", response)
 
     const isSuccess =
       response?.responseHeader?.errorCode === 1101 ||
@@ -231,7 +295,7 @@ const handleSave = async (data: Record<string, any>) => {
       throw new Error(response?.responseHeader?.errorMessage || 'Save failed')
     }
 
-    // 5️⃣ Persist updated state
+    // 6️⃣ Persist updated state
     setFormValues(payload)
 
     showToast(

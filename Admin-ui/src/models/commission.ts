@@ -295,6 +295,8 @@ export interface IConfigCommissionRequest {
   comments:string
   filterConditions?: string
   commissionConfigId?: number
+  targetType: string
+  targetMethod: string
 
 }
 export interface IexecutiveJobListResponseBody {
