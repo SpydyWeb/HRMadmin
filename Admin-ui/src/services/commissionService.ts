@@ -63,49 +63,49 @@ export const commissionService = {
   },
   configCommission: async (data:IConfigCommissionRequest) => {
     try {
-      console.log("configCommission request payload:", data);
+      console.log("create configCommission request payload:", data);
       const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
         APIRoutes.CONFIG_COMMISSION,
         [data],
       )
-      console.log("config 1st step service response:", response);
-      console.log("configCommission response type:", typeof response);
-      console.log("configCommission response keys:", response ? Object.keys(response) : 'null/undefined');
-      console.log("configCommission full response:", JSON.stringify(response, null, 2));
+      console.log("create config 1st step service response:", response);
+      console.log("create configCommission response type:", typeof response);
+      console.log("create configCommission response keys:", response ? Object.keys(response) : 'null/undefined');
+      console.log("create configCommission full response:", JSON.stringify(response, null, 2));
       
       // Validate response structure - be more lenient with validation
-      if (response === null || response === undefined) {
-        console.error("Invalid response received: null or undefined");
-        throw new Error('API returned null or undefined response. Please check the server logs.');
-      }
+      // if (response === null || response === undefined) {
+      //   console.error("create Invalid response received: null or undefined");
+      //   throw new Error('create API returned null or undefined response. Please check the server logs.');
+      // }
       
-      if (typeof response !== 'object') {
-        console.error("Invalid response received - not an object:", response, "Type:", typeof response);
-        throw new Error(`API returned invalid response type: ${typeof response}. Expected object.`);
-      }
+      // if (typeof response !== 'object') {
+      //   console.error("create Invalid response received - not an object:", response, "Type:", typeof response);
+      //   throw new Error(`create API returned invalid response type: ${typeof response}. Expected object.`);
+      // }
       
       // Check if response is an empty object
-      const responseKeys = Object.keys(response);
-      if (responseKeys.length === 0) {
-        console.error("Invalid response received: empty object", response);
-        throw new Error('API returned empty response object. Please check the server logs.');
-      }
+      // const responseKeys = Object.keys(response);
+      // if (responseKeys.length === 0) {
+      //   console.error("create Invalid response received: empty object", response);
+      //   throw new Error('create API returned empty response object. Please check the server logs.');
+      // }
       
-      // Check for responseHeader - but handle cases where it might be nested differently
-      if (!response.responseHeader) {
-        console.error("Response missing responseHeader. Full response:", JSON.stringify(response, null, 2));
-        console.error("Response structure analysis:", {
-          hasResponseHeader: 'responseHeader' in response,
-          keys: Object.keys(response),
-          firstLevelKeys: Object.keys(response),
-        });
-        throw new Error('API response is missing required responseHeader field. Response structure may have changed.');
-      }
+      // // Check for responseHeader - but handle cases where it might be nested differently
+      // if (!response.responseHeader) {
+      //   console.error("createResponse missing responseHeader. Full response:", JSON.stringify(response, null, 2));
+      //   console.error("create Response structure analysis:", {
+      //     hasResponseHeader: 'create responseHeader' in response,
+      //     keys: Object.keys(response),
+      //     firstLevelKeys: Object.keys(response),
+      //   });
+      //   throw new Error('create API response is missing required responseHeader field. Response structure may have changed.');
+      // }
       
       return response     
     } catch (error) {
-      console.error("configCommission service error:", error);
-      console.error("Error details:", {
+      console.error("create configCommission service error:", error);
+      console.error("create Error details:", {
         message: (error as any)?.message,
         stack: (error as any)?.stack,
         response: (error as any)?.response,
@@ -120,7 +120,7 @@ export const commissionService = {
         APIRoutes.UPDATE_CRON,
         [data],
       )
-      console.log("config cron response:", response);
+      // console.log("config cron response:", response);
       return response     
     } catch (error) {
       console.error("cron error:", error);
@@ -129,17 +129,21 @@ export const commissionService = {
   },
   updateConditionCommissionConfig: async (data: { commissionConfigId: number; formula: string }) => {
     try {
+      console.log("updateConditionCommissionConfig request payload:", data);
       const response = await callApi<ApiResponse<ICommissionMgmtApiResponse>>(
         APIRoutes.UPDATE_CONDITION_CONFIG,
         [data],
       )
-    if (!response) {
-      throw new Error("Invalid response structure");
-    }
+      console.log("updateConditionCommissionConfig response:", response);
+      
+      if (!response) {
+        throw new Error("Invalid response structure");
+      }
       return response     
       
     } catch (error) {
-      
+      console.error("updateConditionCommissionConfig service error:", error);
+      throw error;
     }
   },
   configCommissionList: async (data:IConfigCommissionRequest) => {
@@ -187,7 +191,7 @@ export const commissionService = {
         APIRoutes.COMMISSION_SEARCH_FIELDS,
         [data],
       )
-      console.log("qwe", response)
+      // console.log("qwe", response)
 
       if (!response) {
         console.warn("COMMISSION_SEARCH_FIELDS Response is undefined or null");
@@ -222,15 +226,15 @@ export const commissionService = {
 
   editCommissionConfig: async (data:IConfigCommissionRequest) => {
     try {
-      console.log("editCommissionConfig request payload:", data);
+      // console.log("editCommissionConfig request payload:", data);
       const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(
         APIRoutes.UPDATE_COMMISSION_CONFIG,
         [data],
       )
-      console.log("editCommissionConfig service response:", response);
-      console.log("editCommissionConfig response type:", typeof response);
-      console.log("editCommissionConfig response keys:", response ? Object.keys(response) : 'null/undefined');
-      console.log("editCommissionConfig full response:", JSON.stringify(response, null, 2));
+      // console.log("editCommissionConfig service response:", response);
+      // console.log("editCommissionConfig response type:", typeof response);
+      // console.log("editCommissionConfig response keys:", response ? Object.keys(response) : 'null/undefined');
+      // console.log("editCommissionConfig full response:", JSON.stringify(response, null, 2));
       
       // Validate response structure - be more lenient with validation
       if (response === null || response === undefined) {

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import CommissionFormulaEditor from '@/components/commission/CommissionFormulaEditor'
 
 
@@ -15,6 +15,15 @@ const SecondStepCommissionConfig: React.FC<SecondStepCommissionConfigProps> = ({
   isEditMode = false,
   onSaveSuccess
 }) => {
+  // Log commissionConfigId on mount to debug
+  useEffect(() => {
+    console.log('SecondStepCommissionConfig - commissionConfigId received:', commissionConfigId);
+    console.log('SecondStepCommissionConfig - isEditMode:', isEditMode);
+    if (!commissionConfigId || commissionConfigId === 0) {
+      console.warn('SecondStepCommissionConfig - Warning: commissionConfigId is missing or 0. Step 1 may not be completed.');
+    }
+  }, [commissionConfigId, isEditMode]);
+
   // Extract condition from initialData - check multiple possible field names
   // The condition might be stored as 'condition', 'formula', or other variations
   const initialFormula = useMemo(() => {

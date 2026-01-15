@@ -272,6 +272,7 @@ export default function CommissionFormulaEditor({
     const fetchSearchFields = async () => {
       try {
         setLoadingFields(true);
+        console.log("Fetching commission search fields for commissionConfigId:", commissionConfigId);
         const response = await commissionService.commissionSearchFields({
           commissionConfigId: commissionConfigId
         });
@@ -293,7 +294,7 @@ const processedData: Record<string, any> = {};
               
               }
                else {
-                console.warn(`Key ${key} is not an array, value:`, value);
+                console.warn(`Key ${key} is not an array, value:`, fields);
                 processedData[key] = [];
               }
             });
@@ -332,8 +333,14 @@ const processedData: Record<string, any> = {};
       }
     };
 
-    if (commissionConfigId) {
+    // Call API if commissionConfigId is not null/undefined (allow 0 as valid ID)
+    // This ensures the API is called when switching to step 2, even if commissionConfigId is 0
+    // The useEffect will run on mount and whenever commissionConfigId changes
+    if (commissionConfigId !== null && commissionConfigId !== undefined) {
+      console.log("Calling commissionSearchFields API with commissionConfigId:", commissionConfigId);
       fetchSearchFields();
+    } else {
+      console.warn("Skipping API call - commissionConfigId is null or undefined:", commissionConfigId);
     }
   }, [commissionConfigId]);
   const { ast } = useMemo(() => ({ ast: parseFormula(formula) }), [formula]);
@@ -480,6 +487,20 @@ const handleSave = async () => {
     setSaving(true);
     setError(null);
 
+    // Validate commissionConfigId
+    // Note: commissionConfigId should be > 0 (0 is used as placeholder for new records)
+    if (!commissionConfigId || commissionConfigId === 0 || commissionConfigId === null || commissionConfigId === undefined) {
+      const msg = 'Commission Config ID is missing. Please complete and save Step 1 first before saving the formula.';
+      setError(msg);
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Cannot save formula', {
+        description: msg,
+      });
+      setSaving(false);
+      return;
+    }
+    
+    console.log("Validating save - commissionConfigId:", commissionConfigId);
+
     // Always read the latest value from Monaco (state can lag behind on fast clicks)
     const currentFormula =
       (editorRef.current && typeof editorRef.current.getValue === 'function'
@@ -492,6 +513,7 @@ const handleSave = async () => {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save formula', {
         description: msg,
       });
+      setSaving(false);
       return;
     }
 
@@ -502,20 +524,28 @@ const handleSave = async () => {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Formula validation failed', {
         description: errors[0].message
       });
+      setSaving(false);
       return;
     }
 
-    console.log("formula", currentFormula)
+    console.log("Saving formula with commissionConfigId:", commissionConfigId);
+    console.log("Formula to save:", currentFormula);
+    
     // Call the updateConditionCommissionConfig API
     const response = await commissionService.updateConditionCommissionConfig({
       commissionConfigId,
       formula: currentFormula
     });
     
-    console.log("saved condition:", response);
+    console.log("Save response:", response);
+    
+    // Check if response is undefined or null (service error)
+    if (!response) {
+      throw new Error("No response received from server. Please check your connection and try again.");
+    }
     
     // If successful, move to next step
-    if (response?.responseHeader?.errorCode === 1101) {
+    if (response?.responseHeader?.errorCode === 1101 || response?.responseHeader?.errorMessage === "SUCCESS") {
       showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 2 saved successfully!', {
         description: 'Commission formula has been saved.'
       });
@@ -528,9 +558,9 @@ const handleSave = async () => {
       });
     } 
 
-  } catch (err) {
-    console.error(err);
-    const errorMessage = "Failed to update commission condition";
+  } catch (err: any) {
+    console.error("Error saving formula:", err);
+    const errorMessage = err?.message || "Failed to update commission condition. Please try again.";
     setError(errorMessage);
     showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save', {
       description: errorMessage
