@@ -15,11 +15,14 @@ const SecondStepCommissionConfig: React.FC<SecondStepCommissionConfigProps> = ({
   isEditMode = false,
   onSaveSuccess
 }) => {
-  // Log metadata response on mount
+  // Log commissionConfigId on mount to debug
   useEffect(() => {
-    console.log('SecondStepCommissionConfig - Metadata response on mount:', initialData);
-    console.log('SecondStepCommissionConfig - Full initialData:', JSON.stringify(initialData, null, 2));
-  }, []);
+    console.log('SecondStepCommissionConfig - commissionConfigId received:', commissionConfigId);
+    console.log('SecondStepCommissionConfig - isEditMode:', isEditMode);
+    if (!commissionConfigId || commissionConfigId === 0) {
+      console.warn('SecondStepCommissionConfig - Warning: commissionConfigId is missing or 0. Step 1 may not be completed.');
+    }
+  }, [commissionConfigId, isEditMode]);
 
   // Extract condition from initialData - check multiple possible field names
   // The condition might be stored as 'condition', 'formula', or other variations

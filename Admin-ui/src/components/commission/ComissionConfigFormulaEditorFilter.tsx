@@ -371,7 +371,7 @@ export default function CommissionFormulaEditorFilter({
   const allFields = useMemo(() => {
     const fieldsList: Array<{
       objectKey: string;
-      propertyName: string;
+      columnName: string;
       description: string;
       dataType?: string;
       fullPath: string;
@@ -379,13 +379,13 @@ export default function CommissionFormulaEditorFilter({
     Object.keys(objects).forEach(objectKey => {
       if (Array.isArray(objects[objectKey])) {
         objects[objectKey].forEach(field => {
-          const propertyName = field.propertyName;
+          const columnName = field.columnName;
           fieldsList.push({
             objectKey,
-            propertyName: propertyName,
+            columnName: columnName,
             description: field.description,
             dataType: field.dataType,
-            fullPath: `${objectKey}.${propertyName}`
+            fullPath: `${objectKey}.${columnName}`
           });
         });
       }
@@ -404,7 +404,7 @@ export default function CommissionFormulaEditorFilter({
     return allFields.filter(f =>
       f.fullPath.toLowerCase().includes(searchLower) ||
       f.description?.toLowerCase().includes(searchLower) ||
-      f.propertyName.toLowerCase().includes(searchLower) ||
+      f.columnName.toLowerCase().includes(searchLower) ||
       f.objectKey.toLowerCase().includes(searchLower)
     );
   }, [allFields, search]);
@@ -457,7 +457,7 @@ export default function CommissionFormulaEditorFilter({
 
     // Object / Property check
     while ((match = IDENTIFIER_REGEX.exec(formula)) !== null) {
-      const [full, objectName, propertyName] = match;
+      const [full, objectName, columnName] = match;
       const startIndex = match.index;
 
       // Case-insensitive object name lookup
@@ -472,12 +472,12 @@ export default function CommissionFormulaEditorFilter({
       }
 
       const field = objects[objectKey].find(f => 
-        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
-        (f.columnName && f.columnName.toLowerCase() === propertyName.toLowerCase())
+        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
+        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
       );
       if (!field) {
         errors.push({
-          message: `Property '${propertyName}' does not exist on '${objectName}'`,
+          message: `Property '${columnName}' does not exist on '${objectName}'`,
           start: startIndex + objectName.length + 1,
           end: startIndex + full.length,
         });
@@ -486,7 +486,7 @@ export default function CommissionFormulaEditorFilter({
 
     // Type mismatch check
     while ((match = COMPARISON_REGEX.exec(formula)) !== null) {
-      const [full, objectName, propertyName, operator, literal] = match;
+      const [full, objectName, columnName, operator, literal] = match;
       const startIndex = match.index;
 
       // Case-insensitive object name lookup
@@ -494,8 +494,8 @@ export default function CommissionFormulaEditorFilter({
       if (!objectKey) continue;
 
       const field = objects[objectKey].find(f => 
-        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
-        (f.columnName && f.columnName.toLowerCase() === propertyName.toLowerCase())
+        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
+        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
       );
       if (!field || !field.dataType) continue;
 
@@ -552,14 +552,14 @@ const handleEditorDidMount = (editor, monaco) => {
         if (objectKey && Array.isArray(objects[objectKey])) {
           const fields = objects[objectKey]
             .filter(field =>
-              (field.propertyName || "")
+              (field.columnName || "")
                 .toLowerCase()
                 .startsWith(typedField.toLowerCase())
             )
             .map(field => ({
-              label: field.propertyName,
+              label: field.columnName,
               kind: monaco.languages.CompletionItemKind.Field,
-              insertText: field.propertyName,
+              insertText: field.columnName,
               detail: field.dataType ? `Type: ${field.dataType}` : undefined,
               documentation: field.description,
               range: {
@@ -703,7 +703,7 @@ const handleEditorDidMount = (editor, monaco) => {
               {filteredFields.length > 0 ? (
                 filteredFields.map((f, index) => (
                   <div
-                    key={`${f.objectKey}-${f.propertyName}-${index}`}
+                    key={`${f.objectKey}-${f.columnName}-${index}`}
                     onClick={() => insertAtCursor(f.fullPath)}
                     className="cursor-pointer px-3 py-2 rounded bg-gray-100 hover:bg-indigo-100 text-sm"
                   >

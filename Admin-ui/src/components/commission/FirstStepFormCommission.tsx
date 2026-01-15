@@ -303,7 +303,43 @@ const handleSave = async (data: Record<string, any>) => {
       isEditMode ? 'Commission updated successfully' : 'Commission created successfully'
     )
 
-    onSaveSuccess(commissionConfigId ?? response?.responseBody?.commissionConfigId)
+    // Extract commissionConfigId from response - check multiple possible field names
+    // The API might return commissionId or commissionConfigId
+    const responseId = response?.responseBody?.commissionConfig?.[0]?.commissionConfigId
+    
+    // Use existing ID if in edit mode, otherwise use the ID from response
+    const finalId = isEditMode && commissionConfigId 
+      ? commissionConfigId 
+      : (responseId || commissionConfigId);
+    
+    console.log("Step 1 Save - commissionConfigId:", {
+      isEditMode,
+      existingId: commissionConfigId,
+      responseId,
+      finalId,
+      responseBody: response?.responseBody,
+      fullResponse: response
+    });
+
+    // Validate that we have a valid ID before proceeding
+    if (!finalId || finalId === 0) {
+      const errorMsg = "Failed to get Commission Config ID from server response. Please check the console for details.";
+      console.error("Error: No valid commissionConfigId found after save.", {
+        response,
+        responseBody: response?.responseBody,
+        checkedFields: {
+          commissionConfigId: response?.responseBody?.commissionConfig?.[0]?.commissionConfigId,
+          //pls keep this address is right.      
+        }
+      });
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Save completed but ID missing', {
+        description: errorMsg
+      });
+      // Don't proceed to next step if ID is missing
+      return;
+    }
+
+    onSaveSuccess(finalId)
 
   } catch (err: any) {
     console.error(err)

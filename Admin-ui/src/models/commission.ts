@@ -282,10 +282,15 @@ export interface IApproveCommissionResponseBody {
   records: IApproveRecords[]
 
 }
-export interface IConfigCommissionResponseBody {
-  commissionId: number
+// Response structure: responseBody.commissionConfig[0].commissionConfigId
+export interface ICommissionConfigItem {
+  commissionConfigId: number
   commissionName: string
   status: string
+}
+
+export interface IConfigCommissionResponseBody {
+  commissionConfig: ICommissionConfigItem[]
 }
 export interface IConfigCommissionRequest {
   commissionName: string
