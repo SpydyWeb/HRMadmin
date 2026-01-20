@@ -351,6 +351,7 @@ export interface ICommissionMetadata {
   customer?: ICommissionField[]
   premium?: ICommissionField[]
   policy?: ICommissionField[]
+  lastExec?: ICommissionField[]
   [key: string]: ICommissionField[] | undefined
 }
 
