@@ -132,6 +132,7 @@ useEffect(() => {
     console.log("Initial data received:", initialData);
     console.log("Filter condition value:", initialData.filterCondition);
     
+    // Use empty strings for form state (for display), but we'll send null to backend
     const updatedFormValues = {
       commissionName: initialData.commissionName || '',
       runFrom: initialData.runFrom ? formatDateToLocal(initialData.runFrom) : '',
@@ -207,9 +208,17 @@ useEffect(() => {
     return <Loader />
   }
 
+// Helper function to convert empty strings to null (backend requirement)
+const emptyStringToNull = (value: any): any => {
+  if (value === '' || (typeof value === 'string' && value.trim() === '')) {
+    return null;
+  }
+  return value;
+};
+
 // Helper function to convert date to YYYY-MM-DD format
-const formatDateToYYYYMMDD = (dateValue: string | Date | null | undefined): string => {
-  if (!dateValue) return '';
+const formatDateToYYYYMMDD = (dateValue: string | Date | null | undefined): string | null => {
+  if (!dateValue) return null;
   
   let date: Date;
   
@@ -225,13 +234,13 @@ const formatDateToYYYYMMDD = (dateValue: string | Date | null | undefined): stri
     }
     // Try parsing the date string (handles formats like "15 Jan 2025" from DatePicker)
     date = new Date(dateValue);
-    // If parsing failed, return empty string
+    // If parsing failed, return null
     if (isNaN(date.getTime())) {
       console.warn('Invalid date format:', dateValue);
-      return '';
+      return null;
     }
   } else {
-    return '';
+    return null;
   }
   
   const year = date.getFullYear();
@@ -262,29 +271,41 @@ const handleSave = async (data: Record<string, any>) => {
       runTo: formattedRunTo,
     });
 
-    // 3️⃣ Build payload
-    const payload: IConfigCommissionRequest = {
-      commissionName: mergedData.commissionName,
-      runFrom: formattedRunFrom,
-      runTo: formattedRunTo,
-      comments: mergedData.comments ?? '',
-      filterConditions: filterFormula?.trim() || '',
-      targetType: mergedData.targetType,
-      targetMethod: mergedData.targetMethod,
+    // 3️⃣ Build payload with actual values (no empty string defaults)
+    // Get actual values, use null if empty/undefined instead of empty strings
+    const rawPayload = {
+      commissionName: mergedData.commissionName || null,
+      runFrom: formattedRunFrom, // Already returns null if empty
+      runTo: formattedRunTo, // Already returns null if empty
+      comments: mergedData.comments || null,
+      filterConditions: filterFormula?.trim() || null,
+      targetType: mergedData.targetType || null,
+      targetMethod: mergedData.targetMethod || null,
       commissionConfigId: 0,
     }
 
-    // 4️⃣ VERY IMPORTANT: add ID in edit
+    // 4️⃣ Convert any remaining empty strings to null (backend requirement)
+    const backendPayload: any = {
+      commissionName: emptyStringToNull(rawPayload.commissionName),
+      runFrom: emptyStringToNull(rawPayload.runFrom),
+      runTo: emptyStringToNull(rawPayload.runTo),
+      comments: emptyStringToNull(rawPayload.comments),
+      filterConditions: emptyStringToNull(rawPayload.filterConditions),
+      targetType: emptyStringToNull(rawPayload.targetType),
+      targetMethod: emptyStringToNull(rawPayload.targetMethod),
+      commissionConfigId: rawPayload.commissionConfigId,
+    }
+
+    // 5️⃣ VERY IMPORTANT: add ID in edit
     if (isEditMode) {
       if (!commissionConfigId) {
         throw new Error('commissionConfigId missing in edit mode')
       }
-      payload.commissionConfigId = commissionConfigId
+      backendPayload.commissionConfigId = commissionConfigId
     }
 
-
-    // 5️⃣ Call SAME API (backend handles create/update)
-    const response = await commissionService.configCommission(payload)
+    // 6️⃣ Call SAME API (backend handles create/update)
+    const response = await commissionService.configCommission(backendPayload)
     console.log("create response", response)
 
     const isSuccess =
@@ -295,8 +316,16 @@ const handleSave = async (data: Record<string, any>) => {
       throw new Error(response?.responseHeader?.errorMessage || 'Save failed')
     }
 
-    // 6️⃣ Persist updated state
-    setFormValues(payload)
+    // 7️⃣ Persist updated state (convert null back to empty strings for form display)
+    setFormValues({
+      commissionName: backendPayload.commissionName ?? '',
+      runFrom: backendPayload.runFrom ?? '',
+      runTo: backendPayload.runTo ?? '',
+      comments: backendPayload.comments ?? '',
+      filterConditions: backendPayload.filterConditions ?? '',
+      targetType: backendPayload.targetType ?? '',
+      targetMethod: backendPayload.targetMethod ?? '',
+    })
 
     showToast(
       NOTIFICATION_CONSTANTS.SUCCESS,
