@@ -11,6 +11,7 @@ import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
 import Loader from '@/components/Loader'
 import { Checkbox } from '@/components/ui/checkbox'
+import { X } from 'lucide-react'
 import lodash from 'lodash'
 const { debounce } = lodash
 
@@ -100,14 +101,23 @@ const ConfigCommissionList: React.FC = () => {
     {
       header: 'Enabled',
       width: '5rem',
-      accessor: (row: any) => (
-        <div className="w-fit">
-          <Checkbox
-            checked={row.enabled === true || row.enabled === 'true' || row.enabled === 1}
-            className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
-          />
-        </div>
-      ),
+      accessor: (row: any) => {
+        const isEnabled = row.enabled === true || row.enabled === 'true' || row.enabled === 1
+        return (
+          <div className="w-fit">
+            {isEnabled ? (
+              <Checkbox
+                checked={true}
+                className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
+              />
+            ) : (
+              <div className="h-4 w-4 rounded-sm border border-red-500 bg-red-500 flex items-center justify-center">
+                <X className="h-3 w-3 text-white" />
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       header: 'Commission Name',
@@ -162,7 +172,7 @@ const ConfigCommissionList: React.FC = () => {
               navigate({
                 to: RoutePaths.COMMISSION_HISTORY,
                 search: {
-                  commissionId:  _row.commissionConfigId || '',
+                  jobConfigId:  _row.jobConfigId || '',
                 },
               })
             }
