@@ -11,7 +11,7 @@ const APIRoutes = {
   APPROVECOMMISSION: "/api/CommissionMgmt/ApproveCommission",
   CONFIGCOMMISSION: "/api/CommissionConfig/CreateCommission",
   UPDATECONDITIONCONFIG: "/api/CommissionConfig/UpdateCommissionFormula",
-  CONFIGLIST: "api/CommissionConfig/CommissionJobConfigPaginatedList",
+  CONFIGLIST: "/api/CommissionConfig/CommissionJobConfigPaginatedList",
   UPDATECRON: "/api/CommissionConfig/UpdateCronSetting",
   UPDATESTATUS: "/api/CommissionConfig/EnableDisableJob",
   COMMISSIONSEARCHFIELDS: "/api/MetaData/Fetch",

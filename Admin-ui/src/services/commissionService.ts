@@ -2,7 +2,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionResponseBody,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest, IUpdateCronRequest, IUpdateStatusRequest, ICommissionSearchFieldsRequest, IExecutiveHistoryRequest, IExecutiveHistoryResponseBody, ICommissionSearchFieldsResponseBody} from '@/models/commission'
+import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionResponseBody,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest, IConfigCommissionListRequest, IUpdateCronRequest, IUpdateStatusRequest, ICommissionSearchFieldsRequest, IExecutiveHistoryRequest, IExecutiveHistoryResponseBody, ICommissionSearchFieldsResponseBody} from '@/models/commission'
 
 export const commissionService = {
   commissionDashboard: async (data:ICommissionMgmtResponseBody) => {
@@ -146,7 +146,7 @@ export const commissionService = {
       throw error;
     }
   },
-  configCommissionList: async (data:IConfigCommissionRequest) => {
+  configCommissionList: async (data:IConfigCommissionListRequest) => {
     try {
     
       const response = await callApi<ApiResponse<IConfigCommissionResponseBody>>(

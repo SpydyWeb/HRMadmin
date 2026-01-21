@@ -2,7 +2,6 @@ import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import Button from "../ui/button";
 import { cn } from "@/lib/utils";
 
-
 interface PaginationProps {
   totalPages: number;
   currentPage: number;
@@ -22,6 +21,7 @@ export function Pagination({ totalPages, currentPage, onPageChange }: Pagination
           currentPage === 1 && "opacity-50 pointer-events-none"
         )}
         onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
       >
         <BsArrowLeft className="h-4 w-4" />
       </Button>
@@ -50,6 +50,7 @@ export function Pagination({ totalPages, currentPage, onPageChange }: Pagination
           currentPage === totalPages && "opacity-50 pointer-events-none"
         )}
         onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
       >
         <BsArrowRight className="h-4 w-4" />
       </Button>

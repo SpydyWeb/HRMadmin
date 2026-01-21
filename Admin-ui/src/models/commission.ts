@@ -331,6 +331,10 @@ export interface IUpdateStatusRequest {
   commissionConfigId: number
   enabled: boolean
 }
+export interface IConfigCommissionListRequest {
+  pageNumber: number
+  pageSize: number
+}
 export interface ICommissionSearchFieldsRequest {
   commissionConfigId: number
 }
