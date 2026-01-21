@@ -447,72 +447,78 @@ export default function CommissionFormulaEditorFilter({
     return null;
   }
 
-  function validateFormulaIdentifiers(formula, objects) {
-    const errors = [];
-    const IDENTIFIER_REGEX = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
-    const COMPARISON_REGEX =
-      /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(==|!=|>=|<=|>|<)\s*(".*?"|\d+(\.\d+)?)/g;
+ function validateFormulaIdentifiers(formula, objects) {
+  const errors = [];
+  const IDENTIFIER_REGEX = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
+  const COMPARISON_REGEX =
+    /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(==|!=|>=|<=|>|<)\s*(".*?"|\d+(\.\d+)?)/g;
 
-    let match;
+  let match;
 
-    // Object / Property check
-    while ((match = IDENTIFIER_REGEX.exec(formula)) !== null) {
-      const [full, objectName, columnName] = match;
-      const startIndex = match.index;
-
-      // Case-insensitive object name lookup
-      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
-      if (!objectKey) {
-        errors.push({
-          message: `Unknown object '${objectName}'`,
-          start: startIndex,
-          end: startIndex + objectName.length,
-        });
-        continue;
-      }
-
-      const field = objects[objectKey].find(f => 
-        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
-        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
-      );
-      if (!field) {
-        errors.push({
-          message: `Property '${columnName}' does not exist on '${objectName}'`,
-          start: startIndex + objectName.length + 1,
-          end: startIndex + full.length,
-        });
-      }
-    }
-
-    // Type mismatch check
-    while ((match = COMPARISON_REGEX.exec(formula)) !== null) {
-      const [full, objectName, columnName, operator, literal] = match;
-      const startIndex = match.index;
-
-      // Case-insensitive object name lookup
-      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
-      if (!objectKey) continue;
-
-      const field = objects[objectKey].find(f => 
-        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
-        (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
-      );
-      if (!field || !field.dataType) continue;
-
-      const literalType = inferLiteralType(literal);
-      if (!literalType) continue;
-
-      if (field.dataType !== literalType) {
-        errors.push({
-          message: `Cannot compare ${field.dataType} with ${literalType}`,
-          start: startIndex,
-          end: startIndex + full.length,
-        });
-      }
-    }
-
+  // Skip validation if objects is empty or undefined
+  if (!objects || Object.keys(objects).length === 0) {
     return errors;
   }
+
+  // Rest of the function remains the same...
+  // Object / Property check
+  while ((match = IDENTIFIER_REGEX.exec(formula)) !== null) {
+    const [full, objectName, columnName] = match;
+    const startIndex = match.index;
+
+    // Case-insensitive object name lookup
+    const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+    if (!objectKey) {
+      errors.push({
+        message: `Unknown object '${objectName}'`,
+        start: startIndex,
+        end: startIndex + objectName.length,
+      });
+      continue;
+    }
+
+    const field = objects[objectKey].find(f => 
+      (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
+      (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
+    );
+    if (!field) {
+      errors.push({
+        message: `Property '${columnName}' does not exist on '${objectName}'`,
+        start: startIndex + objectName.length + 1,
+        end: startIndex + full.length,
+      });
+    }
+  }
+
+  // Type mismatch check
+  while ((match = COMPARISON_REGEX.exec(formula)) !== null) {
+    const [full, objectName, columnName, operator, literal] = match;
+    const startIndex = match.index;
+
+    // Case-insensitive object name lookup
+    const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+    if (!objectKey) continue;
+
+    const field = objects[objectKey].find(f => 
+      (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase()) ||
+      (f.columnName && f.columnName.toLowerCase() === columnName.toLowerCase())
+    );
+    if (!field || !field.dataType) continue;
+
+    const literalType = inferLiteralType(literal);
+    if (!literalType) continue;
+
+    if (field.dataType !== literalType) {
+      errors.push({
+        message: `Cannot compare ${field.dataType} with ${literalType}`,
+        start: startIndex,
+        end: startIndex + full.length,
+      });
+    }
+  }
+
+  return errors;
+}
 
   
 const handleEditorDidMount = (editor, monaco) => {

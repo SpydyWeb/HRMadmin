@@ -86,7 +86,7 @@ const updateConditionConfig = (data = {}, headers = {}) => {
   // console.log("update Condition Config commission with:", data);
   return apiClient.post(APIRoutes.UPDATECONDITIONCONFIG, data, { headers });
 };
-const configList = (data = {}, headers = {}) => {
+const configList = (data = { pageNumber: 0, pageSize: 0 }, headers = {}) => {
   // console.log("config commission list:", data);
   return apiClient.post(APIRoutes.CONFIGLIST, data, { headers });
 };
