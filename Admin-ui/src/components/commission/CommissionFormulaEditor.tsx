@@ -424,20 +424,85 @@ const processedData: Record<string, any> = {};
     return null;
   }
 
+  // function validateFormulaIdentifiers(formula, objects) {
+  //   const errors = [];
+  //   const IDENTIFIER_REGEX = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
+  //   const COMPARISON_REGEX =
+  //     /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(==|!=|>=|<=|>|<)\s*(".*?"|\d+(\.\d+)?)/g;
+
+  //   let match;
+
+  //   // Object / Property check
+  //   while ((match = IDENTIFIER_REGEX.exec(formula)) !== null) {
+  //     const [full, objectName, propertyName] = match;
+  //     const startIndex = match.index;
+
+  //     if (!objects[objectName]) {
+  //       errors.push({
+  //         message: `Unknown object '${objectName}'`,
+  //         start: startIndex,
+  //         end: startIndex + objectName.length,
+  //       });
+  //       continue;
+  //     }
+
+  //     const field = objects[objectName].find(f => f.propertyName === propertyName);
+  //     if (!field) {
+  //       errors.push({
+  //         message: `Property '${propertyName}' does not exist on '${objectName}'`,
+  //         start: startIndex + objectName.length + 1,
+  //         end: startIndex + full.length,
+  //       });
+  //     }
+  //   }
+
+  //   // Type mismatch check
+  //   while ((match = COMPARISON_REGEX.exec(formula)) !== null) {
+  //     const [full, objectName, propertyName, operator, literal] = match;
+  //     const startIndex = match.index;
+
+  //     if (!objects[objectName]) continue;
+
+  //     const field = objects[objectName].find(f => f.propertyName === propertyName);
+  //     if (!field || !field.dataType) continue;
+
+  //     const literalType = inferLiteralType(literal);
+  //     if (!literalType) continue;
+
+  //     if (field.dataType !== literalType) {
+  //       errors.push({
+  //         message: `Cannot compare ${field.dataType} with ${literalType}`,
+  //         start: startIndex,
+  //         end: startIndex + full.length,
+  //       });
+  //     }
+  //   }
+
+  //   return errors;
+  // }
+
   function validateFormulaIdentifiers(formula, objects) {
     const errors = [];
     const IDENTIFIER_REGEX = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
     const COMPARISON_REGEX =
       /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(==|!=|>=|<=|>|<)\s*(".*?"|\d+(\.\d+)?)/g;
-
+  
     let match;
-
+  
+    // Skip validation if objects is empty or undefined
+    if (!objects || Object.keys(objects).length === 0) {
+      return errors;
+    }
+  
+    // Rest of the function remains the same...
     // Object / Property check
     while ((match = IDENTIFIER_REGEX.exec(formula)) !== null) {
       const [full, objectName, propertyName] = match;
       const startIndex = match.index;
-
-      if (!objects[objectName]) {
+  
+      // Case-insensitive object name lookup
+      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+      if (!objectKey) {
         errors.push({
           message: `Unknown object '${objectName}'`,
           start: startIndex,
@@ -445,8 +510,11 @@ const processedData: Record<string, any> = {};
         });
         continue;
       }
-
-      const field = objects[objectName].find(f => f.propertyName === propertyName);
+  
+      const field = objects[objectKey].find(f => 
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase())
+      );
       if (!field) {
         errors.push({
           message: `Property '${propertyName}' does not exist on '${objectName}'`,
@@ -455,20 +523,25 @@ const processedData: Record<string, any> = {};
         });
       }
     }
-
+  
     // Type mismatch check
     while ((match = COMPARISON_REGEX.exec(formula)) !== null) {
       const [full, objectName, propertyName, operator, literal] = match;
       const startIndex = match.index;
-
-      if (!objects[objectName]) continue;
-
-      const field = objects[objectName].find(f => f.propertyName === propertyName);
+  
+      // Case-insensitive object name lookup
+      const objectKey = Object.keys(objects).find(key => key.toLowerCase() === objectName.toLowerCase());
+      if (!objectKey) continue;
+  
+      const field = objects[objectKey].find(f => 
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase()) ||
+        (f.propertyName && f.propertyName.toLowerCase() === propertyName.toLowerCase())
+      );
       if (!field || !field.dataType) continue;
-
+  
       const literalType = inferLiteralType(literal);
       if (!literalType) continue;
-
+  
       if (field.dataType !== literalType) {
         errors.push({
           message: `Cannot compare ${field.dataType} with ${literalType}`,
@@ -477,7 +550,7 @@ const processedData: Record<string, any> = {};
         });
       }
     }
-
+  
     return errors;
   }
 
