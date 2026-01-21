@@ -319,7 +319,7 @@ export interface IExecutiveHistoryResponseBody {
   executiveJobList: IexecutiveJobListResponseBody[]
 }
 export interface IExecutiveHistoryRequest {
-  commissionConfigId: number
+  jobConfigId: number
 }
 export interface IUpdateCronRequest {
   commissionConfigId: number

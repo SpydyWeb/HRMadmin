@@ -15,7 +15,7 @@ const FourthStepCommissionConfig: React.FC<FourthStepCommissionConfigProps> = ({
   onSaveSuccess
 }) => {
   const navigate = useNavigate()
-  const [enabled, setEnabled] = useState<boolean>(true)
+  const [enabled, setEnabled] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

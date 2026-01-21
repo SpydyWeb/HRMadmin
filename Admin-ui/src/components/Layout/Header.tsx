@@ -1,5 +1,5 @@
 import { IoMdLock } from 'react-icons/io'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useLocation } from '@tanstack/react-router'
 import Notification from '../Notification'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import Button from '../ui/button'
@@ -10,7 +10,12 @@ import { useAuth } from '@/hooks/useAuth'
 
 export default function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+
+  // Determine header title based on current route
+  const isCommissionRoute = location.pathname.startsWith('/commission')
+  const headerTitle = isCommissionRoute ? 'Commission Management' : 'Hierarchy Management'
   
 
   const handleLogout = () => {
@@ -31,7 +36,7 @@ export default function Header() {
 >
               HM
             </div>
-            <span className="text-xl font-bold">Hierarchy Management</span>
+            <span className="text-xl font-bold">{headerTitle}</span>
           </div>
         </div>
 
@@ -58,7 +63,8 @@ export default function Header() {
             className="!rounded-full !font-medium"
           >
             <IoMdLock className="w-4 h-4" />
-            <span>Reset Password</span>
+            {/* <span>Reset Password</span> */}
+            <span>Logout</span>
           </Button>
         </div>
       </div>

@@ -6,16 +6,15 @@ import { Filter } from '@/components/Filter'
 import { BiDownload } from 'react-icons/bi'
 import Loader from '@/components/Loader'
 import { useQuery } from '@tanstack/react-query'
+import { useSearch } from '@tanstack/react-router'
 import { commissionService } from '@/services/commissionService'
 import type { IexecutiveJobListResponseBody } from '@/models/commission'
 import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
 
 const CommissionHistory: React.FC = () => {
-  // const search = useSearch({ strict: false })
-  // const commissionName = (search as any)?.commissionName || 'Commission History'
-  // const commissionId = (search as any)?.commissionId || '12'
-  const commissionId =12
+  const search = useSearch({ strict: false })
+  const jobConfigId = (search as any)?.jobConfigId || ''
 
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -25,8 +24,8 @@ const CommissionHistory: React.FC = () => {
   const keyReady = !!encryptionService.getHrm_Key()
   const canFetch = !encryptionEnabled || keyReady
 
-  // Convert commissionId to number for API call
-  const commissionConfigId = commissionId ? Number(commissionId) : 0
+  // Convert jobConfigId to number for API call
+  const commissionjobConfigId = jobConfigId ? Number(jobConfigId) : 0
 
   // Fetch executive history list
   const {
@@ -35,9 +34,9 @@ const CommissionHistory: React.FC = () => {
     isError: historyError,
     error: historyErrorObj,
   } = useQuery<any>({
-    queryKey: ['executive-history-list', commissionConfigId],
-    enabled: canFetch && commissionConfigId > 0,
-    queryFn: () => commissionService.executiveHistoryList({ commissionConfigId }),
+    queryKey: ['executive-history-list', jobConfigId],
+    enabled: canFetch && commissionjobConfigId > 0,
+    queryFn: () => commissionService.executiveHistoryList({  jobConfigId:commissionjobConfigId }),
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
     retry: 1,
@@ -57,7 +56,7 @@ const CommissionHistory: React.FC = () => {
     if (!historyResponse) return []
   
     const raw = historyResponse?.responseBody?.jobExecutionHistory
-  
+  console.log('raw', raw)
     // Case 1: already an array
     if (Array.isArray(raw)) return raw
   
@@ -102,7 +101,7 @@ const CommissionHistory: React.FC = () => {
   
       const finishedAt = item.finishedAt
         ? new Date(item.finishedAt).toLocaleString().toLowerCase()
-        : ''
+        : 'null'
   
       const status = item.exeStatus?.toLowerCase() || ''
       const duration = item.duration?.toLowerCase() || ''

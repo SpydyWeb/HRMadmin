@@ -116,10 +116,10 @@ const editAgentDetails = (data = {}, headers = {}) => {
 };
 const executiveHistoryList = (data = {}, headers = {}) => {
   console.log("config commission executive history list:", data);
-  const { commissionConfigId } = data;
-  const pathId =  commissionConfigId;
+  const { jobConfigId } = data;
+  const pathId =  jobConfigId;
   if (!pathId) {
-    throw new Error("commissionConfigId is required for executive history list");
+    throw new Error("jobConfigId is required for executive history list");
   }
   return apiClient.post(`${APIRoutes.EXECUTIVEHISTORYLIST}/${pathId}`, data, { headers });
 };
