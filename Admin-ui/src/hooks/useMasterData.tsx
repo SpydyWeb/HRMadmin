@@ -6,7 +6,7 @@ import { masterService } from '@/services/masterService'
 type MasterMap = Record<string, any[]>
 
 export const useMasterData = (keys: string[]) => {
-  console.log('renderr.....................');
+  // console.log('renderr.....................');
   
   const sortedKeys = useMemo(() => [...keys].sort(), [keys])
 
@@ -25,10 +25,10 @@ export const useMasterData = (keys: string[]) => {
   const masterData = data ?? {}
   const getOptions = (key: string) => {
     const items = masterData[key] || []
-    console.log("see",masterData,key,items.map((x: any) => ({
-      label: x.entryDesc ?? x.name ?? '',
-      value: x.entryIdentity ?? x.id,
-    })));
+    // console.log("see",masterData,key,items.map((x: any) => ({
+    //   label: x.entryDesc ?? x.name ?? '',
+    //   value: x.entryIdentity ?? x.id,
+    // })));
     
     return items.map((x: any) => ({
       label: x.entryDesc ?? x.name ?? '',

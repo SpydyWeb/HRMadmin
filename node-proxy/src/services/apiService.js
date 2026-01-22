@@ -107,12 +107,27 @@ const searchFieldsConfig = (data = {}, headers = {}) => {
   });
 };
 
-const editAgentDetails = (data = {}, headers = {}) => {
+const editAgentDetails = async(data = {}, headers = {}) => {
   console.log("Edit agent details:", data);
-  // Extract agentId and sectionName from data for URL path
-  const { agentId, sectionName } = data;
-  // Send full data object in body (including agentId and sectionName as per API spec)
-  return apiClient.post(`${APIRoutes.EDITAGENT}/${agentId}/${sectionName}`, data, { headers });
+  const { id, sectionName } = data;
+ const res = apiClient.post(`${APIRoutes.EDITAGENT}/${id}/${sectionName}`, data, { headers });
+ try {
+  const res = await apiClient.post(
+    `${APIRoutes.EDITAGENT}/${id}/${sectionName}`,
+    data,
+    { headers }
+  );
+
+  console.log("Full API Response:", res);
+  console.log("Response Data:", res?.data);
+  console.log("Status:", res?.status);
+  console.log("Headers:", res?.headers);
+
+} catch (error) {
+  console.error("API Error:", error);
+  console.error("Error Response:", error?.response);
+}
+  // return apiClient.post(`${APIRoutes.EDITAGENT}/${id}/${sectionName}`, data, { headers });
 };
 const executiveHistoryList = (data = {}, headers = {}) => {
   console.log("config commission executive history list:", data);

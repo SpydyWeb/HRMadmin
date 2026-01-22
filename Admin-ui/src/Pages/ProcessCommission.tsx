@@ -40,6 +40,7 @@ const tabs = [
     value: 'movement',
     label: 'Hold Record',
     icon: <HiOutlineCodeBracketSquare />,
+     
   },
   { value: 'pi', label: 'Adjustment History', icon: <LuSquareUserRound /> },
   {

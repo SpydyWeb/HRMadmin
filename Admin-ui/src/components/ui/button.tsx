@@ -95,12 +95,22 @@ export default function Button({
   const isButtonDisabled = disabled || (!canSubmit && form) || isSubmitting
   const showLoader = isSubmitting || isLoading
 
+
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick) {
+      onClick(e)
+    } else {
+      console.warn('⚠️ Button clicked but no onClick handler!')
+    }
+  }
+
   return (
     <button
       type={type}
       disabled={isButtonDisabled}
       id={id}
-      onClick={onClick}
+      onClick={handleClick}
       className={clsx(
         baseStyles,
         sizes[size],

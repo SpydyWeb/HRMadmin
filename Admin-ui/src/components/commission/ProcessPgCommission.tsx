@@ -137,19 +137,45 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
         row.processedDate
           ? new Date(row.processedDate).toLocaleDateString()
           : '-',
-        
+        width: '20%',
       },
-      { header: 'Period',  accessor: (row: any) => row.period, },
-      { header: 'Records', accessor: (row: any) => row.recordsCount, },
-      { header: 'Status',  accessor: (row: any) => row.status, },
+      { 
+        header: 'Period',  
+        accessor: (row: any) => row.period,
+        width: '20%',
+      },
+      { 
+        header: 'Records', 
+        accessor: (row: any) => (
+          <div className="flex items-center gap-2">
+            <span>{row.recordsCount}</span>
+            <RxDownload 
+              className="h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer transition" 
+              onClick={() => {
+                // TODO: Integrate API to download records for this ID
+                console.log('Download records for ID:', row.id || row._id)
+                alert(`Download records for ID: ${row.id || row._id}`)
+              }}
+              title="Download records"
+            />
+          </div>
+        ),
+        width: '15%',
+      },
+      { 
+        header: 'Status',  
+        accessor: (row: any) => row.status,
+        width: '15%',
+      },
       {
         header: 'Actions',
         accessor: (row: any) => (
           <div className="flex items-center gap-2">
-            <Button variant="outline-red">Reject</Button>
-            <Button variant="green">Approve</Button>
+            <Button variant="outline-red" size="sm">Reject</Button>
+            <Button variant="green" size="sm">Approve</Button>
           </div>
         ),
+        width: '40%',
       },
     ]
 
