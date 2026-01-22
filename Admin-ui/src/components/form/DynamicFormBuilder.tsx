@@ -32,7 +32,7 @@ interface DynamicFormBuilderProps {
 const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   config,
   onSubmit,
-  onFieldClick = () => {},
+  onFieldClick = () => { },
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -44,7 +44,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         return acc
       }, {}),
 
-      ...(config.defaultValues || {}), 
+      ...(config.defaultValues || {}),
     },
     onSubmit: async ({ value }) => {
       if (onSubmit) {
@@ -54,11 +54,14 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         } finally {
           setIsSubmitting(false)
         }
+      } else {
+        console.warn('⚠️ No onSubmit handler provided!')
       }
     },
     validatorAdapter: zodValidator,
   })
-  // console.log('config', config)
+
+
 
   const linkField = config.fields.find((field: any) => field.type === 'link');
   const fieldsToRender = config.fields.filter((field: any) => field.type !== 'link');
@@ -89,7 +92,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {!(['text', 'email', 'password', 'number','checkbox','link','select'].includes(field.type)) && (
+              {!(['text', 'email', 'password', 'number', 'checkbox', 'link', 'select'].includes(field.type)) && (
                 <Label
                   htmlFor={field.name}
                   className="label-text text-gray-400 font-semibold pt-[1%] pr-[1%] pb-[1%] pl-0"
@@ -99,24 +102,24 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {['text', 'email', 'password', 'number'].includes(field.type) && (
-                  <Input
-                    id={field.name}
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={fieldApi.state.value}
-                    onChange={(e) =>
-                      fieldApi.handleChange(
-                        field.type === 'number'
-                          ? Number(e.target.value)
-                          : e.target.value,
-                      )
-                    }
-                    readOnly={field.readOnly}
-                    disabled={field.readOnly}
-                    variant={field.variant}
-                    className="w-full h-10 pl-0 pr-3 py-2"
-                    label={field.label}
-                  />
+                <Input
+                  id={field.name}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  value={fieldApi.state.value}
+                  onChange={(e) =>
+                    fieldApi.handleChange(
+                      field.type === 'number'
+                        ? Number(e.target.value)
+                        : e.target.value,
+                    )
+                  }
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
+                  className="w-full h-10 pl-0 pr-3 py-2"
+                  label={field.label}
+                />
               )}
 
               {field.type === 'textarea' && (
@@ -125,7 +128,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                   placeholder={field.placeholder}
                   value={fieldApi.state.value}
                   onChange={(e) => handleChange(e.target.value)}
-                  className="w-full min-h-24 px-3 py-2" 
+                  className="w-full min-h-24 px-3 py-2"
                   readOnly={field.readOnly}
                   disabled={field.readOnly}
                   variant={field.variant}
@@ -152,33 +155,33 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 </Select>
                 </div>
               )} */}
-{field.type === 'select' && (
-  <div className={field.variant === 'custom' ? "bg-white rounded-sm p-[3.5%] shadow-sm border border-gray-200" : ""}>
-    <Select
-      value={fieldApi.state.value}
-      // onValueChange={handleChange}
-      onValueChange={(val) => fieldApi.handleChange(val)}
-      disabled={field.readOnly}
-    >
-      <SelectGroup>
-        <SelectLabel variant={field.variant}>
-          {field.label}
-        </SelectLabel>
-        <SelectTrigger className={field.variant === 'custom' ? '!w-full !h-10 px-1 py-1' : '!w-full !h-10 px-3 py-3'} variant={field.variant}>
-          <SelectValue placeholder={field.placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          
-          {field.options?.map((option: any) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </SelectGroup>
-    </Select>
-  </div>
-)}
+              {field.type === 'select' && (
+                <div className={field.variant === 'custom' ? "bg-white rounded-sm p-[3.5%] shadow-sm border border-gray-200" : ""}>
+                  <Select
+                    value={fieldApi.state.value}
+                    // onValueChange={handleChange}
+                    onValueChange={(val) => fieldApi.handleChange(val)}
+                    disabled={field.readOnly}
+                  >
+                    <SelectGroup>
+                      <SelectLabel variant={field.variant}>
+                        {field.label}
+                      </SelectLabel>
+                      <SelectTrigger className={field.variant === 'custom' ? '!w-full !h-10 px-1 py-1' : '!w-full !h-10 px-3 py-3'} variant={field.variant}>
+                        <SelectValue placeholder={field.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+
+                        {field.options?.map((option: any) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </SelectGroup>
+                  </Select>
+                </div>
+              )}
 
               {field.type === 'checkbox' && (
                 <div className="flex items-center space-x-2 py-2">
@@ -209,7 +212,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     onChange={(d) => fieldApi.handleChange(d)}
                     icon={field.icon}
                     disabled={field.readOnly}
-                    // className="w-full h-7" // Added consistent height
+                  // className="w-full h-7" // Added consistent height
                   />
                 </div>
               )}
@@ -251,7 +254,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'boolean' && (
-              <div className='bg-tranparent px-1 py-2'>
+                <div className='bg-tranparent px-1 py-2'>
                   <Switch
                     id={field.name}
                     checked={fieldApi.state.value ?? false}
@@ -259,7 +262,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     disabled={field.readOnly}
                     containerClassName="font-poppins"
                   />
-                 </div>
+                </div>
               )}
 
               {/* {fieldApi.state.meta.errors.length > 0 && (
@@ -274,7 +277,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
   const handleButtonClick = async (button: any) => {
     if (button.type === 'submit') {
+      console.log("clicked submit button");
       await form.handleSubmit()
+
     } else if (button.type === 'reset') {
       form.reset()
     }
@@ -304,11 +309,14 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               type={ele.type}
               variant={ele.variant || 'default'}
               size={ele.size || 'default'}
-              onClick={() =>
-                ele.type === 'submit'
-                  ? handleButtonClick(ele)
-                  : onFieldClick(ele.name, ele.data)
-              }
+              onClick={() => {
+                if (ele.type === 'submit') {
+                  console.log('Submitting form...')
+                  handleButtonClick(ele)
+                } else {
+                  onFieldClick(ele.name, ele.data)
+                }
+              }}
               className={ele.className}
               style={{
                 gridColumn: `span ${ele.colSpan || 1} / span ${ele.colSpan || 1}`,

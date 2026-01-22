@@ -320,3 +320,9 @@ export interface IPeopleHierarchy {
   lastName: string | null
   supervisors?: IPeopleHierarchy | null
 }
+
+export interface IEditAgentPayload {
+  id: number | string
+  sectionName: string
+  [key: string]: any
+}
