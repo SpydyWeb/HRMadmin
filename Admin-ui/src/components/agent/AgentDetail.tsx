@@ -13,14 +13,11 @@ import { agentService } from '@/services/agentService'
 import { showToast } from '@/components/ui/sonner'
 
 type AgentDetailProps = {
-  agent: any,
-  getOptions:any
+  agent: any
+  getOptions: any
 }
 
-const AgentDetail = ({
-  agent,
-  getOptions
-}: AgentDetailProps) => {
+const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
   const [isEdit, setIsEdit] = useState(false)
 
   if (!agent) return null
@@ -57,7 +54,7 @@ const AgentDetail = ({
       preferredLanguage: agent.preferredLanguage,
       father_Husband_Nm: agent.father_Husband_Nm,
 
-    channel: agent.channel,
+      channel: agent.channel,
       subChannel: agent.subChannel,
       // --- contact DETAILS ---
       mobileNo: agent?.personalInfo?.[0]?.mobileNo,
@@ -125,7 +122,7 @@ const AgentDetail = ({
       // --- Other Personal Details ---
       dateOfBirth: agent.personalInfo?.[0]?.dateOfBirth,
       martialStatus: agent.martialStatus,
- 
+
       educationLevel: agent.educationLevel,
       workProfile: agent.workProfile,
       annualIncome: agent.annualIncome,
@@ -141,15 +138,15 @@ const AgentDetail = ({
 
       // --- ADDRESS INFO ---
       stateEid: agent.stateEid,
-      addressType: agent?.permanentAddres?.[0].addressType,
-      addressLine1: agent?.permanentAddres?.[0].addressLine1,
-      addressLine2: agent?.permanentAddres?.[0].addressLine2,
-      addressLine3: agent?.permanentAddres?.[0].addressLine3,
-      city: agent?.permanentAddres?.[0].city,
-      state: agent?.permanentAddres?.[0].state,
+      addressType: agent?.permanentAddres?.[0]?.addressType,
+      addressLine1: agent?.permanentAddres?.[0]?.addressLine1,
+      addressLine2: agent?.permanentAddres?.[0]?.addressLine2,
+      addressLine3: agent?.permanentAddres?.[0]?.addressLine3,
+      city: agent?.permanentAddres?.[0]?.city,
+      state: agent?.permanentAddres?.[0]?.state,
       // country: agent?.permanentAddres?.[0].country,
       country: agent?.country,
-      pin: agent?.permanentAddres?.[0].pin,
+      pin: agent?.permanentAddres?.[0]?.pin,
     },
 
     onSubmit: async ({ value }) => {
@@ -157,8 +154,8 @@ const AgentDetail = ({
     },
   })
 
-  const handleFieldClick = ()=>{
-    alert("cancel")
+  const handleFieldClick = () => {
+    alert('cancel')
   }
 
   const agentChannelConfig = {
@@ -168,13 +165,13 @@ const AgentDetail = ({
     defaultValues: {
       channel: agent.channel,
       subChannel: agent.subChannel,
-      commissionClass: agent.commissionClass ?? "N/A",
+      commissionClass: agent.commissionClass ?? 'N/A',
     },
 
     schema: z.object({
-      channel: z.string().optional(),
-      subChannel: z.string().optional(),
-      commissionClass: z.string().optional(),
+      channel: z.any().optional(),
+      subChannel: z.any().optional(),
+      commissionClass: z.any().optional(),
     }),
 
     fields: [
@@ -203,7 +200,7 @@ const AgentDetail = ({
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options:getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
+        options: getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
       },
     ],
 
@@ -224,34 +221,32 @@ const AgentDetail = ({
       : null,
   }
 
+  const handleSectionSubmit =
+    (sectionName: string) => async (formData: Record<string, any>) => {
+      console.log(`📝 Submitting ${sectionName}:`, formData)
 
-  const handleSectionSubmit = (sectionName: string) => async (formData: Record<string, any>) => {
-    console.log(`📝 Submitting ${sectionName}:`, formData)
-    
-    try {
-      const payload: IEditAgentPayload = {
-        id: agent.agentId, // Agent ID
-        sectionName: sectionName,
-        ...formData, // Include all form fields
+      try {
+        const payload: IEditAgentPayload = {
+          id: agent.agentId, // Agent ID
+          sectionName: sectionName,
+          ...formData, // Include all form fields
+        }
+
+        console.log('📤 Sending payload:', payload)
+        const response = await agentService.editAgent(payload)
+        console.log('✅ Update successful:', response)
+
+        // You can add success notification here
+        alert(`${sectionName} updated successfully!`)
+        setIsEdit(false) // Exit edit mode after successful save
+
+        return response
+      } catch (error) {
+        console.error(`❌ Error updating ${sectionName}:`, error)
+        alert(`Failed to update ${sectionName}. Please try again.`)
+        throw error // Re-throw to let the form handle the error state
       }
-      
-      console.log('📤 Sending payload:', payload)
-      const response = await agentService.editAgent(payload)
-      console.log('✅ Update successful:', response)
-      
-      // You can add success notification here
-      alert(`${sectionName} updated successfully!`)
-      setIsEdit(false) // Exit edit mode after successful save
-      
-      return response
-    } catch (error) {
-      console.error(`❌ Error updating ${sectionName}:`, error)
-      alert(`Failed to update ${sectionName}. Please try again.`)
-      throw error // Re-throw to let the form handle the error state
     }
-  }
-
-
 
   const PersonalDetailsConfig = {
     gridCols: 3,
@@ -262,9 +257,8 @@ const AgentDetail = ({
       firstName: agent.firstName,
       middleName: agent.middleName,
       lastName: agent.lastName,
-      father_Husband_Nm: agent.father_Husband_Nm ?? "N/a",
+      father_Husband_Nm: agent.father_Husband_Nm ?? 'N/a',
       gender: agent.gender,
-  
     },
 
     schema: z.object({
@@ -340,12 +334,12 @@ const AgentDetail = ({
               colSpan: 2,
               size: 'md',
               className: 'whitespace-nowrap, mt-4',
-            }
+            },
           ],
         }
       : null,
   }
- 
+
   // ne
   const contactInformationConfig = {
     gridCols: 12,
@@ -468,11 +462,11 @@ const AgentDetail = ({
     // DEFAULT VALUES
     defaultValues: {
       agentId: agent.agentId,
-      applicationDocketNo: agent.applicationDocketNo ?? "N/A",
+      applicationDocketNo: agent.applicationDocketNo ?? 'N/A',
       agentCode: agent.agentCode,
       candidateType: agent.candidateType,
       agentType: agent.agentType,
-      employeeCode: agent.employeeCode ?? "N/A",
+      employeeCode: agent.employeeCode ?? 'N/A',
       startDate: agent.startDate,
       appointmentDate: agent.appointmentDate,
       incorporationDate: agent.incorporationDate,
@@ -486,14 +480,14 @@ const AgentDetail = ({
       agentId: z.string().optional(),
       applicationDocketNo: z.string().optional(),
       agentCode: z.string().optional(),
-      candidateType: z.string().optional(),
-      agentType: z.string().optional(),
-      employeeCode: z.string().optional(),
+      candidateType: z.union([z.string(), z.number()]).optional(),
+      agentType: z.union([z.string(), z.number()]).optional(),
+      employeeCode: z.union([z.string(), z.number()]).optional(),
       startDate: z.string().optional(),
       appointmentDate: z.string().optional(),
       incorporationDate: z.string().optional(),
-      agentTypeCat: z.string().optional(),
-      agentClass: z.string().optional(),
+      agentTypeCat: z.union([z.string(), z.number()]).optional(),
+      agentClass: z.union([z.string(), z.number()]).optional(),
       cmsAgentType: z.string().optional(),
     }),
 
@@ -532,7 +526,6 @@ const AgentDetail = ({
         readOnly: !isEdit,
         variant: 'standard',
         options: getOptions(MASTER_DATA_KEYS.CANDIDATE_TYPE),
-
       },
       {
         name: 'agentType',
@@ -593,7 +586,7 @@ const AgentDetail = ({
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        options:getOptions(MASTER_DATA_KEYS.AGENT_CLASS),
+        options: getOptions(MASTER_DATA_KEYS.AGENT_CLASS),
       },
       {
         name: 'cmsAgentType',
@@ -614,31 +607,32 @@ const AgentDetail = ({
     ],
     // BUTTONS
 
-    buttons: isEdit? {
-      gridCols: 4,
-      items: [
-        {
-          label: 'Save Channel Info',
-          type: 'submit',
-          variant: 'orange',
-          colSpan: 4,
-          size: 'md',
-          className: 'whitespace-nowrap, mt-4',
-        },
-      ],
-    }: null,
-      
+    buttons: isEdit
+      ? {
+          gridCols: 4,
+          items: [
+            {
+              label: 'Save Channel Info',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 4,
+              size: 'md',
+              className: 'whitespace-nowrap, mt-4',
+            },
+          ],
+        }
+      : null,
   }
 
   const financialDetailsConfig = {
     gridCols: 12,
     sectionName: 'financialInfo',
-    
+
     // DEFAULT VALUES
     defaultValues: {
       panAadharLinkFlag: agent.panAadharLinkFlag,
       sec206abFlag: agent.sec206abFlag,
-      taxStatus: agent.taxStatus ?? "N/A",
+      taxStatus: agent.taxStatus ?? 'N/A',
       serviceTaxNo: agent.serviceTaxNo,
       //Acct Activation Date missing
       factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
@@ -803,22 +797,22 @@ const AgentDetail = ({
     ],
 
     // BUTTONS
-    buttons:isEdit? {
-      gridCols: 4,
-      items: [
-        {
-          label: 'Save Financial Details',
-          type: 'submit',
-          variant: 'orange',
-          colSpan: 4,
-          size: 'md',
-          className: 'whitespace-nowrap, mt-4',
-        },
-      ],
-    }: null,
-       
+    buttons: isEdit
+      ? {
+          gridCols: 4,
+          items: [
+            {
+              label: 'Save Financial Details',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 4,
+              size: 'md',
+              className: 'whitespace-nowrap, mt-4',
+            },
+          ],
+        }
+      : null,
   }
-
 
   const otherPersonalDetailsConfig = {
     gridCols: 12,
@@ -837,7 +831,7 @@ const AgentDetail = ({
       relationship: agent.nominees?.[0]?.relationship,
       nomineeAge: agent.nominees?.[0]?.nomineeAge,
       occupation: agent.occupation,
-      urn: agent.urn ?? "N/A",
+      urn: agent.urn ?? 'N/A',
       additionalComment: agent.additionalComment,
       // workExpMonths: agent.personalInfo?[0]?.workExpMonths,
       bloodGroup: agent.personalInfo?.[0]?.bloodGroup,
@@ -849,14 +843,14 @@ const AgentDetail = ({
     // -----------------------------------------
     schema: z.object({
       dateOfBirth: z.string().optional(),
-      maritalStatus: z.string().optional(),
-      education: z.string().optional(),
+      maritalStatus: z.union([z.string(), z.number()]).optional(),
+      education: z.union([z.string(), z.number()]).optional(),
       workProfile: z.string().optional(),
       annualIncome: z.string().optional(),
       nomineeAge: z.string().optional(),
       nomineeName: z.string().optional(),
       relationship: z.string().optional(),
-      occupation: z.string().optional(),
+      occupation: z.union([z.string(), z.number()]).optional(),
       urn: z.string().optional(),
       additionalComment: z.string().optional(),
       // workExpMonths: z.string().optional(),
@@ -943,7 +937,7 @@ const AgentDetail = ({
         colSpan: 4,
         readOnly: !isEdit,
         // variant: 'standard',
-       options: getOptions(MASTER_DATA_KEYS.OCCUPATIONS),
+        options: getOptions(MASTER_DATA_KEYS.OCCUPATIONS),
       },
 
       {
@@ -987,36 +981,37 @@ const AgentDetail = ({
         variant: 'standard',
       },
     ],
-    buttons: isEdit? {
-      gridCols: 4,
-      items: [
-        {
-          label: 'Save Details',
-          type: 'submit',
-          variant: 'orange',
-          colSpan: 4,
-          size: 'md',
-          className: 'whitespace-nowrap, mt-4',
-        },
-      ],
-    }: null,
-      
+    buttons: isEdit
+      ? {
+          gridCols: 4,
+          items: [
+            {
+              label: 'Save Details',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 4,
+              size: 'md',
+              className: 'whitespace-nowrap, mt-4',
+            },
+          ],
+        }
+      : null,
   }
-  
+
   const addressConfig = {
     gridCols: 12,
     sectionName: 'addressInfo',
-    
+
     defaultValues: {
       stateEid: agent.stateEid,
-      addressType: agent?.permanentAddres?.[0].addressType,
-      addressLine1: agent.permanentAddres?.[0].addressLine1,
-      addressLine2: agent.permanentAddres?.[0].addressLine2,
-      addressLine3: agent.permanentAddres?.[0].addressLine3,
-      city: agent.permanentAddres?.[0].city,
-      state: agent.permanentAddres?.[0].state,
-      pin: agent.permanentAddres?.[0].pin,
-      country: agent.permanentAddres?.[0].country,
+      addressType: agent?.permanentAddres?.[0]?.addressType,
+      addressLine1: agent.permanentAddres?.[0]?.addressLine1,
+      addressLine2: agent.permanentAddres?.[0]?.addressLine2,
+      addressLine3: agent.permanentAddres?.[0]?.addressLine3,
+      city: agent.permanentAddres?.[0]?.city,
+      state: agent.permanentAddres?.[0]?.state,
+      pin: agent.permanentAddres?.[0]?.pin,
+      country: agent.permanentAddres?.[0]?.country,
     },
 
     schema: z.object({
@@ -1097,7 +1092,7 @@ const AgentDetail = ({
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-         options: getOptions(MASTER_DATA_KEYS.COUNTRY),
+        options: getOptions(MASTER_DATA_KEYS.COUNTRY),
       },
       {
         name: 'pin',
@@ -1109,22 +1104,22 @@ const AgentDetail = ({
       },
     ],
 
-    buttons: isEdit? {
-      gridCols: 4,
-      items: [
-        {
-          label: 'Save Address',
-          type: 'submit',
-          variant: 'orange',
-          colSpan: 4,
-          size: 'md',
-          className: 'whitespace-nowrap, mt-4',
-        },
-      ],
-    }: null,
-
+    buttons: isEdit
+      ? {
+          gridCols: 4,
+          items: [
+            {
+              label: 'Save Address',
+              type: 'submit',
+              variant: 'orange',
+              colSpan: 4,
+              size: 'md',
+              className: 'whitespace-nowrap, mt-4',
+            },
+          ],
+        }
+      : null,
   }
-
 
   const f = agentForm as any
 
@@ -1188,8 +1183,8 @@ const AgentDetail = ({
             <CardContent className="w-[100%] p-0">
               <DynamicFormBuilder
                 config={agentChannelConfig}
-                onSubmit={()=>handleSectionSubmit(agentChannelConfig.sectionName)}
-                 onFieldClick={handleFieldClick}
+                onSubmit={handleSectionSubmit(agentChannelConfig.sectionName)}
+                onFieldClick={handleFieldClick}
               />
 
               {/* some form inputs here */}
@@ -1210,7 +1205,9 @@ const AgentDetail = ({
               <AutoAccordionSection id="sec-1">
                 <DynamicFormBuilder
                   config={PersonalDetailsConfig}
-                  onSubmit={()=>handleSectionSubmit(PersonalDetailsConfig.sectionName)}
+                  onSubmit={handleSectionSubmit(
+                    PersonalDetailsConfig.sectionName,
+                  )}
                 />
               </AutoAccordionSection>
             </CardContent>
@@ -1228,7 +1225,9 @@ const AgentDetail = ({
               <AutoAccordionSection id="sec-1">
                 <DynamicFormBuilder
                   config={contactInformationConfig}
-                  onSubmit={handleSectionSubmit(contactInformationConfig.sectionName)}
+                  onSubmit={handleSectionSubmit(
+                    contactInformationConfig.sectionName,
+                  )}
                 />
               </AutoAccordionSection>
             </CardContent>
@@ -1264,7 +1263,9 @@ const AgentDetail = ({
               <AutoAccordionSection id="sec-1">
                 <DynamicFormBuilder
                   config={employeeInformationConfig}
-                  onSubmit={handleSectionSubmit(employeeInformationConfig.sectionName)}
+                  onSubmit={handleSectionSubmit(
+                    employeeInformationConfig.sectionName,
+                  )}
                 />
               </AutoAccordionSection>
             </CardContent>
@@ -1280,7 +1281,9 @@ const AgentDetail = ({
               <AutoAccordionSection id="sec-1">
                 <DynamicFormBuilder
                   config={financialDetailsConfig}
-                  onSubmit={handleSectionSubmit(financialDetailsConfig.sectionName)}
+                  onSubmit={handleSectionSubmit(
+                    financialDetailsConfig.sectionName,
+                  )}
                 />
               </AutoAccordionSection>
             </CardContent>
@@ -1296,7 +1299,9 @@ const AgentDetail = ({
               <AutoAccordionSection id="sec-1">
                 <DynamicFormBuilder
                   config={otherPersonalDetailsConfig}
-                  onSubmit={handleSectionSubmit(otherPersonalDetailsConfig.sectionName)}
+                  onSubmit={handleSectionSubmit(
+                    otherPersonalDetailsConfig.sectionName,
+                  )}
                 />
               </AutoAccordionSection>
             </CardContent>

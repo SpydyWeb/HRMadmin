@@ -22,7 +22,6 @@ import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
 import { Variable } from 'lucide-react'
 
-
 interface DynamicFormBuilderProps {
   config: any
   onSubmit: (data: Record<string, any>) => void
@@ -32,9 +31,22 @@ interface DynamicFormBuilderProps {
 const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   config,
   onSubmit,
-  onFieldClick = () => { },
+  onFieldClick = () => {},
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+  // Helper function to recursively sanitize default values
+  const sanitizeValues = (values: Record<string, any>) => {
+    if (!values) return {}
+    return Object.entries(values).reduce(
+      (acc, [key, value]) => {
+        // Convert null to undefined so Zod optional() validation works
+        acc[key] = value === null ? undefined : value
+        return acc
+      },
+      {} as Record<string, any>,
+    )
+  }
 
   const form = useForm({
     defaultValues: {
@@ -44,27 +56,43 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         return acc
       }, {}),
 
-      ...(config.defaultValues || {}),
+      ...sanitizeValues(config.defaultValues || {}),
     },
     onSubmit: async ({ value }) => {
-      if (onSubmit) {
-        setIsSubmitting(true)
-        try {
-          await onSubmit(value)
-        } finally {
-          setIsSubmitting(false)
-        }
-      } else {
-        console.warn('⚠️ No onSubmit handler provided!')
+      console.log('✅ Form submitted with values:', value)
+      if (!onSubmit) {
+        console.warn('⚠️ onSubmit prop is missing in DynamicFormBuilder')
+        return
       }
+
+      setIsSubmitting(true)
+      try {
+        await onSubmit(value)
+      } catch (error) {
+        console.error('❌ Error in onSubmit:', error)
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    onSubmitInvalid: ({ value, formApi }) => {
+      console.error('❌ Form validation failed!')
+      console.error('Values:', value)
+      // Helper to log actual errors
+      const errors = formApi.state.fieldMeta
+      Object.keys(errors).forEach((key) => {
+        if (errors[key].errors && errors[key].errors.length > 0) {
+          console.error(`Field '${key}' Error:`, errors[key].errors)
+        }
+      })
+      console.error('Full Error Meta:', errors)
     },
     validatorAdapter: zodValidator,
   })
 
-
-
-  const linkField = config.fields.find((field: any) => field.type === 'link');
-  const fieldsToRender = config.fields.filter((field: any) => field.type !== 'link');
+  const linkField = config.fields.find((field: any) => field.type === 'link')
+  const fieldsToRender = config.fields.filter(
+    (field: any) => field.type !== 'link',
+  )
 
   const renderField = (field: any) => {
     const fieldSchema = config.schema.shape[field.name]
@@ -73,9 +101,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
       <form.Field
         key={field.name}
         name={field.name}
-        validators={{
-          onChange: fieldSchema,
-        }}
+        // validators={{
+        //   onChange: fieldSchema,
+        // }}
       >
         {(fieldApi) => {
           const handleChange = (value: any) => {
@@ -92,7 +120,15 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 gridColumn: `span ${field.colSpan} / span ${field.colSpan}`,
               }}
             >
-              {!(['text', 'email', 'password', 'number', 'checkbox', 'link', 'select'].includes(field.type)) && (
+              {![
+                'text',
+                'email',
+                'password',
+                'number',
+                'checkbox',
+                'link',
+                'select',
+              ].includes(field.type) && (
                 <Label
                   htmlFor={field.name}
                   className="label-text text-gray-400 font-semibold pt-[1%] pr-[1%] pb-[1%] pl-0"
@@ -156,7 +192,13 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 </div>
               )} */}
               {field.type === 'select' && (
-                <div className={field.variant === 'custom' ? "bg-white rounded-sm p-[3.5%] shadow-sm border border-gray-200" : ""}>
+                <div
+                  className={
+                    field.variant === 'custom'
+                      ? 'bg-white rounded-sm p-[3.5%] shadow-sm border border-gray-200'
+                      : ''
+                  }
+                >
                   <Select
                     value={fieldApi.state.value}
                     // onValueChange={handleChange}
@@ -167,11 +209,17 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                       <SelectLabel variant={field.variant}>
                         {field.label}
                       </SelectLabel>
-                      <SelectTrigger className={field.variant === 'custom' ? '!w-full !h-10 px-1 py-1' : '!w-full !h-10 px-3 py-3'} variant={field.variant}>
+                      <SelectTrigger
+                        className={
+                          field.variant === 'custom'
+                            ? '!w-full !h-10 px-1 py-1'
+                            : '!w-full !h-10 px-3 py-3'
+                        }
+                        variant={field.variant}
+                      >
                         <SelectValue placeholder={field.placeholder} />
                       </SelectTrigger>
                       <SelectContent>
-
                         {field.options?.map((option: any) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
@@ -212,7 +260,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                     onChange={(d) => fieldApi.handleChange(d)}
                     icon={field.icon}
                     disabled={field.readOnly}
-                  // className="w-full h-7" // Added consistent height
+                    // className="w-full h-7" // Added consistent height
                   />
                 </div>
               )}
@@ -254,7 +302,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'boolean' && (
-                <div className='bg-tranparent px-1 py-2'>
+                <div className="bg-tranparent px-1 py-2">
                   <Switch
                     id={field.name}
                     checked={fieldApi.state.value ?? false}
@@ -277,9 +325,8 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
   const handleButtonClick = async (button: any) => {
     if (button.type === 'submit') {
-      console.log("clicked submit button");
+      console.log('clicked submit button')
       await form.handleSubmit()
-
     } else if (button.type === 'reset') {
       form.reset()
     }
@@ -335,7 +382,10 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         <div className="!text-end mt-4">
           <span
             onClick={() => onFieldClick(linkField.name)}
-            className={linkField.className || 'text-blue-600 hover:underline text-sm cursor-pointer'}
+            className={
+              linkField.className ||
+              'text-blue-600 hover:underline text-sm cursor-pointer'
+            }
           >
             {linkField.label}
           </span>
