@@ -17,14 +17,13 @@ router.post("/proxy", async (req, res) => {
       decryptedBody = req.body;
     }
     const { fn, args = [], headers = {} } = decryptedBody;
+  
     if (!fn || typeof apiService[fn] !== "function") {
-      console.error("Invalid function name:", fn, "Available functions:", Object.keys(apiService));
-      console.log("Invalid function name:", fn, "Available functions:", Object.keys(apiService));
       return res.status(400).json({ error: `Invalid function name: ${fn}` });
     }
     const result = await apiService[fn](...args, headers);
     const safeData = { ...result };
-    console.log(safeData);
+    
     
     if (encryptionEnabled) {
       const ciphertextResp = encryptionService.encryptObject(safeData);

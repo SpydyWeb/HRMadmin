@@ -99,38 +99,31 @@ const updateStatus = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATESTATUS, data, { headers });
 };
 const searchFieldsConfig = (data = {}, headers = {}) => {
-  console.log("### search fields:", data);
-  console.log("### search fields headers:", headers);
+  // console.log("### search fields:", data);
+  // console.log("### search fields headers:", headers);
   return apiClient.get(APIRoutes.COMMISSIONSEARCHFIELDS, { 
     params: data, 
     headers: headers 
   });
 };
 
-const editAgentDetails = async(data = {}, headers = {}) => {
-  console.log("Edit agent details:", data);
-  const { id, sectionName } = data;
- const res = apiClient.post(`${APIRoutes.EDITAGENT}/${id}/${sectionName}`, data, { headers });
- try {
-  const res = await apiClient.post(
-    `${APIRoutes.EDITAGENT}/${id}/${sectionName}`,
-    data,
-    { headers }
-  );
+const editAgentDetails = async (data ,sectionName, agentid, headers = {}) => {
+  
 
-  console.log("Full API Response:", res);
-  console.log("Response Data:", res?.data);
-  console.log("Status:", res?.status);
-  console.log("Headers:", res?.headers);
-
-} catch (error) {
-  console.error("API Error:", error);
-  console.error("Error Response:", error?.response);
+console.log("📝 Edit agent details input:", data,`${APIRoutes.EDITAGENT}/${agentid}/${sectionName}`);
+if(!agentid){
+  throw new Error("Agent ID is required");
 }
-  // return apiClient.post(`${APIRoutes.EDITAGENT}/${id}/${sectionName}`, data, { headers });
+  if(!sectionName){
+    throw new Error("Section name is required");
+  }
+
+  return apiClient.post(`${APIRoutes.EDITAGENT}/${agentid}/${sectionName}`, data, { headers });
+
 };
+
 const executiveHistoryList = (data = {}, headers = {}) => {
-  console.log("config commission executive history list:", data);
+  // console.log("config commission executive history list:", data);
   const { jobConfigId } = data;
   const pathId =  jobConfigId;
   if (!pathId) {
@@ -142,7 +135,7 @@ const executiveHistoryList = (data = {}, headers = {}) => {
 const editCommission = (data = {}, headers = {}) => {
   const { commissionConfigId } = data;
   const ConfigId = commissionConfigId;
-  console.log("config  Edit commission steps:", data);
+  // console.log("config  Edit commission steps:", data);
   return apiClient.post(`${APIRoutes.UPDATECOMMISSIONBYID}/${ConfigId}`, data, { headers });
 };
 

@@ -321,8 +321,12 @@ export interface IPeopleHierarchy {
   supervisors?: IPeopleHierarchy | null
 }
 
-export interface IEditAgentPayload {
-  id: number | string
+
+export interface IEditAgentRequest {
+  agentId: number
   sectionName: string
-  [key: string]: any
+}
+
+export interface IEditAgentResponseBody {
+  updatedAgentFields: IAgent[]
 }

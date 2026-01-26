@@ -7,7 +7,8 @@ import type {
   IAgentSearchByCodeRequest,
   IAgentSearchRequest,
   IAgent,
-  IEditAgentPayload,
+  IEditAgentRequest,
+  IEditAgentResponseBody,
 } from '@/models/agent'
 
 export const agentService = {
@@ -17,28 +18,38 @@ export const agentService = {
     callApi<ApiResponse<ILoginResponseBody>>(APIRoutes.SEARCHBYCODE, [data]),
   AgentByCode: (data: IAgentSearchByCodeRequest) =>
     callApi<ApiResponse<ILoginResponseBody>>(APIRoutes.AGENTBYCODE, [data]),
-  // editAgent: (data: IEditAgentPayload) =>
-  //   callApi<ApiResponse<ILoginResponseBody>>(APIRoutes.EDIT_AGENT, [data]),
-  editAgent: async (data: IEditAgentPayload) => {
-  console.log('EDIT_AGENT route:', APIRoutes.EDIT_AGENT);
-  console.log('EDIT_AGENT payload:', data);
 
-  const response = await callApi<ApiResponse<ILoginResponseBody>>(
-    APIRoutes.EDIT_AGENT,
-    [data]
-  );
+  editAgent: async (
+    data: IEditAgentRequest,
+    sectionName: string,
+    agentid: number,
+  ) => {
+    console.log('EDIT_AGENT route:', APIRoutes.EDIT_AGENT)
+    console.log('EDIT_AGENT data:', data)
+     console.log('🔍 Agent ID:', agentid)
+        console.log('🔍 Section Name:', sectionName)
+    try {
+      const response = await callApi<ApiResponse<IEditAgentResponseBody>>(
+        APIRoutes.EDIT_AGENT,
+        [data, sectionName, agentid],
+      )
+      if (!response) {
+        console.warn('agent edit- Response is undefined or null')
+      }
+      console.log('EDIT_AGENT full response:', response)
+      console.log('EDIT_AGENT responseBody:', response?.responseBody)
 
-  console.log('EDIT_AGENT full response:', response);
-  console.log('EDIT_AGENT responseBody:', response?.responseBody);
-
-  return response;
-},
+      return response
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
 
   fetchAgentHierarchy: async (data: IAgentSearchByCodeRequest) => {
     const response = await callApi<ApiResponse<ILoginResponseBody>>(
       APIRoutes.AGENTBYID,
       [data],
-      
     )
     console.log('agent', response)
     return response.responseBody?.agents?.[0] || null
