@@ -321,6 +321,7 @@ export interface IExecutiveHistoryResponseBody {
 export interface IExecutiveHistoryRequest {
   jobConfigId: number
 }
+
 export interface IUpdateCronRequest {
   commissionConfigId: number
   jobType: string

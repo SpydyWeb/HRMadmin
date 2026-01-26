@@ -87,6 +87,10 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
       console.error('Full Error Meta:', errors)
     },
     validatorAdapter: zodValidator,
+
+
+
+    
   })
 
   const linkField = config.fields.find((field: any) => field.type === 'link')

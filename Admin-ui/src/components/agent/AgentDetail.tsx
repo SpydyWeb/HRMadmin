@@ -7,7 +7,7 @@ import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import AutoAccordionSection from '../ui/autoAccordianSection'
-import { MASTER_DATA_KEYS } from '@/utils/constant'
+import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { useMasterData } from '@/hooks/useMasterData'
 import { agentService } from '@/services/agentService'
 import { showToast } from '@/components/ui/sonner'
@@ -226,31 +226,36 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       console.log(`📝 Submitting ${sectionName}:`, formData)
 
       try {
+        // Extract agentId from agent object (convert to lowercase for backend)
+        const agentid = agent?.agentId || agent?.agentid
+        if (!agentid) {
+          throw new Error('Agent ID is missing. Cannot update agent details.')
+        }
+
         const payload: IEditAgentPayload = {
-          id: agent.agentId, // Agent ID
-          sectionName: sectionName,
-          ...formData, // Include all form fields
+          ...formData,
         }
 
         console.log('📤 Sending payload:', payload)
-        const response = await agentService.editAgent(payload)
+   
+        const response = await agentService.editAgent(payload, sectionName, agentid)
         console.log('✅ Update successful:', response)
 
         // You can add success notification here
-        alert(`${sectionName} updated successfully!`)
+        showToast(NOTIFICATION_CONSTANTS.SUCCESS, `${sectionName} updated successfully!`)
         setIsEdit(false) // Exit edit mode after successful save
 
         return response
       } catch (error) {
         console.error(`❌ Error updating ${sectionName}:`, error)
-        alert(`Failed to update ${sectionName}. Please try again.`)
+        showToast(NOTIFICATION_CONSTANTS.ERROR, `Failed to update ${sectionName}. Please try again.`)
         throw error // Re-throw to let the form handle the error state
       }
     }
 
   const PersonalDetailsConfig = {
     gridCols: 3,
-    sectionName: 'personalInfo',
+    sectionName: 'personal_details',
 
     defaultValues: {
       title: agent.title,
@@ -343,7 +348,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
   // ne
   const contactInformationConfig = {
     gridCols: 12,
-    sectionName: 'contactInfo',
+    sectionName: 'contact_information',
 
     defaultValues: {
       mobileNo: agent?.personalInfo?.[0]?.mobileNo,
@@ -457,7 +462,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
   const employeeInformationConfig = {
     gridCols: 12,
-    sectionName: 'employmentInfo',
+    sectionName: 'employee_info',
 
     // DEFAULT VALUES
     defaultValues: {
@@ -626,7 +631,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
   const financialDetailsConfig = {
     gridCols: 12,
-    sectionName: 'financialInfo',
+    sectionName: 'financial_details',
 
     // DEFAULT VALUES
     defaultValues: {
@@ -816,7 +821,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
   const otherPersonalDetailsConfig = {
     gridCols: 12,
-    sectionName: 'otherPersonalInfo',
+    sectionName: 'other_personal_details',
 
     // -----------------------------------------
     // DEFAULT VALUES
@@ -1000,7 +1005,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
   const addressConfig = {
     gridCols: 12,
-    sectionName: 'addressInfo',
+    sectionName: 'address_info',
 
     defaultValues: {
       stateEid: agent.stateEid,
