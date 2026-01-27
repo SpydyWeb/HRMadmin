@@ -1,40 +1,27 @@
-import React, { useEffect, useState } from 'react'
-import { BiUser } from 'react-icons/bi'
+import { useState } from 'react'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
-import type { IAgent } from '@/models/agent'
-import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
+import { agentService } from '@/services/agentService'
+import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import { showToast } from '@/components/ui/sonner'
 
-const License = ({ agent }: { agent: IAgent }) => {
+type FinanceDetailProps = {
+  agent: any
+  getOptions: any
+}
+
+const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
 console.log('agent in financial', agent)
 
   if (!agent) return null
 
-  const financialForm = useAppForm({
-
-    defaultValues: {
-  bankName: agent.bankAccounts?.[0]?.bankName,
-  ifsc: agent.bankAccounts?.[0]?.ifsc,
-  micr: agent.bankAccounts?.[0]?.micr,
-  branchName: agent.bankAccounts?.[0]?.branchName,
-  accountNumber: agent.bankAccounts?.[0]?.accountNumber,
-  accountType: agent.bankAccounts?.[0]?.accountType,
-  preferredPaymentMode: agent.bankAccounts?.[0]?.preferredPaymentMode,
-  factoringHouse: agent.bankAccounts?.[0]?.factoringHouse,
-  accountHolderName: agent.bankAccounts?.[0]?.accountHolderName,
-},
-
-    onSubmit: async ({ value }) => {
-      console.log('Updated agent:', value)
-    },
-  })
-
   const financialConfig = {
     gridCols: 3,
+    sectionName: 'bank_details',
     defaultValues: {
   bankName: agent.bankAccounts?.[0]?.bankName,
   ifsc: agent.bankAccounts?.[0]?.ifsc,
@@ -86,22 +73,6 @@ console.log('agent in financial', agent)
     readOnly: !isEdit,
     variant: 'standard',
   },
-  // {
-  //   name: 'panNo',
-  //   label: 'PAN No',
-  //   type: 'text',
-  //   colSpan: 1,
-  //   readOnly: !isEdit,
-  //   variant: 'standard',
-  // },
-  {
-    name: 'bankName',
-    label: 'Bank Name',
-    type: 'text',
-    colSpan: 1,
-    readOnly: !isEdit,
-    variant: 'standard',
-  },
 
   {
     name: 'accountNumber',
@@ -114,10 +85,11 @@ console.log('agent in financial', agent)
   {
     name: 'accountType',
     label: 'Bank Account Type',
-    type: 'text',
+    type: 'select',
     colSpan: 1,
     readOnly: !isEdit,
     variant: 'standard',
+    options: getOptions(MASTER_DATA_KEYS.BANK_ACC_TYPE),
   },
   {
     name: 'micr',
@@ -162,16 +134,61 @@ console.log('agent in financial', agent)
               type: 'submit',
               variant: 'orange',
               colSpan: 1,
-              size: 'lg',
+              size: 'md',
             },
           ],
         }
       : null,
   }
 
-  // console.log("agentFormConfig", agentFormConfig)
+  const handleSectionSubmit =
+  (sectionName: string) => async (formData: Record<string, any>) => {
+    console.log(`📝 Submitting ${sectionName}:`, formData)
 
-  const f = financialForm as any
+    try {
+      // Extract agentId from agent object (convert to lowercase for backend)
+      const agentid = agent?.agentId
+      if (!agentid) {
+        throw new Error('Agent ID is missing. Cannot update agent details.')
+      }
+
+      // Transform formData to match API expected format with bankAccounts array
+      const bankAccountData = {
+        accountHolderName: formData.accountHolderName || '',
+        accountNumber: formData.accountNumber || '',
+        ifsc: formData.ifsc || '',
+        micr: formData.micr || '',
+        bankName: formData.bankName || '',
+        branchName: formData.branchName || '',
+        accountType: typeof formData.accountType === 'string' 
+          ? parseInt(formData.accountType, 10) 
+          : formData.accountType || 0,
+        preferredPaymentMode: typeof formData.preferredPaymentMode === 'string'
+          ? parseInt(formData.preferredPaymentMode, 10)
+          : formData.preferredPaymentMode || 0,
+        factoringHouse: formData.factoringHouse || '',
+      }
+
+      const payload = {
+        bankAccounts: [bankAccountData],
+      }
+
+      console.log('📤 Sending payload:', payload)
+ 
+      const response = await agentService.editAgent(payload as any, sectionName, agentid)
+      console.log('✅ Update successful:', response)
+
+      // You can add success notification here
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, `${sectionName} updated successfully!`)
+      setIsEdit(false) // Exit edit mode after successful save
+
+      return response
+    } catch (error) {
+      console.error(`❌ Error updating ${sectionName}:`, error)
+      showToast(NOTIFICATION_CONSTANTS.ERROR, `Failed to update ${sectionName}. Please try again.`)
+      throw error // Re-throw to let the form handle the error state
+    }
+  }
 
   if (!agent) {
     return <div className="p-10 text-red-600">Agent not found</div>
@@ -184,7 +201,7 @@ console.log('agent in financial', agent)
         <div className="flex justify-between">
 
           <h2 className="text-xl font-semibold text-gray-900 mb-6 font-poppins font-semibold text-[20px]">
-            License Details
+            Financial Details
           </h2>
           <div className="flex gap-2">
             <span className="font-medium text-gray-700">Edit</span>
@@ -201,7 +218,8 @@ console.log('agent in financial', agent)
             <CardContent>
               <DynamicFormBuilder
                 config={financialConfig}
-                onSubmit={financialForm.handleSubmit}
+                onSubmit={handleSectionSubmit(financialConfig.sectionName)}
+
               />
 
               {/* some form inputs here */}
@@ -213,4 +231,4 @@ console.log('agent in financial', agent)
   )
 }
 
-export default License
+export default Finance

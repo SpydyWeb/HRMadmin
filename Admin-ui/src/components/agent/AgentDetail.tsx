@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
-import type { IAgent, IEditAgentPayload } from '@/models/agent'
+import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
@@ -160,7 +160,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
   const agentChannelConfig = {
     gridCols: 2,
-    sectionName: 'channelInfo',
+    sectionName: 'individual_agent_action',
 
     defaultValues: {
       channel: agent.channel,
@@ -676,7 +676,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       {
         name: 'panAadharLinkFlag',
         label: 'Pan Aadhar Link Flag',
-        type: 'text',
+        type: 'boolean',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
@@ -1016,7 +1016,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       city: agent.permanentAddres?.[0]?.city,
       state: agent.permanentAddres?.[0]?.state,
       pin: agent.permanentAddres?.[0]?.pin,
-      country: agent.permanentAddres?.[0]?.country,
+      country: agent.country,
     },
 
     schema: z.object({
@@ -1036,10 +1036,11 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       {
         name: 'addressType',
         label: 'Address Type',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.ADDRESS_TYPE),
       },
       {
         name: 'addressLine1',

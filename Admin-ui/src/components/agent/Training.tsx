@@ -8,8 +8,17 @@ import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 // import { BiIdCard } from 'react-icons/bi'
 import DisplaySection from '../ui/displaySection'
+import { agentService } from '@/services/agentService'
+import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import { showToast } from '@/components/ui/sonner'
 
-const Training = ({ agent }: { agent: IAgent }) => {
+
+type TrainingDetailProps = {
+  agent: any
+  getOptions: any
+}
+
+const Training = ({ agent }: TrainingDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) 
   // console.log('agent', agent)
 
@@ -39,6 +48,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
 
   const organisationConfig = {
     gridCols: 3,
+    sectionName: 'organisation_details',
     defaultValues: {
        confirmationDate: agent.confirmationDate,
              incrementDate: agent.incrementDate,
@@ -126,6 +136,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
   }
   const branchConfig = {
     gridCols: 2,
+    sectionName: 'branch_details',
 
     defaultValues: {
             branchCode: agent.branchCode,
@@ -174,6 +185,7 @@ const Training = ({ agent }: { agent: IAgent }) => {
 
  const otherTrainingConfig = {
   gridCols: 3,
+  sectionName: 'other_training',
 
   defaultValues: {
     ic36TrngCompletionDate: agent.ic36TrngCompletionDate,
@@ -290,6 +302,37 @@ const Training = ({ agent }: { agent: IAgent }) => {
     : null,
 }
 
+const handleSectionSubmit =(sectionName: string) => async (formData: Record<string, any>) => {
+  console.log(`📝 Submitting ${sectionName}:`, formData)
+
+  try {
+    // Extract agentId from agent object (convert to lowercase for backend)
+    const agentid = agent?.agentId
+    if (!agentid) {
+      throw new Error('Agent ID is missing. Cannot update agent details.')
+    }
+
+    const payload: IEditAgentPayload = {
+      ...formData,
+    }
+
+    console.log('📤 Sending payload:', payload)
+
+    const response = await agentService.editAgent(payload, sectionName, agentid)
+    console.log('✅ Update successful:', response)
+
+    // You can add success notification here
+    showToast(NOTIFICATION_CONSTANTS.SUCCESS, `${sectionName} updated successfully!`)
+    setIsEdit(false) // Exit edit mode after successful save
+
+    return response
+  } catch (error) {
+    console.error(`❌ Error updating ${sectionName}:`, error)
+    showToast(NOTIFICATION_CONSTANTS.ERROR, `Failed to update ${sectionName}. Please try again.`)
+    throw error // Re-throw to let the form handle the error state
+  }
+}
+
 
   // console.log("agentFormConfig", agentFormConfig)
 
@@ -355,8 +398,8 @@ const Training = ({ agent }: { agent: IAgent }) => {
           <CardContent>
             <DynamicFormBuilder
               config={otherTrainingConfig}
-              onSubmit={agentForm.handleSubmit}
-            />
+              onSubmit={handleSectionSubmit(otherTrainingConfig.sectionName)}
+              />
             {/* some form inputs */}
           </CardContent>
         </Card>

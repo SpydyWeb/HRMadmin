@@ -5,7 +5,7 @@ const APIRoutes = {
   AGENTBYID: "/api/Agent/AgentByid",
   GETMASTERS: "/api/AppMasters/get",
   GETCOMMISSION: "/api/CommissionMgmt/Dashboard",
-  PROCESSCOMMISSION: "/api/CommissionMgmt/ProcessCommission",
+  PROCESSCOMMISSION: "/api/CommissionMgmt/ProcessCommissions",
   HOLDCOMMISSION: "/api/CommissionMgmt/HoldCommission",
   ADJUSTCOMMISSION: "/api/CommissionMgmt/AdjustCommission",
   APPROVECOMMISSION: "/api/CommissionMgmt/ApproveCommission",
@@ -18,6 +18,7 @@ const APIRoutes = {
   EXECUTIVEHISTORYLIST: "/api/CommissionConfig/JobExecutionHistory",
   EDITAGENT: "/api/Agent/UpdateAgent",
   UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",
+  DOWNLOADRECORD: "/api/CommissionMgmt/DownloadCommissionExcel",
 };
 
 module.exports = { APIRoutes };
