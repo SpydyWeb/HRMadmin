@@ -23,7 +23,8 @@ export const APIRoutes = {
   COMMISSION_SEARCH_FIELDS: 'searchFieldsConfig',
   EDIT_AGENT: 'editAgentDetails',
   EXECUTIVE_HISTORY_LIST: 'executiveHistoryList',
-  UPDATE_COMMISSION_CONFIG:'editCommission'
+  UPDATE_COMMISSION_CONFIG:'editCommission',
+  DOWNLOAD_RECORD: 'downloadRecord'
 
 }
 

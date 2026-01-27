@@ -139,6 +139,14 @@ const editCommission = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.UPDATECOMMISSIONBYID}/${ConfigId}`, data, { headers });
 };
 
+const downloadRecord = (data = {}, headers = {}) => {
+  const { jobExeHistId } = data;
+  if (!jobExeHistId) {
+    throw new Error("jobExeHistId is required for download record");
+  }
+  return apiClient.post(`${APIRoutes.DOWNLOADRECORD}/${jobExeHistId}`, data, { headers });
+};
+
 
 module.exports = {
   login,
@@ -163,5 +171,7 @@ module.exports = {
   searchFieldsConfig,
   editAgentDetails,
   executiveHistoryList ,
-  editCommission                           
+  editCommission ,
+  downloadRecord   
+
 };

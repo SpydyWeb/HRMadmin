@@ -152,11 +152,11 @@ const Agent: React.FC = () => {
       ) : activeTab === 'auditlog' ? (
         <AuditLog Agentcode={agentId || ''} />
       ) : activeTab === 'training' ? (
-        <Training agent={firstAgent} />
+        <Training agent={firstAgent} getOptions={getOptions}/>
       ) : activeTab === 'licensedetails' ? (
-        <License agent={firstAgent} />
+        <License agent={firstAgent} getOptions={getOptions} />
       ) : activeTab === 'financialdetails' ? (
-        <Financial agent={firstAgent} />
+        <Financial agent={firstAgent} getOptions={getOptions} />
       ) : (
         <ComingSoon />
       )}

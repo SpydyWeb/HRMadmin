@@ -2,7 +2,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionResponseBody,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest, IConfigCommissionListRequest, IUpdateCronRequest, IUpdateStatusRequest, ICommissionSearchFieldsRequest, IExecutiveHistoryRequest, IExecutiveHistoryResponseBody, ICommissionSearchFieldsResponseBody} from '@/models/commission'
+import type { ICommissionMgmtResponseBody, ICommissionMgmtApiResponse,IProcessCommissionRequest,IDownloadRecordRequest,IHoldCommissionResponseBody,IAdjustCommissionResponseBody,IApproveCommissionResponseBody,IConfigCommissionResponseBody, IConfigCommissionRequest, IConfigCommissionListRequest, IUpdateCronRequest, IUpdateStatusRequest, ICommissionSearchFieldsRequest, IExecutiveHistoryRequest, IExecutiveHistoryResponseBody, ICommissionSearchFieldsResponseBody, IDownloadRecordResponseBody} from '@/models/commission'
 
 export const commissionService = {
   commissionDashboard: async (data:ICommissionMgmtResponseBody) => {
@@ -17,7 +17,7 @@ export const commissionService = {
     throw error
   }
   },
-  processCommission: async (data:IProcessCommissionResponseBody) => {
+  processCommission: async (data:IProcessCommissionRequest) => {
     try {
       const response = await callApi<ApiResponse<ICommissionMgmtApiResponse>>(
         APIRoutes.PROCESSCOMMISSION,
@@ -25,7 +25,8 @@ export const commissionService = {
       )
       return response     
     } catch (error) {
-      
+      console.error("processCommission service error:", error);
+      throw error;
     }
   },
   holdCommission: async (data:IHoldCommissionResponseBody) => {
@@ -277,7 +278,20 @@ export const commissionService = {
       });
       throw error;
     }
-  }
+  },
+
+  downloadRecord: async (data:IDownloadRecordRequest) => { 
+    try {
+      const response = await callApi<ApiResponse<IDownloadRecordResponseBody>>(
+        APIRoutes.DOWNLOAD_RECORD,
+        [data],
+      )
+      return response     
+    } catch (error) {
+      console.error("downloadRecord service error:", error);
+      throw error;
+    }
+  },
 
 
 

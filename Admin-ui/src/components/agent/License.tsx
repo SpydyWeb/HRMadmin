@@ -2,22 +2,25 @@ import React, { useEffect, useState } from 'react'
 import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
-import type { IAgent } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
 import DisplaySection from '../ui/displaySection'
+import type { IAgent } from '@/models/agent'
+import { agentService } from '@/services/agentService'
+import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import { showToast } from '@/components/ui/sonner'
 
-const License = ({ agent }: { agent: IAgent }) => {
+
+type LicenseDetailProps = {
+  agent: any
+  getOptions: any
+}
+
+const License = ({ agent, getOptions }: LicenseDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
-  // console.log('agent', agent)
-  const genderOptions = ['Male', 'Female', 'Other']
-  const genderDropdown = genderOptions.map((g) => ({
-    label: g,
-    value: g,
-  }))
-
+ 
   if (!agent) return null
 
   const licenseForm = useAppForm({
@@ -47,6 +50,7 @@ const License = ({ agent }: { agent: IAgent }) => {
 
   const licenseConfig = {
     gridCols: 3,
+    sectionName: 'license_details',
     defaultValues: {
       cnctPersonName: agent.cnctPersonName,
       agentTypeCategory: agent.agentTypeCategory,
@@ -59,8 +63,8 @@ const License = ({ agent }: { agent: IAgent }) => {
     },
     schema: z.object({
          cnctPersonName:  z.string().optional(),
-      agentTypeCategory:  z.string().optional(),
-      agentClassification:  z.string().optional(),
+      agentTypeCategory:  z.union([z.string(), z.number()]).optional(),
+      agentClassification:  z.union([z.string(), z.number()]).optional(),
       licenseStatus:  z.string().optional(),
       licenseExpiryDate:  z.string().optional(),
       licenseIssueDate:  z.string().optional(),
@@ -80,26 +84,29 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'agentTypeCategory',
         label: 'Agent Type Category',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.AGENT_TYPE_CATEGORY),
       },
       {
         name: 'agentClassification',
         label: 'Agent Classification',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.AGENT_CLASS),
       },
       {
         name: 'licenseStatus',
         label: 'License Status',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.LICENCE_STATUS),
       },
       {
         name: 'licenseExpiryDate',
@@ -124,6 +131,7 @@ const License = ({ agent }: { agent: IAgent }) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.LICENSE_TYPE),
       },
       {
         name: 'licenseNo',
@@ -153,6 +161,7 @@ const License = ({ agent }: { agent: IAgent }) => {
   }
   const licenseTrainingConfig = {
     gridCols: 2,
+    sectionName: 'training_details',
 
     defaultValues: {
        trainingGroupType: agent.trainingGroupType,
@@ -177,7 +186,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'refresherTrainingCompleted',
         label: 'Refresher Training Completed',
-        type: 'text',
+        type: 'boolean',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -203,6 +212,8 @@ const License = ({ agent }: { agent: IAgent }) => {
 
   const licenseProductConfig = {
     gridCols: 2,
+    sectionName: 'licenseProduct_Config',
+
 
     defaultValues: {
             ulipFlag: agent.ulipFlag,
@@ -218,7 +229,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'ulipFlag',
         label: 'Ulip Flag',
-        type: 'text',
+        type: 'boolean',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -243,6 +254,8 @@ const License = ({ agent }: { agent: IAgent }) => {
   }
   const licenseFinancialConfig = {
     gridCols: 2,
+    sectionName: 'product_details',
+
 
     defaultValues: {
        ifs: agent.ifs,
@@ -282,6 +295,8 @@ const License = ({ agent }: { agent: IAgent }) => {
   }
   const licenseOthersConfig = {
     gridCols: 2,
+    sectionName: 'others_details',
+
 
     defaultValues: {
       isMigrated: agent.isMigrated,
@@ -304,7 +319,7 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'isMigrated',
         label: 'Is Migrated',
-        type: 'text',
+        type: 'boolean',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
@@ -336,10 +351,11 @@ const License = ({ agent }: { agent: IAgent }) => {
       {
         name: 'vertical',
         label: 'vertical',
-        type: 'text',
+        type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.VERTICAL),
       },
     ],
 
@@ -360,6 +376,37 @@ const License = ({ agent }: { agent: IAgent }) => {
   }
 
   // console.log("agentFormConfig", agentFormConfig)
+
+    const handleSectionSubmit =(sectionName: string) => async (formData: Record<string, any>) => {
+        console.log(`📝 Submitting ${sectionName}:`, formData)
+  
+        try {
+          // Extract agentId from agent object (convert to lowercase for backend)
+          const agentid = agent?.agentId
+          if (!agentid) {
+            throw new Error('Agent ID is missing. Cannot update agent details.')
+          }
+  
+          const payload: Record<string, any> = {
+            ...formData,
+          }
+  
+          console.log('📤 Sending payload:', payload)
+     
+          const response = await agentService.editAgent(payload, sectionName, agentid)
+          console.log('✅ Update successful:', response)
+  
+          // You can add success notification here
+          showToast(NOTIFICATION_CONSTANTS.SUCCESS, `${sectionName} updated successfully!`)
+          setIsEdit(false) // Exit edit mode after successful save
+  
+          return response
+        } catch (error) {
+          console.error(`❌ Error updating ${sectionName}:`, error)
+          showToast(NOTIFICATION_CONSTANTS.ERROR, `Failed to update ${sectionName}. Please try again.`)
+          throw error // Re-throw to let the form handle the error state
+        }
+      }
 
   const f = licenseForm as any
 
@@ -391,7 +438,7 @@ const License = ({ agent }: { agent: IAgent }) => {
             <CardContent>
               <DynamicFormBuilder
                 config={licenseConfig}
-                onSubmit={licenseForm.handleSubmit}
+                  onSubmit={handleSectionSubmit(licenseConfig.sectionName)}
               />
 
               {/* some form inputs here */}
@@ -409,7 +456,7 @@ const License = ({ agent }: { agent: IAgent }) => {
             <CardContent>
               <DynamicFormBuilder
                 config={licenseTrainingConfig}
-                onSubmit={licenseForm.handleSubmit}
+                  onSubmit={handleSectionSubmit(licenseTrainingConfig.sectionName)}
               />
               {/* some form inputs here */}
             </CardContent>
@@ -424,7 +471,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           <CardContent>
             <DynamicFormBuilder
               config={licenseFinancialConfig}
-              onSubmit={licenseForm.handleSubmit}
+                  onSubmit={handleSectionSubmit(licenseFinancialConfig.sectionName)}
             />
             {/* some form inputs */}
           </CardContent>
@@ -440,7 +487,7 @@ const License = ({ agent }: { agent: IAgent }) => {
           <CardContent>
             <DynamicFormBuilder
               config={licenseProductConfig}
-              onSubmit={licenseForm.handleSubmit}
+              onSubmit={handleSectionSubmit(licenseProductConfig.sectionName)}
             />
             {/* some form inputs */}
           </CardContent>
@@ -456,9 +503,8 @@ const License = ({ agent }: { agent: IAgent }) => {
           <CardContent>
             <DynamicFormBuilder
               config={licenseOthersConfig}
-              onSubmit={licenseForm.handleSubmit}
+              onSubmit={handleSectionSubmit(licenseOthersConfig.sectionName)}
             />
-            {/* some form inputs */}
           </CardContent>
         </Card>
       </div>

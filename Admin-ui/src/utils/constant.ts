@@ -49,5 +49,11 @@ export const MASTER_DATA_KEYS = {
   SALUTATION: 'Salutation',
   CANDIDATE_TYPE: 'CandidateType',
   AGENT_TYPE: 'AgentType',
-  COMMISSION_CLASS:"CommissionClass"
+  COMMISSION_CLASS:"CommissionClass",
+  ADDRESS_TYPE:"AddressType",
+  LICENSE_TYPE:"LicenseType",
+  LICENCE_STATUS:"LicenceStatus",
+  VERTICAL:"Vertical",
+  TRAINING_GROUP_TYPE:"TrainingGroupType",
+  
 }

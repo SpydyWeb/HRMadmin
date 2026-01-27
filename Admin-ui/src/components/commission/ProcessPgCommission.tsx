@@ -19,17 +19,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEffect, useState } from 'react'
 import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { commissionService } from '@/services/commissionService'
 import Loader from '../Loader'
+import { Pagination } from '@/components/table/Pagination'
 
-interface ProcessPgCommissionProps {
-   responseBody?: {
-    processedRecordsLog: any[]
-  }
-}
 
-const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
+// interface ProcessPgCommissionProps {
+//    responseBody?: {
+//     processedRecordsLog: any[]
+//   }
+// }
+
+const ProcessPgCommission: React.FC<any> = () => {
         const actions: Array<ActionItem> = [
       {
         icon: FaPlus,
@@ -87,7 +89,11 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
       },
     ] 
   const navigate = useNavigate()
+  const [page, setPage] = useState(1) // Page state starting from 1
+  const [pageSize] = useState(10) // Default page size
+  const [searchTerm, setSearchTerm] = useState('')
     const [localError, setLocalError] = useState<string | null>(null)
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
 
   const encryptionEnabled = useEncryption()
       const keyReady = !!encryptionService.getHrm_Key()
@@ -98,12 +104,14 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
       isLoading: processcommissionLoading,
       isError: processcommissionQueryError,
       error: processcommissionQueryErrorObj,
-    } = useQuery<ProcessPgCommissionProps>({
-      queryKey: ['process-commission'],
+    } = useQuery<any>({
+      queryKey: ['process-commission', page, pageSize],
       enabled: canFetch,
-      queryFn: () => commissionService.processCommission(),
+      queryFn: () => commissionService.processCommission({ 
+        pageNumber: page, // API uses 1-based indexing
+        pageSize: pageSize
+      }),
       staleTime: 1000 * 60 * 60, // 1 hour
-      keepPreviousData: true,
       refetchOnWindowFocus: false,
       retry: 1,
     })
@@ -118,8 +126,63 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
           setLocalError(null)
         }
       }, [processcommissionQueryError, processcommissionQueryErrorObj])
-  const dashboardData = processedRecordsLog?.responseBody?.processCommission
+
+  // Download record mutation
+  const downloadMutation = useMutation({
+    mutationFn: (jobExeHistId: number) => 
+      commissionService.downloadRecord({ jobExeHistId }),
+    onSuccess: (response) => {
+      const fileDownload = response?.responseBody?.fileDownload
+      if (fileDownload && fileDownload.fileBase64) {
+        // Convert base64 to blob and download
+        const byteCharacters = atob(fileDownload.fileBase64)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: fileDownload.contentType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileDownload.fileName || 'commission.xlsx'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        setDownloadingId(null)
+      } else {
+        console.error('No file data in response')
+        alert('Failed to download file: No file data received')
+        setDownloadingId(null)
+      }
+    },
+    onError: (error: any) => {
+      console.error('Download error:', error)
+      alert(`Failed to download file: ${error?.message || 'Unknown error'}`)
+      setDownloadingId(null)
+    },
+  })
+
+  const handleDownload = (row: any) => {
+    const jobExeHistId = row.jobExeHistId || row._jobExeHistId
+    if (!jobExeHistId) {
+      alert('No job execution history ID found')
+      return
+    }
+    setDownloadingId(jobExeHistId)
+    downloadMutation.mutate(jobExeHistId)
+  }
+
+  const dashboardData = processedRecordsLog?.responseBody?.processCommissionList
+  // const dashboardData = processedRecordsLog?.responseBody?.processCommissionList
   console.log('!@#dashboardData', dashboardData)
+  const paginationData = processedRecordsLog?.responseBody?.pagination || {}
+  console.log('!@#paginationData', paginationData)
+
 
      const loading = processcommissionLoading
     if (loading) return <Loader />
@@ -127,45 +190,51 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
       return <div className="p-4 text-red-600">Error: {localError}</div>
   
 
-    const dataTableData =dashboardData?.processedRecordsLog ?? []
+    const dataTableData =dashboardData ?? []
     console.log('!@#dataTableData', dataTableData) 
+
+    const handlePageChange = (newPage: number) => {
+      console.log('Changing to page:', newPage)
+      setPage(newPage)
+    }
 
   const columns = [
       {
         header: 'Date',
         accessor: (row: any) =>
-        row.processedDate
-          ? new Date(row.processedDate).toLocaleDateString()
+        row.startedAt
+          ? new Date(row.startedAt).toLocaleDateString()
           : '-',
         width: '20%',
       },
       { 
-        header: 'Period',  
-        accessor: (row: any) => row.period,
+        header: 'Commission Name',  
+        accessor: (row: any) => row.commissionName,
         width: '20%',
       },
       { 
         header: 'Records', 
         accessor: (row: any) => (
           <div className="flex items-center gap-2">
-            <span>{row.recordsCount}</span>
+            <span>{row.records}</span>
             <RxDownload 
-              className="h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer transition" 
+              className={`h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer transition ${
+                downloadingId === (row.jobExeHistId || row._jobExeHistId) ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               onClick={() => {
-                // TODO: Integrate API to download records for this ID
-                console.log('Download records for ID:', row.id || row._id)
-                alert(`Download records for ID: ${row.id || row._id}`)
+                if (downloadingId === (row.jobExeHistId || row._jobExeHistId)) return
+                handleDownload(row)
               }}
               title="Download records"
             />
           </div>
         ),
-        width: '15%',
+        width: '20%',
       },
       { 
         header: 'Status',  
-        accessor: (row: any) => row.status,
-        width: '15%',
+        accessor: (row: any) => row.exeStatus,
+        width: '20%',
       },
       {
         header: 'Actions',
@@ -175,7 +244,7 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
             <Button variant="green" size="sm">Approve</Button>
           </div>
         ),
-        width: '40%',
+        width: '20%',
       },
     ]
 
@@ -196,6 +265,16 @@ const ProcessPgCommission: React.FC<ProcessPgCommissionProps> = () => {
           </Select>
         </div>
         <DataTable columns={columns} data={dataTableData} />
+        <div className="flex justify-between items-center mt-4">
+            <span className="font-semibold text-lg text-gray-700">
+              Page {page} of {paginationData.totalPages } ({paginationData.totalItems} total items)
+            </span>
+            <Pagination
+              totalPages={paginationData.totalPages}
+              currentPage={page}
+              onPageChange={handlePageChange}
+            />
+          </div>
       </div>
       <div className="max-w-[26rem] w-full space-y-3">
         <Card className="px-2 gap-0 rounded-md">

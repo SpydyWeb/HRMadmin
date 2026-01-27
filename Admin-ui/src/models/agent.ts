@@ -182,16 +182,16 @@ export interface IAgent {
   // keyValueEntry: IkeyValueEntry[]
   
   //Acct Activation Date missing
-  factoringHouse: string
-  accountHolderName: string
-  panNumber?: string
-  bankName?: string
-  branchName: string
-  accountNumber: string
-  accountType: string
-  micr: string
-  ifsc: string
-  preferredPaymentMode: string
+  // factoringHouse: string
+  // accountHolderName: string
+  // panNumber?: string
+  // bankName?: string
+  // branchName: string
+  // accountNumber: string
+  // accountType: string
+  // micr: string
+  // ifsc: string
+  // preferredPaymentMode: string
 
   // heirarchy
 
