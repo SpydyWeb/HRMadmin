@@ -52,8 +52,9 @@ export const MASTER_DATA_KEYS = {
   COMMISSION_CLASS:"CommissionClass",
   ADDRESS_TYPE:"AddressType",
   LICENSE_TYPE:"LicenseType",
-  LICENCE_STATUS:"LicenceStatus",
+  LICENCE_STATUS:"LicenseStatus",
   VERTICAL:"Vertical",
   TRAINING_GROUP_TYPE:"TrainingGroupType",
+  PAYMENT_MODE:"PaymentMode"
   
 }

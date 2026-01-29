@@ -228,10 +228,10 @@ const ProcessCommission : React.FC = () => {
       {/* Render different content based on the selected tab */}
       {renderTabContent()}
 
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <span className="font-semibold text-lg text-gray-700">Page 1/6</span>
         <Pagination totalPages={4} currentPage={page} onPageChange={setPage} />
-      </div>
+      </div> */}
     </div>
   )
 }
