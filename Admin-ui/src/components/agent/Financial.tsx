@@ -17,6 +17,7 @@ const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
 
 console.log('agent in financial', agent)
 
+
   if (!agent) return null
 
   const financialConfig = {
@@ -110,10 +111,11 @@ console.log('agent in financial', agent)
   {
     name: 'preferredPaymentMode',
     label: 'Payment Mode',
-    type: 'text',
+    type: 'select',
     colSpan: 1,
     readOnly: !isEdit,
     variant: 'standard',
+    options: getOptions(MASTER_DATA_KEYS.PAYMENT_MODE),
   },
   // {
   //   name: 'serviceTaxNo',

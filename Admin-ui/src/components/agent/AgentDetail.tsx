@@ -12,6 +12,60 @@ import { useMasterData } from '@/hooks/useMasterData'
 import { agentService } from '@/services/agentService'
 import { showToast } from '@/components/ui/sonner'
 
+const formatDateToISO = (dateString) => {
+  if (!dateString) return null;
+  
+  // If it's already in the right format, return as is
+  if (dateString.includes('T')) return dateString;
+  
+  // Convert various date formats to YYYY-MM-DD format
+  let date;
+  
+  // Handle format like "02 Jan 2026"
+  if (dateString.match(/\d{2} \w{3} \d{4}/)) {
+    const parts = dateString.split(' ');
+    const day = parts[0];
+    const month = new Date(Date.parse(parts[1] + " 1, 2022")).getMonth() + 1; // Convert month name to number
+    const year = parts[2];
+    date = new Date(`${year}-${month}-${day}`);
+  } else {
+    // Try to parse as is
+    date = new Date(dateString);
+  }
+  
+  if (isNaN(date.getTime())) return dateString; // Return as is if invalid
+  
+  // Format date as YYYY-MM-DD
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  // Get current time
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`;
+};
+
+
+// Helper function to format dates in form data
+const formatDatesInFormData = (formData, dateFields) => {
+  const formattedData = { ...formData };
+  
+  dateFields.forEach(field => {
+    if (formattedData[field]) {
+      formattedData[field] = formatDateToISO(formattedData[field]);
+    }
+  });
+  
+  return formattedData;
+};
+
+
+
 type AgentDetailProps = {
   agent: any
   getOptions: any
@@ -23,6 +77,9 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
   if (!agent) return null
 
   console.log('agent', agent)
+  console.log('bankAccounts', agent.bankAccounts?.[0]?.preferredPaymentMode
+)
+
 
   const agentForm = useAppForm({
     defaultValues: {
@@ -232,8 +289,25 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
           throw new Error('Agent ID is missing. Cannot update agent details.')
         }
 
+        const dateFieldsBySection = {
+          'employee_info': ['startDate', 'appointmentDate', 'incorporationDate'],
+          'other_personal_details': ['dateOfBirth'],
+          'financial_details': [], // Add any date fields in financial details if needed
+          'contact_information': [], // Add any date fields in contact information if needed
+          'personal_details': [], // Add any date fields in personal details if needed
+          'address_info': [], // Add any date fields in address info if needed
+          'individual_agent_action': [] // Add any date fields in agent channel config if needed
+        };
+
+         // Format dates in the form data
+        const formattedPayload = formatDatesInFormData(
+          formData, 
+          dateFieldsBySection[sectionName] || []
+        );
+
+
         const payload: IEditAgentPayload = {
-          ...formData,
+          ...formattedPayload,
         }
 
         console.log('📤 Sending payload:', payload)
@@ -793,11 +867,11 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       {
         name: 'preferredPaymentMode',
         label: 'Payment Mode',
-        type: 'text',
+        type: 'select',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        // options: ['Bank Transfer', 'Cheque', 'Cash', 'UPI'],
+        options: getOptions(MASTER_DATA_KEYS.PAYMENT_MODE),
       },
     ],
 
@@ -1079,7 +1153,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
-        //  options: getOptions(MASTER_DATA_KEYS.STATE),
+         options: getOptions(MASTER_DATA_KEYS.STATE),
       },
 
       {
@@ -1316,7 +1390,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
 
         {/* addressConfig */}
         <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Address Config
+          Address
         </h2>
         <div className="flex gap-2">
           <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
