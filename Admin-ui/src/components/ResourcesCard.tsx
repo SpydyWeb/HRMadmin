@@ -16,6 +16,7 @@ interface ResourcesCardProps {
     { title: "User Manual", link: "/manual" },
     { title: "Review Masters", link: "/review-masters" },
     { title: "Review Structure", link: "/review-structure" },
+    { title: "Review Access", link: "/review-access" },
   ];
 
 export default function ResourcesCard() {
@@ -39,6 +40,7 @@ export default function ResourcesCard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
+            variant="searchVariant"
           />
         </div>
 
