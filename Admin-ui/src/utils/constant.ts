@@ -57,6 +57,7 @@ export const MASTER_DATA_KEYS = {
   TRAINING_GROUP_TYPE:"TrainingGroupType",
   PAYMENT_MODE:"PaymentMode",
   SUB_CHANNELS:"SubChannel",
-  DESIGNATION:"Designation"
+  DESIGNATION:"Designation",
+  CHANNEL:"Channel"
 
 }

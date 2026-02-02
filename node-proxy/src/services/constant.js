@@ -19,6 +19,7 @@ const APIRoutes = {
   EDITAGENT: "/api/Agent/UpdateAgent",
   UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",
   DOWNLOADRECORD: "/api/CommissionMgmt/DownloadCommissionExcel",
+  GEOHIERARCHY: "/api/Agent/GeoHierarchy",
 };
 
 module.exports = { APIRoutes };

@@ -147,6 +147,13 @@ const downloadRecord = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.DOWNLOADRECORD}/${jobExeHistId}`, data, { headers });
 };
 
+const GeoHierarchy = (channelCategory, headers = {}) => {
+  if (!channelCategory) {
+    throw new Error("channelCategory is required for GeoHierarchy");
+  }
+  return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
+};
+
 
 module.exports = {
   login,
@@ -172,6 +179,7 @@ module.exports = {
   editAgentDetails,
   executiveHistoryList ,
   editCommission ,
-  downloadRecord   
+  downloadRecord,
+  GeoHierarchy
 
 };
