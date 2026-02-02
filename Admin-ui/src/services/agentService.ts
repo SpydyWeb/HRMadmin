@@ -54,4 +54,28 @@ export const agentService = {
     console.log('agent', response)
     return response.responseBody?.agents?.[0] || null
   },
+
+  fetchGeoHierarchy: async (channelCategory: string) => {
+    const response = await callApi<ApiResponse<any>>(
+      APIRoutes.GEO_HIERARCHY,
+      [channelCategory],
+    )
+    console.log('geoHierarchy full response:', response)
+    console.log('geoHierarchy responseBody:', response?.responseBody)
+    
+    // Handle different possible response structures
+    if (response?.responseBody) {
+      // Case 1: peopleHeirarchy is directly in responseBody
+      if (response.responseBody.geoHierarchy) {
+        return response.responseBody
+      }
+      // Case 2: peopleHeirarchy is nested in agents[0]
+      if (response.responseBody.agents?.[0]?.geoHierarchy) {
+        return response.responseBody.agents[0]
+      }
+      // Case 3: responseBody itself is the object we need
+      return response.responseBody
+    }
+    return null
+  },
 }

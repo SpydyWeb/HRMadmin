@@ -320,6 +320,14 @@ export interface IPeopleHierarchy {
   lastName: string | null
   supervisors?: IPeopleHierarchy | null
 }
+export interface IGeoHierarchy {
+  designationCode: string,
+  designationId: number,
+  designationName: string,
+  hierarchyPath: string,  
+  parentLocation: IGeoHierarchy | null
+}
+
 
 
 export interface IEditAgentRequest {

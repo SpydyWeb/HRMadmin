@@ -24,7 +24,8 @@ export const APIRoutes = {
   EDIT_AGENT: 'editAgentDetails',
   EXECUTIVE_HISTORY_LIST: 'executiveHistoryList',
   UPDATE_COMMISSION_CONFIG:'editCommission',
-  DOWNLOAD_RECORD: 'downloadRecord'
+  DOWNLOAD_RECORD: 'downloadRecord',
+  GEO_HIERARCHY: 'GeoHierarchy'
 
 }
 

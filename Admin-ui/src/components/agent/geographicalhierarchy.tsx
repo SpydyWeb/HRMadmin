@@ -2,37 +2,41 @@
 import { useQuery } from '@tanstack/react-query'
 import SplitTreeTable from '../ui/SplitTreeView'
 import type { TreeViewItem } from '../ui/tree-view'
-import type { IAgentSearchByCodeRequest, IPeopleHierarchy } from '@/models/agent'
+import type { IGeoHierarchy } from '@/models/agent'
 import { agentService } from '@/services/agentService'
 
 interface GeoHierarchyProps {
   Agent: { agentId: number }
+  channelCode?: string | null
 }
 
-const buildUniqueSupervisorTree = (hierarchies: Array<IPeopleHierarchy>): Array<TreeViewItem> => {
+const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
   const nodeMap = new Map<number, TreeViewItem>()
   const childSet = new Set<number>()
 
-  const flatten = (node: IPeopleHierarchy | null) => {
+  const flatten = (node: IGeoHierarchy | null) => {
     if (!node) return
 
-    if (!nodeMap.has(node.agentId)) {
-      nodeMap.set(node.agentId, {
-        id: node.agentId.toString(),
-        name: node.firstName + ' - ' + node.agentCode,
-        type: 'agent',
-        agentCode: node.agentCode || '',
-        agentName: [node.firstName, node.middleName, node.lastName].filter(Boolean).join(' '),
+    if (!nodeMap.has(node.designationId)) {
+      nodeMap.set(node.designationId, {
+        id: node.designationId.toString(),
+        name: `${node.designationName} - ${node.designationCode}`,
+        type: 'designation',
+        agentCode: node.designationCode || '',
+        agentName: node.designationName || '',
         children: [],
       })
     }
 
-    if (node.supervisors) {
-      childSet.add(node.supervisors.agentId)
-      flatten(node.supervisors)
+    if (node.parentLocation) {
+      // Mark current node as a child (it has a parent)
+      childSet.add(node.designationId)
+      // Recursively process the parent
+      flatten(node.parentLocation)
 
-      const parentNode = nodeMap.get(node.agentId)!
-      const childNode = nodeMap.get(node.supervisors.agentId)!
+      // Add current node as a child of its parent
+      const parentNode = nodeMap.get(node.parentLocation.designationId)!
+      const childNode = nodeMap.get(node.designationId)!
       if (!parentNode.children?.some((c) => c.id === childNode.id)) {
         parentNode.children?.push(childNode)
       }
@@ -49,23 +53,24 @@ const buildUniqueSupervisorTree = (hierarchies: Array<IPeopleHierarchy>): Array<
   return roots
 }
 
-export const GeographicalHierarchy = ({ Agent }: GeoHierarchyProps) => {
-  const requestData: IAgentSearchByCodeRequest = {
-    agentId: Agent.agentId,
-    FetchHierarchy: true,
-  }
-
-  const { data: agent, isLoading, isError } = useQuery({
-    queryKey: ['agentHierarchy', requestData], // object form
-    queryFn: () => agentService.fetchAgentHierarchy(requestData), // object form
+export const GeographicalHierarchy = ({ channelCode }: GeoHierarchyProps) => {
+  const { data: geoHierarchy, isLoading, isError } = useQuery({
+    queryKey: ['geoHierarchy', channelCode],
+    queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
+    enabled: !!channelCode, // Only fetch if channelCategory is available
     staleTime: 5 * 60 * 1000, // optional: cache for 5 minutes
   })
 
-  if (isLoading) return <div className="text-center p-4">Loading hierarchy...</div>
-  if (isError) return <div className="text-center p-4 text-red-500">Failed to load hierarchy.</div>
+  if (!channelCode) {
+    return <div className="text-center p-4 text-gray-500">Channel category is required to load geographical hierarchy.</div>
+  }
 
-  const treeData = agent?.peopleHeirarchy
-    ? buildUniqueSupervisorTree(agent.peopleHeirarchy)
+  if (isLoading) return <div className="text-center p-4">Loading geographical hierarchy...</div>
+  if (isError) return <div className="text-center p-4 text-red-500">Failed to load geographical hierarchy.</div>
+
+  console.log("whatis the geo hierarchy", geoHierarchy)
+  const treeData = geoHierarchy?.geoHierarchy
+    ? buildGeoHierarchyTree(geoHierarchy.geoHierarchy)
     : []
 
   return <SplitTreeTable treeData={treeData} />

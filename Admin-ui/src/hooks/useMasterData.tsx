@@ -45,6 +45,13 @@ export const useMasterData = (keys: string[]) => {
     return item?.entryDesc ?? item?.name ?? ''
   }
 
+  const getCategoryCode = (key: string) => {
+    if (key == null) return ''
+    const items = masterData[key] || []
+    const item = items.find((x: any) => (x.entryIdentity ?? x.id) != null)
+    return item?.entryCategory ?? ''
+  }
+
   return {
     masterData,
     isLoading,
@@ -52,5 +59,6 @@ export const useMasterData = (keys: string[]) => {
     error,
     getOptions,
     getDescription,
+    getCategoryCode
   }
 }

@@ -331,6 +331,7 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 pr-9"
                   disabled={apiLoading}
+                  variant="outline"
                 />
                 {searchQuery && (
                   <Button

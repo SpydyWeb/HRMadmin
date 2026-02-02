@@ -6,6 +6,7 @@ import Button from '../ui/button'
 import AgentDetail from './AgentDetail'
 import ComingSoon from '../comming-soon'
 import { Hierarchy } from './hierarchy'
+import { GeographicalHierarchy } from './geographicalhierarchy'
 import Loader from '@/components/Loader'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import encryptionService from '@/services/encryptionService'
@@ -51,9 +52,23 @@ const Agent: React.FC = () => {
   const canFetch = !encryptionEnabled || keyReady
 
   // master data hook (instant if loader prefetched + hydrated)
-  const { getOptions, isLoading: masterLoading } = useMasterData(
+  const { getOptions, masterData, isLoading: masterLoading } = useMasterData(
     Object.values(MASTER_DATA_KEYS),
   )
+
+  // Helper function to extract channel category from agent's channel value
+  const getChannelCategory = (agent: any): string | null => {
+    if (!agent?.channel) return null
+    
+    const channelItems = masterData[MASTER_DATA_KEYS.CHANNEL] || []
+    console.log("whatis the channel items", channelItems)
+    const channelEntry = channelItems.find(
+      (x: any) => (x.entryIdentity ?? x.id) === agent.channel
+    )
+    console.log("whatis the channel entry", channelEntry)
+    
+    return channelEntry?.entryCategory || null
+  }
 
   // Agent query: same key & signature used by loader
   const {
@@ -148,7 +163,14 @@ const Agent: React.FC = () => {
       ) : activeTab === 'peoplehierarchy' ? (
         <Hierarchy Agent={firstAgent} />
       ) : activeTab === 'geographicalhierarchy' ? (
-        <Hierarchy Agent={firstAgent} />
+        firstAgent ? (
+          <GeographicalHierarchy 
+            Agent={firstAgent} 
+            channelCode={getChannelCategory(firstAgent)}
+          />
+        ) : (
+          <div className="p-4 text-gray-600">No agent found.</div>
+        )
       ) : activeTab === 'auditlog' ? (
         <AuditLog Agentcode={agentId || ''} />
       ) : activeTab === 'training' ? (
