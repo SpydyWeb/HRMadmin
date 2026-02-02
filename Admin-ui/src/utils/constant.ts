@@ -55,6 +55,8 @@ export const MASTER_DATA_KEYS = {
   LICENCE_STATUS:"LicenseStatus",
   VERTICAL:"Vertical",
   TRAINING_GROUP_TYPE:"TrainingGroupType",
-  PAYMENT_MODE:"PaymentMode"
-  
+  PAYMENT_MODE:"PaymentMode",
+  SUB_CHANNELS:"SubChannel",
+  DESIGNATION:"Designation"
+
 }
