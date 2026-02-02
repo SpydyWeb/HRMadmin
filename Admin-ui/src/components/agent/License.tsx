@@ -26,9 +26,9 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
   const licenseForm = useAppForm({
     defaultValues: {
       licenseNo: agent.licenseNo,
-      licenseType: agent.licenceType,
+      licenseType: agent.licenseType,
       licenseIssueDate: agent.licenseIssueDate,
-      licenseStatus: agent.licenceStatus,
+      licenseStatus: agent.licenseStatus,
       licenseExpiryDate: agent.licenseExpiryDate,
       cnctPersonName: agent.cnctPersonName,
       agentTypeCat:agent.agentTypeCat,
@@ -55,10 +55,10 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       cnctPersonName: agent.cnctPersonName,
       agentTypeCat:agent.agentTypeCat,
        agentClass: agent.agentClass,
-      licenseStatus: agent.licenceStatus,
+      licenseStatus: agent.licenseStatus,
       licenseExpiryDate: agent.licenseExpiryDate,
       licenseIssueDate: agent.licenseIssueDate,
-      licenseType: agent.licenceType,
+      licenseType: agent.licenseType,
       licenseNo: agent.licenseNo,
     },
     schema: z.object({

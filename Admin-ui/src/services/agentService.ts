@@ -24,10 +24,10 @@ export const agentService = {
     sectionName: string,
     agentid: number,
   ) => {
-    console.log('EDIT_AGENT route:', APIRoutes.EDIT_AGENT)
-    console.log('EDIT_AGENT data:', data)
-     console.log('🔍 Agent ID:', agentid)
-        console.log('🔍 Section Name:', sectionName)
+    // console.log('EDIT_AGENT route:', APIRoutes.EDIT_AGENT)
+    // console.log('EDIT_AGENT data:', data)
+    //  console.log('🔍 Agent ID:', agentid)
+    //     console.log('🔍 Section Name:', sectionName)
     try {
       const response = await callApi<ApiResponse<IEditAgentResponseBody>>(
         APIRoutes.EDIT_AGENT,
@@ -60,8 +60,8 @@ export const agentService = {
       APIRoutes.GEO_HIERARCHY,
       [channelCategory],
     )
-    console.log('geoHierarchy full response:', response)
-    console.log('geoHierarchy responseBody:', response?.responseBody)
+    // console.log('geoHierarchy full response:', response)
+    // console.log('geoHierarchy responseBody:', response?.responseBody)
     
     // Handle different possible response structures
     if (response?.responseBody) {
