@@ -223,12 +223,14 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       channel: agent.channel,
       subChannel: agent.subChannel,
       commissionClass: agent.commissionClass ?? 'N/A',
+      designationCode: agent.designationCode,
     },
 
     schema: z.object({
       channel: z.any().optional(),
       subChannel: z.any().optional(),
       commissionClass: z.any().optional(),
+      designationCode: z.any().optional(),
     }),
 
     fields: [
@@ -258,6 +260,15 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         readOnly: !isEdit,
         variant: 'custom',
         options: getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
+      },
+      {
+        name: 'designationCode',
+        label: 'Designation',
+        type: 'select',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'custom',
+        options: getOptions(MASTER_DATA_KEYS.DESIGNATION),
       },
     ],
 
@@ -1251,6 +1262,9 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
                       </h3>
                       <p className="text-orange-100 text-sm">
                         AGENT CODE - {agent.agentCode}
+                      </p>
+                      <p className="text-orange-100 text-sm">
+                        DESIGNATION  - {agent.designationCodeDesc ?? "N/A"}
                       </p>
                     </div>
                   </div>
