@@ -61,11 +61,11 @@ const Agent: React.FC = () => {
     if (!agent?.channel) return null
     
     const channelItems = masterData[MASTER_DATA_KEYS.CHANNEL] || []
-    console.log("whatis the channel items", channelItems)
+    // console.log("whatis the channel items", channelItems)
     const channelEntry = channelItems.find(
       (x: any) => (x.entryIdentity ?? x.id) === agent.channel
     )
-    console.log("whatis the channel entry", channelEntry)
+    // console.log("whatis the channel entry", channelEntry)
     
     return channelEntry?.entryCategory || null
   }

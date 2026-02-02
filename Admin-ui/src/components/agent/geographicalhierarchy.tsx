@@ -4,6 +4,7 @@ import SplitTreeTable from '../ui/SplitTreeView'
 import type { TreeViewItem } from '../ui/tree-view'
 import type { IGeoHierarchy } from '@/models/agent'
 import { agentService } from '@/services/agentService'
+import Loader from '../Loader'
 
 interface GeoHierarchyProps {
   Agent: { agentId: number }
@@ -65,7 +66,8 @@ export const GeographicalHierarchy = ({ channelCode }: GeoHierarchyProps) => {
     return <div className="text-center p-4 text-gray-500">Channel category is required to load geographical hierarchy.</div>
   }
 
-  if (isLoading) return <div className="text-center p-4">Loading geographical hierarchy...</div>
+  // if (isLoading) return <div className="text-center p-4">Loading geographical hierarchy...</div>
+  if (isLoading) return <Loader />
   if (isError) return <div className="text-center p-4 text-red-500">Failed to load geographical hierarchy.</div>
 
   console.log("whatis the geo hierarchy", geoHierarchy)
