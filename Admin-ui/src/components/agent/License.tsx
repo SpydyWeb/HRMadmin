@@ -423,7 +423,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
           <h2 className="text-xl font-semibold text-gray-900 mb-6 font-poppins font-semibold text-[20px]">
             License Details
           </h2>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <span className="font-medium text-gray-700">Edit</span>
             <Switch
               checked={isEdit}

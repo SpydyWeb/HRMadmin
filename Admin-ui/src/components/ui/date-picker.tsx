@@ -97,7 +97,7 @@ export default function DatePicker({
             onClick={() => setOpen(!open)}
             className={cn(
               "w-full  input-text flex items-center px-3  py-1 h-10 gap-2 font-normal",
-              "justify-start text-left border border-gray-400 shadow-none rounded-md bg-white",
+              "justify-start text-left border border-gray-400 shadow-none rounded-sm bg-white",
               "hover:bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300"
             )}
           >
