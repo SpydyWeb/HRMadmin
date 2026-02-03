@@ -20,6 +20,7 @@ const APIRoutes = {
   UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",
   DOWNLOADRECORD: "/api/CommissionMgmt/DownloadCommissionExcel",
   GEOHIERARCHY: "/api/Agent/GeoHierarchy",
+  GEOHIERARCHYTABLE: "/api/Agent/GeoHierarchyByChannelDesignation",
 };
 
 module.exports = { APIRoutes };

@@ -154,6 +154,10 @@ const GeoHierarchy = (channelCategory, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
 };
 
+const GeoHierarchyTable = (channelCategory,designationCode, headers = {}) => {
+  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, designationCode: designationCode }, { headers });
+}
+
 
 module.exports = {
   login,
@@ -180,6 +184,7 @@ module.exports = {
   executiveHistoryList ,
   editCommission ,
   downloadRecord,
-  GeoHierarchy
+  GeoHierarchy,
+  GeoHierarchyTable
 
 };

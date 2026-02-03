@@ -10,6 +10,7 @@ import type {
   IEditAgentRequest,
   IEditAgentResponseBody,
 } from '@/models/agent'
+import { channel } from 'diagnostics_channel'
 
 export const agentService = {
   search: (data: IAgentSearchRequest) =>
@@ -60,12 +61,8 @@ export const agentService = {
       APIRoutes.GEO_HIERARCHY,
       [channelCategory],
     )
-    // console.log('geoHierarchy full response:', response)
-    // console.log('geoHierarchy responseBody:', response?.responseBody)
-    
-    // Handle different possible response structures
     if (response?.responseBody) {
-      // Case 1: peopleHeirarchy is directly in responseBody
+     
       if (response.responseBody.geoHierarchy) {
         return response.responseBody
       }
@@ -76,6 +73,43 @@ export const agentService = {
       // Case 3: responseBody itself is the object we need
       return response.responseBody
     }
+    return null
+  },
+  fetchGeoHierarchyTable:async (channelCategory:string, designationCode:string)=>{
+    const response = await callApi<ApiResponse<any>>(
+      APIRoutes.GEO_HIERARCHY_TABLE,
+      [channelCategory, designationCode],
+    )
+    
+    
+    // Handle different response structures
+    const responseBody = (response as any)?.responseBody
+    const directResponse = response as any
+    
+    if (responseBody?.geoAgentHierarchy) {
+      // console.log("✅ Found geoAgentHierarchy in response.responseBody")
+      return responseBody.geoAgentHierarchy
+    }
+    
+    // Check if geoAgentHierarchy is directly in response
+    if (directResponse?.geoAgentHierarchy) {
+      // console.log("✅ Found geoAgentHierarchy directly in response")
+      return directResponse.geoAgentHierarchy
+    }
+    
+    // Check if responseBody itself is the array
+    if (Array.isArray(responseBody)) {
+      // console.log("✅ responseBody is directly an array")
+      return responseBody
+    }
+    
+    // Check if response itself is the array
+    if (Array.isArray(response)) {
+      // console.log("✅ response is directly an array")
+      return response
+    }
+    
+    console.warn("⚠️ Could not find geoAgentHierarchy in response structure")
     return null
   },
 }

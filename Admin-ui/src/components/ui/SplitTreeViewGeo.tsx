@@ -34,25 +34,29 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { agentService } from '@/services/agentService';
 
-
-interface SplitTreeGeoTableProps {
+interface SplitTreeTableGeoProps {
   treeData: Array<any>;
   onSearch?: (
     query: string,
     page: number,
     pageSize: number,
-    selectedNodeId?: string 
+    selectedNodeId?: string
   ) => Promise<any>;
   isLoading?: boolean;
+  channelCode?: string | null;
+  designationCode?: string | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
-const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
+const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   treeData,
   onSearch,
   isLoading = false,
+  channelCode,
+  designationCode,
 }) => {
   // Tree view states
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -84,8 +88,50 @@ const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
   useEffect(() => {
     const fetchTableData = async () => {
       if (!onSearch) {
-        // If no API provided, show selected node's children or all data
-        if (selectedNode?.children) {
+        // If no API provided, try to fetch from GeoHierarchyByChannelDesignation API
+        if (selectedNode && channelCode && designationCode) {
+          setApiLoading(true);
+          setError(null);
+          
+          try {
+            const geoAgentHierarchy = await agentService.fetchGeoHierarchyTable(
+              channelCode,
+              designationCode
+            );
+            
+            if (geoAgentHierarchy && Array.isArray(geoAgentHierarchy)) {
+              // Map the API response to table data format
+              const mappedData = geoAgentHierarchy.map((item: {
+                agentId: number;
+                agentName: string;
+                agentDesignation: string;
+                agentCode: string;
+                location: string;
+              }) => ({
+                id: item.agentId.toString(),
+                name: item.agentName,
+                type: 'agent',
+                agentCode: item.agentCode,
+                agentName: item.agentName,
+                region: item.location,
+                agentDesignation: item.agentDesignation,
+              }));
+              setTableData(mappedData);
+              setTotalCount(mappedData.length);
+            } else {
+              setTableData([]);
+              setTotalCount(0);
+            }
+          } catch (err) {
+            console.error('Error fetching geo hierarchy table:', err);
+            setError(err instanceof Error ? err.message : 'Failed to fetch data');
+            setTableData([]);
+            setTotalCount(0);
+          } finally {
+            setApiLoading(false);
+          }
+        } else if (selectedNode?.children) {
+          // If no API call needed, show selected node's children
           setTableData(selectedNode.children);
           setTotalCount(selectedNode.children.length);
         } else {
@@ -117,7 +163,7 @@ const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
     };
 
     fetchTableData();
-  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch]);
+  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch, channelCode,designationCode]);
 
   // Toggle tree node expansion
   const toggleExpand = (id: string) => {
@@ -245,7 +291,7 @@ const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
 
         {hasChildren &&
           isExpanded &&
-          item.children!.map((child) => renderTreeNode(child, level + 1))}
+          item.children!.map((child: any) => renderTreeNode(child, level + 1))}
       </div>
     );
   };
@@ -331,6 +377,8 @@ const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 pr-9"
                   disabled={apiLoading}
+                  variant="outlined"
+                  label=""
                 />
                 {searchQuery && (
                   <Button
@@ -573,4 +621,4 @@ const SplitTreeTable: React.FC<SplitTreeGeoTableProps> = ({
   );
 };
 
-export default SplitTreeTable;
+export default SplitTreeTableGeo;

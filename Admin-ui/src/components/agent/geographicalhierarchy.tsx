@@ -1,14 +1,15 @@
 // Hierarchy.tsx
 import { useQuery } from '@tanstack/react-query'
-import SplitTreeTable from '../ui/SplitTreeView'
 import type { TreeViewItem } from '../ui/tree-view'
 import type { IGeoHierarchy } from '@/models/agent'
 import { agentService } from '@/services/agentService'
 import Loader from '../Loader'
+import SplitTreeTableGeo from '../ui/SplitTreeViewGeo'
 
 interface GeoHierarchyProps {
   Agent: { agentId: number }
   channelCode?: string | null
+  designationCode?: string | null
 }
 
 const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
@@ -54,26 +55,25 @@ const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeVie
   return roots
 }
 
-export const GeographicalHierarchy = ({ channelCode }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ channelCode,designationCode }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
     queryKey: ['geoHierarchy', channelCode],
     queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
-    enabled: !!channelCode, // Only fetch if channelCategory is available
-    staleTime: 5 * 60 * 1000, // optional: cache for 5 minutes
+    enabled: !!channelCode, 
+    staleTime: 5 * 60 * 1000, 
   })
 
   if (!channelCode) {
     return <div className="text-center p-4 text-gray-500">Channel category is required to load geographical hierarchy.</div>
   }
 
-  // if (isLoading) return <div className="text-center p-4">Loading geographical hierarchy...</div>
   if (isLoading) return <Loader />
   if (isError) return <div className="text-center p-4 text-red-500">Failed to load geographical hierarchy.</div>
 
-  console.log("whatis the geo hierarchy", geoHierarchy)
+
   const treeData = geoHierarchy?.geoHierarchy
     ? buildGeoHierarchyTree(geoHierarchy.geoHierarchy)
     : []
-
-  return <SplitTreeTable treeData={treeData} />
+    
+  return <SplitTreeTableGeo treeData={treeData} channelCode={channelCode} designationCode={designationCode} />
 }
