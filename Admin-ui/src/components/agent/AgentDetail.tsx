@@ -77,8 +77,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
   if (!agent) return null
 
   console.log('agent', agent)
-  console.log('bankAccounts', agent.bankAccounts?.[0]?.preferredPaymentMode
-)
+
 
 
   const agentForm = useAppForm({
@@ -117,6 +116,8 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       mobileNo: agent?.personalInfo?.[0]?.mobileNo,
       workContactNo: agent?.personalInfo?.[0]?.workContactNo,
       // --- EMPLOYMENT DETAILS ---
+
+
 
       pob: agent.pob,
       aadharNumber: agent.aadharNumber,
@@ -241,7 +242,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options: getOptions(MASTER_DATA_KEYS.SALES_CHANNELS),
+        options: getOptions(MASTER_DATA_KEYS.CHANNEL),
       },
       {
         name: 'subChannel',
@@ -250,7 +251,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options: getOptions(MASTER_DATA_KEYS.SALES_SUB_CHANNELS),
+        options: getOptions(MASTER_DATA_KEYS.SUB_CHANNELS),
       },
       {
         name: 'commissionClass',

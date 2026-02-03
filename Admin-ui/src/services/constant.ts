@@ -25,7 +25,8 @@ export const APIRoutes = {
   EXECUTIVE_HISTORY_LIST: 'executiveHistoryList',
   UPDATE_COMMISSION_CONFIG:'editCommission',
   DOWNLOAD_RECORD: 'downloadRecord',
-  GEO_HIERARCHY: 'GeoHierarchy'
+  GEO_HIERARCHY: 'GeoHierarchy',
+  GEO_HIERARCHY_TABLE: 'GeoHierarchyTable',
 
 }
 

@@ -31,7 +31,7 @@ export const useMasterData = (keys: string[]) => {
     // })));
     
     return items.map((x: any) => ({
-      label: x.entryDesc ?? x.name ?? '',
+      label: x.entryDesc ?? x.name ?? 'not found',
       value: x.entryIdentity ?? x.id,
     }))
   }

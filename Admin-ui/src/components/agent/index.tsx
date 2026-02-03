@@ -69,6 +69,18 @@ const Agent: React.FC = () => {
     
     return channelEntry?.entryCategory || null
   }
+  const getDesignation = (agent: any): string | null => {
+    if (!agent?.designationCode) return null
+    
+    const designationItems = masterData[MASTER_DATA_KEYS.DESIGNATION] || []
+    // console.log("whatis the designation items", designationItems)
+    const designationEntry = designationItems.find(
+      (x: any) => (x.entryIdentity ?? x.id) === agent.designationCode
+    )
+    // console.log("whatis the designation entry", designationEntry)
+    
+    return designationEntry?.entryCategory || null
+  }
 
   // Agent query: same key & signature used by loader
   const {
@@ -167,6 +179,7 @@ const Agent: React.FC = () => {
           <GeographicalHierarchy 
             Agent={firstAgent} 
             channelCode={getChannelCategory(firstAgent)}
+            designationCode={getDesignation(firstAgent)}
           />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>
