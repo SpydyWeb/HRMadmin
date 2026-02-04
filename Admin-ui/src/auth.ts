@@ -6,6 +6,7 @@ import {
   ILoginResponseBody,
 } from '@/models/authentication'
 import { storage } from '@/utils/storage'
+import { authStore } from '@/store/authStore'
 
 let _token: string | null = null
 
@@ -41,10 +42,15 @@ export const auth = {
   },
   async login(data: ILoginRequest): Promise<ApiResponse<ILoginResponseBody>> {
     const response = await authService.login(data)
-    const token = JSON.stringify(response.responseBody.loginResponse)
-    if (token) {
+    const loginResponse = response.responseBody.loginResponse
+    const token = JSON.stringify(loginResponse)
+    if (loginResponse?.token) {
       _token = token
       storage.set(TOKEN_KEY, token)
+      authStore.setState({
+        token: loginResponse.token,
+        user: loginResponse,
+      })
     }
     return response
   },
@@ -52,6 +58,7 @@ export const auth = {
     _token = null
     if (typeof window !== 'undefined') {
       storage.remove(TOKEN_KEY)
+      authStore.setState({ token: null, user: null })
       window.location.href = '/login'
     }
   },
