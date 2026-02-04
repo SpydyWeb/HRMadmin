@@ -27,7 +27,7 @@ export const APIRoutes = {
   DOWNLOAD_RECORD: 'downloadRecord',
   GEO_HIERARCHY: 'GeoHierarchy',
   GEO_HIERARCHY_TABLE: 'GeoHierarchyTable',
-
+  HMS_DASHBOARD: 'hmsDashboard',
 }
 
 export const LoginConstants = {

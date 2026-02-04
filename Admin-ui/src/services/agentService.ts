@@ -10,7 +10,6 @@ import type {
   IEditAgentRequest,
   IEditAgentResponseBody,
 } from '@/models/agent'
-import { channel } from 'diagnostics_channel'
 
 export const agentService = {
   search: (data: IAgentSearchRequest) =>
@@ -25,10 +24,7 @@ export const agentService = {
     sectionName: string,
     agentid: number,
   ) => {
-    // console.log('EDIT_AGENT route:', APIRoutes.EDIT_AGENT)
-    // console.log('EDIT_AGENT data:', data)
-    //  console.log('🔍 Agent ID:', agentid)
-    //     console.log('🔍 Section Name:', sectionName)
+   
     try {
       const response = await callApi<ApiResponse<IEditAgentResponseBody>>(
         APIRoutes.EDIT_AGENT,

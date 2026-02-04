@@ -21,6 +21,7 @@ const APIRoutes = {
   DOWNLOADRECORD: "/api/CommissionMgmt/DownloadCommissionExcel",
   GEOHIERARCHY: "/api/Agent/GeoHierarchy",
   GEOHIERARCHYTABLE: "/api/Agent/GeoHierarchyByChannelDesignation",
+  HMSDASHBOARD: "/api/HMSDashboard/GetHMSDashboard",
 };
 
 module.exports = { APIRoutes };
