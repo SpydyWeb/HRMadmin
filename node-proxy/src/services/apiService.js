@@ -158,6 +158,10 @@ const GeoHierarchyTable = (channelCategory,designationCode, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, designationCode: designationCode }, { headers });
 }
 
+const hmsDashboard = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.HMSDASHBOARD, data, { headers });
+}
+
 
 module.exports = {
   login,
@@ -185,6 +189,7 @@ module.exports = {
   editCommission ,
   downloadRecord,
   GeoHierarchy,
-  GeoHierarchyTable
+  GeoHierarchyTable,
+  hmsDashboard
 
 };

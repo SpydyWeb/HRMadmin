@@ -182,22 +182,22 @@ const CommissionHistory: React.FC = () => {
         <span className="text-gray-700">{row.duration || 'N/A'}</span>
       ),
     },
-    {
-      header: 'Download',
-      width: '10rem',
-      accessor: (row: IexecutiveJobListResponseBody) => (
-        <Button
-          variant="blue"
-          size="sm"
-          onClick={() => handleDownload(row)}
-          disabled={!row.downloadLink || row.exeStatus !== 'SUCCESS'}
-          className="flex items-center gap-2"
-        >
-          <BiDownload className="w-4 h-4" />
-          Download
-        </Button>
-      ),
-    },
+    // {
+    //   header: 'Download',
+    //   width: '10rem',
+    //   accessor: (row: IexecutiveJobListResponseBody) => (
+    //     <Button
+    //       variant="blue"
+    //       size="sm"
+    //       onClick={() => handleDownload(row)}
+    //       disabled={!row.downloadLink || row.exeStatus !== 'SUCCESS'}
+    //       className="flex items-center gap-2"
+    //     >
+    //       <BiDownload className="w-4 h-4" />
+    //       Download
+    //     </Button>
+    //   ),
+    // },
   ]
 
   if (historyLoading) return <Loader />

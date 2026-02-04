@@ -2,10 +2,23 @@ import { ImArrowDown2, ImArrowUp2 } from "react-icons/im";
 import { MiniChart } from "./MiniChart";
 import { Card, CardFooter } from "./ui/card";
 
-export const MetricsCard = () => {
+type Metric = {
+  title: string;
+  value: string;
+  change: string;
+  changeType: "positive" | "negative";
+  chartColor: string;
+  chartData: number[];
+};
+
+type MetricsCardProps = {
+  metrics?: Metric[];
+};
+
+export const MetricsCard = ({ metrics: propsMetrics }: MetricsCardProps) => {
   
-  // Centralized data for reusability
-  const metrics = [
+  // Default metrics if not provided
+  const defaultMetrics: Metric[] = [
     {
       title: "Total Entities",
       value: "1250",
@@ -39,6 +52,8 @@ export const MetricsCard = () => {
       chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25],
     },
   ];
+
+  const metrics = propsMetrics || defaultMetrics;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
