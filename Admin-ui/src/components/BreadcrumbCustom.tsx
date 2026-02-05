@@ -8,7 +8,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { RoutePaths } from '@/utils/constant'
 
 function formatLabel(segment: string) {
   return segment
@@ -45,7 +44,7 @@ export function BreadcrumbCustom() {
   })
 
   return (
-    <Breadcrumb className='ml-8'>
+    <Breadcrumb className='ml-8 mb-3'>
       <BreadcrumbList>
         {crumbs.map((crumb, index) => (
           <React.Fragment key={index}>

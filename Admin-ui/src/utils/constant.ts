@@ -58,6 +58,6 @@ export const MASTER_DATA_KEYS = {
   PAYMENT_MODE:"PaymentMode",
   SUB_CHANNELS:"SubChannel",
   DESIGNATION:"Designation",
-  CHANNEL:"Channel"
-
+  CHANNEL:"Channel",
+  LOCATION:"BranchLocation"
 }

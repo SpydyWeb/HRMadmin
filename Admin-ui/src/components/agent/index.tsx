@@ -180,6 +180,7 @@ const Agent: React.FC = () => {
             Agent={firstAgent} 
             channelCode={getChannelCategory(firstAgent)}
             designationCode={getDesignation(firstAgent)}
+            getOptions={getOptions}
           />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>

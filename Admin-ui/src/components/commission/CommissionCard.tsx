@@ -16,6 +16,7 @@ import Button from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { ActionItem } from '@/utils/models'
 import { Eye } from 'lucide-react'
+import { useContextPath } from '@/hooks/useContextPath'
 
 interface CommissionCardProps {
   dashboardData: any
@@ -23,6 +24,7 @@ interface CommissionCardProps {
 
 const CommissionCard: React.FC<CommissionCardProps> = ({ dashboardData }) => {
   const navigate = useNavigate()
+  const { buildPath } = useContextPath()
   const priorityColor = (priority: string) => {
     switch (priority) {
       case 'Medium':
@@ -346,7 +348,7 @@ const channelTables = [
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {buttons.map((data, id) => (
-            <Button key={id} onClick={() => navigate({ to: data.path,state: data.state })}>
+            <Button key={id} onClick={() => navigate({ to: buildPath(data.path) })}>
               {data.title}
             </Button>
           ))} 

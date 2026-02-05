@@ -22,6 +22,7 @@ import { Pagination } from '@/components/table/Pagination'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { RoutePaths } from '@/utils/constant'
 import { tableData } from '@/utils/utilities'
+import { useContextPath } from '@/hooks/useContextPath'
 
 const tabs = [
   { value: 'new', label: 'New Code Creation', icon: <FaNetworkWired /> },
@@ -40,6 +41,7 @@ const tabs = [
 
 const CodeMovement = () => {
   const navigate = useNavigate()
+  const { buildPath } = useContextPath()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedChannel, setSelectedChannel] = useState('All')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
@@ -161,7 +163,7 @@ const CodeMovement = () => {
             <Button
               variant="blue"
               size={'sm'}
-              onClick={() => navigate({ to: RoutePaths.BULKACTION })}
+              onClick={() => navigate({ to: buildPath(RoutePaths.BULKACTION) })}
             >
               <FaClipboardList className="h-4 w-4" />
               Bulk Action

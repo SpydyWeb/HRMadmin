@@ -35,6 +35,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agentService';
+import { MASTER_DATA_KEYS } from '@/utils/constant';
 
 interface SplitTreeTableGeoProps {
   treeData: Array<any>;
@@ -48,6 +49,7 @@ interface SplitTreeTableGeoProps {
   channelCode?: string | null;
   designationCode?: string | null;
   highlightDesignationCode?: string | null;
+  getOptions: (key: string) => any[];
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -59,6 +61,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   channelCode,
   designationCode,
   highlightDesignationCode,
+  getOptions,
 }) => {
   // Tree view states
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -338,7 +341,24 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
       <Card className="col-span-12 lg:col-span-8 xl:col-span-9 overflow-hidden flex flex-col">
         <CardHeader className="pb-3 border-b">
           <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+            <p>Select Location:</p>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getOptions(MASTER_DATA_KEYS.LOCATION).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center justify-between">
+             
+             
               <CardTitle className="text-lg">
                 {selectedNode ? 'Details & Children' : 'All Employees'}
               </CardTitle>

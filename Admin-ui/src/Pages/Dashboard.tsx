@@ -171,6 +171,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex gap-6">
+      
       <div className="w-full space-y-3">
           <MetricsCard metrics={metrics} />
           <AlertCard dashboardData={dashboardData} />
