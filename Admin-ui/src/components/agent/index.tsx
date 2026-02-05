@@ -173,7 +173,7 @@ const Agent: React.FC = () => {
           <div className="p-4 text-gray-600">No agent found.</div>
         )
       ) : activeTab === 'peoplehierarchy' ? (
-        <Hierarchy Agent={firstAgent} />
+        <Hierarchy Agent={firstAgent} highlightAgentCode={agentId} />
       ) : activeTab === 'geographicalhierarchy' ? (
         firstAgent ? (
           <GeographicalHierarchy 

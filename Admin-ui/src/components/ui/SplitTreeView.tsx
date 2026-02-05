@@ -46,6 +46,7 @@ interface SplitTreeTableProps {
   ) => Promise<any>;
   isLoading?: boolean;
   channelCode?: string | null;
+  highlightAgentCode?: string;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -55,6 +56,7 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
   onSearch,
   isLoading = false,
   channelCode,
+  highlightAgentCode,
 }) => {
   // Tree view states
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -223,13 +225,15 @@ const SplitTreeTable: React.FC<SplitTreeTableProps> = ({
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedIds.has(item.id);
     const isSelected = selectedNode?.id === item.id;
+    const isHighlighted = highlightAgentCode && item.agentCode?.toLowerCase() === highlightAgentCode?.toLowerCase();
 
     return (
       <div key={item.id}>
         <div
           className={cn(
             'flex items-center gap-2 py-2 px-3 rounded-md cursor-pointer hover:bg-muted/50 transition-colors group',
-            isSelected && 'bg-primary/10 border-l-2 border-primary'
+            isSelected && 'bg-primary/10 border-l-2 border-primary',
+            isHighlighted && !isSelected && 'bg-orange-100 border-l-2 border-orange-500 dark:bg-orange-900/30 dark:border-orange-600'
           )}
           style={{ paddingLeft: `${level * 16 + 12}px` }}
           onClick={() => setSelectedNode(item)}

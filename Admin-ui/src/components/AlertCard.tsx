@@ -4,39 +4,39 @@ import { LuSquareUserRound } from 'react-icons/lu'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import Button from './ui/button'
 
-const alerts = [
-  {
-    icon: <TbCertificate className={`w-5 h-5`} />,
-    iconBgColor: 'var(--brand-orange)',
-    count: '52',
-    btnColor: 'var(--brand-orange)',
-    title: 'Licenses Expiring Soon',
-    subtitle: 'Expiring in 30 days',
-    button1: 'outline-orange',
-    button2: 'orange',
-  },
-  {
-    icon: <BsWindowDock className={`w-5 h-5`} />,
-    iconBgColor: 'var(--brand-green)',
-    count: '23',
-    btnColor: 'var(--brand-green)',
-    title: 'Certifications Expiring',
-    subtitle: 'Expiring in 30 days',
-    button1: 'outline-green',
-    button2: 'green',
-  },
-  {
-    icon: <LuSquareUserRound className={`w-5 h-5`} />,
-    iconBgColor: 'var(--brand-blue)',
-    count: '13',
-    btnColor: 'var(--brand-blue)',
-    title: 'MBG Criteria Not Met',
-    subtitle: 'Entities not meeting MBG criteria',
-    button1: 'outline-blue',
-    button2: 'blue',
-  },
-]
-export const AlertCard = () => {
+export const AlertCard = ({ dashboardData }: { dashboardData: any }) => {
+  const alerts = [
+    {
+      icon: <TbCertificate className={`w-5 h-5`} />,
+      iconBgColor: 'var(--brand-orange)',
+      count: dashboardData?.licenseExpiringIn30Months || 0,
+      btnColor: 'var(--brand-orange)',
+      title: 'Licenses Expiring Soon',
+      subtitle: 'Expiring in 30 days',
+      button1: 'outline-orange' as const,
+      button2: 'orange' as const,
+    },
+    {
+      icon: <BsWindowDock className={`w-5 h-5`} />,
+      iconBgColor: 'var(--brand-green)',
+      count: dashboardData?.certificateExpiringIn30Months || 0,
+      btnColor: 'var(--brand-green)',
+      title: 'Certifications Expiring',
+      subtitle: 'Expiring in 30 days',
+      button1: 'outline-green' as const,
+      button2: 'green' as const,
+    },
+    {
+      icon: <LuSquareUserRound className={`w-5 h-5`} />,
+      iconBgColor: 'var(--brand-blue)',
+      count: dashboardData?.mbgCriteriaNotMet || 0,
+      btnColor: 'var(--brand-blue)',
+      title: 'MBG Criteria Not Met',
+      subtitle: 'Entities not meeting MBG criteria',
+      button1: 'outline-blue' as const,
+      button2: 'blue' as const,
+    },
+  ]
   return (
     <Card className="max-w-7xl gap-0 rounded-md">
       <CardHeader>

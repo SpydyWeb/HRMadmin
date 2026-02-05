@@ -7,6 +7,7 @@ import { agentService } from '@/services/agentService'
 
 interface HierarchyProps {
   Agent: { agentId: number }
+  highlightAgentCode?: string
 }
 
 const buildUniqueSupervisorTree = (hierarchies: Array<IPeopleHierarchy>): Array<TreeViewItem> => {
@@ -49,7 +50,7 @@ const buildUniqueSupervisorTree = (hierarchies: Array<IPeopleHierarchy>): Array<
   return roots
 }
 
-export const Hierarchy = ({ Agent }: HierarchyProps) => {
+export const Hierarchy = ({ Agent, highlightAgentCode }: HierarchyProps) => {
   const requestData: IAgentSearchByCodeRequest = {
     agentId: Agent.agentId,
     FetchHierarchy: true,
@@ -68,5 +69,5 @@ export const Hierarchy = ({ Agent }: HierarchyProps) => {
     ? buildUniqueSupervisorTree(agent.peopleHeirarchy)
     : []
 
-  return <SplitTreeTable treeData={treeData} />
+  return <SplitTreeTable treeData={treeData} highlightAgentCode={highlightAgentCode} />
 }

@@ -12,11 +12,6 @@ import encryptionService from '@/services/encryptionService'
 import { HMSService } from '@/services/hmsService'
 import Loader from '@/components/Loader'
 import type { ApiResponse } from '@/models/api'
-
-
-
-
-
 import type { IHmsDashboardApiResponse } from '@/models/hmsdashboard'
 
 type DashboardResponse = ApiResponse<IHmsDashboardApiResponse>
@@ -178,7 +173,7 @@ const Dashboard = () => {
     <div className="flex gap-6">
       <div className="w-full space-y-3">
           <MetricsCard metrics={metrics} />
-          <AlertCard />
+          <AlertCard dashboardData={dashboardData} />
           <PendingActionsTable />
           <CompanyOverview />
       </div>
