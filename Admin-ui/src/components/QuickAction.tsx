@@ -4,20 +4,22 @@ import { RxDownload, RxUpload } from 'react-icons/rx'
 import { ActionItem } from '@/utils/models'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { useNavigate } from '@tanstack/react-router'
-import {  RoutePaths } from '@/utils/constant'
+import { RoutePaths } from '@/utils/constant'
+import { useContextPath } from '@/hooks/useContextPath'
 
 
 
 
 const QuickActions = () => {
   const navigate = useNavigate()
+  const { buildPath } = useContextPath()
 
   const actions: Array<ActionItem> = [
   {
     icon: FaPlus,
     title: 'Bulk Create Entity',
     subtitle: 'Create multiple entities at once',
-    onClick: () => navigate({ to: RoutePaths.CREATEBULK }),
+    onClick: () => navigate({ to: buildPath(RoutePaths.CREATEBULK) }),
   },
   {
     icon: LuSquareUserRound,

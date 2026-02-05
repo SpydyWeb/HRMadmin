@@ -25,13 +25,23 @@ import { Route as AuthCommissionTerminationRouteImport } from './routes/_auth/co
 import { Route as AuthCommissionCreateBulkRouteImport } from './routes/_auth/commission/create-bulk'
 import { Route as AuthCommissionCertificationUpdateRouteImport } from './routes/_auth/commission/certification-update'
 import { Route as AuthCommissionNotFoundRouteImport } from './routes/_auth/commission/$not-found'
+import { Route as AuthSearchDashboardTerminationRouteImport } from './routes/_auth/search/dashboard/termination'
+import { Route as AuthSearchDashboardCreateBulkRouteImport } from './routes/_auth/search/dashboard/create-bulk'
+import { Route as AuthSearchDashboardCertificationUpdateRouteImport } from './routes/_auth/search/dashboard/certification-update'
 import { Route as AuthDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/dashboard/code-movement/bulk-action'
 import { Route as AuthCommissionProcesscommissionBulkActionRouteImport } from './routes/_auth/commission/processcommission/bulk-action'
+import { Route as AuthSearchDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/search/dashboard/code-movement/bulk-action'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
 const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
 const AuthCommissionIndexLazyRouteImport =
   createFileRoute('/_auth/commission/')()
+const AuthSearchDashboardIndexLazyRouteImport = createFileRoute(
+  '/_auth/search/dashboard/',
+)()
+const AuthSearchCommissionIndexLazyRouteImport = createFileRoute(
+  '/_auth/search/commission/',
+)()
 const AuthDashboardCodeMovementIndexLazyRouteImport = createFileRoute(
   '/_auth/dashboard/code-movement/',
 )()
@@ -50,6 +60,19 @@ const AuthCommissionConfigcommissionListNewCommissionCreationLazyRouteImport =
   )()
 const AuthCommissionConfigcommissionListHistoryLazyRouteImport =
   createFileRoute('/_auth/commission/configcommission-list/history')()
+const AuthSearchDashboardCodeMovementIndexLazyRouteImport = createFileRoute(
+  '/_auth/search/dashboard/code-movement/',
+)()
+const AuthSearchCommissionProcesscommissionIndexLazyRouteImport =
+  createFileRoute('/_auth/search/commission/processcommission/')()
+const AuthSearchCommissionConfigcommissionListIndexLazyRouteImport =
+  createFileRoute('/_auth/search/commission/configcommission-list/')()
+const AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRouteImport =
+  createFileRoute(
+    '/_auth/search/commission/configcommission-list/new-commission-creation',
+  )()
+const AuthSearchCommissionConfigcommissionListHistoryLazyRouteImport =
+  createFileRoute('/_auth/search/commission/configcommission-list/history')()
 
 const LoginLazyRoute = LoginLazyRouteImport.update({
   id: '/login',
@@ -144,6 +167,22 @@ const AuthCommissionNotFoundRoute = AuthCommissionNotFoundRouteImport.update({
   path: '/commission/$not-found',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthSearchDashboardIndexLazyRoute =
+  AuthSearchDashboardIndexLazyRouteImport.update({
+    id: '/search/dashboard/',
+    path: '/search/dashboard/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/dashboard/index.lazy').then((d) => d.Route),
+  )
+const AuthSearchCommissionIndexLazyRoute =
+  AuthSearchCommissionIndexLazyRouteImport.update({
+    id: '/search/commission/',
+    path: '/search/commission/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/commission/index.lazy').then((d) => d.Route),
+  )
 const AuthDashboardCodeMovementIndexLazyRoute =
   AuthDashboardCodeMovementIndexLazyRouteImport.update({
     id: '/dashboard/code-movement/',
@@ -206,6 +245,24 @@ const AuthCommissionConfigcommissionListHistoryLazyRoute =
       (d) => d.Route,
     ),
   )
+const AuthSearchDashboardTerminationRoute =
+  AuthSearchDashboardTerminationRouteImport.update({
+    id: '/search/dashboard/termination',
+    path: '/search/dashboard/termination',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthSearchDashboardCreateBulkRoute =
+  AuthSearchDashboardCreateBulkRouteImport.update({
+    id: '/search/dashboard/create-bulk',
+    path: '/search/dashboard/create-bulk',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthSearchDashboardCertificationUpdateRoute =
+  AuthSearchDashboardCertificationUpdateRouteImport.update({
+    id: '/search/dashboard/certification-update',
+    path: '/search/dashboard/certification-update',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthDashboardCodeMovementBulkActionRoute =
   AuthDashboardCodeMovementBulkActionRouteImport.update({
     id: '/dashboard/code-movement/bulk-action',
@@ -216,6 +273,64 @@ const AuthCommissionProcesscommissionBulkActionRoute =
   AuthCommissionProcesscommissionBulkActionRouteImport.update({
     id: '/commission/processcommission/bulk-action',
     path: '/commission/processcommission/bulk-action',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthSearchDashboardCodeMovementIndexLazyRoute =
+  AuthSearchDashboardCodeMovementIndexLazyRouteImport.update({
+    id: '/search/dashboard/code-movement/',
+    path: '/search/dashboard/code-movement/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/dashboard/code-movement/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const AuthSearchCommissionProcesscommissionIndexLazyRoute =
+  AuthSearchCommissionProcesscommissionIndexLazyRouteImport.update({
+    id: '/search/commission/processcommission/',
+    path: '/search/commission/processcommission/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_auth/search/commission/processcommission/index.lazy'
+    ).then((d) => d.Route),
+  )
+const AuthSearchCommissionConfigcommissionListIndexLazyRoute =
+  AuthSearchCommissionConfigcommissionListIndexLazyRouteImport.update({
+    id: '/search/commission/configcommission-list/',
+    path: '/search/commission/configcommission-list/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_auth/search/commission/configcommission-list/index.lazy'
+    ).then((d) => d.Route),
+  )
+const AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute =
+  AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRouteImport.update(
+    {
+      id: '/search/commission/configcommission-list/new-commission-creation',
+      path: '/search/commission/configcommission-list/new-commission-creation',
+      getParentRoute: () => AuthRoute,
+    } as any,
+  ).lazy(() =>
+    import(
+      './routes/_auth/search/commission/configcommission-list/new-commission-creation.lazy'
+    ).then((d) => d.Route),
+  )
+const AuthSearchCommissionConfigcommissionListHistoryLazyRoute =
+  AuthSearchCommissionConfigcommissionListHistoryLazyRouteImport.update({
+    id: '/search/commission/configcommission-list/history',
+    path: '/search/commission/configcommission-list/history',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_auth/search/commission/configcommission-list/history.lazy'
+    ).then((d) => d.Route),
+  )
+const AuthSearchDashboardCodeMovementBulkActionRoute =
+  AuthSearchDashboardCodeMovementBulkActionRouteImport.update({
+    id: '/search/dashboard/code-movement/bulk-action',
+    path: '/search/dashboard/code-movement/bulk-action',
     getParentRoute: () => AuthRoute,
   } as any)
 
@@ -238,12 +353,23 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
+  '/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
+  '/search/commission': typeof AuthSearchCommissionIndexLazyRoute
+  '/search/dashboard': typeof AuthSearchDashboardIndexLazyRoute
+  '/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
+  '/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
+  '/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/search/commission/configcommission-list': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
+  '/search/commission/processcommission': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
+  '/search/dashboard/code-movement': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -264,12 +390,23 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
+  '/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
+  '/search/commission': typeof AuthSearchCommissionIndexLazyRoute
+  '/search/dashboard': typeof AuthSearchDashboardIndexLazyRoute
+  '/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
+  '/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
+  '/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/search/commission/configcommission-list': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
+  '/search/commission/processcommission': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
+  '/search/dashboard/code-movement': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -292,12 +429,23 @@ export interface FileRoutesById {
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
+  '/_auth/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
+  '/_auth/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/_auth/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/_auth/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/_auth/commission/configcomission/': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/_auth/commission/configcommission-list/': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/_auth/commission/processcommission/': typeof AuthCommissionProcesscommissionIndexLazyRoute
   '/_auth/dashboard/code-movement/': typeof AuthDashboardCodeMovementIndexLazyRoute
+  '/_auth/search/commission/': typeof AuthSearchCommissionIndexLazyRoute
+  '/_auth/search/dashboard/': typeof AuthSearchDashboardIndexLazyRoute
+  '/_auth/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
+  '/_auth/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
+  '/_auth/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/_auth/search/commission/configcommission-list/': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
+  '/_auth/search/commission/processcommission/': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
+  '/_auth/search/dashboard/code-movement/': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,12 +468,23 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/search/dashboard/certification-update'
+    | '/search/dashboard/create-bulk'
+    | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
     | '/dashboard/code-movement'
+    | '/search/commission'
+    | '/search/dashboard'
+    | '/search/dashboard/code-movement/bulk-action'
+    | '/search/commission/configcommission-list/history'
+    | '/search/commission/configcommission-list/new-commission-creation'
+    | '/search/commission/configcommission-list'
+    | '/search/commission/processcommission'
+    | '/search/dashboard/code-movement'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -346,12 +505,23 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
+    | '/search/dashboard/certification-update'
+    | '/search/dashboard/create-bulk'
+    | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
     | '/dashboard/code-movement'
+    | '/search/commission'
+    | '/search/dashboard'
+    | '/search/dashboard/code-movement/bulk-action'
+    | '/search/commission/configcommission-list/history'
+    | '/search/commission/configcommission-list/new-commission-creation'
+    | '/search/commission/configcommission-list'
+    | '/search/commission/processcommission'
+    | '/search/dashboard/code-movement'
   id:
     | '__root__'
     | '/'
@@ -373,12 +543,23 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/'
     | '/_auth/commission/processcommission/bulk-action'
     | '/_auth/dashboard/code-movement/bulk-action'
+    | '/_auth/search/dashboard/certification-update'
+    | '/_auth/search/dashboard/create-bulk'
+    | '/_auth/search/dashboard/termination'
     | '/_auth/commission/configcommission-list/history'
     | '/_auth/commission/configcommission-list/new-commission-creation'
     | '/_auth/commission/configcomission/'
     | '/_auth/commission/configcommission-list/'
     | '/_auth/commission/processcommission/'
     | '/_auth/dashboard/code-movement/'
+    | '/_auth/search/commission/'
+    | '/_auth/search/dashboard/'
+    | '/_auth/search/dashboard/code-movement/bulk-action'
+    | '/_auth/search/commission/configcommission-list/history'
+    | '/_auth/search/commission/configcommission-list/new-commission-creation'
+    | '/_auth/search/commission/configcommission-list/'
+    | '/_auth/search/commission/processcommission/'
+    | '/_auth/search/dashboard/code-movement/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -509,6 +690,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionNotFoundRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/dashboard/': {
+      id: '/_auth/search/dashboard/'
+      path: '/search/dashboard'
+      fullPath: '/search/dashboard'
+      preLoaderRoute: typeof AuthSearchDashboardIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/commission/': {
+      id: '/_auth/search/commission/'
+      path: '/search/commission'
+      fullPath: '/search/commission'
+      preLoaderRoute: typeof AuthSearchCommissionIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/code-movement/': {
       id: '/_auth/dashboard/code-movement/'
       path: '/dashboard/code-movement'
@@ -551,6 +746,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/dashboard/termination': {
+      id: '/_auth/search/dashboard/termination'
+      path: '/search/dashboard/termination'
+      fullPath: '/search/dashboard/termination'
+      preLoaderRoute: typeof AuthSearchDashboardTerminationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/dashboard/create-bulk': {
+      id: '/_auth/search/dashboard/create-bulk'
+      path: '/search/dashboard/create-bulk'
+      fullPath: '/search/dashboard/create-bulk'
+      preLoaderRoute: typeof AuthSearchDashboardCreateBulkRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/dashboard/certification-update': {
+      id: '/_auth/search/dashboard/certification-update'
+      path: '/search/dashboard/certification-update'
+      fullPath: '/search/dashboard/certification-update'
+      preLoaderRoute: typeof AuthSearchDashboardCertificationUpdateRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/code-movement/bulk-action': {
       id: '/_auth/dashboard/code-movement/bulk-action'
       path: '/dashboard/code-movement/bulk-action'
@@ -563,6 +779,48 @@ declare module '@tanstack/react-router' {
       path: '/commission/processcommission/bulk-action'
       fullPath: '/commission/processcommission/bulk-action'
       preLoaderRoute: typeof AuthCommissionProcesscommissionBulkActionRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/dashboard/code-movement/': {
+      id: '/_auth/search/dashboard/code-movement/'
+      path: '/search/dashboard/code-movement'
+      fullPath: '/search/dashboard/code-movement'
+      preLoaderRoute: typeof AuthSearchDashboardCodeMovementIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/commission/processcommission/': {
+      id: '/_auth/search/commission/processcommission/'
+      path: '/search/commission/processcommission'
+      fullPath: '/search/commission/processcommission'
+      preLoaderRoute: typeof AuthSearchCommissionProcesscommissionIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/commission/configcommission-list/': {
+      id: '/_auth/search/commission/configcommission-list/'
+      path: '/search/commission/configcommission-list'
+      fullPath: '/search/commission/configcommission-list'
+      preLoaderRoute: typeof AuthSearchCommissionConfigcommissionListIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/commission/configcommission-list/new-commission-creation': {
+      id: '/_auth/search/commission/configcommission-list/new-commission-creation'
+      path: '/search/commission/configcommission-list/new-commission-creation'
+      fullPath: '/search/commission/configcommission-list/new-commission-creation'
+      preLoaderRoute: typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/commission/configcommission-list/history': {
+      id: '/_auth/search/commission/configcommission-list/history'
+      path: '/search/commission/configcommission-list/history'
+      fullPath: '/search/commission/configcommission-list/history'
+      preLoaderRoute: typeof AuthSearchCommissionConfigcommissionListHistoryLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/dashboard/code-movement/bulk-action': {
+      id: '/_auth/search/dashboard/code-movement/bulk-action'
+      path: '/search/dashboard/code-movement/bulk-action'
+      fullPath: '/search/dashboard/code-movement/bulk-action'
+      preLoaderRoute: typeof AuthSearchDashboardCodeMovementBulkActionRouteImport
       parentRoute: typeof AuthRoute
     }
   }
@@ -584,12 +842,23 @@ interface AuthRouteChildren {
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthCommissionProcesscommissionBulkActionRoute: typeof AuthCommissionProcesscommissionBulkActionRoute
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
+  AuthSearchDashboardCertificationUpdateRoute: typeof AuthSearchDashboardCertificationUpdateRoute
+  AuthSearchDashboardCreateBulkRoute: typeof AuthSearchDashboardCreateBulkRoute
+  AuthSearchDashboardTerminationRoute: typeof AuthSearchDashboardTerminationRoute
   AuthCommissionConfigcommissionListHistoryLazyRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   AuthCommissionConfigcomissionIndexLazyRoute: typeof AuthCommissionConfigcomissionIndexLazyRoute
   AuthCommissionConfigcommissionListIndexLazyRoute: typeof AuthCommissionConfigcommissionListIndexLazyRoute
   AuthCommissionProcesscommissionIndexLazyRoute: typeof AuthCommissionProcesscommissionIndexLazyRoute
   AuthDashboardCodeMovementIndexLazyRoute: typeof AuthDashboardCodeMovementIndexLazyRoute
+  AuthSearchCommissionIndexLazyRoute: typeof AuthSearchCommissionIndexLazyRoute
+  AuthSearchDashboardIndexLazyRoute: typeof AuthSearchDashboardIndexLazyRoute
+  AuthSearchDashboardCodeMovementBulkActionRoute: typeof AuthSearchDashboardCodeMovementBulkActionRoute
+  AuthSearchCommissionConfigcommissionListHistoryLazyRoute: typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
+  AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  AuthSearchCommissionConfigcommissionListIndexLazyRoute: typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
+  AuthSearchCommissionProcesscommissionIndexLazyRoute: typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
+  AuthSearchDashboardCodeMovementIndexLazyRoute: typeof AuthSearchDashboardCodeMovementIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -611,6 +880,10 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthCommissionProcesscommissionBulkActionRoute,
   AuthDashboardCodeMovementBulkActionRoute:
     AuthDashboardCodeMovementBulkActionRoute,
+  AuthSearchDashboardCertificationUpdateRoute:
+    AuthSearchDashboardCertificationUpdateRoute,
+  AuthSearchDashboardCreateBulkRoute: AuthSearchDashboardCreateBulkRoute,
+  AuthSearchDashboardTerminationRoute: AuthSearchDashboardTerminationRoute,
   AuthCommissionConfigcommissionListHistoryLazyRoute:
     AuthCommissionConfigcommissionListHistoryLazyRoute,
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute:
@@ -623,6 +896,20 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthCommissionProcesscommissionIndexLazyRoute,
   AuthDashboardCodeMovementIndexLazyRoute:
     AuthDashboardCodeMovementIndexLazyRoute,
+  AuthSearchCommissionIndexLazyRoute: AuthSearchCommissionIndexLazyRoute,
+  AuthSearchDashboardIndexLazyRoute: AuthSearchDashboardIndexLazyRoute,
+  AuthSearchDashboardCodeMovementBulkActionRoute:
+    AuthSearchDashboardCodeMovementBulkActionRoute,
+  AuthSearchCommissionConfigcommissionListHistoryLazyRoute:
+    AuthSearchCommissionConfigcommissionListHistoryLazyRoute,
+  AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute:
+    AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute,
+  AuthSearchCommissionConfigcommissionListIndexLazyRoute:
+    AuthSearchCommissionConfigcommissionListIndexLazyRoute,
+  AuthSearchCommissionProcesscommissionIndexLazyRoute:
+    AuthSearchCommissionProcesscommissionIndexLazyRoute,
+  AuthSearchDashboardCodeMovementIndexLazyRoute:
+    AuthSearchDashboardCodeMovementIndexLazyRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

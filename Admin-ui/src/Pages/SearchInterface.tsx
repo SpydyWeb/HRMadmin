@@ -37,7 +37,7 @@ export default function SearchInterface() {
       icon: MdMonitor,
       color: 'bg-blue-600 hover:bg-blue-700',
       isActive: true,
-      route:'/dashboard'
+      route:'/search/dashboard'
     },
     {
       id: 'commissions',
@@ -45,7 +45,7 @@ export default function SearchInterface() {
       icon: MdMonitor,
       color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
       isActive: false,
-       route:'/commission'
+       route:'/search/commission'
     },
     {
       id: 'incentive',

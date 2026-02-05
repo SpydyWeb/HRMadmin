@@ -13,10 +13,12 @@ import Loader from '@/components/Loader'
 import { Checkbox } from '@/components/ui/checkbox'
 import { X } from 'lucide-react'
 import lodash from 'lodash'
+import { useContextPath } from '@/hooks/useContextPath'
 const { debounce } = lodash
 
 const ConfigCommissionList: React.FC = () => {
   const navigate = useNavigate()
+  const { buildPath } = useContextPath()
   const [page, setPage] = useState(1) // Page state starting from 1
   const [pageSize] = useState(10) // Default page size
   const [searchTerm, setSearchTerm] = useState('')
@@ -157,7 +159,7 @@ const ConfigCommissionList: React.FC = () => {
             variant="blue"
             onClick={() =>
               navigate({
-                to: RoutePaths.CONFIG_COMMISSION_NEW,
+                to: buildPath(RoutePaths.CONFIG_COMMISSION_NEW),
                 search: {
                   commissionConfigId: _row.commissionConfigId || '',
                 },
@@ -170,7 +172,7 @@ const ConfigCommissionList: React.FC = () => {
             variant="blue"
             onClick={() =>
               navigate({
-                to: RoutePaths.COMMISSION_HISTORY,
+                to: buildPath(RoutePaths.COMMISSION_HISTORY),
                 search: {
                   jobConfigId:  _row.jobConfigId || '',
                 },
@@ -202,7 +204,7 @@ const ConfigCommissionList: React.FC = () => {
               />
               <Button
                 variant="blue"
-                onClick={() => navigate({ to: RoutePaths.CONFIG_COMMISSION_NEW })}
+                onClick={() => navigate({ to: buildPath(RoutePaths.CONFIG_COMMISSION_NEW) })}
               >
                 New
               </Button>

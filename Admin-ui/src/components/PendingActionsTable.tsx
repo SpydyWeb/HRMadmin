@@ -10,6 +10,7 @@ import {
 import Button from '@/components/ui/button'
 import { RoutePaths } from '@/utils/constant'
 import { useNavigate } from '@tanstack/react-router'
+import { useContextPath } from '@/hooks/useContextPath'
 
 // Table data
 const tableData = [
@@ -66,11 +67,12 @@ const priorityColor = (priority: string) => {
 
 export default function PendingActionsTable() {
   const navigate = useNavigate()
+  const { buildPath } = useContextPath()
 
   // Proper handleRedirect function
   const handleRedirect = (path: string) => {
     if (!path) return
-    navigate({ to: path })
+    navigate({ to: buildPath(path) })
   }
 
   const columns = [

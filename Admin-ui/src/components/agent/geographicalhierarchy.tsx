@@ -10,6 +10,7 @@ interface GeoHierarchyProps {
   Agent: { agentId: number }
   channelCode?: string | null
   designationCode?: string | null
+  getOptions: (key: string) => any[]
 }
 
 // const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
@@ -99,7 +100,7 @@ const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeVie
 
 
 
-export const GeographicalHierarchy = ({ channelCode,designationCode }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ channelCode,designationCode,getOptions }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
     queryKey: ['geoHierarchy', channelCode],
     queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
@@ -119,5 +120,5 @@ export const GeographicalHierarchy = ({ channelCode,designationCode }: GeoHierar
     ? buildGeoHierarchyTree(geoHierarchy.geoHierarchy)
     : []
     
-  return <SplitTreeTableGeo treeData={treeData} channelCode={channelCode} designationCode={designationCode} highlightDesignationCode={designationCode} />
+  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} designationCode={designationCode} highlightDesignationCode={designationCode} />
 }
