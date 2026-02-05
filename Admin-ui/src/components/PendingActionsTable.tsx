@@ -10,43 +10,44 @@ import {
 import Button from '@/components/ui/button'
 import { RoutePaths } from '@/utils/constant'
 import { useNavigate } from '@tanstack/react-router'
+import { FiExternalLink, FiUpload } from 'react-icons/fi'
 
 // Table data
 const tableData = [
   {
-    channel: 'Code Movement',
-    pending: 12,
-    updated: '2 hours ago',
-    priority: 'Medium',
-    path: RoutePaths.CODEMOVEMENT,
+    Activity: 'Code Movement',
+    Template: 'Download',
+    Upload: '2 hours ago',
+    Summary: '',
+    Action: RoutePaths.CODEMOVEMENT,
   },
   {
-    channel: 'Certifications Update',
-    pending: 2,
-    updated: '3 hours ago',
-    priority: 'High',
-    path: RoutePaths.CERTIFICATIONUPDATE,
+    Activity: 'Certification Update',
+    Template: 'Download',
+    Upload: '2 hours ago',
+    Summary: '',
+    Action: RoutePaths.CODEMOVEMENT,
   },
   {
-    channel: 'Termination',
-    pending: 21,
-    updated: '6 hours ago',
-    priority: 'Critical',
-    path: RoutePaths.TERMINATION,
+    Activity: 'Change in Status',
+    Template: 'Download',
+    Upload: '2 hours ago',
+    Summary: '',
+    Action: RoutePaths.CODEMOVEMENT,
   },
   {
-    channel: 'New Entity Approval',
-    pending: 53,
-    updated: '5 hours ago',
-    priority: 'Critical',
-    path: '',
+    Activity: 'Manger Update',
+    Template: 'Download',
+    Upload: '2 hours ago',
+    Summary: '',
+    Action: RoutePaths.CODEMOVEMENT,
   },
   {
-    channel: 'Query',
-    pending: 1,
-    updated: '5 hours ago',
-    priority: 'Critical',
-    path: '',
+    Activity: 'Designation Update',
+    Template: 'Download',
+    Upload: '2 hours ago',
+    Summary: '',
+    Action: RoutePaths.CODEMOVEMENT,
   },
 ]
 
@@ -74,30 +75,28 @@ export default function PendingActionsTable() {
   }
 
   const columns = [
-    { header: 'Channel Name', accessor: 'channel' },
+    { header: 'Activity', accessor: 'Activity' },
     {
-      header: 'Pending Items',
+      header: 'Templates',
       accessor: (row: any) => (
-        <span className="px-2 py-1 rounded-md bg-green-100 text-green-800 font-medium">
-          {row.pending.toString().padStart(2, '0')}
-        </span>
-      ),
-    },
-    { header: 'Last Updated', accessor: 'updated' },
-    {
-      header: 'Priority',
-      accessor: (row: any) => (
-        <span
-          className={`px-2 py-1 rounded-md font-medium ${priorityColor(
-            row.priority,
-          )}`}
+        <button
+          onClick={() => handleRedirect(row.downloadPath)}
+          className="text-blue-600 underline hover:text-blue-800 font-medium"
         >
-          {row.priority}
-        </span>
+          Download
+        </button>
       ),
+
     },
     {
-      header: 'Actions',
+      header: 'Upload',
+      accessor: (row: any) => (
+        <FiUpload className="text-gray-500 ml-4" onClick={() => handleRedirect(row.path)} />
+      ),
+    },
+    { header: 'Summary', accessor: 'Summary' },
+    {
+      header: 'Action',
       accessor: (row: any) => (
         <Button variant="blue" onClick={() => handleRedirect(row.path)}>
           Process Now
@@ -109,7 +108,7 @@ export default function PendingActionsTable() {
   return (
     <Card className="shadow-md rounded-md">
       <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="text-xl font-semibold">Pending Actions</CardTitle>
+        <CardTitle className="text-xl font-semibold">Movement & Updation</CardTitle>
         <Select defaultValue="this-month">
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Select range" />
