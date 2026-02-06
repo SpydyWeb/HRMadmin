@@ -59,3 +59,33 @@ export interface IHmsDashboardApiResponse {
   responseBody: IHmsDashboardResponseBody
  
  }
+
+// Channel Stats Interfaces
+export interface IChannel {
+  channelId: number;
+  channelCode: string | null;
+  channelName: string;
+  description: string | null;
+  isActive: boolean;
+  orgId: number;
+  createdBy: string;
+  createdDate: string;
+  modifiedBy: string | null;
+  modifiedDate: string | null;
+  rowVersion: string | null;
+  totalEntities: number;
+  createdEntities: number;
+  terminatedEntities: number;
+}
+
+export interface IChannelStatsResponseBody {
+  channels: IChannel[];
+  totalEntities: number;
+  activeEntities: number;
+  terminatedEntities: number;
+}
+
+export interface IChannelStatsApiResponse {
+  responseHeader: IResponseHeader;
+  responseBody: IChannelStatsResponseBody;
+}

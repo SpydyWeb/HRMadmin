@@ -136,6 +136,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       // --- CHANNEL DETAILS ---
       channelRegion: agent.channelRegion,
       commissionClass: agent.commissionClass,
+      locationCode:agent.locationCode,
       cluster: agent.cluster,
       branchCode: agent.branchCode,
       baseLocation: agent.baseLocation,
@@ -225,12 +226,14 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       subChannel: agent.subChannel,
       commissionClass: agent.commissionClass ?? 'N/A',
       designationCode: agent.designationCode,
+      locationCode:agent.locationCode ?? "N/A",
     },
 
     schema: z.object({
       channel: z.any().optional(),
       subChannel: z.any().optional(),
       commissionClass: z.any().optional(),
+      locationCode: z.any().optional(),
       designationCode: z.any().optional(),
     }),
 
@@ -254,13 +257,13 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         options: getOptions(MASTER_DATA_KEYS.SUB_CHANNELS),
       },
       {
-        name: 'commissionClass',
-        label: 'Commission Class',
+        name: 'locationCode',
+        label: 'Location',
         type: 'select',
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'custom',
-        options: getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
+        options: getOptions(MASTER_DATA_KEYS.LOCATION),
       },
       {
         name: 'designationCode',

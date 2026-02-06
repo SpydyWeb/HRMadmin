@@ -49,8 +49,8 @@ const Dashboard = () => {
   }, [hmsQueryError, hmsQueryErrorObj])
 
   const dashboardData = hmsDashboardData?.responseBody?.hmsDashboard
-  console.log("dashbaord data", dashboardData)
-  console.log("full response", hmsDashboardData)
+  // console.log("dashbaord data", dashboardData)
+  // console.log("full response", hmsDashboardData)
 
   // Map API response to metrics format
  

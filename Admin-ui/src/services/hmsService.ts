@@ -1,7 +1,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { IHmsDashboardResponseBody,IHmsDashboardApiResponse } from '@/models/hmsdashboard'
+import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IChannelStatsApiResponse, IChannelStatsResponseBody } from '@/models/hmsdashboard'
 
 export const HMSService = {
   hmsDashboard: async (data:IHmsDashboardResponseBody) => {
@@ -18,4 +18,18 @@ export const HMSService = {
   }
   }, 
 
+
+  hmsOverviewStats: async (data:IChannelStatsResponseBody) => {  
+    try {
+      const response = await callApi<ApiResponse<IChannelStatsApiResponse>>(
+        APIRoutes.HMS_OVERVIEW_STATS,
+        [],
+      )
+      console.log("hms channel stats response", response)
+      return response
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
 }

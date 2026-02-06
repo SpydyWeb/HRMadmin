@@ -60,6 +60,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       licenseIssueDate: agent.licenseIssueDate,
       licenseType: agent.licenseType,
       licenseNo: agent.licenseNo,
+      commissionClass: agent.commissionClass,
     },
     schema: z.object({
          cnctPersonName:  z.string().optional(),
@@ -70,6 +71,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       licenseIssueDate:  z.string().optional(),
       licenseType:  z.string().optional(),
       licenseNo:  z.string().optional(),
+      commissionClass:  z.string().optional(),
     }),
 
     fields: [
@@ -140,6 +142,15 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         colSpan: 1,
         readOnly: !isEdit,
         variant: 'standard',
+      },
+      {
+        name: 'commissionClass',
+        label: 'Commission Class',
+        type: 'select',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'standard',
+        options: getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
       },
       
     ],
