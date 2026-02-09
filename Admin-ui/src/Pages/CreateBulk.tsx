@@ -1,8 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FiFileText, FiSettings } from 'react-icons/fi'
 import { BiDownload, BiSend, BiUpload } from 'react-icons/bi'
 import { FaRegFileExcel } from 'react-icons/fa6'
 import { TbUpload } from 'react-icons/tb'
+import { HMSService } from '@/services/hmsService'
+import type { IBatch } from '@/models/hmsdashboard'
 import {
   Table,
   TableBody,
@@ -20,54 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import DataTable from '@/components/table/DataTable'
 
-type UploadSummary = {
-  id: string
-  fileName: string
-  uploadedBy: string
-  uploadedOn: string
-  totalRows: number
-  success: number
-  failed: number
-  status:  'In Review' |  'Failed' | 'pending'
-}
-
-const seedUploads: UploadSummary[] = [
-  {
-    id: 'UPL-1048',
-    fileName: 'Hierarchy-NewAgents-Oct.xlsx',
-    uploadedBy: 'Amit Mehta',
-    uploadedOn: '14 Oct 2025',
-    totalRows: 42,
-    success: 38,
-    failed: 4,
-    status: 'In Review',
-  },
-  {
-    id: 'UPL-1039',
-    fileName: 'PI-Updates-Sep.xls',
-    uploadedBy: 'Priya Singh',
-    uploadedOn: '28 Sep 2025',
-    totalRows: 21,
-    success: 21,
-    failed: 0,
-    status: 'pending',
-  },
-  {
-    id: 'UPL-1024',
-    fileName: 'Status-Change-Batch-09.xlsx',
-    uploadedBy: 'Rahul Gupta',
-    uploadedOn: '05 Sep 2025',
-    totalRows: 18,
-    success: 17,
-    failed: 1,
-    status: 'pending',
-  },
-]
-const data=[
-  {}
-]
 
 const bulkSteps = [
   {
@@ -89,30 +44,34 @@ const bulkSteps = [
     icon: BiSend,
   },
 ]
-  const dynamicColumns = [
-    {
-      header: 'Agent ID',
-      accessor: (row: any) => (
-        <span
-          onClick={() => handleClick(row.agentid)}
-          className="text-blue-700 underline font-medium cursor-pointer"
-        >
-          {row.agentid}
-        </span>
-      ),
-    },
-    { header: 'Requested By', accessor: 'requestedby' },
-    { header: 'Date', accessor: 'date' },
-    { header: 'Current Branch', accessor: 'currentBranch' },
-  ]
 
 const CreateBulk = () => {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [uploads, setUploads] = useState<UploadSummary[]>(seedUploads)
+  const [batches, setBatches] = useState<IBatch[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeStep, setActiveStep] = useState<number>(2) // default to upload step per requirement
 
-  const lastUploadMeta = useMemo(() => uploads[0], [uploads])
+  // Fetch uploaded file list on mount
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await HMSService.uploadFileList()
+        if (response?.responseBody?.batches) {
+          setBatches(response.responseBody.batches)
+        }
+      } catch (err) {
+        console.error('Error fetching batches:', err)
+        setError('Failed to load uploaded batches')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchBatches()
+  }, [])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -124,32 +83,40 @@ const CreateBulk = () => {
   const handleProcessUpload = () => {
     if (!selectedFile) return
 
-    const timestamp = new Date()
-    const formattedDate = timestamp.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-
-    setUploads((prev) => [
-      {
-        id: `UPL-${timestamp.getTime().toString().slice(-4)}`,
-        fileName: selectedFile.name,
-        uploadedBy: 'You',
-        uploadedOn: formattedDate,
-        totalRows: 25,
-        success: 25,
-        failed: 0,
-        status: 'Ready',
-      },
-      ...prev,
-    ])
-
+    // For now, just move to next step - actual upload logic can be added later
     setSelectedFile(null)
     if (inputRef.current) {
       inputRef.current.value = ''
     }
     setActiveStep(3)
+  }
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  // Get status badge color
+  const getStatusBadgeClass = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-700'
+      case 'completedwitherrors':
+        return 'bg-amber-100 text-amber-700'
+      case 'pending':
+        return 'bg-slate-100 text-slate-700'
+      case 'failed':
+        return 'bg-rose-100 text-rose-700'
+      case 'processing':
+        return 'bg-blue-100 text-blue-700'
+      default:
+        return 'bg-slate-100 text-slate-700'
+    }
   }
 
   const renderStepContent = () => {
@@ -427,46 +394,53 @@ const CreateBulk = () => {
   </div>
 </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Batch ID</TableHead>
-                <TableHead>File Name</TableHead>
-                <TableHead>Uploaded By</TableHead>
-                <TableHead>Uploaded On</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Success</TableHead>
-                <TableHead>Failed</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {uploads.map((upload) => (
-                <TableRow key={upload.id}>
-                  <TableCell className="font-semibold text-slate-900">{upload.id}</TableCell>
-                  <TableCell>{upload.fileName}</TableCell>
-                  <TableCell>{upload.uploadedBy}</TableCell>
-                  <TableCell>{upload.uploadedOn}</TableCell>
-                  <TableCell>{upload.totalRows}</TableCell>
-                  <TableCell className="text-green-600">{upload.success}</TableCell>
-                  <TableCell className="text-rose-500">{upload.failed}</TableCell>
-                  <TableCell>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {upload.status}
-                    </span>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              <span className="ml-3 text-slate-600">Loading batches...</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-10 text-rose-500">
+              {error}
+            </div>
+          ) : batches.length === 0 ? (
+            <div className="flex items-center justify-center py-10 text-slate-500">
+              No uploaded batches found.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Batch ID</TableHead>
+                  <TableHead>File Name</TableHead>
+                  <TableHead>Uploaded By</TableHead>
+                  <TableHead>Uploaded On</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Success</TableHead>
+                  <TableHead>Failed</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-              {/* <div className={`mt-5 px-20 text-center `}>
-                    <DataTable
-                      columns={dynamicColumns}
-                      data={data || []}
-                      // loading={isFetching}
-                      // noDataMessage={error?.message || ''}
-                    />
-                  </div> */}
+              </TableHeader>
+              <TableBody>
+                {batches.map((batch) => (
+                  <TableRow key={batch.batchId}>
+                    <TableCell className="font-semibold text-slate-900">{batch.batchId}</TableCell>
+                    <TableCell>{batch.fileName}</TableCell>
+                    <TableCell>{batch.uploadedBy}</TableCell>
+                    <TableCell>{formatDate(batch.uploadedOn)}</TableCell>
+                    <TableCell>{batch.total}</TableCell>
+                    <TableCell className="text-green-600">{batch.success}</TableCell>
+                    <TableCell className="text-rose-500">{batch.failed}</TableCell>
+                    <TableCell>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(batch.status)}`}>
+                        {batch.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

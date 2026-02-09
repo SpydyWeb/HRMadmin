@@ -162,6 +162,27 @@ const hmsDashboard = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.HMSDASHBOARD, data, { headers });
 }
 
+const getChannelStats = (data = {}, headers = {}) => {
+  console.log("Fetching channel stats with data:", data);
+  console.log("Fetching channel stats with headers:", headers);
+  return apiClient.post(APIRoutes.CHANNELSTATS, data, { headers });
+}
+
+const uploadFileList = (headers = {}) => {
+  console.log("uploadFileList called");
+  return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
+}
+const downloadReport = (reportId, headers = {}) => {
+  console.log("downloadReport called with reportId:", reportId);
+  if (!reportId) {
+    throw new Error("reportId is required for download report");
+  }
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${reportId}`, {}, { 
+    headers,
+    responseType: 'blob' // Handle blob/file responses
+  });
+}
+
 
 module.exports = {
   login,
@@ -190,6 +211,9 @@ module.exports = {
   downloadRecord,
   GeoHierarchy,
   GeoHierarchyTable,
-  hmsDashboard
+  hmsDashboard,
+  getChannelStats,
+  uploadFileList,
+  downloadReport,
 
 };
