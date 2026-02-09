@@ -47,8 +47,8 @@ interface SplitTreeTableGeoProps {
   ) => Promise<any>;
   isLoading?: boolean;
   channelCode?: string | null;
-  designationCode?: string | null;
-  highlightDesignationCode?: string | null;
+  locationCode?: string | null;
+  highlightLocationCode?: string | null;
   getOptions: (key: string) => any[];
 }
 
@@ -59,8 +59,8 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   onSearch,
   isLoading = false,
   channelCode,
-  designationCode,
-  highlightDesignationCode,
+  locationCode,
+  highlightLocationCode,
   getOptions,
 }) => {
   // Tree view states
@@ -94,14 +94,14 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     const fetchTableData = async () => {
       if (!onSearch) {
         // If no API provided, try to fetch from GeoHierarchyByChannelDesignation API
-        if (selectedNode && channelCode && designationCode) {
+        if (selectedNode && channelCode && locationCode) {
           setApiLoading(true);
           setError(null);
           
           try {
             const geoAgentHierarchy = await agentService.fetchGeoHierarchyTable(
               channelCode,
-              designationCode
+              locationCode
             );
             
             if (geoAgentHierarchy && Array.isArray(geoAgentHierarchy)) {
@@ -168,7 +168,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     };
 
     fetchTableData();
-  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch, channelCode,designationCode]);
+  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch, channelCode,locationCode]);
 
   // Toggle tree node expansion
   const toggleExpand = (id: string) => {
@@ -230,7 +230,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedIds.has(item.id);
     const isSelected = selectedNode?.id === item.id;
-    const isHighlighted = highlightDesignationCode && item.agentCode?.toLowerCase() === highlightDesignationCode?.toLowerCase();
+    const isHighlighted = highlightLocationCode && item.agentCode?.toLowerCase() === highlightLocationCode?.toLowerCase();
 
     return (
       <div key={item.id}>

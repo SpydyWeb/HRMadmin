@@ -52,6 +52,8 @@ const CreateBulk = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [activeStep, setActiveStep] = useState<number>(2) // default to upload step per requirement
+  const [downloadingBatchId, setDownloadingBatchId] = useState<string | null>(null)
+  const [downloadingType, setDownloadingType] = useState<'success' | 'failed' | null>(null)
 
   // Fetch uploaded file list on mount
   useEffect(() => {
@@ -116,6 +118,34 @@ const CreateBulk = () => {
         return 'bg-blue-100 text-blue-700'
       default:
         return 'bg-slate-100 text-slate-700'
+    }
+  }
+
+  // Handle download report
+  const handleDownloadReport = async (batchId: string, reportType: 'success' | 'failed') => {
+    try {
+      setDownloadingBatchId(batchId)
+      setDownloadingType(reportType)
+      
+      const blob = await HMSService.downloadReport(batchId, reportType)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `batch_${batchId}_${reportType}_report.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      setDownloadingBatchId(null)
+      setDownloadingType(null)
+    } catch (error) {
+      console.error('Download error:', error)
+      alert(`Failed to download ${reportType} report: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setDownloadingBatchId(null)
+      setDownloadingType(null)
     }
   }
 
@@ -429,8 +459,30 @@ const CreateBulk = () => {
                     <TableCell>{batch.uploadedBy}</TableCell>
                     <TableCell>{formatDate(batch.uploadedOn)}</TableCell>
                     <TableCell>{batch.total}</TableCell>
-                    <TableCell className="text-green-600">{batch.success}</TableCell>
-                    <TableCell className="text-rose-500">{batch.failed}</TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => handleDownloadReport(batch.batchId, 'success')}
+                        disabled={!batch.success || batch.success === 0 || (downloadingBatchId === batch.batchId && downloadingType === 'success')}
+                        className={`text-green-600 hover:text-green-700 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
+                          downloadingBatchId === batch.batchId && downloadingType === 'success' ? 'opacity-50' : ''
+                        }`}
+                        title="Download success report"
+                      >
+                        {downloadingBatchId === batch.batchId && downloadingType === 'success' ? 'Downloading...' : batch.success}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => handleDownloadReport(batch.batchId, 'failed')}
+                        disabled={!batch.failed || batch.failed === 0 || (downloadingBatchId === batch.batchId && downloadingType === 'failed')}
+                        className={`text-rose-500 hover:text-rose-600 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
+                          downloadingBatchId === batch.batchId && downloadingType === 'failed' ? 'opacity-50' : ''
+                        }`}
+                        title="Download failed report"
+                      >
+                        {downloadingBatchId === batch.batchId && downloadingType === 'failed' ? 'Downloading...' : batch.failed}
+                      </button>
+                    </TableCell>
                     <TableCell>
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(batch.status)}`}>
                         {batch.status}

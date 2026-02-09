@@ -9,98 +9,99 @@ import SplitTreeTableGeo from '../ui/SplitTreeViewGeo'
 interface GeoHierarchyProps {
   Agent: { agentId: number }
   channelCode?: string | null
-  designationCode?: string | null
+  locationCode?: string | null
   getOptions: (key: string) => any[]
 }
 
+
 // const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
 //   const nodeMap = new Map<number, TreeViewItem>()
-//   const childSet = new Set<number>()
 
-//   const flatten = (node: IGeoHierarchy | null) => {
-//     if (!node) return
+//   // Process all nodes and establish parent-child relationships
+//   hierarchies.forEach(hierarchy => {
+//     const processNode = (node: IGeoHierarchy) => {
+//       // Create the node if it doesn't exist
+//       if (!nodeMap.has(node.designationId)) {
+//         nodeMap.set(node.designationId, {
+//           id: node.designationId,
+//           name: `${node.designationName} - ${node.designationCode}`,
+//           type: 'designation',
+//           agentCode: node.designationCode || '',
+//           agentName: node.designationName || '',
+//           children: [],
+//         })
+//       }
 
-//     if (!nodeMap.has(node.designationId)) {
-//       nodeMap.set(node.designationId, {
-//         id: node.designationId.toString(),
-//         name: `${node.designationName} - ${node.designationCode}`,
-//         type: 'designation',
-//         agentCode: node.designationCode || '',
-//         agentName: node.designationName || '',
-//         children: [],
-//       })
-//     }
-
-//     if (node.parentLocation) {
-//       // Mark current node as a child (it has a parent)
-//       childSet.add(node.designationId)
-//       // Recursively process the parent
-//       flatten(node.parentLocation)
-
-//       // Add current node as a child of its parent
-//       const parentNode = nodeMap.get(node.parentLocation.designationId)!
-//       const childNode = nodeMap.get(node.designationId)!
-//       if (!parentNode.children?.some((c) => c.id === childNode.id)) {
-//         parentNode.children?.push(childNode)
+//       // If this node has a "parentLocation" (which is actually its child in the hierarchy)
+//       if (node.parentLocation) {
+//         // Process the child node
+//         processNode(node.parentLocation)
+        
+//         // Add the child to this node's children
+//         const parentNode = nodeMap.get(node.designationId)!
+//         const childNode = nodeMap.get(node.parentLocation.designationId)!
+        
+//         if (!parentNode.children?.some((c) => c.id === childNode.id)) {
+//           parentNode.children?.push(childNode)
+//         }
 //       }
 //     }
-//   }
 
-//   hierarchies.forEach(flatten)
-
-//   const roots: Array<TreeViewItem> = []
-//   nodeMap.forEach((node, id) => {
-//     if (!childSet.has(Number(id))) roots.push(node)
+//     processNode(hierarchy)
 //   })
 
-//   return roots
+//   // The roots are the top-level nodes in the hierarchies array
+//   return hierarchies.map(h => nodeMap.get(h.designationId)!).filter(Boolean)
 // }
 
 const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
   const nodeMap = new Map<number, TreeViewItem>()
+  const rootNodes: TreeViewItem[] = []
 
-  // Process all nodes and establish parent-child relationships
-  hierarchies.forEach(hierarchy => {
-    const processNode = (node: IGeoHierarchy) => {
-      // Create the node if it doesn't exist
-      if (!nodeMap.has(node.designationId)) {
-        nodeMap.set(node.designationId, {
-          id: node.designationId.toString(),
-          name: `${node.designationName} - ${node.designationCode}`,
-          type: 'designation',
-          agentCode: node.designationCode || '',
-          agentName: node.designationName || '',
+  // The items in the initial `hierarchies` array are the roots of the trees.
+  hierarchies.forEach(rootHierarchy => {
+    // Recursive function to traverse the chain of children.
+    const processNode = (node: IGeoHierarchy): TreeViewItem => {
+      // 1. Create the TreeViewItem for the current node if it doesn't exist.
+      if (!nodeMap.has(node.locationMasterId)) {
+        nodeMap.set(node.locationMasterId, {
+          id: node.locationMasterId,
+          name: `${node.locationName} - ${node.locationCode}`,
+          type: 'location',
+          agentCode: node.locationCode || '',
+          agentName: node.locationName || '',
           children: [],
         })
       }
+      const currentNode = nodeMap.get(node.locationMasterId)!;
 
-      // If this node has a "parentLocation" (which is actually its child in the hierarchy)
+      // 2. If the node has a "child" (misnamed as parentLocation), process it.
       if (node.parentLocation) {
-        // Process the child node
-        processNode(node.parentLocation)
+        const childNode = processNode(node.parentLocation); // Recursively process the child
         
-        // Add the child to this node's children
-        const parentNode = nodeMap.get(node.designationId)!
-        const childNode = nodeMap.get(node.parentLocation.designationId)!
-        
-        if (!parentNode.children?.some((c) => c.id === childNode.id)) {
-          parentNode.children?.push(childNode)
+        // Add the child to the current node's children array if it's not already there.
+        if (!currentNode.children?.some((c) => c.id === childNode.id)) {
+          currentNode.children?.push(childNode);
         }
       }
-    }
+      
+      // 3. Return the current node.
+      return currentNode;
+    };
 
-    processNode(hierarchy)
-  })
+    // Start processing from the root of this chain and add it to the list of roots.
+    const rootNode = processNode(rootHierarchy);
+    rootNodes.push(rootNode);
+  });
 
-  // The roots are the top-level nodes in the hierarchies array
-  return hierarchies.map(h => nodeMap.get(h.designationId)!).filter(Boolean)
+  return rootNodes;
 }
 
 
 
 
 
-export const GeographicalHierarchy = ({ channelCode,designationCode,getOptions }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ channelCode,locationCode,getOptions }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
     queryKey: ['geoHierarchy', channelCode],
     queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
@@ -120,5 +121,5 @@ export const GeographicalHierarchy = ({ channelCode,designationCode,getOptions }
     ? buildGeoHierarchyTree(geoHierarchy.geoHierarchy)
     : []
     
-  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} designationCode={designationCode} highlightDesignationCode={designationCode} />
+  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} locationCode={locationCode} highlightLocationCode={locationCode} />
 }
