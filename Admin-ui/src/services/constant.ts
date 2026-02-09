@@ -28,7 +28,8 @@ export const APIRoutes = {
   GEO_HIERARCHY: 'GeoHierarchy',
   GEO_HIERARCHY_TABLE: 'GeoHierarchyTable',
   HMS_DASHBOARD: 'hmsDashboard',
-  HMS_OVERVIEW_STATS: 'hmsOverviewStats',
+  HMS_OVERVIEW_STATS: 'getChannelStats',
+  UPLOAD_FILE_LIST: 'uploadFileList',
 }
 
 export const LoginConstants = {

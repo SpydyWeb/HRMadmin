@@ -70,9 +70,10 @@ const CompanyOverview = () => {
   })
 
   // Extract data from API response - responseBody contains IChannelStatsApiResponse, then its responseBody contains the actual data
-  const channelStatsResponse = companyOverviewData
-  const responseBody: IChannelStatsResponseBody | undefined = channelStatsResponse?.responseBody
-  console.log("channelStatsResponse", channelStatsResponse)
+  const channelStatsApiResponse = companyOverviewData?.responseBody
+  const responseBody: IChannelStatsResponseBody | undefined = companyOverviewData?.responseBody
+  // console.log("channelStatsOverview", companyOverviewData)
+  // console.log("responseBody", responseBody)
 
   // Memoize company overview stats
   const companyStats = useMemo(() => [

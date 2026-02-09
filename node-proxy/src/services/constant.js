@@ -22,7 +22,8 @@ const APIRoutes = {
   GEOHIERARCHY: "/api/Agent/GeoHierarchy",
   GEOHIERARCHYTABLE: "/api/Agent/GeoHierarchyByChannelDesignation",
   HMSDASHBOARD: "/api/HMSDashboard/GetHMSDashboard",
-  OVERVIEWSTATS:"/api/HMSDashboard/channel-stats"
+  CHANNELSTATS: "/api/HMSDashboard/channel-stats",
+  UPLOADFILELIST:"/uploaded-file-list"
 };
 
 module.exports = { APIRoutes };

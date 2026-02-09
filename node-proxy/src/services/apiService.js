@@ -161,9 +161,16 @@ const GeoHierarchyTable = (channelCategory,designationCode, headers = {}) => {
 const hmsDashboard = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.HMSDASHBOARD, data, { headers });
 }
-const hmsOverviewStats = (data = {}, headers = {}) => {
-  console.log("hmsOverviewStats called with:", data);
-  return apiClient.post(APIRoutes.OVERVIEWSTATS, data, { headers });
+
+const getChannelStats = (data = {}, headers = {}) => {
+  console.log("Fetching channel stats with data:", data);
+  console.log("Fetching channel stats with headers:", headers);
+  return apiClient.post(APIRoutes.CHANNELSTATS, data, { headers });
+}
+
+const uploadFileList = (headers = {}) => {
+  console.log("uploadFileList called");
+  return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
 
 
@@ -195,6 +202,7 @@ module.exports = {
   GeoHierarchy,
   GeoHierarchyTable,
   hmsDashboard,
-  hmsOverviewStats,
+  getChannelStats,
+  uploadFileList
 
 };
