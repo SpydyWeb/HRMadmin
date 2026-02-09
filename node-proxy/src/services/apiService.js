@@ -154,8 +154,8 @@ const GeoHierarchy = (channelCategory, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
 };
 
-const GeoHierarchyTable = (channelCategory,designationCode, headers = {}) => {
-  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, designationCode: designationCode }, { headers });
+const GeoHierarchyTable = (channelCategory,locationCode, headers = {}) => {
+  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, locationCode: locationCode }, { headers });
 }
 
 const hmsDashboard = (data = {}, headers = {}) => {
@@ -172,12 +172,12 @@ const uploadFileList = (headers = {}) => {
   console.log("uploadFileList called");
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
-const downloadReport = (reportId, headers = {}) => {
-  console.log("downloadReport called with reportId:", reportId);
-  if (!reportId) {
+const downloadReport = (id,reportType, headers = {}) => {
+  console.log("downloadReport called with reportId:", id);
+  if (!id) {
     throw new Error("reportId is required for download report");
   }
-  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${reportId}`, {}, { 
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, {}, { 
     headers,
     responseType: 'blob' // Handle blob/file responses
   });

@@ -20,11 +20,11 @@ const APIRoutes = {
   UPDATECOMMISSIONBYID: "/api/CommissionConfig/GetCommissionById",
   DOWNLOADRECORD: "/api/CommissionMgmt/DownloadCommissionExcel",
   GEOHIERARCHY: "/api/Agent/GeoHierarchy",
-  GEOHIERARCHYTABLE: "/api/Agent/GeoHierarchyByChannelDesignation",
+  GEOHIERARCHYTABLE: "/api/Agent/ReporteesByChannelLocation",
   HMSDASHBOARD: "/api/HMSDashboard/GetHMSDashboard",
   CHANNELSTATS: "/api/HMSDashboard/channel-stats",
   UPLOADFILELIST:"/uploaded-file-list",
-  DOWNLOADREPORT:"/failure-report"
+  DOWNLOADREPORT:"/download-report"
 };
 
 module.exports = { APIRoutes };
