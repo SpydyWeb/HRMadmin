@@ -22,8 +22,16 @@ router.post("/proxy", async (req, res) => {
       return res.status(400).json({ error: `Invalid function name: ${fn}` });
     }
     const result = await apiService[fn](...args, headers);
-    const safeData = { ...result };
     
+    // Handle blob responses (file downloads) - Buffer in Node.js
+    if (Buffer.isBuffer(result) || result instanceof Uint8Array) {
+      // Set appropriate headers for file download
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'attachment');
+      return res.send(result);
+    }
+    
+    const safeData = { ...result };
     
     if (encryptionEnabled) {
       const ciphertextResp = encryptionService.encryptObject(safeData);

@@ -27,6 +27,11 @@ const request = async (method, url, data, config = {}) => {
       ...config,
     });
 
+    // Handle blob responses (file downloads)
+    if (config.responseType === 'blob' || config.responseType === 'arraybuffer') {
+      return response.data;
+    }
+
     // Decrypt response if `data` field exists
     if (response.data && response.data.data) {
       return JSON.parse(response.data.data);

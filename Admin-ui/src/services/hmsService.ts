@@ -1,7 +1,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IChannelStatsApiResponse, IChannelStatsResponseBody, IUploadFileListApiResponse } from '@/models/hmsdashboard'
+import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IChannelStatsApiResponse, IUploadFileListApiResponse } from '@/models/hmsdashboard'
 
 export const HMSService = {
   hmsDashboard: async (data:IHmsDashboardResponseBody) => {
@@ -42,6 +42,20 @@ export const HMSService = {
       console.log("upload file list response", response)
       return response
     } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
+  downloadReport: async (reportId: string | number) => {
+    try {
+      const response = await callApi(
+        APIRoutes.DOWNLOAD_REPORT,
+        [reportId],
+      )
+      console.log("download report response", response)
+      return response
+    }
+    catch (error) {
       console.error(error)
       throw error
     }

@@ -30,6 +30,7 @@ export const APIRoutes = {
   HMS_DASHBOARD: 'hmsDashboard',
   HMS_OVERVIEW_STATS: 'getChannelStats',
   UPLOAD_FILE_LIST: 'uploadFileList',
+  DOWNLOAD_REPORT: 'downloadReport',
 }
 
 export const LoginConstants = {

@@ -172,6 +172,16 @@ const uploadFileList = (headers = {}) => {
   console.log("uploadFileList called");
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
+const downloadReport = (reportId, headers = {}) => {
+  console.log("downloadReport called with reportId:", reportId);
+  if (!reportId) {
+    throw new Error("reportId is required for download report");
+  }
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${reportId}`, {}, { 
+    headers,
+    responseType: 'blob' // Handle blob/file responses
+  });
+}
 
 
 module.exports = {
@@ -203,6 +213,7 @@ module.exports = {
   GeoHierarchyTable,
   hmsDashboard,
   getChannelStats,
-  uploadFileList
+  uploadFileList,
+  downloadReport,
 
 };
