@@ -1,7 +1,7 @@
 import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IChannelStatsApiResponse, IUploadFileListApiResponse } from '@/models/hmsdashboard'
+import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IDownloadReportRequest,IChannelStatsApiResponse, IDownloadReportResponseBody,IUploadFileListApiResponse } from '@/models/hmsdashboard'
 import { apiClient } from './apiClient'
 
 export const HMSService = {
@@ -47,27 +47,16 @@ export const HMSService = {
       throw error
     }
   },
-  downloadReport: async (id: string | number, reportType: string) => {
+  downloadReport: async (data:IDownloadReportRequest) => {
     try {
-      // For blob downloads, we need to make a direct call with responseType: 'blob'
-      // The proxy will return the blob directly without encryption
-      // The Authorization header will be set by the apiClient interceptor
-      const response = await apiClient.post<Blob>(
-        APIRoutes.PROXY,
-        {
-          fn: APIRoutes.DOWNLOAD_REPORT,
-          args: [id, reportType],
-        },
-        {
-          responseType: 'blob',
-        }
+      const response = await callApi<ApiResponse<IDownloadReportResponseBody>>(
+        APIRoutes.DOWNLOAD_REPORT,[data],
       )
-      
-      console.log("download report response", response)
-      return response
+            return response
     } catch (error) {
-      console.error(error)
+      console.error("downloadRecord service error:", error);
       throw error
     }
   },
+
 }

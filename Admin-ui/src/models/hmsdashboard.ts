@@ -84,8 +84,18 @@ export interface IChannelStatsResponseBody {
   activeEntities: number;
   terminatedEntities: number;
 }
+export interface IDownloadReportRequest {
+  id: number;
+  reportType:string;
+}
+
+export interface IDownloadReportResponseBody {
+  fileDownload: IFileDownload | null
+}
 
 export interface IChannelStatsApiResponse {
   responseHeader: IResponseHeader;
-  responseBody: IChannelStatsResponseBody;
+  responseBody: IChannelStatsResponseBody | IDownloadReportResponseBody
 }
+
+

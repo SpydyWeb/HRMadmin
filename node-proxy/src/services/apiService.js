@@ -172,15 +172,13 @@ const uploadFileList = (headers = {}) => {
   console.log("uploadFileList called");
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
-const downloadReport = (id,reportType, headers = {}) => {
-  console.log("downloadReport called with reportId:", id);
-  if (!id) {
-    throw new Error("reportId is required for download report");
+
+const downloadReport = (data={}, headers = {}) => {
+  const { id, reportType } = data;
+  if (!id || !reportType) {
+    throw new Error("reportId and reportType are required for download report");
   }
-  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, {}, { 
-    headers,
-    responseType: 'blob' // Handle blob/file responses
-  });
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`,data, { headers,});
 }
 
 
