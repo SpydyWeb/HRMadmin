@@ -5,6 +5,9 @@ import { FaRegFileExcel } from 'react-icons/fa6'
 import { TbUpload } from 'react-icons/tb'
 import { HMSService } from '@/services/hmsService'
 import type { IBatch } from '@/models/hmsdashboard'
+import { useMutation } from '@tanstack/react-query'
+import { showToast } from '@/components/ui/sonner'
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import {
   Table,
   TableBody,
@@ -121,37 +124,70 @@ const CreateBulk = () => {
     }
   }
 
-  // Handle download report
-  const handleDownloadReport = async (batchId: string, reportType: 'success' | 'failed') => {
-    try {
-      setDownloadingBatchId(batchId)
-      setDownloadingType(reportType)
-      
-      const blob = await HMSService.downloadReport(batchId, reportType)
-      
-      // Create download link
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `batch_${batchId}_${reportType}_report.xlsx`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
-      setDownloadingBatchId(null)
-      setDownloadingType(null)
-    } catch (error) {
+
+  // Download report mutation
+  const downloadMutation = useMutation({
+    mutationFn: ({ batchId, reportType }: { batchId: string; reportType: 'success' | 'failed' }) => 
+      HMSService.downloadReport({ 
+        id: Number(batchId), 
+        reportType: reportType 
+      }),
+    onSuccess: (response) => {
+      const fileDownload = response?.responseBody?.fileDownload
+      if (fileDownload && fileDownload.fileBase64) {
+        // Convert base64 to blob and download
+        const byteCharacters = atob(fileDownload.fileBase64)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: fileDownload.contentType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileDownload.fileName || `batch_${downloadingBatchId}_${downloadingType}_report.xlsx`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Show success toast
+        showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Report downloaded successfully')
+        
+        setDownloadingBatchId(null)
+        setDownloadingType(null)
+      } else {
+        console.error('No file data in response')
+        alert('Failed to download file: No file data received')
+        setDownloadingBatchId(null)
+        setDownloadingType(null)
+      }
+    },
+    onError: (error: any) => {
       console.error('Download error:', error)
-      alert(`Failed to download ${reportType} report: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`Failed to download ${downloadingType} report: ${error?.message || 'Unknown error'}`)
       setDownloadingBatchId(null)
       setDownloadingType(null)
+    },
+  })
+
+  const handleDownloadReport = (batchId: string, reportType: 'success' | 'failed') => {
+    if (!batchId) {
+      alert('No batch ID found')
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'No batch ID found')
+      return
     }
+    setDownloadingBatchId(batchId)
+    setDownloadingType(reportType)
+    downloadMutation.mutate({ batchId, reportType })
   }
 
   const renderStepContent = () => {
     switch (activeStep) {
-      case 1:
+        case 1:
         return (
           <Card className="border border-slate-100 shadow-sm">
             <CardHeader>
