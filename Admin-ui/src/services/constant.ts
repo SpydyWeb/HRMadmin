@@ -31,6 +31,8 @@ export const APIRoutes = {
   HMS_OVERVIEW_STATS: 'getChannelStats',
   UPLOAD_FILE_LIST: 'uploadFileList',
   DOWNLOAD_REPORT: 'downloadReport',
+  HMS_FILE:'file'
+
 }
 
 export const LoginConstants = {
