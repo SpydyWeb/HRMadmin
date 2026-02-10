@@ -212,30 +212,77 @@ const ProcessPgCommission: React.FC<any> = () => {
         accessor: (row: any) => row.commissionName,
         width: '20%',
       },
-      { 
-        header: 'Records', 
-        accessor: (row: any) => (
-          <div className="flex items-center gap-2">
-            <span>{row.records}</span>
-            <RxDownload 
-              className={`h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer transition ${
-                downloadingId === (row.jobExeHistId || row._jobExeHistId) ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              onClick={() => {
-                if (downloadingId === (row.jobExeHistId || row._jobExeHistId)) return
-                handleDownload(row)
-              }}
-              title="Download records"
-            />
-          </div>
-        ),
-        width: '20%',
-      },
-      { 
-        header: 'Status',  
-        accessor: (row: any) => row.exeStatus,
-        width: '20%',
-      },
+      // { 
+      //   header: 'Records', 
+      //   accessor: (row: any) => (
+      //     <div className="flex items-center gap-2">
+      //       <span>{row.records}</span>
+      //       <RxDownload 
+      //         className={`h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer transition ${
+      //           downloadingId === (row.jobExeHistId || row._jobExeHistId) ? 'opacity-50 cursor-not-allowed' : ''
+      //         }`}
+      //         onClick={() => {
+      //           if (downloadingId === (row.jobExeHistId || row._jobExeHistId)) return
+      //           handleDownload(row)
+      //         }}
+      //         title="Download records"
+      //       />
+      //     </div>
+      //   ),
+      //   width: '20%',
+      // },
+      {
+  header: 'Records',
+  accessor: (row: any) => {
+    const id = row.jobExeHistId || row._jobExeHistId
+    const isDownloading = downloadingId === id
+
+    return (
+      <div className="flex items-center gap-4 cursor-pointer">
+        {/* Success Records */}
+        <div
+          className="flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700"
+          title="Approval/Rejection will work only on successfully processed records"
+        >
+          <span className="text-sm font-medium">{row.successRecords ?? 0}</span>
+          <RxDownload
+            className={`h-4 w-4 cursor-pointer transition ${
+              isDownloading ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-900'
+            }`}
+            onClick={() => {
+              if (isDownloading) return
+              handleDownload(row, 'SUCCESS')
+            }}
+          />
+        </div>
+
+        {/* Failed Records */}
+        <div
+          className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700"
+          title="Approval/Rejection will work only on successfully processed records"
+        >
+          <span className="text-sm font-medium">{row.failedRecords ?? 0}</span>
+          <RxDownload
+            className={`h-4 w-4 cursor-pointer transition ${
+              isDownloading ? 'opacity-50 cursor-not-allowed' : 'hover:text-red-900'
+            }`}
+            onClick={() => {
+              if (isDownloading) return
+              handleDownload(row, 'FAILED')
+            }}
+          />
+        </div>
+      </div>
+    )
+  },
+  width: '20%',
+},
+
+      // { 
+      //   header: 'Status',  
+      //   accessor: (row: any) => row.exeStatus,
+      //   width: '20%',
+      // },
       {
         header: 'Actions',
         accessor: (row: any) => (
