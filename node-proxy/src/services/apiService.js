@@ -154,8 +154,8 @@ const GeoHierarchy = (channelCategory, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
 };
 
-const GeoHierarchyTable = (channelCategory,locationCode, headers = {}) => {
-  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, locationCode: locationCode }, { headers });
+const GeoHierarchyTable = (parentBranchId, headers = {}) => {
+  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { parentBranchId: parentBranchId}, { headers });
 }
 
 const hmsDashboard = (data = {}, headers = {}) => {

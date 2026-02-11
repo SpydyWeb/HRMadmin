@@ -50,6 +50,7 @@ interface SplitTreeTableGeoProps {
   locationCode?: string | null;
   highlightLocationCode?: string | null;
   getOptions: (key: string) => any[];
+  parentBranchId:number
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -62,6 +63,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   locationCode,
   highlightLocationCode,
   getOptions,
+  parentBranchId
 }) => {
   // Tree view states
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -93,34 +95,26 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   useEffect(() => {
     const fetchTableData = async () => {
       if (!onSearch) {
-        // If no API provided, try to fetch from GeoHierarchyByChannelDesignation API
-        if (selectedNode && channelCode && locationCode) {
+        // If no API provided, try to fetch from GeoChildren API
+        if (selectedNode && selectedNode.parentBranchId) {
           setApiLoading(true);
           setError(null);
           
           try {
             const geoAgentHierarchy = await agentService.fetchGeoHierarchyTable(
-              channelCode,
-              locationCode
+              selectedNode.parentBranchId
             );
+            // console.log("see what geoAgentHierarchy",geoAgentHierarchy)
             
             if (geoAgentHierarchy && Array.isArray(geoAgentHierarchy)) {
               // Map the API response to table data format
-              const mappedData = geoAgentHierarchy.map((item: {
-                agentId: number;
-                agentName: string;
-                agentDesignation: string;
-                agentCode: string;
-                location: string;
-              }) => ({
-                id: item.agentId.toString(),
-                name: item.agentName,
-                type: 'agent',
-                agentCode: item.agentCode,
-                agentName: item.agentName,
-                region: item.location,
-                agentDesignation: item.agentDesignation,
+              const mappedData = geoAgentHierarchy.map((item: any) => ({
+                id: item.branchMasterId?.toString() || '',
+                // type: item.agentId ? 'agent' : 'location',
+                branchCode: item.branchCode || '',
+                branchName: item.branchName || '',
               }));
+              // console.log("see what mappedData",mappedData)
               setTableData(mappedData);
               setTotalCount(mappedData.length);
             } else {
@@ -128,7 +122,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
               setTotalCount(0);
             }
           } catch (err) {
-            console.error('Error fetching geo hierarchy table:', err);
+            console.error('Error fetching geo children:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch data');
             setTableData([]);
             setTotalCount(0);
@@ -168,7 +162,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     };
 
     fetchTableData();
-  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch, channelCode,locationCode]);
+  }, [debouncedSearchQuery, currentPage, pageSize, selectedNode, onSearch, parentBranchId]);
 
   // Toggle tree node expansion
   const toggleExpand = (id: string) => {
@@ -341,22 +335,8 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
       <Card className="col-span-12 lg:col-span-8 xl:col-span-9 overflow-hidden flex flex-col">
         <CardHeader className="pb-3 border-b">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-2">
-            <p>Select Location:</p>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getOptions(MASTER_DATA_KEYS.LOCATION).map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between">
+          
+            <div className="flex  items-center justify-between">
              
              
               <CardTitle className="text-lg">
@@ -483,11 +463,11 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">Name</TableHead>
-                    <TableHead className="w-[100px]">Type</TableHead>
-                    <TableHead className="w-[140px]">Agent Code</TableHead>
-                    <TableHead className="w-[180px]">Agent Name</TableHead>
-                    <TableHead className="w-[130px]">Region</TableHead>
+                    <TableHead className="w-[200px]">Branch Name</TableHead>
+                    {/* <TableHead className="w-[100px]">Type</TableHead> */}
+                    <TableHead className="w-[140px]">Brach Code</TableHead>
+                    {/* <TableHead className="w-[180px]">Agent Name</TableHead>
+                    <TableHead className="w-[130px]">Region</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -533,10 +513,10 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <FiUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="truncate">{item.name}</span>
+                            <span className="truncate">{item.branchName}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <Badge
                             variant="secondary"
                             className={cn(
@@ -546,14 +526,14 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
                           >
                             {item.type}
                           </Badge>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell className="truncate">
-                          {item.agentCode}
+                          {item.branchCode}
                         </TableCell>
-                        <TableCell className="truncate">
+                        {/* <TableCell className="truncate">
                           {item.agentName}
                         </TableCell>
-                        <TableCell className="truncate">{item.region}</TableCell>
+                        <TableCell className="truncate">{item.region}</TableCell> */}
                       </TableRow>
                     ))
                   )}

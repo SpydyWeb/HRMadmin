@@ -71,26 +71,27 @@ export const agentService = {
     }
     return null
   },
-  fetchGeoHierarchyTable:async (channelCategory:string, designationCode:string)=>{
+  fetchGeoHierarchyTable:async (parentBranchId:string)=>{
     const response = await callApi<ApiResponse<any>>(
       APIRoutes.GEO_HIERARCHY_TABLE,
-      [channelCategory, designationCode],
+      [parentBranchId],
     )
+    // console.log("see what response",response?.responseBody?.geoHierarchy)
     
     
     // Handle different response structures
     const responseBody = (response as any)?.responseBody
     const directResponse = response as any
     
-    if (responseBody?.geoAgentHierarchy) {
-      // console.log("✅ Found geoAgentHierarchy in response.responseBody")
-      return responseBody.geoAgentHierarchy
+    if (responseBody?.geoHierarchy) {
+      // console.log("✅ Found geoHierarchy in response.responseBody")
+      return responseBody.geoHierarchy
     }
     
-    // Check if geoAgentHierarchy is directly in response
-    if (directResponse?.geoAgentHierarchy) {
-      // console.log("✅ Found geoAgentHierarchy directly in response")
-      return directResponse.geoAgentHierarchy
+    // Check if geoHierarchy is directly in response
+    if (directResponse?.geoHierarchy) {
+      // console.log("✅ Found geoAgentgeoHierarchyHierarchy directly in response")
+      return directResponse.geoHierarchy
     }
     
     // Check if responseBody itself is the array

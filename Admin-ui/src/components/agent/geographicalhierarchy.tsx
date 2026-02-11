@@ -9,99 +9,59 @@ import SplitTreeTableGeo from '../ui/SplitTreeViewGeo'
 interface GeoHierarchyProps {
   Agent: { agentId: number }
   channelCode?: string | null
-  locationCode?: string | null
   getOptions: (key: string) => any[]
 }
 
-
-// const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
-//   const nodeMap = new Map<number, TreeViewItem>()
-
-//   // Process all nodes and establish parent-child relationships
-//   hierarchies.forEach(hierarchy => {
-//     const processNode = (node: IGeoHierarchy) => {
-//       // Create the node if it doesn't exist
-//       if (!nodeMap.has(node.designationId)) {
-//         nodeMap.set(node.designationId, {
-//           id: node.designationId,
-//           name: `${node.designationName} - ${node.designationCode}`,
-//           type: 'designation',
-//           agentCode: node.designationCode || '',
-//           agentName: node.designationName || '',
-//           children: [],
-//         })
-//       }
-
-//       // If this node has a "parentLocation" (which is actually its child in the hierarchy)
-//       if (node.parentLocation) {
-//         // Process the child node
-//         processNode(node.parentLocation)
-        
-//         // Add the child to this node's children
-//         const parentNode = nodeMap.get(node.designationId)!
-//         const childNode = nodeMap.get(node.parentLocation.designationId)!
-        
-//         if (!parentNode.children?.some((c) => c.id === childNode.id)) {
-//           parentNode.children?.push(childNode)
-//         }
-//       }
-//     }
-
-//     processNode(hierarchy)
-//   })
-
-//   // The roots are the top-level nodes in the hierarchies array
-//   return hierarchies.map(h => nodeMap.get(h.designationId)!).filter(Boolean)
-// }
-
 const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
   const nodeMap = new Map<number, TreeViewItem>()
-  const rootNodes: TreeViewItem[] = []
+  let rootNode: TreeViewItem | null = null
 
-  // The items in the initial `hierarchies` array are the roots of the trees.
-  hierarchies.forEach(rootHierarchy => {
-    // Recursive function to traverse the chain of children.
-    const processNode = (node: IGeoHierarchy): TreeViewItem => {
-      // 1. Create the TreeViewItem for the current node if it doesn't exist.
-      if (!nodeMap.has(node.locationMasterId)) {
-        nodeMap.set(node.locationMasterId, {
-          id: node.locationMasterId,
-          name: `${node.locationName} - ${node.locationCode}`,
-          type: 'location',
-          agentCode: node.locationCode || '',
-          agentName: node.locationName || '',
-          children: [],
-        })
-      }
-      const currentNode = nodeMap.get(node.locationMasterId)!;
-
-      // 2. If the node has a "child" (misnamed as parentLocation), process it.
-      if (node.parentLocation) {
-        const childNode = processNode(node.parentLocation); // Recursively process the child
-        
-        // Add the child to the current node's children array if it's not already there.
-        if (!currentNode.children?.some((c) => c.id === childNode.id)) {
-          currentNode.children?.push(childNode);
-        }
-      }
+  // Process each hierarchy path
+  hierarchies.forEach(item => {
+    const processPath = (node: IGeoHierarchy, parent: TreeViewItem | null = null) => {
+      let currentNode = nodeMap.get(node.branchMasterId)
       
-      // 3. Return the current node.
-      return currentNode;
-    };
+      if (!currentNode) {
+        currentNode = {
+          id: node.branchMasterId.toString(),
+          name: node.branchName + ' - ' + node.branchCode,
+          type: 'location',
+          agentCode: '',
+          agentName: '',
+          branchCode: node.branchCode || '',
+          branchName: node.branchName || '',
+          parentBranchId: node.branchMasterId,
+          children: [],
+        } as unknown as TreeViewItem & { branchCode: string; branchName: string; parentBranchId: number }
+        nodeMap.set(node.branchMasterId, currentNode)
+      }
 
-    // Start processing from the root of this chain and add it to the list of roots.
-    const rootNode = processNode(rootHierarchy);
-    rootNodes.push(rootNode);
-  });
+      if (parent) {
+        // Check if this child is already added to the parent
+        if (!parent.children?.find(c => c.id === currentNode!.id)) {
+          parent.children?.push(currentNode!)
+        }
+      } else {
+        // This is the root node
+        rootNode = currentNode || null
+      }
 
-  return rootNodes;
+      if (node.parentLocation) {
+        processPath(node.parentLocation, currentNode)
+      }
+    }
+
+    processPath(item)
+  })
+
+  return rootNode ? [rootNode] : []
 }
 
 
 
 
 
-export const GeographicalHierarchy = ({ channelCode,locationCode,getOptions }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ channelCode,getOptions }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
     queryKey: ['geoHierarchy', channelCode],
     queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
@@ -116,10 +76,15 @@ export const GeographicalHierarchy = ({ channelCode,locationCode,getOptions }: G
   if (isLoading) return <Loader />
   if (isError) return <div className="text-center p-4 text-red-500">Failed to load geographical hierarchy.</div>
 
+  // console.log("see what get",geoHierarchy?.geoHierarchy) //in each object we have branchCode take that and pass to split
 
   const treeData = geoHierarchy?.geoHierarchy
     ? buildGeoHierarchyTree(geoHierarchy.geoHierarchy)
     : []
+
+  // Extract root branchMasterId (the one without parentLocation) to use as parentBranchId
+  const rootBranch = geoHierarchy?.geoHierarchy?.find((item: IGeoHierarchy) => !item.parentLocation)
+  const parentBranchId = rootBranch?.branchMasterId || 0
     
-  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} locationCode={locationCode} highlightLocationCode={locationCode} />
+  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} parentBranchId={parentBranchId} />
 }
