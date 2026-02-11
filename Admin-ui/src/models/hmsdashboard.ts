@@ -2,15 +2,15 @@ import { ICommissionMgmtDashboard } from "./commission";
 
 export interface IResponseHeader {
 
- errorCode: number;
+  errorCode: number;
 
- errorMessage: string;
+  errorMessage: string;
 
 }
 
 export interface ICommissionMgmtResponseBody {
 
- commissionMgmtDashboards: ICommissionMgmtDashboard[];
+  commissionMgmtDashboards: ICommissionMgmtDashboard[];
 
 }
 
@@ -55,10 +55,10 @@ export interface ICommissionMgmtDashboard {
 export interface IHmsDashboardApiResponse {
 
   responseHeader: IResponseHeader;
- 
+
   responseBody: IHmsDashboardResponseBody
- 
- }
+
+}
 
 // Channel Stats Interfaces
 export interface IChannel {
@@ -81,6 +81,7 @@ export interface IChannel {
 export interface IChannelStatsResponseBody {
   channels: IChannel[];
   totalEntities: number;
+
   activeEntities: number;
   terminatedEntities: number;
 }
@@ -92,6 +93,12 @@ export interface IDownloadReportRequest {
 export interface IDownloadReportResponseBody {
   fileDownload: IFileDownload | null
 }
+
+export interface fileResponseBody {
+  File: string;
+  FileType: string;
+}
+
 
 export interface IChannelStatsApiResponse {
   responseHeader: IResponseHeader;
