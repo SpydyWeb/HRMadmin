@@ -23,7 +23,7 @@ import {
 import { FiUpload } from 'react-icons/fi'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { HMSService } from '@/services/HMSService'
+import { HMSService } from '@/services/hmsService'
 
 type JsonElement = { [key: string]: string | number | boolean | null }
 let excelData: JsonElement[] = []
