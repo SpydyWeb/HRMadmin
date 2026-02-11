@@ -60,9 +60,31 @@ export async function callApi<T>(
   args: Array<unknown> = [],
   headers: Record<string, string> = {},
 ): Promise<T> {
+  console.log('====================================');
+  console.log(headers);
+  console.log('====================================');
   return encryptedPost(APIRoutes.PROXY, {
     fn,
     args,
-    headers: { Authorization: `Bearer ${JSON.parse(auth.getToken())?.token}` },
+    headers: { Authorization: `Bearer ${JSON.parse(auth.getToken())?.token}`,...headers },
   }) as Promise<T>
+}
+
+// File upload helper for FormData - bypasses encryption
+export async function uploadFile<T>(
+  formData: FormData,
+  headers: Record<string, string> = {},
+): Promise<T> {
+  const token = JSON.parse(auth.getToken())?.token
+  
+  // Send directly to /api/upload endpoint
+  // Let axios handle Content-Type automatically with FormData
+  const response = await apiClient.post<T>(APIRoutes.UPLOADPROXY, formData, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      // Don't set Content-Type - axios will set it automatically for FormData
+      ...headers,
+    },
+  })
+  return response
 }

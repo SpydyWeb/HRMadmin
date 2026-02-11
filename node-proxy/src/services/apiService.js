@@ -37,8 +37,30 @@ const GetMasters = (data, headers = {}) => {
   return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
 };
 const file = (data, headers = {}) => {
-  return apiClient.post(APIRoutes.UPLOADFILES, data, { headers });
+  console.log('====================================');
+  console.log('File upload request:');
+  console.log('Data type:', typeof data, 'Is FormData:', typeof data?.getHeaders === 'function');
+  console.log('Headers:', headers);
+  console.log('====================================');
+  
+  return apiClient.post(APIRoutes.UPLOADFILES, data, { headers }).then(response => {
+    console.log('====================================');
+    console.log('File upload response received:');
+    console.log('Response type:', typeof response);
+    console.log('Response:', JSON.stringify(response, null, 2));
+    console.log('Response status:', response?.status);
+    console.log('Response statusCode:', response?.statusCode);
+    console.log('====================================');
+    return response;
+  }).catch(err => {
+    console.error('====================================');
+    console.error('File upload error:');
+    console.error('Error:', err.message);
+    console.error('====================================');
+    throw err;
+  });
 };
+
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
     try {

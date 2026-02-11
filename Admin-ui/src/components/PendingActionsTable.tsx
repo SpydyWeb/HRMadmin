@@ -73,7 +73,7 @@ export default function PendingActionsTable() {
   }
 
   const { mutate: uploadFile } = useMutation({
-    mutationFn: (fileData: any) => HMSService.getHmsFile(fileData),
+    mutationFn: (fileData: FormData) => HMSService.getHmsFile(fileData),
     onSuccess: () => {
       setLoading(false)
       setOpen(false)
@@ -86,14 +86,21 @@ export default function PendingActionsTable() {
   })
 
 
-  const handleUpload = () => {
-    if (!selectedFile) return
-    setLoading(true)
-    const fileName = selectedFile.name
-    const fileType = selectedRow?.Activity
-    let fileData = { 'File': fileName, 'FileType': fileType }
-    uploadFile(fileData);
-  }
+ const handleUpload = () => {
+  if (!selectedFile) return;
+
+  setLoading(true);
+
+  const formData = new FormData();
+
+  // Actual file object
+  formData.append("File", selectedFile);
+
+  // Extra field
+  formData.append("FileType", selectedRow?.Activity || "");
+  uploadFile(formData);
+};
+
 
 
   const columns = [

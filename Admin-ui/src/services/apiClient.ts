@@ -5,7 +5,7 @@ import { storage } from '@/utils/storage'
 
 const api = axios.create({
   baseURL:APIRoutes.BASEURL,
-  headers: { 'Content-Type': 'application/json' },
+  // headers: { 'Content-Type': 'application/json' },
   validateStatus: () => true, // so 400/401 don't throw
 })
 

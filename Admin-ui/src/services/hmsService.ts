@@ -1,7 +1,16 @@
-import { callApi } from './apiService'
+import { callApi, uploadFile } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
-import type { IHmsDashboardResponseBody, IHmsDashboardApiResponse, IDownloadReportRequest,IChannelStatsApiResponse, IDownloadReportResponseBody,IUploadFileListApiResponse, fileApiResponse, fileResponseBody } from '@/models/hmsdashboard'
+import type {
+  IHmsDashboardResponseBody,
+  IHmsDashboardApiResponse,
+  IDownloadReportRequest,
+  IChannelStatsApiResponse,
+  IDownloadReportResponseBody,
+  IUploadFileListApiResponse,
+  fileApiResponse,
+  fileResponseBody,
+} from '@/models/hmsdashboard'
 import { apiClient } from './apiClient'
 
 export const HMSService = {
@@ -11,7 +20,7 @@ export const HMSService = {
         APIRoutes.HMS_DASHBOARD,
         [data],
       )
-      console.log("hms dashboard response", response)
+      console.log('hms dashboard response', response)
       return response
     } catch (error) {
       console.error(error)
@@ -19,14 +28,13 @@ export const HMSService = {
     }
   },
 
-
   hmsOverviewStats: async () => {
     try {
       const response = await callApi<ApiResponse<IChannelStatsApiResponse>>(
         APIRoutes.HMS_OVERVIEW_STATS,
         [{}], // Pass empty object as data parameter
       )
-      console.log("hms channel stats response", response)
+      console.log('hms channel stats response', response)
       return response
     } catch (error) {
       console.error(error)
@@ -40,32 +48,32 @@ export const HMSService = {
         APIRoutes.UPLOAD_FILE_LIST,
         [],
       )
-      console.log("upload file list response", response)
+      console.log('upload file list response', response)
       return response
     } catch (error) {
       console.error(error)
       throw error
     }
   },
-  downloadReport: async (data:IDownloadReportRequest) => {
+  downloadReport: async (data: IDownloadReportRequest) => {
     try {
       const response = await callApi<ApiResponse<IDownloadReportResponseBody>>(
-        APIRoutes.DOWNLOAD_REPORT,[data],
+        APIRoutes.DOWNLOAD_REPORT,
+        [data],
       )
-            return response
+      return response
     } catch (error) {
-      console.error("downloadRecord service error:", error);
+      console.error('downloadRecord service error:', error)
       throw error
     }
   },
 
-  getHmsFile: async (data: fileResponseBody) => {
+  getHmsFile: async (formData: FormData) => {
     try {
-      const response = await callApi<ApiResponse<fileApiResponse>>(
-        APIRoutes.HMS_FILE,
-        [data],
+      const response = await uploadFile<ApiResponse<fileApiResponse>>(
+        formData
       )
-      console.log("hms dashboard response", response)
+      console.log('hms file upload response', response)
       return response
     } catch (error) {
       console.error(error)

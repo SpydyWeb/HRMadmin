@@ -7,6 +7,7 @@ const cluster = require("cluster");
 const os = require("os");
 const compression = require("compression");
 const morgan = require("morgan");
+const multer = require("multer");
 const config = require("./config");
 const { encryptionService } = require("./services/encryptionService");
 const apiService = require("./services/apiService");
@@ -80,6 +81,135 @@ const numCPUs = os.cpus().length;
   if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
   }
+
+  // Multer setup for file uploads
+  const upload = multer({ storage: multer.memoryStorage() });
+
+  // File Upload Endpoint - MUST be before the generic /api routes
+  console.log("🔧 Setting up /api/file endpoint");
+  app.post('/api/file', upload.fields([{ name: 'File' }, { name: 'FileType' }]), async (req, res) => {
+    try {
+      console.log('📁 /api/file endpoint hit');
+      console.log('Files received:', req.files?.File?.length || 0);
+      console.log('FileType:', req.body?.FileType);
+      
+      // Validate file exists
+      if (!req.files?.File || req.files.File.length === 0) {
+        console.error('❌ No file provided');
+        return res.status(400).json({ error: 'No file provided' });
+      }
+      
+      const FormData = require('form-data');
+      const formData = new FormData();
+      
+      // Add files to FormData
+      for (const file of req.files.File) {
+        console.log(`Adding file: ${file.originalname} (${file.size} bytes)`);
+        formData.append('File', file.buffer, file.originalname);
+      }
+      
+      // Add FileType if provided
+      const fileType = req.body?.FileType;
+      if (fileType) {
+        formData.append('FileType', fileType);
+        console.log(`Adding FileType: ${fileType}`);
+      }
+      
+      // Prepare headers - merge FormData headers with auth
+      const headers = {
+        ...formData.getHeaders(),
+      };
+      
+      if (req.headers.authorization) {
+        const authHeader = Array.isArray(req.headers.authorization) 
+          ? req.headers.authorization[0] 
+          : String(req.headers.authorization);
+        headers.authorization = authHeader;
+        console.log('✓ Forwarding Authorization header (file endpoint)');
+      }
+      
+      console.log('Headers being sent:', Object.keys(headers));
+      console.log('Calling apiService.file()');
+      const result = await apiService.file(formData, { headers });
+      
+      console.log('Result from apiService.file():', JSON.stringify(result, null, 2));
+      
+      if (!result || (typeof result === 'string' && result.length === 0)) {
+        console.error('❌ apiService.file() returned empty or null response:', result);
+        console.error('Error might be in the request itself or API response format');
+        return res.status(500).json({ error: 'API returned empty response', result });
+      }
+      
+      console.log('✅ File upload successful:', result);
+      res.json(result);
+    } catch (err) {
+      console.error('❌ File upload error:', err);
+      res.status(500).json({ error: err.message || String(err) });
+    }
+  });
+
+  // Alias endpoint for backward compatibility
+  console.log("🔧 Setting up /api/upload endpoint (alias for /api/file)");
+  app.post('/api/upload', upload.fields([{ name: 'File' }, { name: 'FileType' }]), async (req, res) => {
+    try {
+      console.log('📁 /api/upload endpoint hit');
+      console.log('Files received:', req.files?.File?.length || 0);
+      console.log('FileType:', req.body?.FileType);
+      
+      // Validate file exists
+      if (!req.files?.File || req.files.File.length === 0) {
+        console.error('❌ No file provided');
+        return res.status(400).json({ error: 'No file provided' });
+      }
+      
+      const FormData = require('form-data');
+      const formData = new FormData();
+      
+      // Add files to FormData
+      for (const file of req.files.File) {
+        console.log(`Adding file: ${file.originalname} (${file.size} bytes)`);
+        formData.append('File', file.buffer, file.originalname);
+      }
+      
+      // Add FileType if provided
+      const fileType = req.body?.FileType;
+      if (fileType) {
+        formData.append('FileType', fileType);
+        console.log(`Adding FileType: ${fileType}`);
+      }
+      
+      // Prepare headers - merge FormData headers with auth
+      const headers = {
+        ...formData.getHeaders(),
+      };
+      
+      if (req.headers.authorization) {
+        const authHeader = Array.isArray(req.headers.authorization) 
+          ? req.headers.authorization[0] 
+          : String(req.headers.authorization);
+        headers.authorization = authHeader;
+        console.log('✓ Forwarding Authorization header (upload endpoint)');
+      }
+      
+      console.log('Headers being sent:', Object.keys(headers));
+      console.log('Calling apiService.file()');
+      const result = await apiService.file(formData, { headers });
+      
+      console.log('Result from apiService.file():', JSON.stringify(result, null, 2));
+      
+      if (!result || (typeof result === 'string' && result.length === 0)) {
+        console.error('❌ apiService.file() returned empty or null response:', result);
+        console.error('Error might be in the request itself or API response format');
+        return res.status(500).json({ error: 'API returned empty response', result });
+      }
+      
+      console.log('✅ File upload successful:', result);
+      res.json(result);
+    } catch (err) {
+      console.error('❌ File upload error:', err);
+      res.status(500).json({ error: err.message || String(err) });
+    }
+  });
 
   // Routes
   app.use("/api", apiRoutes);

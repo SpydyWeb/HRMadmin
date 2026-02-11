@@ -3,6 +3,7 @@ export const APIRoutes = {
   // BASEURL:"https://hrmadmin-nodeproxxy.onrender.com/",
   BASEURL: import.meta.env.VITE_API_URL,
   PROXY: '/api/proxy',
+  UPLOADPROXY: '/api/upload',
   CHUNKS: 'getHRMChunks',
   SEARCH: 'search',
   SEARCHBYCODE: 'searchbycode',
