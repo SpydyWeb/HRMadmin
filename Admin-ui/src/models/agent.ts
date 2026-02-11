@@ -321,10 +321,10 @@ export interface IPeopleHierarchy {
   supervisors?: IPeopleHierarchy | null
 }
 export interface IGeoHierarchy {
-  designationCode: string,
-  designationId: number,
-  designationName: string,
-  hierarchyPath: string,  
+  branchMasterId: number
+branchName: string
+ branchCode: string
+  hierarchyPath: string  | null
   parentLocation: IGeoHierarchy | null
 }
 
