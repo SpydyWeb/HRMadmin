@@ -62,7 +62,7 @@ const downloadExcel = (row: any) => {
 export default function PendingActionsTable() {
   const navigate = useNavigate()
   const { buildPath } = useContextPath()
-
+  const [isLoading, setLoading] = useState(false);
   const [open, setOpen] = useState(false)
   const [selectedRow, setSelectedRow] = useState<any>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -72,25 +72,29 @@ export default function PendingActionsTable() {
     navigate({ to: buildPath(path) })
   }
 
-  // ✅ Upload Mutation
-  const { mutate: uploadFile, isLoading } = useMutation({
-    mutationFn: (formData: FormData) => HMSService.getHmsFile(formData),
+  const { mutate: uploadFile } = useMutation({
+    mutationFn: (fileData: any) => HMSService.getHmsFile(fileData),
     onSuccess: () => {
+      setLoading(false)
       setOpen(false)
       setSelectedFile(null)
     },
     onError: (err) => {
+      setLoading(false)
       console.error('Upload failed', err)
     },
   })
 
+
   const handleUpload = () => {
     if (!selectedFile) return
-    const formData = new FormData()
-    formData.append('file', selectedFile)
-    formData.append('activity', selectedRow?.Activity)
-    uploadFile(formData)
+    setLoading(true)
+    const fileName = selectedFile.name
+    const fileType = selectedRow?.Activity
+    let fileData = { 'File': fileName, 'FileType': fileType }
+    uploadFile(fileData);
   }
+
 
   const columns = [
     { header: 'Activity', accessor: 'Activity' },
@@ -175,7 +179,7 @@ export default function PendingActionsTable() {
           </div>
 
           <AlertDialogFooter className="mt-6 flex justify-end gap-3">
-            <AlertDialogCancel className="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <AlertDialogCancel onClick={() => setLoading(false)} className="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
               Cancel
             </AlertDialogCancel>
           </AlertDialogFooter>

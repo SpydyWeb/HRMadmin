@@ -36,7 +36,9 @@ const AgentByCode = (data, headers = {}) => {
 const GetMasters = (data, headers = {}) => {
   return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
 };
-
+const file = (data, headers = {}) => {
+  return apiClient.post(APIRoutes.UPLOADFILES, data, { headers });
+};
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
     try {
@@ -101,20 +103,20 @@ const updateStatus = (data = {}, headers = {}) => {
 const searchFieldsConfig = (data = {}, headers = {}) => {
   // console.log("### search fields:", data);
   // console.log("### search fields headers:", headers);
-  return apiClient.get(APIRoutes.COMMISSIONSEARCHFIELDS, { 
-    params: data, 
-    headers: headers 
+  return apiClient.get(APIRoutes.COMMISSIONSEARCHFIELDS, {
+    params: data,
+    headers: headers
   });
 };
 
-const editAgentDetails = async (data ,sectionName, agentid, headers = {}) => {
-  
+const editAgentDetails = async (data, sectionName, agentid, headers = {}) => {
 
-console.log("📝 Edit agent details input:", data,`${APIRoutes.EDITAGENT}/${agentid}/${sectionName}`);
-if(!agentid){
-  throw new Error("Agent ID is required");
-}
-  if(!sectionName){
+
+  console.log("📝 Edit agent details input:", data, `${APIRoutes.EDITAGENT}/${agentid}/${sectionName}`);
+  if (!agentid) {
+    throw new Error("Agent ID is required");
+  }
+  if (!sectionName) {
     throw new Error("Section name is required");
   }
 
@@ -125,7 +127,7 @@ if(!agentid){
 const executiveHistoryList = (data = {}, headers = {}) => {
   // console.log("config commission executive history list:", data);
   const { jobConfigId } = data;
-  const pathId =  jobConfigId;
+  const pathId = jobConfigId;
   if (!pathId) {
     throw new Error("jobConfigId is required for executive history list");
   }
@@ -154,7 +156,7 @@ const GeoHierarchy = (channelCategory, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
 };
 
-const GeoHierarchyTable = (channelCategory,locationCode, headers = {}) => {
+const GeoHierarchyTable = (channelCategory, locationCode, headers = {}) => {
   return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { channelCode: channelCategory, locationCode: locationCode }, { headers });
 }
 
@@ -172,12 +174,12 @@ const uploadFileList = (headers = {}) => {
   console.log("uploadFileList called");
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
-const downloadReport = (id,reportType, headers = {}) => {
+const downloadReport = (id, reportType, headers = {}) => {
   console.log("downloadReport called with reportId:", id);
   if (!id) {
     throw new Error("reportId is required for download report");
   }
-  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, {}, { 
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, {}, {
     headers,
     responseType: 'blob' // Handle blob/file responses
   });
@@ -193,6 +195,7 @@ module.exports = {
   Agentbyid,
   AgentByCode,
   GetMasters,
+  file,
   GetMastersBulk,
   getCommissionData,
   processCommission,
@@ -202,12 +205,12 @@ module.exports = {
   configcommission,
   updateConditionConfig,
   configList,
-  updateCron, 
+  updateCron,
   updateStatus,
   searchFieldsConfig,
   editAgentDetails,
-  executiveHistoryList ,
-  editCommission ,
+  executiveHistoryList,
+  editCommission,
   downloadRecord,
   GeoHierarchy,
   GeoHierarchyTable,

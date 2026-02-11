@@ -23,8 +23,10 @@ const APIRoutes = {
   GEOHIERARCHYTABLE: "/api/Agent/ReporteesByChannelLocation",
   HMSDASHBOARD: "/api/HMSDashboard/GetHMSDashboard",
   CHANNELSTATS: "/api/HMSDashboard/channel-stats",
-  UPLOADFILELIST:"/uploaded-file-list",
-  DOWNLOADREPORT:"/download-report"
+  UPLOADFILELIST: "/uploaded-file-list",
+  DOWNLOADREPORT: "/download-report",
+  GETMASTERS: "/api/AppMasters/get",
+  UPLOADFILES: "/api/file",
 };
 
 module.exports = { APIRoutes };

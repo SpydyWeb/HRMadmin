@@ -2,15 +2,15 @@ import { ICommissionMgmtDashboard } from "./commission";
 
 export interface IResponseHeader {
 
- errorCode: number;
+  errorCode: number;
 
- errorMessage: string;
+  errorMessage: string;
 
 }
 
 export interface ICommissionMgmtResponseBody {
 
- commissionMgmtDashboards: ICommissionMgmtDashboard[];
+  commissionMgmtDashboards: ICommissionMgmtDashboard[];
 
 }
 
@@ -55,10 +55,10 @@ export interface ICommissionMgmtDashboard {
 export interface IHmsDashboardApiResponse {
 
   responseHeader: IResponseHeader;
- 
+
   responseBody: IHmsDashboardResponseBody
- 
- }
+
+}
 
 // Channel Stats Interfaces
 export interface IChannel {
@@ -85,7 +85,18 @@ export interface IChannelStatsResponseBody {
   terminatedEntities: number;
 }
 
+export interface fileResponseBody {
+  File: string;
+  FileType: string;
+}
+
+
 export interface IChannelStatsApiResponse {
   responseHeader: IResponseHeader;
   responseBody: IChannelStatsResponseBody;
+}
+
+export interface fileApiResponse {
+  responseHeader: IResponseHeader;
+  responseBody: fileResponseBody;
 }
