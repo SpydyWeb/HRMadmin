@@ -26,7 +26,7 @@ const APIRoutes = {
   UPLOADFILELIST: "/uploaded-file-list",
   DOWNLOADREPORT: "/download-report",
   GETMASTERS: "/api/AppMasters/get",
-  UPLOADFILES: "/api/file",
+  UPLOADFILES: "/file",
 };
 
 module.exports = { APIRoutes };

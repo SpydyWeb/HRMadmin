@@ -10,6 +10,7 @@ import type {
   IUploadFileListApiResponse,
   fileApiResponse,
   fileResponseBody,
+  IFileUploadApiResponse,
 } from '@/models/hmsdashboard'
 import { apiClient } from './apiClient'
 
@@ -70,10 +71,10 @@ export const HMSService = {
 
   getHmsFile: async (formData: FormData) => {
     try {
-      const response = await uploadFile<ApiResponse<fileApiResponse>>(
-        formData
+      const response = await uploadFile<ApiResponse<IFileUploadApiResponse>>(
+        formData,
+        APIRoutes.HMS_FILE,
       )
-      console.log('hms file upload response', response)
       return response
     } catch (error) {
       console.error(error)

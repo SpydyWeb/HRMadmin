@@ -104,5 +104,14 @@ export interface IChannelStatsApiResponse {
   responseHeader: IResponseHeader;
   responseBody: IChannelStatsResponseBody | IDownloadReportResponseBody
 }
+export interface IFileUploadApiResponse {
+  responseHeader: IResponseHeader;
+  responseBody: IFileUpload
+}
 
-
+export interface IFileUpload {
+  fileTaskId: number
+  fileName: string
+  filePath: string
+  fileType: string
+}

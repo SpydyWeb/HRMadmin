@@ -15,7 +15,7 @@ const request = async (method, url, data, config = {}) => {
     const payload = data ? data : undefined;
 
     // Check if data is FormData
-    const isFormData = payload && typeof payload.getHeaders === 'function';
+    const isFormData = payload && typeof payload.getHeaders === "function";
 
     // Forward Authorization header if exists
     const headers = {
@@ -39,19 +39,31 @@ const request = async (method, url, data, config = {}) => {
     }
 
     // Merge other config options but avoid overriding data/method/url
-    Object.keys(config).forEach(key => {
-      if (!['headers', 'data', 'method', 'url'].includes(key)) {
+    Object.keys(config).forEach((key) => {
+      if (!["headers", "data", "method", "url"].includes(key)) {
         requestConfig[key] = config[key];
       }
     });
-
-    console.log('🌐 API Request:', method.toUpperCase(), url);
+    console.log("🌐 API Request:", method.toUpperCase(), url);
     const response = await api.request(requestConfig);
-    console.log('📥 API Response Status:', response.status || response.statusCode);
-    console.log('📥 API Response Data:', response.data ? (typeof response.data === 'string' ? response.data.substring(0, 100) : JSON.stringify(response.data).substring(0, 100)) : 'null');
+    console.log(
+      "📥 API Response Status:",
+      response.status || response.statusCode,
+    );
+    console.log(
+      "📥 API Response Data:",
+      response.data
+        ? typeof response.data === "string"
+          ? response.data.substring(0, 100)
+          : JSON.stringify(response.data).substring(0, 100)
+        : "null",
+    );
 
     // Handle blob responses (file downloads)
-    if (config.responseType === 'blob' || config.responseType === 'arraybuffer') {
+    if (
+      config.responseType === "blob" ||
+      config.responseType === "arraybuffer"
+    ) {
       return response.data;
     }
 
