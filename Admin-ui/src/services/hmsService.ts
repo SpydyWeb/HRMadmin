@@ -80,4 +80,18 @@ export const HMSService = {
       throw error
     }
   },
+
+  getRoles: async () => {
+    try {
+      const response = await callApi(
+        APIRoutes.GET_ROLES,
+        [{}],
+      )
+      return response
+    } catch (error) {
+      console.error('downloadRecord service error:', error)
+      throw error
+    }
+  },
+
 }

@@ -42,7 +42,7 @@ const file = (data, headers = {}) => {
   console.log('Data type:', typeof data, 'Is FormData:', typeof data?.getHeaders === 'function');
   console.log('Headers:', headers);
   console.log('====================================');
-  
+
   return apiClient.post(APIRoutes.UPLOADFILES, data, { headers }).then(response => {
     console.log('====================================');
     console.log('File upload response received:');
@@ -60,6 +60,11 @@ const file = (data, headers = {}) => {
     throw err;
   });
 };
+
+const rolesList = (data, headers = {}) => {
+  return apiClient.post(APIRoutes.GETROLES, data, { headers });
+};
+
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -179,7 +184,7 @@ const GeoHierarchy = (channelCategory, headers = {}) => {
 };
 
 const GeoHierarchyTable = (parentBranchId, headers = {}) => {
-  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { parentBranchId: parentBranchId}, { headers });
+  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { parentBranchId: parentBranchId }, { headers });
 }
 
 const hmsDashboard = (data = {}, headers = {}) => {
@@ -197,12 +202,12 @@ const uploadFileList = (headers = {}) => {
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
 
-const downloadReport = (data={}, headers = {}) => {
+const downloadReport = (data = {}, headers = {}) => {
   const { id, reportType } = data;
   if (!id || !reportType) {
     throw new Error("reportId and reportType are required for download report");
   }
-  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`,data, { headers,});
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, data, { headers, });
 }
 
 
@@ -216,6 +221,7 @@ module.exports = {
   AgentByCode,
   GetMasters,
   file,
+  rolesList,
   GetMastersBulk,
   getCommissionData,
   processCommission,

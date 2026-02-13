@@ -27,6 +27,8 @@ const APIRoutes = {
   DOWNLOADREPORT: "/download-report",
   GETMASTERS: "/api/AppMasters/get",
   UPLOADFILES: "/api/file",
+  GETROLES: "/api/RoleMaster/RolesList",
+
 };
 
 module.exports = { APIRoutes };
