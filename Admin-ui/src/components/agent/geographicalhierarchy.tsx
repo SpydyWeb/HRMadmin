@@ -8,8 +8,13 @@ import SplitTreeTableGeo from '../ui/SplitTreeViewGeo'
 
 interface GeoHierarchyProps {
   Agent: { agentId: number }
-  channelCode?: string | null
+  channelCode?: number | null
   getOptions: (key: string) => any[]
+  branchCode:  number | null
+  subChannelCode?: number | null
+  highlightBranch?: string
+  locationCode?: string | null
+  officeType?: string | null
 }
 
 const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeViewItem> => {
@@ -24,8 +29,8 @@ const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeVie
       if (!currentNode) {
         currentNode = {
           id: node.branchMasterId.toString(),
-          name: node.branchName + ' - ' + node.branchCode,
-          type: 'location',
+          name: node.branchName,
+          type: node.locationDesc,
           agentCode: '',
           agentName: '',
           branchCode: node.branchCode || '',
@@ -61,11 +66,11 @@ const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeVie
 
 
 
-export const GeographicalHierarchy = ({ channelCode,getOptions }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ channelCode,branchCode,subChannelCode,getOptions,highlightBranch,locationCode,officeType }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
-    queryKey: ['geoHierarchy', channelCode],
-    queryFn: () => agentService.fetchGeoHierarchy(channelCode || ''),
-    enabled: !!channelCode, 
+    queryKey: ['geoHierarchy', channelCode,branchCode,subChannelCode],
+    queryFn: () => agentService.fetchGeoHierarchy(channelCode, branchCode, subChannelCode),
+    enabled: !!channelCode && !!branchCode, 
     staleTime: 5 * 60 * 1000, 
   })
 
@@ -86,5 +91,5 @@ export const GeographicalHierarchy = ({ channelCode,getOptions }: GeoHierarchyPr
   const rootBranch = geoHierarchy?.geoHierarchy?.find((item: IGeoHierarchy) => !item.parentLocation)
   const parentBranchId = rootBranch?.branchMasterId || 0
     
-  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} parentBranchId={parentBranchId} />
+  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} parentBranchId={parentBranchId} highlightBranch={highlightBranch} officeType={officeType} locationCode={locationCode} />
 }

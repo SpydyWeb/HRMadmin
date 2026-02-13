@@ -67,9 +67,23 @@ const Agent: React.FC = () => {
     )
     // console.log("whatis the channel entry", channelEntry)
     
-    return channelEntry?.entryCategory || null
+    return channelEntry?.entryIdentity || null
   }
- 
+
+  const getBranchCode = (agent: any): string | null => {
+    if (!agent?.branch) return null
+    
+    const branchItems = masterData[MASTER_DATA_KEYS.Office_Location] || []
+    // console.log("whatis the channel items", channelItems)
+    const branchEntry = branchItems.find(
+      (x: any) => (x.entryIdentity ?? x.id) === agent.branch
+    )
+    // console.log("whatis the channel entry", channelEntry)
+    
+    return branchEntry?.entryIdentity || null
+  }
+
+  const getSubChannelCode = null
 
   // Agent query: same key & signature used by loader
   const {
@@ -110,6 +124,7 @@ const Agent: React.FC = () => {
   if (localError) return <div className="p-4 text-red-600">Error: {localError}</div>
 
   const firstAgent = (agentData?.responseBody?.agents ?? [])[0] ?? null
+
 
 
   return (
@@ -170,6 +185,11 @@ const Agent: React.FC = () => {
             Agent={firstAgent} 
             channelCode={getChannelCategory(firstAgent)}
             getOptions={getOptions}
+            branchCode={getBranchCode(firstAgent)}
+            subChannelCode={getSubChannelCode}
+            highlightBranch={firstAgent?.branch}
+            locationCode={firstAgent?.locationCode}
+            officeType={firstAgent?.branchDesc}
           />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>
