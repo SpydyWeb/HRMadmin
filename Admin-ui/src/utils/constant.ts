@@ -59,5 +59,6 @@ export const MASTER_DATA_KEYS = {
   SUB_CHANNELS:"SubChannel",
   DESIGNATION:"Designation",
   CHANNEL:"Channel",
-  LOCATION:"Location"
+  Office_Type:"Location",
+  Office_Location:"Branch",
 }

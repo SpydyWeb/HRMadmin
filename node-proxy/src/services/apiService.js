@@ -149,11 +149,12 @@ const downloadRecord = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.DOWNLOADRECORD}/${jobExeHistId}`, data, { headers });
 };
 
-const GeoHierarchy = (channelCategory, headers = {}) => {
-  if (!channelCategory) {
+const GeoHierarchy = (channelCategory,subChannelCode,branchCode, headers = {}) => {
+  if (!channelCategory && !branchCode) {
     throw new Error("channelCategory is required for GeoHierarchy");
   }
-  return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory }, { headers });
+  console.log("Fetching GeoHierarchy with channelCategory:", channelCategory, "subChannelCode:", subChannelCode, "branchCode:", branchCode);
+  return apiClient.post(APIRoutes.GEOHIERARCHY, { channelCode: channelCategory, subChannelCode: subChannelCode, branchCode: branchCode }, { headers });
 };
 
 const GeoHierarchyTable = (parentBranchId, headers = {}) => {

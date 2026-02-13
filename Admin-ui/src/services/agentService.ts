@@ -52,11 +52,12 @@ export const agentService = {
     return response.responseBody?.agents?.[0] || null
   },
 
-  fetchGeoHierarchy: async (channelCategory: string) => {
+  fetchGeoHierarchy: async (channelCategory: number,branchCode:number,subChannelCode?:number) => {
     const response = await callApi<ApiResponse<any>>(
       APIRoutes.GEO_HIERARCHY,
-      [channelCategory],
+      [channelCategory, subChannelCode, branchCode],
     )
+    console.log('fetchGeoHierarchy full response:', response)
     if (response?.responseBody) {
      
       if (response.responseBody.geoHierarchy) {

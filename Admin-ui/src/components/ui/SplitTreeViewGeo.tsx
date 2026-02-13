@@ -48,7 +48,8 @@ interface SplitTreeTableGeoProps {
   isLoading?: boolean;
   channelCode?: string | null;
   locationCode?: string | null;
-  highlightLocationCode?: string | null;
+  highlightBranch?: number | null;
+  officeType?: string | null;
   getOptions: (key: string) => any[];
   parentBranchId:number
 }
@@ -61,8 +62,9 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   isLoading = false,
   channelCode,
   locationCode,
-  highlightLocationCode,
+  highlightBranch,
   getOptions,
+  officeType,
   parentBranchId
 }) => {
   // Tree view states
@@ -224,7 +226,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedIds.has(item.id);
     const isSelected = selectedNode?.id === item.id;
-    const isHighlighted = highlightLocationCode && item.agentCode?.toLowerCase() === highlightLocationCode?.toLowerCase();
+    const isHighlighted = highlightBranch && item.parentBranchId === highlightBranch;
 
     return (
       <div key={item.id}>
@@ -317,24 +319,55 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-200px)]">
       {/* LEFT PANEL - Tree View */}
-      <Card className="col-span-12 lg:col-span-4 xl:col-span-3 overflow-hidden flex flex-col">
-        <CardHeader className="pb-3 border-b">
+      <Card className="col-span-12 lg:col-span-4 xl:col-span-4 overflow-hidden flex flex-col h-full">
+        <CardHeader className="pb-3 border-b flex-shrink-0">
           <CardTitle className="flex items-center gap-2 text-lg">
             <FiUsers className="h-5 w-5" />
             Hierarchy Navigator
           </CardTitle>
         </CardHeader>
-        <ScrollArea className="flex-1">
-          <CardContent className="pt-4 pb-2">
-            {treeData?.map((item) => renderTreeNode(item))}
-          </CardContent>
-        </ScrollArea>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ScrollArea className="h-full">
+            <CardContent className="pt-4 pb-2">
+              {treeData?.map((item) => renderTreeNode(item))}
+            </CardContent>
+          </ScrollArea>
+        </div>
       </Card>
 
       {/* RIGHT PANEL - Table with Search & Pagination */}
-      <Card className="col-span-12 lg:col-span-8 xl:col-span-9 overflow-hidden flex flex-col">
+      <Card className="col-span-12 lg:col-span-8 xl:col-span-8 overflow-hidden flex flex-col">
         <CardHeader className="pb-3 border-b">
           <div className="flex flex-col gap-3">
+          <div className="flex  gap-2">
+            <p>Select Office Type</p>
+              <Select value={officeType || ''} disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Office Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getOptions(MASTER_DATA_KEYS.Office_Type).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p>Select Location</p>
+              <Select value={locationCode || ''} disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getOptions(MASTER_DATA_KEYS.Office_Type).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+     
           
             <div className="flex  items-center justify-between">
              
