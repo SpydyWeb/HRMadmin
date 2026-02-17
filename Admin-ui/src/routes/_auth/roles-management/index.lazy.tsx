@@ -4,7 +4,7 @@ import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { HMSService } from '@/services/hmsService'
 import DataTable from '@/components/table/DataTable'
-import Swal from 'sweetalert2'
+import swal from "sweetalert2"
 import {
   AlertDialog,
   AlertDialogCancel,

@@ -849,7 +849,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       {
         name: 'accountNumber',
         label: 'Bank Account No',
-        type: 'text',
+        type: 'masked',
         colSpan: 4,
         readOnly: !isEdit,
         variant: 'standard',
