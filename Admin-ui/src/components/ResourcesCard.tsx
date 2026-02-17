@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiExternalLink,FiSearch } from "react-icons/fi";
+import { FiExternalLink, FiSearch } from "react-icons/fi";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Link } from "@tanstack/react-router";
@@ -8,14 +8,20 @@ interface ResourceItem {
   title: string;
   link: string;
 }
- const resources = [
-    { title: "Tips", link: "/tips" },
-    { title: "User Manual", link: "/manual" },
-    { title: "Review Masters", link: "/review-masters" },
-    { title: "Review Structure", link: "/review-structure" },
-    { title: "Review Access", link: "/review-access" },
-    { title: "User Inbox", link: "/user-inbox" },
-  ];
+
+interface ResourcesCardProps {
+  resources: ResourceItem[];
+}
+
+const resources = [
+  { title: "Tips", link: "/tips" },
+  { title: "User Manual", link: "/manual" },
+  { title: "Review Masters", link: "/review-masters" },
+  { title: "Review Structure", link: "/review-structure" },
+  { title: "Review Access", link: "/review-access" },
+  { title: "Roles Management", link: "/roles-management" }, // ✅ FIXED
+   { title: "User Inbox", link: "/user-inbox" },
+];
 
 export default function ResourcesCard() {
   const [search, setSearch] = useState("");
@@ -48,7 +54,7 @@ export default function ResourcesCard() {
           {filteredResources.map((item, index) => (
             <Link
               key={index}
-              to={item.link}
+              to={item.link as any}
               className="flex items-center justify-between rounded-lg bg-gray-100 hover:bg-gray-100 p-3 transition"
             >
               <span className="text-sm font-medium text-gray-700">
@@ -57,6 +63,7 @@ export default function ResourcesCard() {
               <FiExternalLink className="text-gray-500" />
             </Link>
           ))}
+
         </div>
       </CardContent>
     </Card>

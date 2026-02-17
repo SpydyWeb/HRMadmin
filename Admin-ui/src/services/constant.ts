@@ -9,7 +9,7 @@ export const APIRoutes = {
   SEARCHBYCODE: 'searchbycode',
   LOGIN: 'login',
   AGENTBYID: 'Agentbyid',
-  AGENTBYCODE: 'AgentByCode', 
+  AGENTBYCODE: 'AgentByCode',
   GETCOMMISSIONDATA: 'getCommissionData',
   GETMASTERS: 'GetMasters',
   PROCESSCOMMISSION: 'processCommission',
@@ -24,7 +24,7 @@ export const APIRoutes = {
   COMMISSION_SEARCH_FIELDS: 'searchFieldsConfig',
   EDIT_AGENT: 'editAgentDetails',
   EXECUTIVE_HISTORY_LIST: 'executiveHistoryList',
-  UPDATE_COMMISSION_CONFIG:'editCommission',
+  UPDATE_COMMISSION_CONFIG: 'editCommission',
   DOWNLOAD_RECORD: 'downloadRecord',
   GEO_HIERARCHY: 'GeoHierarchy',
   GEO_HIERARCHY_TABLE: 'GeoHierarchyTable',
@@ -32,8 +32,13 @@ export const APIRoutes = {
   HMS_OVERVIEW_STATS: 'getChannelStats',
   UPLOAD_FILE_LIST: 'uploadFileList',
   DOWNLOAD_REPORT: 'downloadReport',
-  HMS_FILE:'file'
-
+  HMS_FILE: 'file',
+  GET_ROLES: 'rolesList',
+  DELETE_ROLES: "deleteRole",
+  FETCH_MENU: "fetchMenu",
+  ROLE_USER_LIST: "userList",
+  GRANT_MENU_ACCESS: "grantMenu",
+  REVOKE_MENU_ACCESS: "revokeMenu",
 }
 
 export const LoginConstants = {
