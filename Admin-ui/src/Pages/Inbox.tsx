@@ -10,6 +10,16 @@ import {
 import Button from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { FiExternalLink } from "react-icons/fi";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "@tanstack/react-router";
+import { RoutePaths } from "@/utils/constant";
 
 interface Task {
   id: string;
@@ -84,7 +94,7 @@ const formatDate = (date: Date): string => {
   });
 };
 
-const UserInbox = () => {
+const Inbox = () => {
   const [tasks] = useState<Task[]>(generateMockTasks());
 
   const handleApproval = (taskId: string) => {
@@ -99,6 +109,21 @@ const UserInbox = () => {
 
   return (
     <div className="container mx-auto p-6">
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to={RoutePaths.DASHBOARD} className="text-gray-400 hover:text-gray-600">
+                Dashboard
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="font-semibold text-gray-900">Inbox</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">User Inbox</CardTitle>
@@ -111,10 +136,9 @@ const UserInbox = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[200px]">Task Name</TableHead>
-                <TableHead className="w-[150px]">Received On</TableHead>
-                <TableHead className="w-[200px]">Created By / On</TableHead>
-                <TableHead className="w-[150px]">Link to Task Details</TableHead>
                 <TableHead className="w-[100px]">Aging (Days)</TableHead>
+                <TableHead className="w-[200px]">Created By / On</TableHead>
+                <TableHead className="w-[150px]">Received On</TableHead>
                 <TableHead className="w-[200px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -125,26 +149,6 @@ const UserInbox = () => {
                   <TableRow key={task.id}>
                     <TableCell className="font-medium">
                       {task.taskName}
-                    </TableCell>
-                    <TableCell>{formatDate(task.receivedOn)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{task.createdBy}</span>
-                        <span className="text-sm text-gray-500">
-                          {formatDate(task.createdOn)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <a
-                        href={task.taskDetailsLink}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View Details
-                        <FiExternalLink className="w-4 h-4" />
-                      </a>
                     </TableCell>
                     <TableCell>
                       <span
@@ -160,25 +164,28 @@ const UserInbox = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="green"
-                          size="sm"
-                          onClick={() => handleApproval(task.id)}
-                          className="min-w-[80px]"
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="red"
-                          size="sm"
-                          onClick={() => handleRejection(task.id)}
-                          className="min-w-[80px]"
-                        >
-                          Reject
-                        </Button>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{task.createdBy}</span>
+                        <span className="text-sm text-gray-500">
+                          {formatDate(task.createdOn)}
+                        </span>
                       </div>
                     </TableCell>
+                    <TableCell>{formatDate(task.receivedOn)}</TableCell>
+                    
+                    <TableCell>
+                      <a
+                        href={task.taskDetailsLink}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View Details
+                        <FiExternalLink className="w-4 h-4" />
+                      </a>
+                    </TableCell>
+                    
+                   
                   </TableRow>
                 );
               })}
@@ -190,4 +197,4 @@ const UserInbox = () => {
   );
 };
 
-export default UserInbox;
+export default Inbox;
