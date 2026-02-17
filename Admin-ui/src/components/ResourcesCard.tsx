@@ -20,7 +20,7 @@ const resources = [
   { title: "Review Structure", link: "/review-structure" },
   { title: "Review Access", link: "/review-access" },
   { title: "Roles Management", link: "/roles-management" }, // ✅ FIXED
-   { title: "User Inbox", link: "/user-inbox" },
+   { title: "Inbox", link: "/inbox" },
 ];
 
 export default function ResourcesCard() {
