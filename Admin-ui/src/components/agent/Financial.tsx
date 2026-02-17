@@ -78,7 +78,7 @@ console.log('agent in financial', agent)
   {
     name: 'accountNumber',
     label: 'Bank Account No',
-    type: 'text',
+    type: 'masked',
     colSpan: 1,
     readOnly: !isEdit,
     variant: 'standard',

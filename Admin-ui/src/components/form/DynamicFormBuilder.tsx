@@ -21,6 +21,7 @@ import DatePicker from '../ui/date-picker'
 import { TimePicker } from '../ui/time-picker'
 import { DateTimePicker } from '../ui/date-timepicker'
 import { Variable } from 'lucide-react'
+import { MaskedInput } from '@/components/ui/masked-input'
 
 interface DynamicFormBuilderProps {
   config: any
@@ -132,6 +133,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 'checkbox',
                 'link',
                 'select',
+                'masked',
               ].includes(field.type) && (
                 <Label
                   htmlFor={field.name}
@@ -139,6 +141,20 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 >
                   {field.label}
                 </Label>
+              )}
+
+              {field.type === 'masked' && (
+                <MaskedInput
+                  id={field.name}
+                  value={fieldApi.state.value}
+                  onChange={(value) => fieldApi.handleChange(value)}
+                  placeholder={field.placeholder}
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
+                  variant={field.variant}
+                  className="w-full h-10 pl-0 pr-3 py-2"
+                  label={field.label}
+                />
               )}
 
               {['text', 'email', 'password', 'number'].includes(field.type) && (
