@@ -42,7 +42,7 @@ const file = (data, headers = {}) => {
   console.log('Data type:', typeof data, 'Is FormData:', typeof data?.getHeaders === 'function');
   console.log('Headers:', headers);
   console.log('====================================');
-  
+
   return apiClient.post(APIRoutes.UPLOADFILES, data, { headers }).then(response => {
     console.log('====================================');
     console.log('File upload response received:');
@@ -60,6 +60,98 @@ const file = (data, headers = {}) => {
     throw err;
   });
 };
+
+const rolesList = (data, headers = {}) => {
+  return apiClient.post(APIRoutes.GETROLES, data, { headers });
+};
+
+const deleteRole = async (data, headers = {}) => {
+  const roleId = data?.roleId
+  console.log("Deleting role:", roleId)
+  return apiClient.post(`${APIRoutes.DELETEROLES}/${roleId}`, {}, { headers })
+};
+
+const fetchMenu = async (data, headers = {}) => {
+  const roleId = data?.roleId
+  return apiClient.post(`${APIRoutes.FETCHMENU}/${roleId}`, {}, { headers })
+}
+
+const userList = async (data, headers = {}) => {
+  const roleId = data?.roleId
+  return apiClient.post(`${APIRoutes.USERLIST}/${roleId}`, {}, { headers })
+}
+
+const grantMenu = async (data, headers = {}) => {
+  console.log("gettingHere");
+  console.log("grantMenu", data);
+  console.log("FINAL REQUEST", {
+    url: APIRoutes.GRANTMENU,
+    body: {
+      roleId: data.roleId,
+      menuId: data.menuId,
+    }
+  });
+
+  return apiClient.post(
+    APIRoutes.GRANTMENU,     // ✅ NO roleId in URL
+    {
+      roleId: data.roleId,
+      menuId: data.menuId,   // ✅ send menuId
+    },
+    { headers }
+  );
+};
+
+const revokeMenu = async (data, headers = {}) => {
+  console.log("revokeMenu", data);
+
+  return apiClient.post(
+    APIRoutes.REVOKEMENU,
+    {
+      roleId: data.roleId,
+      menuId: data.menuId,
+    },
+    { headers }
+  );
+};
+
+const removeUser = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.REMOVEUSER,
+    {
+      userName: data.userName,
+      roleId: data.roleId,
+    },
+    { headers }
+  );
+};
+
+
+const createRole = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.CREATEROLE,
+    {
+      roleName: data.roleName,
+      rowVersion: data.rowVersion,
+      role_ID: data.role_ID,
+      isSystemRole: data.isSystemRole,
+      isActive: data.isActive,
+    },
+    { headers }
+  );
+};
+
+const addUser = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.ADDUSER,
+    {
+      userName: data.userName,
+      roleId: data.roleId,
+    },
+    { headers }
+  );
+};
+
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -180,7 +272,7 @@ const GeoHierarchy = (channelCategory,subChannelCode,branchCode, headers = {}) =
 };
 
 const GeoHierarchyTable = (parentBranchId, headers = {}) => {
-  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { parentBranchId: parentBranchId}, { headers });
+  return apiClient.post(APIRoutes.GEOHIERARCHYTABLE, { parentBranchId: parentBranchId }, { headers });
 }
 
 const hmsDashboard = (data = {}, headers = {}) => {
@@ -198,12 +290,12 @@ const uploadFileList = (headers = {}) => {
   return apiClient.post(APIRoutes.UPLOADFILELIST, {}, { headers });
 }
 
-const downloadReport = (data={}, headers = {}) => {
+const downloadReport = (data = {}, headers = {}) => {
   const { id, reportType } = data;
   if (!id || !reportType) {
     throw new Error("reportId and reportType are required for download report");
   }
-  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`,data, { headers,});
+  return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, data, { headers, });
 }
 
 
@@ -217,6 +309,13 @@ module.exports = {
   AgentByCode,
   GetMasters,
   file,
+  userList,
+  fetchMenu,
+  rolesList,
+  grantMenu,
+  createRole,
+  removeUser,
+  revokeMenu,
   GetMastersBulk,
   getCommissionData,
   processCommission,
@@ -224,9 +323,11 @@ module.exports = {
   adjustCommission,
   approveCommission,
   configcommission,
+  deleteRole,
   updateConditionConfig,
   configList,
   updateCron,
+  addUser,
   updateStatus,
   searchFieldsConfig,
   editAgentDetails,
