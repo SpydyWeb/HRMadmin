@@ -59,6 +59,18 @@ const downloadExcel = (row: any) => {
   XLSX.writeFile(workbook, `${row.Activity.replace(/\s+/g, '_')}_Template.xlsx`)
 }
 
+// Helper function to map activity name to filetype
+const getFileTypeFromActivity = (activity: string): string => {
+  const mapping: { [key: string]: string } = {
+    'Code Movement': 'UpdateLocation',
+    'Certification Update': 'CertificateUpdate',
+    'Change in Status': 'UpdateStatus',
+    'Manager Update': 'ManagerUpdate',
+    'Designation Update': 'UpdateDesignation',
+  }
+  return mapping[activity] || activity
+}
+
 export default function PendingActionsTable() {
   const navigate = useNavigate()
   const { buildPath } = useContextPath()
@@ -66,6 +78,7 @@ export default function PendingActionsTable() {
   const [open, setOpen] = useState(false)
   const [selectedRow, setSelectedRow] = useState<any>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFileType, setSelectedFileType] = useState<string>('')
 
   const handleRedirect = (path: string) => {
     if (!path) return
@@ -78,6 +91,7 @@ export default function PendingActionsTable() {
       setLoading(false)
       setOpen(false)
       setSelectedFile(null)
+      setSelectedFileType('')
     },
     onError: (err) => {
       setLoading(false)
@@ -87,11 +101,10 @@ export default function PendingActionsTable() {
 
 
   const handleUpload = () => {
-    if (!selectedFile) return
+    if (!selectedFile || !selectedFileType) return
     setLoading(true)
     const fileName = selectedFile.name
-    const fileType = selectedRow?.Activity
-    let fileData = { 'File': fileName, 'FileType': fileType }
+    let fileData = { 'File': fileName, 'FileType': selectedFileType }
     uploadFile(fileData);
   }
 
@@ -116,6 +129,7 @@ export default function PendingActionsTable() {
           className="text-gray-500 ml-4 cursor-pointer hover:text-gray-700"
           onClick={() => {
             setSelectedRow(row)
+            setSelectedFileType(getFileTypeFromActivity(row.Activity))
             setOpen(true)
           }}
         />
@@ -144,21 +158,47 @@ export default function PendingActionsTable() {
           </AlertDialogHeader>
 
           <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-gray-600
-                  file:mr-4 file:py-2.5 file:px-4
-                  file:rounded-md file:border
-                  file:border-gray-300
-                  file:bg-white file:text-gray-700
-                  file:font-medium
-                  hover:file:bg-gray-100
-                  cursor-pointer"
-              />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filetype
+                  </label>
+                  <Select
+                    value={selectedFileType}
+                    onValueChange={setSelectedFileType}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select filetype" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedRow?.Activity && (
+                        <SelectItem value={getFileTypeFromActivity(selectedRow.Activity)}>
+                          {getFileTypeFromActivity(selectedRow.Activity)}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-gray-600
+                    file:mr-4 file:py-2.5 file:px-4
+                    file:rounded-md file:border
+                    file:border-gray-300
+                    file:bg-white file:text-gray-700
+                    file:font-medium
+                    hover:file:bg-gray-100
+                    cursor-pointer"
+                />
+              </div>
+            </div>
 
+            <div className="flex items-center gap-4 mt-4">
               <button
                 onClick={handleUpload}
                 disabled={!selectedFile || isLoading}
@@ -179,7 +219,13 @@ export default function PendingActionsTable() {
           </div>
 
           <AlertDialogFooter className="mt-6 flex justify-end gap-3">
-            <AlertDialogCancel onClick={() => setLoading(false)} className="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <AlertDialogCancel 
+              onClick={() => {
+                setLoading(false)
+                setSelectedFileType('')
+              }} 
+              className="rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
               Cancel
             </AlertDialogCancel>
           </AlertDialogFooter>
