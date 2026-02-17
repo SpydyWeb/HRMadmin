@@ -2,14 +2,11 @@ import { useState } from "react";
 import { FiExternalLink,FiSearch } from "react-icons/fi";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Link } from "@tanstack/react-router";
 
 interface ResourceItem {
   title: string;
   link: string;
-}
-
-interface ResourcesCardProps {
-  resources: ResourceItem[];
 }
  const resources = [
     { title: "Tips", link: "/tips" },
@@ -17,6 +14,7 @@ interface ResourcesCardProps {
     { title: "Review Masters", link: "/review-masters" },
     { title: "Review Structure", link: "/review-structure" },
     { title: "Review Access", link: "/review-access" },
+    { title: "User Inbox", link: "/user-inbox" },
   ];
 
 export default function ResourcesCard() {
@@ -36,6 +34,7 @@ export default function ResourcesCard() {
         <div className="relative">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <Input
+            label=""
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -47,18 +46,16 @@ export default function ResourcesCard() {
         {/* Resource List */}
         <div className="space-y-2">
           {filteredResources.map((item, index) => (
-            <a
+            <Link
               key={index}
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
+              to={item.link}
               className="flex items-center justify-between rounded-lg bg-gray-100 hover:bg-gray-100 p-3 transition"
             >
               <span className="text-sm font-medium text-gray-700">
                 {item.title}
               </span>
               <FiExternalLink className="text-gray-500" />
-            </a>
+            </Link>
           ))}
         </div>
       </CardContent>
