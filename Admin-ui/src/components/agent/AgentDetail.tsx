@@ -593,7 +593,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         label: 'Agent ID',
         type: 'text',
         colSpan: 4,
-        readOnly: !isEdit,
+        readOnly: true,
         variant: 'standard',
       },
       {
@@ -609,7 +609,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         label: 'Agent Code',
         type: 'text',
         colSpan: 4,
-        readOnly: !isEdit,
+        readOnly: true,
         variant: 'standard',
       },
 

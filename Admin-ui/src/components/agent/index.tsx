@@ -189,7 +189,7 @@ const Agent: React.FC = () => {
             subChannelCode={getSubChannelCode}
             highlightBranch={firstAgent?.branch}
             locationCode={firstAgent?.locationCode}
-            officeType={firstAgent?.branchDesc}
+            officeType={firstAgent?.branch}
           />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>
