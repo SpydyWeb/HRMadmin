@@ -27,8 +27,15 @@ const APIRoutes = {
   DOWNLOADREPORT: "/download-report",
   GETMASTERS: "/api/AppMasters/get",
   UPLOADFILES: "/api/file",
-  GETROLES: "/api/RoleMaster/RolesList",
-
+  GETROLES: "/api/Access/Role/List",
+  DELETEROLES: "/api/Access/Role/Delete",
+  FETCHMENU: "/api/Access/Role/MenuAccess/",
+  USERLIST:"/api/Access/Role/UserList/",
+  GRANTMENU:"/api/Access/Role/MenuAccess/Grant",
+  REVOKEMENU:"/api/Access/Role/MenuAccess/Revoke",
+  REMOVEUSER:"/api/Access/Role/RemoveUser",
+  CREATEROLE:"/api/Access/Role/Create",
+  ADDUSER:"/api/Access/Role/AddUser"
 };
 
 module.exports = { APIRoutes };

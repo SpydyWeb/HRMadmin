@@ -94,4 +94,97 @@ export const HMSService = {
     }
   },
 
+  deleteRoles: async (roleId: number | string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.DELETE_ROLES,
+        [
+          { roleId }
+        ],
+      )
+
+      return response
+    } catch (error) {
+      console.error('delete role service error:', error)
+      throw error
+    }
+  },
+
+  fetchMenu: async (roleId: number | string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.FETCH_MENU,
+        [
+          { roleId }
+        ],
+      )
+
+      return response
+    } catch (error) {
+      console.error('fetch menu service error:', error)
+      throw error
+    }
+  },
+
+  fetchRoleUsers: async (roleId: number | string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.ROLE_USER_LIST,
+        [{ roleId }]
+      )
+      return response
+    } catch (error) {
+      console.error('fetch role users error:', error)
+      throw error
+    }
+  },
+
+  grantMenuAccess: async (payload: {
+    roleId: number
+    menuId: number
+  }) => {
+    return callApi("grantMenu", [
+      payload
+    ])
+  },
+
+  revokeMenuAccess: async (payload: {
+    roleId: number
+    menuId: number
+  }) => {
+    return callApi("revokeMenu", [
+      payload
+    ])
+  },
+
+  removeUserFromRole: async (payload: {
+    userName: string
+    roleId: number
+  }) => {
+    return callApi("removeUser", [
+      payload
+    ])
+  },
+
+  createRole: async (payload: {
+    roleName: string
+    rowVersion: number
+    role_ID: number
+    isSystemRole: boolean
+    isActive: boolean
+  }) => {
+    return callApi("createRole", [
+      payload
+    ])
+  },
+
+  assignUserToRole: async (payload: {
+    userName: string
+    roleId: number
+  }) => {
+    return callApi("addUser", [
+      payload
+    ])
+  },
+
 }

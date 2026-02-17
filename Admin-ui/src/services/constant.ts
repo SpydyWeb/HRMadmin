@@ -34,6 +34,11 @@ export const APIRoutes = {
   DOWNLOAD_REPORT: 'downloadReport',
   HMS_FILE: 'file',
   GET_ROLES: 'rolesList',
+  DELETE_ROLES: "deleteRole",
+  FETCH_MENU: "fetchMenu",
+  ROLE_USER_LIST: "userList",
+  GRANT_MENU_ACCESS: "grantMenu",
+  REVOKE_MENU_ACCESS: "revokeMenu",
 }
 
 export const LoginConstants = {
