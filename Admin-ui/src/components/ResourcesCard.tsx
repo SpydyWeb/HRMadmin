@@ -20,6 +20,7 @@ const resources = [
   { title: "Review Structure", link: "/review-structure" },
   { title: "Review Access", link: "/review-access" },
   { title: "Roles Management", link: "/roles-management" }, // ✅ FIXED
+   { title: "User Inbox", link: "/user-inbox" },
 ];
 
 export default function ResourcesCard() {
@@ -39,6 +40,7 @@ export default function ResourcesCard() {
         <div className="relative">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <Input
+            label=""
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

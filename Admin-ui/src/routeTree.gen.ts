@@ -33,6 +33,7 @@ import { Route as AuthCommissionProcesscommissionBulkActionRouteImport } from '.
 import { Route as AuthSearchDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/search/dashboard/code-movement/bulk-action'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
+const AuthUserInboxLazyRouteImport = createFileRoute('/_auth/user-inbox')()
 const AuthRolesManagementIndexLazyRouteImport = createFileRoute(
   '/_auth/roles-management/',
 )()
@@ -96,6 +97,13 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthUserInboxLazyRoute = AuthUserInboxLazyRouteImport.update({
+  id: '/user-inbox',
+  path: '/user-inbox',
+  getParentRoute: () => AuthRoute,
+} as any).lazy(() =>
+  import('./routes/_auth/user-inbox.lazy').then((d) => d.Route),
+)
 const AuthTerminationRoute = AuthTerminationRouteImport.update({
   id: '/termination',
   path: '/termination',
@@ -350,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
+  '/user-inbox': typeof AuthUserInboxLazyRoute
   '/commission/$not-found': typeof AuthCommissionNotFoundRoute
   '/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
   '/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
@@ -388,6 +397,7 @@ export interface FileRoutesByTo {
   '/$not-found': typeof NotFoundRoute
   '/login': typeof LoginLazyRoute
   '/termination': typeof AuthTerminationRoute
+  '/user-inbox': typeof AuthUserInboxLazyRoute
   '/commission/$not-found': typeof AuthCommissionNotFoundRoute
   '/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
   '/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
@@ -428,6 +438,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginLazyRoute
   '/_auth/termination': typeof AuthTerminationRoute
+  '/_auth/user-inbox': typeof AuthUserInboxLazyRoute
   '/_auth/commission/$not-found': typeof AuthCommissionNotFoundRoute
   '/_auth/commission/certification-update': typeof AuthCommissionCertificationUpdateRoute
   '/_auth/commission/create-bulk': typeof AuthCommissionCreateBulkRoute
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/login'
     | '/termination'
+    | '/user-inbox'
     | '/commission/$not-found'
     | '/commission/certification-update'
     | '/commission/create-bulk'
@@ -506,6 +518,7 @@ export interface FileRouteTypes {
     | '/$not-found'
     | '/login'
     | '/termination'
+    | '/user-inbox'
     | '/commission/$not-found'
     | '/commission/certification-update'
     | '/commission/create-bulk'
@@ -545,6 +558,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/login'
     | '/_auth/termination'
+    | '/_auth/user-inbox'
     | '/_auth/commission/$not-found'
     | '/_auth/commission/certification-update'
     | '/_auth/commission/create-bulk'
@@ -615,6 +629,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/user-inbox': {
+      id: '/_auth/user-inbox'
+      path: '/user-inbox'
+      fullPath: '/user-inbox'
+      preLoaderRoute: typeof AuthUserInboxLazyRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/termination': {
       id: '/_auth/termination'
@@ -852,6 +873,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteChildren {
   AuthTerminationRoute: typeof AuthTerminationRoute
+  AuthUserInboxLazyRoute: typeof AuthUserInboxLazyRoute
   AuthCommissionNotFoundRoute: typeof AuthCommissionNotFoundRoute
   AuthCommissionCertificationUpdateRoute: typeof AuthCommissionCertificationUpdateRoute
   AuthCommissionCreateBulkRoute: typeof AuthCommissionCreateBulkRoute
@@ -888,6 +910,7 @@ interface AuthRouteChildren {
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthTerminationRoute: AuthTerminationRoute,
+  AuthUserInboxLazyRoute: AuthUserInboxLazyRoute,
   AuthCommissionNotFoundRoute: AuthCommissionNotFoundRoute,
   AuthCommissionCertificationUpdateRoute:
     AuthCommissionCertificationUpdateRoute,
