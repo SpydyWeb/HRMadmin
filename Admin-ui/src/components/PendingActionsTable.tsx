@@ -23,7 +23,7 @@ import {
 import { FiUpload } from 'react-icons/fi'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { HMSService } from '@/services/HMSService'
+import { HMSService } from '@/services/hmsService'
 
 type JsonElement = { [key: string]: string | number | boolean | null }
 let excelData: JsonElement[] = []
@@ -86,7 +86,7 @@ export default function PendingActionsTable() {
   }
 
   const { mutate: uploadFile } = useMutation({
-    mutationFn: (fileData: any) => HMSService.getHmsFile(fileData),
+    mutationFn: (fileData: FormData) => HMSService.getHmsFile(fileData),
     onSuccess: () => {
       setLoading(false)
       setOpen(false)
@@ -100,13 +100,23 @@ export default function PendingActionsTable() {
   })
 
 
-  const handleUpload = () => {
-    if (!selectedFile || !selectedFileType) return
-    setLoading(true)
-    const fileName = selectedFile.name
-    let fileData = { 'File': fileName, 'FileType': selectedFileType }
-    uploadFile(fileData);
-  }
+
+ const handleUpload = () => {
+  if (!selectedFile) return;
+
+  setLoading(true);
+
+  const formData = new FormData();
+
+  // Actual file object
+  formData.append("File", selectedFile);
+
+  // Extra field
+  formData.append("FileType", selectedRow?.Activity || "");
+  uploadFile(formData);
+};
+
+
 
 
   const columns = [

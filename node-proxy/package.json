@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon src/server.js"
   },
   "author": "",
   "license": "ISC",
@@ -18,8 +18,10 @@
     "dotenv": "^17.2.2",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
+    "formidable": "^3.5.4",
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
     "nodemon": "^3.1.10"
   }
 }

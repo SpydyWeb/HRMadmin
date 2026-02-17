@@ -7,7 +7,10 @@ import { auth } from '@/auth'
 import { useEncryption } from '@/store/encryptionStore'
 
 //  Helper: Wait until HRM_Key is available
-async function ensureEncryptionKeyReady(retries = 10, delay = 200): Promise<void> {
+async function ensureEncryptionKeyReady(
+  retries = 10,
+  delay = 200,
+): Promise<void> {
   for (let i = 0; i < retries; i++) {
     const key = encryptionService.getHrm_Key()
     if (key) return
@@ -45,7 +48,9 @@ export async function encryptedPost(url: string, body: any) {
     throw new Error('Invalid encrypted response from server')
   }
 
-  const decryptedObject = encryptionService.decryptObject(res.responseEncryptedString)
+  const decryptedObject = encryptionService.decryptObject(
+    res.responseEncryptedString,
+  )
   return decryptedObject
 }
 
@@ -63,6 +68,70 @@ export async function callApi<T>(
   return encryptedPost(APIRoutes.PROXY, {
     fn,
     args,
-    headers: { Authorization: `Bearer ${JSON.parse(auth.getToken())?.token}` },
+    headers: {
+      Authorization: `Bearer ${JSON.parse(auth.getToken())?.token}`,
+      ...headers,
+    },
   }) as Promise<T>
+}
+
+// File upload helper for FormData - bypasses encryption
+// export async function uploadFile<T>(
+//   formData: FormData,
+//   headers: Record<string, string> = {},
+// ): Promise<T> {
+//   // apiClient interceptor already adds Authorization header, so don't add it again
+//   // Let axios handle Content-Type automatically with FormData
+//   try {
+//     const response = await apiClient.post<T>(APIRoutes.UPLOADPROXY, formData)
+//     return response
+//   } catch (err) {
+//     console.error('uploadFile error', err)
+//     throw err
+//   }
+// }
+
+export async function uploadFile<T>(
+  formData: FormData,
+  fn: string,
+  headers: Record<string, string> = {},
+): Promise<T> {
+  const encryptionEnabled = useEncryption()
+
+  const metaPayload = {
+    fn,
+    headers,
+  }
+
+  if (!encryptionEnabled) {
+    formData.append('fn', fn)
+
+    Object.entries(metaPayload.headers).forEach(([key, value]) => {
+      formData.append(`headers[${key}]`, value)
+    })
+
+    const res = await apiClient.post<T>(APIRoutes.UPLOADPROXY, formData)
+    return res.data
+  }
+
+  await ensureEncryptionKeyReady()
+
+  const encryptedMeta = encryptionService.encryptObject(metaPayload)
+
+  formData.append('requestEncryptedString', encryptedMeta)
+
+  const res = await apiClient.post<IEncryptAPIResponse>(
+    APIRoutes.UPLOADPROXY,
+    formData,
+  )
+
+  // Validate response
+  if (!res.responseEncryptedString) {
+    throw new Error('Invalid encrypted upload response')
+  }
+
+  // Decrypt response
+  const decrypted = encryptionService.decryptObject(res.responseEncryptedString)
+
+  return decrypted as T
 }
