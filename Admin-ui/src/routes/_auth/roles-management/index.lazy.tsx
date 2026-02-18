@@ -4,7 +4,8 @@ import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { HMSService } from '@/services/hmsService'
 import DataTable from '@/components/table/DataTable'
-import Swal from 'sweetalert2'
+import { Pagination } from '@/components/table/Pagination'
+import CustomTabs from '@/components/CustomTabs'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,6 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import Swal from 'sweetalert2'
+import FieldTreeView from '../../../components/ui/FieldTreeView'
 
 export const Route = createLazyFileRoute('/_auth/roles-management/')({
   component: RouteComponent,
@@ -37,7 +40,21 @@ function RouteComponent() {
     failedLoginAttempts: number
   }
 
-  const [activeTab, setActiveTab] = useState<'menu' | 'user'>('menu')
+  type FieldAccess = {
+    fieldId: number
+    fieldName: string
+
+    edit: boolean
+    render: boolean
+    createLog: boolean
+
+    approver1: string
+    approver2: string
+    approver3: string
+    defaultApprover: string
+  }
+
+  const [activeTab, setActiveTab] = useState<'menu' | 'user' | 'field'>('menu')
   const [userList, setUserList] = useState<any[]>([])
   const [userLoading, setUserLoading] = useState(false)
   const [menuAccess, setMenuAccess] = useState<MenuAccess[]>([])
@@ -50,7 +67,11 @@ function RouteComponent() {
   const [openAddUser, setOpenAddUser] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [addingUser, setAddingUser] = useState(false)
-
+  const [fieldAccess, setFieldAccess] = useState<FieldAccess[]>([])
+  const [fieldLoading, setFieldLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 5 // how many rows per page
+  const [treeData, setTreeData] = useState<any[]>([])
 
   const menuData = [
     {
@@ -90,35 +111,18 @@ function RouteComponent() {
     },
   ]
 
-  const userData = [
-    {
-      id: 1,
-      userId: 'navink',
-      name: 'Navin Kumar',
-      designation: 'Manager',
-      department: 'Management',
-      location: 'Mumbai',
-      status: 'Active',
-    },
-    {
-      id: 2,
-      userId: 'gaurav',
-      name: 'Gaurav Rathore',
-      designation: 'Manager',
-      department: 'IT',
-      location: 'Indore',
-      status: 'Active',
-    },
-    {
-      id: 3,
-      userId: 'saurab',
-      name: 'Saurab Singh',
-      designation: 'Manager',
-      department: 'Operations',
-      location: 'Delhi',
-      status: 'Inactive',
-    },
+  const roleTabs = [
+    { value: 'menu', label: 'Menu' },
+    { value: 'user', label: 'User' },
+    { value: 'field', label: 'Field Access' },
   ]
+
+  const approverOptions = [
+    { label: 'User A', value: 'userA' },
+    { label: 'User B', value: 'userB' },
+    { label: 'User C', value: 'userC' },
+  ]
+
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -141,8 +145,59 @@ function RouteComponent() {
       displayMenu(selectedRole)
     } else if (activeTab === 'user') {
       fetchUserList(selectedRole)
+    } else if (activeTab === 'field') {
+      fetchFieldAccess(selectedRole)
     }
   }, [activeTab])
+
+
+  useEffect(() => {
+    const getHierarchy = async () => {
+      try {
+        const response = await HMSService.getHierarchyData()
+
+        if (response?.responseHeader?.errorCode === 1101) {
+          const apiMenu =
+            response?.responseBody?.uiMenuResponse?.uiMenu || []
+
+          const formattedTree = apiMenu.map((screen: any, i: number) => ({
+            id: `screen-${i}`,
+            name: screen.section,
+            type: 'root',
+            children: screen.subSection?.map(
+              (tab: any, j: number) => ({
+                id: `screen-${i}-tab-${j}`,
+                name: tab.section,
+                type: 'module',
+                children: tab.subSection?.map(
+                  (section: any, k: number) => ({
+                    id: `screen-${i}-tab-${j}-section-${k}`,
+                    name: section.section,
+                    type: 'menu',
+                    children: section.fieldList?.map(
+                      (field: any) => ({
+                        id: `field-${field.cntrlid}`,
+                        name: field.cntrlName,
+                        type: 'field',
+                        render: field.render,
+                        allowedit: field.allowedit,
+                      })
+                    ) || [],
+                  })
+                ) || [],
+              })
+            ) || [],
+          }))
+
+          setTreeData(formattedTree)
+        }
+      } catch (error) {
+        console.error('Failed to fetch hierarchy:', error)
+      }
+    }
+
+    getHierarchy()
+  }, [])
 
 
   /* ================= MENU TABLE COLUMNS ================= */
@@ -227,6 +282,141 @@ function RouteComponent() {
       ),
     },
   ]
+
+  const fieldColumns = [
+    {
+      header: 'Field',
+      accessor: 'fieldName',
+    },
+    {
+      header: 'Edit',
+      accessor: (row: FieldAccess) => (
+        <input
+          type="checkbox"
+          checked={row.edit}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'edit', e.target.checked)
+          }
+        />
+      ),
+    },
+    {
+      header: 'Render',
+      accessor: (row: FieldAccess) => (
+        <input
+          type="checkbox"
+          checked={row.render}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'render', e.target.checked)
+          }
+        />
+      ),
+    },
+    {
+      header: 'CreateLog',
+      accessor: (row: FieldAccess) => (
+        <input
+          type="checkbox"
+          checked={row.createLog}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'createLog', e.target.checked)
+          }
+        />
+      ),
+    },
+    {
+      header: 'Approver 1',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver1}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'approver1', e.target.value)
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {approverOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Approver 2',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver2}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'approver2', e.target.value)
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {approverOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Approver 3',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver3}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'approver3', e.target.value)
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {approverOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Default Approver',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.defaultApprover}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'defaultApprover', e.target.value)
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {approverOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+  ]
+
+
+  const updateFieldAccess = (
+    fieldId: number,
+    key: keyof FieldAccess,
+    value: boolean | string
+  ) => {
+    setFieldAccess(prev =>
+      prev.map(row =>
+        row.fieldId === fieldId
+          ? { ...row, [key]: value }
+          : row
+      )
+    )
+  }
+
 
   const handleAddRole = async () => {
     if (!newRoleName.trim()) {
@@ -325,11 +515,15 @@ function RouteComponent() {
 
         const formattedMenu = apiMenu.map((item: any) => ({
           menuId: item.menuId,
-          menuName: item.menuName,
+          menuName: item.parentMenuName
+            ? `${item.parentMenuName} >> ${item.menuName}`
+            : item.menuName,
           hasAccess: item.hasAccess,
         }))
 
+
         setMenuAccess(formattedMenu)
+        setCurrentPage(1)
       } else {
         setMenuAccess([])
       }
@@ -339,6 +533,38 @@ function RouteComponent() {
     } finally {
       setMenuLoading(false)
     }
+  }
+
+  const fetchFieldAccess = async (role: Role) => {
+    setFieldLoading(true)
+
+    setTimeout(() => {
+      setFieldAccess([
+        {
+          fieldId: 1,
+          fieldName: 'Tree View',
+          edit: true,
+          render: true,
+          createLog: false,
+          approver1: 'userA',
+          approver2: '',
+          approver3: '',
+          defaultApprover: 'userA',
+        },
+        {
+          fieldId: 2,
+          fieldName: 'Agent Form',
+          edit: false,
+          render: true,
+          createLog: true,
+          approver1: 'userB',
+          approver2: 'userC',
+          approver3: '',
+          defaultApprover: 'userB',
+        },
+      ])
+      setFieldLoading(false)
+    }, 500)
   }
 
   const fetchUserList = async (role: Role) => {
@@ -550,6 +776,12 @@ function RouteComponent() {
     }
   }
 
+  const totalPages = Math.ceil(menuAccess.length / pageSize)
+
+  const paginatedMenu = menuAccess.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   return (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -637,7 +869,7 @@ function RouteComponent() {
 
       <div className="flex gap-6">
         {/* LEFT SIDE - ROLES */}
-        <div className="bg-white rounded-2xl shadow-md border p-6 w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-md border p-6 w-90">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold">Roles</h2>
@@ -692,66 +924,122 @@ function RouteComponent() {
 
         {/* RIGHT SIDE */}
         {selectedRole && (
-          <div className="flex-1 bg-white rounded-2xl shadow-md border p-6">
+          <div className="flex-1 bg-gray-150 rounded-2xl shadow-md border p-6">
             <h3 className="text-lg font-semibold mb-4">
               {selectedRole?.roleName} - Role Details
             </h3>
 
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as 'menu' | 'user')}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="menu">Menu</TabsTrigger>
-                <TabsTrigger value="user">User</TabsTrigger>
-              </TabsList>
+            {/* CUSTOM TABS (Same as Agent Page) */}
+            {/* TABS */}
 
-              {/* MENU TAB */}
-              <TabsContent value="menu" className="mt-4">
-                {menuLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">
-                      Loading menu access...
-                    </span>
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={menuColumns}
-                    data={menuAccess}
-                  />
+            {/* TAB + CONTENT WRAPPER */}
+            <div className="rounded-xl">
+
+              {/* TABS */}
+              <div className="-ml-px pt-2">
+                <CustomTabs
+                  tabs={roleTabs}
+                  defaultValue={activeTab}
+                  onValueChange={(value) =>
+                    setActiveTab(value as 'menu' | 'user' | 'field')
+                  }
+                />
+              </div>
+
+              {/* CONTENT */}
+              <div className="-ml-px p-4 -mt-px bg-white rounded-b-xl rounded-tr-xl">
+                {/* MENU TAB */}
+                {activeTab === 'menu' && (
+                  <>
+                    {menuLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading menu access...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <DataTable columns={menuColumns} data={paginatedMenu} />
+
+                        {totalPages > 1 && (
+                          <Pagination
+                            totalPages={totalPages}
+                            currentPage={currentPage}
+                            onPageChange={(page) => setCurrentPage(page)}
+                          />
+                        )}
+                      </>
+                    )}
+                  </>
                 )}
-              </TabsContent>
 
-              {/* USER TAB */}
-              <TabsContent value="user" className="mt-4">
-                {/* HEADER WITH ADD BUTTON */}
-                <div className="flex justify-end mb-4">
-                  <button
-                    onClick={() => setOpenAddUser(true)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
-                  >
-                    <Plus size={16} />
-                    Add User
-                  </button>
-                </div>
-                {userLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">
-                      Loading users...
-                    </span>
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={userColumns}
-                    data={userList}
-                  />
+                {/* USER TAB */}
+                {activeTab === 'user' && (
+                  <>
+                    <div className="flex justify-end mb-4">
+                      <button
+                        onClick={() => setOpenAddUser(true)}
+                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                      >
+                        <Plus size={16} />
+                        Add User
+                      </button>
+                    </div>
+
+                    {userLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading users...
+                        </span>
+                      </div>
+                    ) : (
+                      <DataTable columns={userColumns} data={userList} />
+                    )}
+                  </>
                 )}
-              </TabsContent>
 
-            </Tabs>
+                {/* FIELD TAB */}
+                {activeTab === 'field' && (
+                  <>
+                    {fieldLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading field hierarchy...
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-12 gap-4 h-[600px]">
+
+                        {/* LEFT → TREE (SMALLER) */}
+                        <div className="col-span-3 h-full overflow-auto">
+                          <FieldTreeView
+                            data={treeData}
+                            onSelect={(node) => {
+                              console.log('Selected node:', node)
+                            }}
+                          />
+                        </div>
+
+                        {/* RIGHT → TABLE (BIGGER) */}
+                        <div className="col-span-9 bg-white border rounded-lg p-4 h-full overflow-auto">
+                          <DataTable
+                            columns={fieldColumns}
+                            data={fieldAccess}
+                          />
+                        </div>
+
+                      </div>
+
+                    )}
+                  </>
+                )}
+
+              </div>
+            </div>
+
           </div>
         )}
       </div>

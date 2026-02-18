@@ -35,7 +35,8 @@ const APIRoutes = {
   REVOKEMENU:"/api/Access/Role/MenuAccess/Revoke",
   REMOVEUSER:"/api/Access/Role/RemoveUser",
   CREATEROLE:"/api/Access/Role/Create",
-  ADDUSER:"/api/Access/Role/AddUser"
+  ADDUSER:"/api/Access/Role/AddUser",
+  GETHIERARCHY:"/api/Access/Role/UI/Control/AccessList",
 };
 
 module.exports = { APIRoutes };
