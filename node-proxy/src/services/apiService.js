@@ -152,6 +152,14 @@ const addUser = async (data, headers = {}) => {
   );
 };
 
+const getHierarchy = async (data = false, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.GETHIERARCHY,
+    data,          // ✅ boolean payload
+    { headers }
+  );
+};
+
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -333,6 +341,7 @@ module.exports = {
   editAgentDetails,
   executiveHistoryList,
   editCommission,
+  getHierarchy,
   downloadRecord,
   GeoHierarchy,
   GeoHierarchyTable,
