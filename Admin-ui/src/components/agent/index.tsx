@@ -19,8 +19,9 @@ import { MASTER_DATA_KEYS } from '@/utils/constant'
 import { useMasterData } from '@/hooks/useMasterData'
 import { useQuery } from '@tanstack/react-query'
 import { agentService } from '@/services/agentService'
+import { useUIAccess } from '@/hooks/uiAccess'
 
-const tabs = [
+const allTabs = [
   { value: 'personaldetails', label: 'Personal' },
   { value: 'peoplehierarchy', label: 'People Hierarchy' },
   { value: 'geographicalhierarchy', label: 'Geographical Hierarchy' },
@@ -46,6 +47,18 @@ const Agent: React.FC = () => {
   const { agentId } = useParams({ from: '/_auth/search/$agentId' })
   const navigate = useNavigate()
 
+  // Get UI access permissions for agent section
+  // API expects "Agent" (capitalized) and "Screen" (capitalized)
+  const { isTabVisible, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+
+  // Filter tabs based on UI access permissions
+  const tabs = allTabs.filter(tab => {
+    // If UI access is loading or no restrictions, show all tabs
+    if (uiAccessLoading) return true
+    // Check if tab is visible based on permissions
+    return isTabVisible(tab.value)
+  })
+
   // encryption gating
   const encryptionEnabled = useEncryption()
   const keyReady = !!encryptionService.getHrm_Key()
@@ -57,7 +70,7 @@ const Agent: React.FC = () => {
   )
 
   // Helper function to extract channel category from agent's channel value
-  const getChannelCategory = (agent: any): string | null => {
+  const getChannelCategory = (agent: any): number | null => {
     if (!agent?.channel) return null
     
     const channelItems = masterData[MASTER_DATA_KEYS.CHANNEL] || []
@@ -67,10 +80,11 @@ const Agent: React.FC = () => {
     )
     // console.log("whatis the channel entry", channelEntry)
     
-    return channelEntry?.entryIdentity || null
+    const entryIdentity = channelEntry?.entryIdentity
+    return entryIdentity ? Number(entryIdentity) : null
   }
 
-  const getBranchCode = (agent: any): string | null => {
+  const getBranchCode = (agent: any): number | null => {
     if (!agent?.branch) return null
     
     const branchItems = masterData[MASTER_DATA_KEYS.Office_Location] || []
@@ -80,10 +94,13 @@ const Agent: React.FC = () => {
     )
     // console.log("whatis the channel entry", channelEntry)
     
-    return branchEntry?.entryIdentity || null
+    const entryIdentity = branchEntry?.entryIdentity
+    if (!entryIdentity) return null
+    const numValue = typeof entryIdentity === 'string' ? Number(entryIdentity) : entryIdentity
+    return isNaN(numValue) ? null : numValue
   }
 
-  const getSubChannelCode = null
+  const getSubChannelCode: number | null = null
 
   // Agent query: same key & signature used by loader
   const {
@@ -106,7 +123,6 @@ const Agent: React.FC = () => {
         sortDirection: 'asc',
       }),
     staleTime: 1000 * 60 * 60, // 1 hour
-    keepPreviousData: true,
     refetchOnWindowFocus: false,
     retry: 1,
   })
@@ -119,11 +135,11 @@ const Agent: React.FC = () => {
     }
   }, [agentQueryError, agentQueryErrorObj])
 
-  const loading = masterLoading || agentLoading
+  const loading = masterLoading || agentLoading || uiAccessLoading
   if (loading) return <Loader />
   if (localError) return <div className="p-4 text-red-600">Error: {localError}</div>
 
-  const firstAgent = (agentData?.responseBody?.agents ?? [])[0] ?? null
+  const firstAgent = ((agentData as any)?.responseBody?.agents ?? [])[0] ?? null
 
 
 
@@ -173,7 +189,7 @@ const Agent: React.FC = () => {
 
       {activeTab === 'personaldetails' ? (
         firstAgent ? (
-          <AgentDetail agent={firstAgent} getOptions={getOptions} />
+          <AgentDetail agent={firstAgent} getOptions={getOptions} activeTab={activeTab} />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>
         )
