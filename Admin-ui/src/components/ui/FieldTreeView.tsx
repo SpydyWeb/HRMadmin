@@ -17,7 +17,11 @@ type TreeNode = {
     name: string
     type: string
     children?: TreeNode[]
+
+    // ✅ Add this
+    fieldList?: any[]
 }
+
 
 interface Props {
     data: TreeNode[]
@@ -44,6 +48,14 @@ export default function FieldTreeView({ data, onSelect }: Props) {
         return (
             <div key={node.id}>
                 <div
+                    onClick={() => {
+                        setSelectedNode(node)
+
+                        // call parent
+                        if (onSelect) {
+                            onSelect(node)
+                        }
+                    }}
                     className={cn(
                         'flex items-center gap-1 py-2 px-1 rounded-md cursor-pointer transition-colors group',
                         'hover:bg-muted/50',
@@ -51,6 +63,7 @@ export default function FieldTreeView({ data, onSelect }: Props) {
                     )}
                     style={{ paddingLeft: `${level * 12}px` }}
                 >
+
                     {/* Expand Button */}
                     {hasChildren ? (
                         <Button

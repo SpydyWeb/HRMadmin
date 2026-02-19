@@ -188,11 +188,13 @@ export const HMSService = {
     ])
   },
 
-  getHierarchyData: async () => {
+  getHierarchyData: async (payload: {
+    roleId: number
+    searchFor: number
+  }) => {
     return callApi(
       "getHierarchy",
-      [false]
+      [payload]
     )
   },
-
 }

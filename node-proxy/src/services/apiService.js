@@ -152,10 +152,13 @@ const addUser = async (data, headers = {}) => {
   );
 };
 
-const getHierarchy = async (data = false, headers = {}) => {
+const getHierarchy = async (data, headers = {}) => {
   return apiClient.post(
     APIRoutes.GETHIERARCHY,
-    data,          // ✅ boolean payload
+    {
+      roleId: data.roleId,
+      searchFor: data.searchFor,
+    },          // ✅ boolean payload
     { headers }
   );
 };
@@ -271,7 +274,7 @@ const downloadRecord = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.DOWNLOADRECORD}/${jobExeHistId}`, data, { headers });
 };
 
-const GeoHierarchy = (channelCategory,subChannelCode,branchCode, headers = {}) => {
+const GeoHierarchy = (channelCategory, subChannelCode, branchCode, headers = {}) => {
   if (!channelCategory && !branchCode) {
     throw new Error("channelCategory is required for GeoHierarchy");
   }

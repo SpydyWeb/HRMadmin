@@ -48,11 +48,13 @@ function RouteComponent() {
     render: boolean
     createLog: boolean
 
+    useUserHierarchy: boolean
+
     approver1: string
     approver2: string
     approver3: string
-    defaultApprover: string
   }
+
 
   const [activeTab, setActiveTab] = useState<'menu' | 'user' | 'field'>('menu')
   const [userList, setUserList] = useState<any[]>([])
@@ -152,9 +154,14 @@ function RouteComponent() {
 
 
   useEffect(() => {
+    if (!selectedRole || activeTab !== 'field') return
+
     const getHierarchy = async () => {
       try {
-        const response = await HMSService.getHierarchyData()
+        const response = await HMSService.getHierarchyData({
+          roleId: selectedRole.roleId,
+          searchFor: 2,
+        })
 
         if (response?.responseHeader?.errorCode === 1101) {
           const apiMenu =
@@ -164,29 +171,30 @@ function RouteComponent() {
             id: `screen-${i}`,
             name: screen.section,
             type: 'root',
-            children: screen.subSection?.map(
-              (tab: any, j: number) => ({
+            children:
+              screen.subSection?.map((tab: any, j: number) => ({
                 id: `screen-${i}-tab-${j}`,
                 name: tab.section,
                 type: 'module',
-                children: tab.subSection?.map(
-                  (section: any, k: number) => ({
+                children:
+                  tab.subSection?.map((section: any, k: number) => ({
                     id: `screen-${i}-tab-${j}-section-${k}`,
                     name: section.section,
                     type: 'menu',
-                    children: section.fieldList?.map(
-                      (field: any) => ({
+
+                    // ✅ store full fieldList for later use
+                    fieldList: section.fieldList || [],
+
+                    children:
+                      section.fieldList?.map((field: any) => ({
                         id: `field-${field.cntrlid}`,
                         name: field.cntrlName,
                         type: 'field',
                         render: field.render,
                         allowedit: field.allowedit,
-                      })
-                    ) || [],
-                  })
-                ) || [],
-              })
-            ) || [],
+                      })) || [],
+                  })) || [],
+              })) || [],
           }))
 
           setTreeData(formattedTree)
@@ -197,7 +205,8 @@ function RouteComponent() {
     }
 
     getHierarchy()
-  }, [])
+  }, [selectedRole, activeTab])
+
 
 
   /* ================= MENU TABLE COLUMNS ================= */
@@ -301,30 +310,6 @@ function RouteComponent() {
       ),
     },
     {
-      header: 'Render',
-      accessor: (row: FieldAccess) => (
-        <input
-          type="checkbox"
-          checked={row.render}
-          onChange={(e) =>
-            updateFieldAccess(row.fieldId, 'render', e.target.checked)
-          }
-        />
-      ),
-    },
-    {
-      header: 'CreateLog',
-      accessor: (row: FieldAccess) => (
-        <input
-          type="checkbox"
-          checked={row.createLog}
-          onChange={(e) =>
-            updateFieldAccess(row.fieldId, 'createLog', e.target.checked)
-          }
-        />
-      ),
-    },
-    {
       header: 'Approver 1',
       accessor: (row: FieldAccess) => (
         <select
@@ -409,13 +394,25 @@ function RouteComponent() {
     value: boolean | string
   ) => {
     setFieldAccess(prev =>
-      prev.map(row =>
-        row.fieldId === fieldId
-          ? { ...row, [key]: value }
-          : row
-      )
+      prev.map(row => {
+        if (row.fieldId !== fieldId) return row
+
+        // If Use User Hierarchy is checked
+        if (key === 'useUserHierarchy' && value === true) {
+          return {
+            ...row,
+            useUserHierarchy: true,
+            approver1: '',
+            approver2: '',
+            approver3: '',
+          }
+        }
+
+        return { ...row, [key]: value }
+      })
     )
   }
+
 
 
   const handleAddRole = async () => {
@@ -537,35 +534,10 @@ function RouteComponent() {
 
   const fetchFieldAccess = async (role: Role) => {
     setFieldLoading(true)
-
-    setTimeout(() => {
-      setFieldAccess([
-        {
-          fieldId: 1,
-          fieldName: 'Tree View',
-          edit: true,
-          render: true,
-          createLog: false,
-          approver1: 'userA',
-          approver2: '',
-          approver3: '',
-          defaultApprover: 'userA',
-        },
-        {
-          fieldId: 2,
-          fieldName: 'Agent Form',
-          edit: false,
-          render: true,
-          createLog: true,
-          approver1: 'userB',
-          approver2: 'userC',
-          approver3: '',
-          defaultApprover: 'userB',
-        },
-      ])
-      setFieldLoading(false)
-    }, 500)
+    setFieldAccess([])
+    setFieldLoading(false)
   }
+
 
   const fetchUserList = async (role: Role) => {
     setUserLoading(true)
@@ -768,13 +740,14 @@ function RouteComponent() {
 
   const handleRoleClick = (role: Role) => {
     setSelectedRole(role)
-
+    setFieldAccess([])
     if (activeTab === 'menu') {
       displayMenu(role)
     } else if (activeTab === 'user') {
       fetchUserList(role)
     }
   }
+
 
   const totalPages = Math.ceil(menuAccess.length / pageSize)
 
@@ -869,7 +842,7 @@ function RouteComponent() {
 
       <div className="flex gap-6">
         {/* LEFT SIDE - ROLES */}
-        <div className="bg-white rounded-2xl shadow-md border p-6 w-90">
+        <div className="bg-white rounded-2xl shadow-md border p-6 w-85">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold">Roles</h2>
@@ -880,7 +853,7 @@ function RouteComponent() {
 
             <button
               onClick={() => setOpenAddRole(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
+              className="flex items-center gap-2 bg-blue-600 text-white px-2 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
               <Plus size={16} />
               Add Role
             </button>
@@ -1019,16 +992,177 @@ function RouteComponent() {
                             data={treeData}
                             onSelect={(node) => {
                               console.log('Selected node:', node)
+
+                              // Only load table if SECTION clicked
+                              if (node.type === 'menu' && node.fieldList) {
+                                const formattedFields = node.fieldList.map((field: any) => ({
+                                  fieldId: field.cntrlid,
+                                  fieldName: field.cntrlName,
+                                  edit: field.allowedit,
+                                  render: field.render,
+                                  createLog: false,
+                                  useUserHierarchy: false,
+                                  approver1: '',
+                                  approver2: '',
+                                  approver3: '',
+                                }))
+
+                                setFieldAccess(formattedFields)
+                              }
                             }}
                           />
+
                         </div>
 
                         {/* RIGHT → TABLE (BIGGER) */}
                         <div className="col-span-9 bg-white border rounded-lg p-4 h-full overflow-auto">
-                          <DataTable
-                            columns={fieldColumns}
-                            data={fieldAccess}
-                          />
+                          <div className="overflow-auto">
+                            <table className="w-full border border-gray-300 text-sm">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th rowSpan={2} className="border p-2 text-left">Field</th>
+                                  <th colSpan={2} className="border p-2 text-center">UI Elements</th>
+                                  <th rowSpan={2} className="border p-2 text-center">Log Changes</th>
+                                  <th colSpan={4} className="border p-2 text-center">
+                                    Approver Matrix
+                                  </th>
+                                </tr>
+                                <tr>
+                                  <th className="border p-2 text-center">Edit</th>
+                                  <th className="border p-2 text-center">Render</th>
+                                  <th className="border p-2 text-center">
+                                    Use User Hierarchy
+                                  </th>
+                                  <th className="border p-2 text-center">Approver 1</th>
+                                  <th className="border p-2 text-center">Approver 2</th>
+                                  <th className="border p-2 text-center">Approver 3</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {fieldAccess.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={9} className="text-center py-8 text-gray-400">
+                                      Select a section from the tree to view field access
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  fieldAccess.map(row => (
+                                    <tr key={row.fieldId} className="hover:bg-gray-50">
+                                      {/* Field */}
+                                      <td className="border p-2">{row.fieldName}</td>
+
+                                      {/* Edit */}
+                                      <td className="border p-2 text-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={row.edit}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'edit', e.target.checked)
+                                          }
+                                        />
+                                      </td>
+
+                                      {/* Render */}
+                                      <td className="border p-2 text-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={row.render}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'render', e.target.checked)
+                                          }
+                                        />
+                                      </td>
+
+                                      {/* Log */}
+                                      <td className="border p-2 text-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={row.createLog}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'createLog', e.target.checked)
+                                          }
+                                        />
+                                      </td>
+
+                                      {/* Use User Hierarchy */}
+                                      <td className="border p-2 text-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={row.useUserHierarchy}
+                                          onChange={(e) =>
+                                            updateFieldAccess(
+                                              row.fieldId,
+                                              'useUserHierarchy',
+                                              e.target.checked
+                                            )
+                                          }
+                                        />
+                                      </td>
+
+                                      {/* Approver 1 */}
+                                      <td className="border p-2">
+                                        <select
+                                          value={row.approver1}
+                                          disabled={row.useUserHierarchy}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'approver1', e.target.value)
+                                          }
+                                          className="border rounded px-2 py-1 w-full"
+                                        >
+                                          <option value="">Select</option>
+                                          {approverOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </td>
+
+                                      {/* Approver 2 */}
+                                      <td className="border p-2">
+                                        <select
+                                          value={row.approver2}
+                                          disabled={row.useUserHierarchy}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'approver2', e.target.value)
+                                          }
+                                          className="border rounded px-2 py-1 w-full"
+                                        >
+                                          <option value="">Select</option>
+                                          {approverOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </td>
+
+                                      {/* Approver 3 */}
+                                      <td className="border p-2">
+                                        <select
+                                          value={row.approver3}
+                                          disabled={row.useUserHierarchy}
+                                          onChange={(e) =>
+                                            updateFieldAccess(row.fieldId, 'approver3', e.target.value)
+                                          }
+                                          className="border rounded px-2 py-1 w-full"
+                                        >
+                                          <option value="">Select</option>
+                                          {approverOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+
+                            </table>
+                          </div>
                         </div>
 
                       </div>
