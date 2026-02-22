@@ -322,7 +322,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
 
               {field.type === 'boolean' && (
-                <div className="bg-tranparent px-1 py-2">
+                <div className="bg-red px-1 py-2">
                   <Switch
                     id={field.name}
                     checked={fieldApi.state.value ?? false}

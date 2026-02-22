@@ -163,6 +163,23 @@ const getHierarchy = async (data, headers = {}) => {
   );
 };
 
+const fieldUpdate = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.FIELDUPDATE,
+    {
+      roleId: data.roleId,
+      cntrlId: data.cntrlId,
+      render: data.render,
+      allowEdit: data.allowEdit,
+      approverOneId: data.approverOneId,
+      approverTwoId: data.approverTwoId,
+      approverThreeId: data.approverThreeId,
+      useDefaultApprover: data.useDefaultApprover,
+    },      
+    { headers }
+  );
+};
+
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -345,6 +362,7 @@ module.exports = {
   executiveHistoryList,
   editCommission,
   getHierarchy,
+  fieldUpdate,
   downloadRecord,
   GeoHierarchy,
   GeoHierarchyTable,

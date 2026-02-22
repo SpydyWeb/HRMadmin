@@ -197,4 +197,21 @@ export const HMSService = {
       [payload]
     )
   },
+
+
+  updateFieldAccess: async (payload: {
+    roleId: number,
+    cntrlId: number,
+    render: boolean,
+    allowEdit: boolean,
+    approverOneId: number,
+    approverTwoId: number,
+    approverThreeId: number,
+    useDefaultApprover: boolean | null,
+  }) => {
+    return callApi(
+      "fieldUpdate",
+      [payload]
+    )
+  },
 }

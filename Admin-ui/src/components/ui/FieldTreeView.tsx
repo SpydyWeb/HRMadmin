@@ -134,19 +134,16 @@ export default function FieldTreeView({ data, onSelect }: Props) {
     }
 
     return (
-        <Card className="h-full flex flex-col overflow-hidden">
-            <CardHeader className="border-b">
+        <Card className="h-full flex flex-col">
+            <CardHeader className="border-b shrink-0">
                 <CardTitle className="text-base">
                     Hierarchy Navigator
                 </CardTitle>
             </CardHeader>
 
-            <ScrollArea className="flex-1">
-                <CardContent className="p-2">
-                    {data.map(node => renderNode(node))}
-                </CardContent>
-            </ScrollArea>
+            <CardContent className="p-2 flex-1 overflow-y-auto">
+                {data.map(node => renderNode(node))}
+            </CardContent>
         </Card>
-
     )
 }

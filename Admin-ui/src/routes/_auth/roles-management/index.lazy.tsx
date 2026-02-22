@@ -6,6 +6,7 @@ import { HMSService } from '@/services/hmsService'
 import DataTable from '@/components/table/DataTable'
 import { Pagination } from '@/components/table/Pagination'
 import CustomTabs from '@/components/CustomTabs'
+import { Switch } from '@/components/ui/switch'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -48,11 +49,11 @@ function RouteComponent() {
     render: boolean
     createLog: boolean
 
-    useUserHierarchy: boolean
+    approvalMode: 'USER' | 'CUSTOM' | 'NONE'
 
-    approver1: string
-    approver2: string
-    approver3: string
+    approver1: number | ''
+    approver2: number | ''
+    approver3: number | ''
   }
 
 
@@ -119,13 +120,6 @@ function RouteComponent() {
     { value: 'field', label: 'Field Access' },
   ]
 
-  const approverOptions = [
-    { label: 'User A', value: 'userA' },
-    { label: 'User B', value: 'userB' },
-    { label: 'User C', value: 'userC' },
-  ]
-
-
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -182,17 +176,11 @@ function RouteComponent() {
                     name: section.section,
                     type: 'menu',
 
-                    // ✅ store full fieldList for later use
+                    // store full fieldList for later use
                     fieldList: section.fieldList || [],
 
-                    children:
-                      section.fieldList?.map((field: any) => ({
-                        id: `field-${field.cntrlid}`,
-                        name: field.cntrlName,
-                        type: 'field',
-                        render: field.render,
-                        allowedit: field.allowedit,
-                      })) || [],
+                    // do NOT show fields in tree
+                    children: [],
                   })) || [],
               })) || [],
           }))
@@ -236,10 +224,13 @@ function RouteComponent() {
   /* ================= USER TABLE COLUMNS ================= */
 
   const userColumns = [
-    { header: 'User ID', accessor: 'userId' },
-    { header: 'Username', accessor: 'username' },
     {
-      header: 'Email', accessor: (row: RoleUser) => (
+      header: 'Login ID',
+      accessor: 'username',
+    },
+    {
+      header: 'Email',
+      accessor: (row: RoleUser) => (
         <span
           className="block max-w-[240px] truncate"
           title={row.emailId}
@@ -253,8 +244,8 @@ function RouteComponent() {
       accessor: (row: RoleUser) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium ${row.isActive
-            ? 'bg-green-100 text-green-700'
-            : 'bg-red-100 text-red-700'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
             }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
@@ -266,8 +257,8 @@ function RouteComponent() {
       accessor: (row: RoleUser) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium ${row.isLocked
-            ? 'bg-red-100 text-red-700'
-            : 'bg-green-100 text-green-700'
+              ? 'bg-red-100 text-red-700'
+              : 'bg-green-100 text-green-700'
             }`}
         >
           {row.isLocked ? 'Yes' : 'No'}
@@ -275,8 +266,6 @@ function RouteComponent() {
       ),
     },
     { header: 'Failed Attempts', accessor: 'failedLoginAttempts' },
-
-    // 🔴 DELETE COLUMN (LAST)
     {
       header: 'Action',
       width: '80px',
@@ -315,14 +304,17 @@ function RouteComponent() {
         <select
           value={row.approver1}
           onChange={(e) =>
-            updateFieldAccess(row.fieldId, 'approver1', e.target.value)
-          }
+            updateFieldAccess(
+              row.fieldId,
+              'approver1',
+              e.target.value ? Number(e.target.value) : ''
+            )}
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Select</option>
-          {approverOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
             </option>
           ))}
         </select>
@@ -334,14 +326,17 @@ function RouteComponent() {
         <select
           value={row.approver2}
           onChange={(e) =>
-            updateFieldAccess(row.fieldId, 'approver2', e.target.value)
-          }
+            updateFieldAccess(
+              row.fieldId,
+              'approver2',
+              e.target.value ? Number(e.target.value) : ''
+            )}
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Select</option>
-          {approverOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
             </option>
           ))}
         </select>
@@ -353,14 +348,17 @@ function RouteComponent() {
         <select
           value={row.approver3}
           onChange={(e) =>
-            updateFieldAccess(row.fieldId, 'approver3', e.target.value)
-          }
+            updateFieldAccess(
+              row.fieldId,
+              'approver3',
+              e.target.value ? Number(e.target.value) : ''
+            )}
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Select</option>
-          {approverOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
             </option>
           ))}
         </select>
@@ -377,9 +375,9 @@ function RouteComponent() {
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Select</option>
-          {approverOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
             </option>
           ))}
         </select>
@@ -388,31 +386,77 @@ function RouteComponent() {
   ]
 
 
-  const updateFieldAccess = (
+  const updateFieldAccess = async (
     fieldId: number,
     key: keyof FieldAccess,
-    value: boolean | string
+    value: boolean | string | number
   ) => {
+    if (!selectedRole) return
+
+    let updatedRow: FieldAccess | null = null
+
+    // 1️⃣ Update UI first
     setFieldAccess(prev =>
       prev.map(row => {
         if (row.fieldId !== fieldId) return row
 
-        // If Use User Hierarchy is checked
-        if (key === 'useUserHierarchy' && value === true) {
-          return {
+        let newRow: FieldAccess
+
+        if (key === 'approvalMode') {
+          newRow = {
             ...row,
-            useUserHierarchy: true,
+            approvalMode: value as 'USER' | 'CUSTOM' | 'NONE',
             approver1: '',
             approver2: '',
             approver3: '',
           }
+        } else {
+          newRow = {
+            ...row,
+            [key]: value,
+          } as FieldAccess
         }
-
-        return { ...row, [key]: value }
+        updatedRow = newRow
+        return newRow
       })
     )
-  }
 
+    if (!updatedRow) return
+
+    // 2️⃣ Convert approvalMode → useDefaultApprover
+    let useDefaultApprover: boolean | null = null
+
+    if (updatedRow.approvalMode === 'USER') {
+      useDefaultApprover = true
+    } else if (updatedRow.approvalMode === 'CUSTOM') {
+      useDefaultApprover = false
+    } else {
+      useDefaultApprover = null
+    }
+
+    // 3️⃣ Prepare API payload
+    const payload = {
+      roleId: selectedRole.roleId,
+      cntrlId: updatedRow.fieldId,
+      render: updatedRow.render,
+      allowEdit: updatedRow.edit,
+      approverOneId: updatedRow.approver1 || 0,
+      approverTwoId: updatedRow.approver2 || 0,
+      approverThreeId: updatedRow.approver3 || 0,
+      useDefaultApprover,
+    }
+
+    console.log("myPayload", payload);
+    try {
+      const res = await HMSService.updateFieldAccess(payload)
+
+      if (res?.responseHeader?.errorCode !== 1101) {
+        Swal.fire('Error', 'Failed to update field access', 'error')
+      }
+    } catch (error) {
+      Swal.fire('Error', 'API Error while updating field access', 'error')
+    }
+  }
 
 
   const handleAddRole = async () => {
@@ -875,7 +919,7 @@ function RouteComponent() {
                   <div className="h-7 w-7 flex items-center justify-center rounded-md bg-blue-50 text-blue-600">
                     <ShieldCheck size={16} />
                   </div>
-                  <span className="text-sm font-medium">dd{role.roleName}</span>
+                  <span className="text-sm font-medium">{role.roleName}</span>
                 </div>
 
                 {/* DELETE ICON */}
@@ -987,7 +1031,7 @@ function RouteComponent() {
                       <div className="grid grid-cols-12 gap-4 h-[600px]">
 
                         {/* LEFT → TREE (SMALLER) */}
-                        <div className="col-span-3 h-full overflow-auto">
+                        <div className="col-span-3 h-full overflow-y-auto pr-2" >
                           <FieldTreeView
                             data={treeData}
                             onSelect={(node) => {
@@ -1001,7 +1045,7 @@ function RouteComponent() {
                                   edit: field.allowedit,
                                   render: field.render,
                                   createLog: false,
-                                  useUserHierarchy: false,
+                                  approvalMode: 'NONE',
                                   approver1: '',
                                   approver2: '',
                                   approver3: '',
@@ -1018,153 +1062,212 @@ function RouteComponent() {
                         <div className="col-span-9 bg-white border rounded-lg p-4 h-full overflow-auto">
                           <div className="overflow-auto">
                             <table className="w-full border border-gray-300 text-sm">
+                              {/* HEADER */}
                               <thead className="bg-gray-100">
                                 <tr>
-                                  <th rowSpan={2} className="border p-2 text-left">Field</th>
-                                  <th colSpan={2} className="border p-2 text-center">UI Elements</th>
-                                  <th rowSpan={2} className="border p-2 text-center">Log Changes</th>
-                                  <th colSpan={4} className="border p-2 text-center">
+                                  {/* FIELD COLUMN (WIDER) */}
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-left w-[200px] min-w-[150px]"
+                                  >
+                                    Field
+                                  </th>
+
+                                  {/* UI ELEMENTS (SMALLER) */}
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[120px] min-w-[50px]"
+                                  >
+                                    UI Elements
+                                  </th>
+
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[110px]"
+                                  >
+                                    Log Changes
+                                  </th>
+
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[320px]"
+                                  >
                                     Approver Matrix
                                   </th>
                                 </tr>
-                                <tr>
-                                  <th className="border p-2 text-center">Edit</th>
-                                  <th className="border p-2 text-center">Render</th>
-                                  <th className="border p-2 text-center">
-                                    Use User Hierarchy
-                                  </th>
-                                  <th className="border p-2 text-center">Approver 1</th>
-                                  <th className="border p-2 text-center">Approver 2</th>
-                                  <th className="border p-2 text-center">Approver 3</th>
-                                </tr>
                               </thead>
 
+                              {/* BODY */}
                               <tbody>
                                 {fieldAccess.length === 0 ? (
                                   <tr>
-                                    <td colSpan={9} className="text-center py-8 text-gray-400">
+                                    <td colSpan={5} className="text-center py-8 text-gray-400">
                                       Select a section from the tree to view field access
                                     </td>
                                   </tr>
                                 ) : (
                                   fieldAccess.map(row => (
-                                    <tr key={row.fieldId} className="hover:bg-gray-50">
-                                      {/* Field */}
-                                      <td className="border p-2">{row.fieldName}</td>
+                                    <tr key={row.fieldId} className="hover:bg-gray-50 align-top">
 
-                                      {/* Edit */}
-                                      <td className="border p-2 text-center">
-                                        <input
-                                          type="checkbox"
-                                          checked={row.edit}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'edit', e.target.checked)
-                                          }
-                                        />
-                                      </td>
-
-                                      {/* Render */}
-                                      <td className="border p-2 text-center">
-                                        <input
-                                          type="checkbox"
-                                          checked={row.render}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'render', e.target.checked)
-                                          }
-                                        />
-                                      </td>
-
-                                      {/* Log */}
-                                      <td className="border p-2 text-center">
-                                        <input
-                                          type="checkbox"
-                                          checked={row.createLog}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'createLog', e.target.checked)
-                                          }
-                                        />
-                                      </td>
-
-                                      {/* Use User Hierarchy */}
-                                      <td className="border p-2 text-center">
-                                        <input
-                                          type="checkbox"
-                                          checked={row.useUserHierarchy}
-                                          onChange={(e) =>
-                                            updateFieldAccess(
-                                              row.fieldId,
-                                              'useUserHierarchy',
-                                              e.target.checked
-                                            )
-                                          }
-                                        />
-                                      </td>
-
-                                      {/* Approver 1 */}
+                                      {/* FIELD */}
                                       <td className="border p-2">
-                                        <select
-                                          value={row.approver1}
-                                          disabled={row.useUserHierarchy}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'approver1', e.target.value)
-                                          }
-                                          className="border rounded px-2 py-1 w-full"
-                                        >
-                                          <option value="">Select</option>
-                                          {approverOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>
-                                              {opt.label}
-                                            </option>
-                                          ))}
-                                        </select>
+                                        {row.fieldName}
                                       </td>
 
-                                      {/* Approver 2 */}
-                                      <td className="border p-2">
-                                        <select
-                                          value={row.approver2}
-                                          disabled={row.useUserHierarchy}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'approver2', e.target.value)
-                                          }
-                                          className="border rounded px-2 py-1 w-full"
-                                        >
-                                          <option value="">Select</option>
-                                          {approverOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>
-                                              {opt.label}
-                                            </option>
-                                          ))}
-                                        </select>
+                                      {/* ✅ UI ELEMENTS COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="space-y-4">
+
+                                          {/* EDIT */}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">Edit</span>
+                                            <Switch
+                                              checked={row.edit}
+                                              onCheckedChange={(checked) =>
+                                                updateFieldAccess(row.fieldId, 'edit', checked)
+                                              }
+                                            />
+                                          </div>
+
+                                          {/* RENDER */}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">Render</span>
+                                            <Switch
+                                              checked={row.render}
+                                              onCheckedChange={(checked) =>
+                                                updateFieldAccess(row.fieldId, 'render', checked)
+                                              }
+                                            />
+                                          </div>
+
+                                        </div>
                                       </td>
 
-                                      {/* Approver 3 */}
-                                      <td className="border p-2">
-                                        <select
-                                          value={row.approver3}
-                                          disabled={row.useUserHierarchy}
-                                          onChange={(e) =>
-                                            updateFieldAccess(row.fieldId, 'approver3', e.target.value)
-                                          }
-                                          className="border rounded px-2 py-1 w-full"
-                                        >
-                                          <option value="">Select</option>
-                                          {approverOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>
-                                              {opt.label}
-                                            </option>
-                                          ))}
-                                        </select>
+                                      {/* ✅ LOG CHANGES COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm text-gray-600">Log</span>
+                                          <Switch
+                                            checked={row.createLog}
+                                            onCheckedChange={(checked) =>
+                                              updateFieldAccess(row.fieldId, 'createLog', checked)
+                                            }
+                                          />
+                                        </div>
                                       </td>
+
+                                      {/* ✅ APPROVER MATRIX COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="space-y-3">
+
+                                          {/* Approval Mode */}
+                                          <div className="flex items-center justify-between gap-3">
+                                            {/* <label className="text-sm font-medium w-40">
+                                              Approval Mode
+                                            </label> */}
+
+                                            <select
+                                              value={row.approvalMode}
+                                              onChange={(e) =>
+                                                updateFieldAccess(row.fieldId, 'approvalMode', e.target.value)
+                                              }
+                                              className="border rounded px-2 py-1 w-full text-sm"
+                                            >
+                                              <option value="USER">Use User Hierarchy</option>
+                                              <option value="CUSTOM">Use Custom Hierarchy</option>
+                                              <option value="NONE">No Approval Required</option>
+                                            </select>
+                                          </div>
+
+                                          {/* Divider */}
+                                          <div className="border-t pt-3 space-y-3">
+
+                                            {/* Approver 1 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 1
+                                              </label>
+                                              <select
+                                                value={row.approver1}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver1',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                            {/* Approver 2 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 2
+                                              </label>
+                                              <select
+                                                value={row.approver2}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver2',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                            {/* Approver 3 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 3
+                                              </label>
+                                              <select
+                                                value={row.approver3}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver3',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                          </div>
+                                        </div>
+                                      </td>
+
                                     </tr>
                                   ))
                                 )}
                               </tbody>
-
                             </table>
                           </div>
                         </div>
-
                       </div>
 
                     )}
