@@ -10,16 +10,18 @@ export const FIELD_TO_CNTRLID_MAP: Record<string, number> = {
   'father_Husband_Nm': 1015,
   
   // Financial Details fields
-  'accountType': 1092, // Bank Account Type
-  'panNumber': 1093,
-  'bankName': 1094,
-  'accountNumber': 1095,
-  'ifsc': 1096,
-  'micr': 1097,
-  'accountHolderName': 1098,
-  'branchName': 1099,
-  'preferredPaymentMode': 1100,
-  'factoringHouse': 1101,
+  // Updated to match actual API response
+  'bankName': 1088, // Matches API: "Bank Name" (cntrlid: 1088)
+  'factoringHouse': 1089, // Matches API: "Factoring House" (cntrlid: 1089)
+  'accountNumber': 1090, // Matches API: "Bank AccountNo" (cntrlid: 1090)
+  'ifsc': 1091, // Matches API: "IFSC Code" (cntrlid: 1091)
+  'preferredPaymentMode': 1093, // Matches API: "Payment Mode" (cntrlid: 1093)
+  // Fields not in current API response (will default to visible/editable):
+  'accountType': 1092, // Bank Account Type - REMOVED from API, will default to visible
+  'micr': 1097, // MICR Code - not in API, will default to visible
+  'accountHolderName': 1098, // Payee Name - not in API, will default to visible
+  'branchName': 1099, // Branch Name - not in API, will default to visible
+  'panNumber': 1094,
   'taxStatus': 1102,
   'serviceTaxNo': 1103,
   'panAadharLinkFlag': 1104,

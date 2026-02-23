@@ -91,8 +91,8 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
     if (uiAccessLoading) return fields // Return all fields while loading
     
     return fields.map(field => {
-      const fieldVisible = isFieldVisible(activeTab, field.name)
-      const fieldEditable = isFieldEditable(activeTab, field.name)
+      const fieldVisible = isFieldVisible(activeTab, field.name, field.label)
+      const fieldEditable = isFieldEditable(activeTab, field.name, field.label)
       
       return {
         ...field,

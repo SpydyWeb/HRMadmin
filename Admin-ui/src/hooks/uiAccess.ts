@@ -114,11 +114,11 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   };
 
   // Check if a specific field is visible
-  const isFieldVisible = (tabValue: string, fieldIdentifier: string): boolean => {
+  const isFieldVisible = (tabValue: string, fieldIdentifier: string, fieldLabel?: string): boolean => {
     const fields = findFieldsInTab(tabValue);
     
     if (fields.length === 0) {
-      console.log(`🔍 Field "${fieldIdentifier}" in tab "${tabValue}": No field restrictions, defaulting to visible`);
+      console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} in tab "${tabValue}": No field restrictions, defaulting to visible`);
       return true; // Default to visible if no field restrictions
     }
     
@@ -128,30 +128,115 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       ? fields.find(f => f.cntrlid === cntrlid)
       : undefined;
     
-    // If not found by cntrlid, try matching by cntrlName or field name
+    // Debug: Log cntrlid matching attempt for accountType specifically
+    if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
+      console.log(`   🔎 [accountType] Trying to match by cntrlid ${cntrlid}...`, field ? `✅ FOUND: ${field.cntrlName}` : `❌ NOT FOUND (cntrlid ${cntrlid} not in API)`);
+    }
+    
+    // If not found by cntrlid, try matching by cntrlName, field name, or label
     if (!field) {
       const normalizedIdentifier = normalizeFieldName(fieldIdentifier);
+      const normalizedLabel = fieldLabel ? normalizeFieldName(fieldLabel) : '';
+      
+      // Debug for accountType
+      if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
+        console.log(`   🔎 [accountType] Trying name/label matching...`);
+        console.log(`      normalizedIdentifier: "${normalizedIdentifier}"`);
+        console.log(`      normalizedLabel: "${normalizedLabel}"`);
+      }
+      
       field = fields.find(f => {
         const fieldName = getFieldName(f.cntrlid);
         const normalizedCntrlName = normalizeFieldName(f.cntrlName || '');
         const normalizedMappedName = fieldName ? normalizeFieldName(fieldName) : '';
         
-        return normalizedMappedName === normalizedIdentifier ||
-               normalizedCntrlName === normalizedIdentifier ||
-               normalizedCntrlName.includes(normalizedIdentifier) ||
-               normalizedIdentifier.includes(normalizedCntrlName) ||
-               f.cntrlName?.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
-               fieldIdentifier.toLowerCase().includes(f.cntrlName?.toLowerCase() || '');
+        // Try matching by field name/identifier
+        // Prioritize exact matches, then use includes only if strings are similar length
+        // This prevents "account" from matching "accountno"
+        const exactMatchByName = 
+          normalizedMappedName === normalizedIdentifier ||
+          normalizedCntrlName === normalizedIdentifier;
+        
+        const partialMatchByName = !exactMatchByName && (
+          // Only use includes if the shorter string is at least 80% of the longer string
+          // This prevents "account" from matching "accountno" (6/9 = 67% < 80%)
+          (normalizedCntrlName.length > 0 && normalizedIdentifier.length > 0 && 
+           Math.min(normalizedCntrlName.length, normalizedIdentifier.length) / 
+           Math.max(normalizedCntrlName.length, normalizedIdentifier.length) >= 0.8 &&
+           (normalizedCntrlName.includes(normalizedIdentifier) ||
+            normalizedIdentifier.includes(normalizedCntrlName))) ||
+          // Also check original field names (case-insensitive)
+          (f.cntrlName && fieldIdentifier && 
+           Math.min(f.cntrlName.toLowerCase().length, fieldIdentifier.toLowerCase().length) / 
+           Math.max(f.cntrlName.toLowerCase().length, fieldIdentifier.toLowerCase().length) >= 0.8 &&
+           (f.cntrlName.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
+            fieldIdentifier.toLowerCase().includes(f.cntrlName.toLowerCase())))
+        );
+        
+        const matchesByName = exactMatchByName || partialMatchByName;
+        
+        // Try matching by label if provided
+        const exactMatchByLabel = normalizedLabel && (
+          normalizedCntrlName === normalizedLabel
+        );
+        
+        const partialMatchByLabel = normalizedLabel && !exactMatchByLabel && (
+          // Only use includes if strings are similar length
+          Math.min(normalizedCntrlName.length, normalizedLabel.length) / 
+          Math.max(normalizedCntrlName.length, normalizedLabel.length) >= 0.6 &&
+          (normalizedCntrlName.includes(normalizedLabel) ||
+           normalizedLabel.includes(normalizedCntrlName)) ||
+          // Also check original labels
+          (f.cntrlName && fieldLabel &&
+           Math.min(f.cntrlName.toLowerCase().length, fieldLabel.toLowerCase().length) / 
+           Math.max(f.cntrlName.toLowerCase().length, fieldLabel.toLowerCase().length) >= 0.6 &&
+           (f.cntrlName.toLowerCase().includes(fieldLabel.toLowerCase()) ||
+            fieldLabel.toLowerCase().includes(f.cntrlName.toLowerCase())))
+        );
+        
+        const matchesByLabel = exactMatchByLabel || partialMatchByLabel;
+        
+        const matches = matchesByName || matchesByLabel;
+        
+        // Debug for accountType
+        if ((fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) && matches) {
+          console.log(`   ⚠️ [accountType] FALSE MATCH detected with field:`, {
+            cntrlid: f.cntrlid,
+            cntrlName: f.cntrlName,
+            matchesByName,
+            matchesByLabel,
+            exactMatchByName,
+            partialMatchByName,
+            exactMatchByLabel,
+            partialMatchByLabel
+          });
+        }
+        
+        return matches;
       });
+      
+      if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
+        console.log(`   🔎 [accountType] Name/label matching result:`, field ? `✅ FOUND: ${field.cntrlName}` : '❌ NOT FOUND');
+      }
     }
     
-    const isVisible = field ? field.render : true;
-    console.log(`🔍 Field "${fieldIdentifier}" (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, render: field.render } : 'not found');
-    return isVisible; // Default to visible if field not found
+    // If field restrictions exist but field is not found, hide it
+    // If no field restrictions exist, show it (default behavior)
+    const isVisible = field ? field.render : (fields.length === 0 ? true : false);
+    
+    // Enhanced logging
+    if (!field && fields.length > 0) {
+      console.log(`❌ Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} NOT FOUND in API restrictions for tab "${tabValue}"`);
+      console.log(`   Available fields in API:`, fields.map(f => ({ cntrlid: f.cntrlid, cntrlName: f.cntrlName, render: f.render })));
+      console.log(`   Tried matching with: fieldIdentifier="${fieldIdentifier}", fieldLabel="${fieldLabel}", cntrlid=${cntrlid || 'N/A'}`);
+    }
+    
+    console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, render: field.render } : `not found (${fields.length} fields in restrictions)`);
+    return isVisible;
   };
   
   // Check if a specific field is editable
-  const isFieldEditable = (tabValue: string, fieldIdentifier: string): boolean => {
+  const isFieldEditable = (tabValue: string, fieldIdentifier: string, fieldLabel?: string): boolean => {
     const fields = findFieldsInTab(tabValue);
     
     if (fields.length === 0) return true; // Default to editable if no field restrictions
@@ -162,26 +247,41 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       ? fields.find(f => f.cntrlid === cntrlid)
       : undefined;
     
-    // If not found by cntrlid, try matching by cntrlName or field name
+    // If not found by cntrlid, try matching by cntrlName, field name, or label
     if (!field) {
       const normalizedIdentifier = normalizeFieldName(fieldIdentifier);
+      const normalizedLabel = fieldLabel ? normalizeFieldName(fieldLabel) : '';
+      
       field = fields.find(f => {
         const fieldName = getFieldName(f.cntrlid);
         const normalizedCntrlName = normalizeFieldName(f.cntrlName || '');
         const normalizedMappedName = fieldName ? normalizeFieldName(fieldName) : '';
         
-        return normalizedMappedName === normalizedIdentifier ||
-               normalizedCntrlName === normalizedIdentifier ||
-               normalizedCntrlName.includes(normalizedIdentifier) ||
-               normalizedIdentifier.includes(normalizedCntrlName) ||
-               f.cntrlName?.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
-               fieldIdentifier.toLowerCase().includes(f.cntrlName?.toLowerCase() || '');
+        // Try matching by field name/identifier
+        const matchesByName = 
+          normalizedMappedName === normalizedIdentifier ||
+          normalizedCntrlName === normalizedIdentifier ||
+          normalizedCntrlName.includes(normalizedIdentifier) ||
+          normalizedIdentifier.includes(normalizedCntrlName) ||
+          f.cntrlName?.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
+          fieldIdentifier.toLowerCase().includes(f.cntrlName?.toLowerCase() || '');
+        
+        // Try matching by label if provided
+        const matchesByLabel = normalizedLabel && (
+          normalizedCntrlName === normalizedLabel ||
+          normalizedCntrlName.includes(normalizedLabel) ||
+          normalizedLabel.includes(normalizedCntrlName) ||
+          f.cntrlName?.toLowerCase().includes(fieldLabel?.toLowerCase() || '') ||
+          fieldLabel?.toLowerCase().includes(f.cntrlName?.toLowerCase() || '')
+        );
+        
+        return matchesByName || matchesByLabel;
       });
     }
     
-    const isEditable = field ? field.allowedit : true;
-    console.log(`🔍 Field "${fieldIdentifier}" (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : 'not found');
-    return isEditable; // Default to editable if field not found
+    const isEditable = field ? field.allowedit : (fields.length === 0 ? true : false);
+    console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : `not found (${fields.length} fields in restrictions)`);
+    return isEditable;
   };
 
   return {
