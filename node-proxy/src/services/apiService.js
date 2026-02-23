@@ -152,6 +152,34 @@ const addUser = async (data, headers = {}) => {
   );
 };
 
+const getHierarchy = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.GETHIERARCHY,
+    {
+      roleId: data.roleId,
+      searchFor: data.searchFor,
+    },          // ✅ boolean payload
+    { headers }
+  );
+};
+
+const fieldUpdate = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.FIELDUPDATE,
+    {
+      roleId: data.roleId,
+      cntrlId: data.cntrlId,
+      render: data.render,
+      allowEdit: data.allowEdit,
+      approverOneId: data.approverOneId,
+      approverTwoId: data.approverTwoId,
+      approverThreeId: data.approverThreeId,
+      useDefaultApprover: data.useDefaultApprover,
+    },      
+    { headers }
+  );
+};
+
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -263,7 +291,7 @@ const downloadRecord = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.DOWNLOADRECORD}/${jobExeHistId}`, data, { headers });
 };
 
-const GeoHierarchy = (channelCategory,subChannelCode,branchCode, headers = {}) => {
+const GeoHierarchy = (channelCategory, subChannelCode, branchCode, headers = {}) => {
   if (!channelCategory && !branchCode) {
     throw new Error("channelCategory is required for GeoHierarchy");
   }
@@ -335,6 +363,8 @@ module.exports = {
   editAgentDetails,
   executiveHistoryList,
   editCommission,
+  getHierarchy,
+  fieldUpdate,
   downloadRecord,
   GeoHierarchy,
   GeoHierarchyTable,

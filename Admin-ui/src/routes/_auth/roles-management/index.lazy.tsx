@@ -4,7 +4,9 @@ import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { HMSService } from '@/services/hmsService'
 import DataTable from '@/components/table/DataTable'
-import Swal from 'sweetalert2'
+import { Pagination } from '@/components/table/Pagination'
+import CustomTabs from '@/components/CustomTabs'
+import { Switch } from '@/components/ui/switch'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,6 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import Swal from 'sweetalert2'
+import FieldTreeView from '../../../components/ui/FieldTreeView'
 
 export const Route = createLazyFileRoute('/_auth/roles-management/')({
   component: RouteComponent,
@@ -37,7 +41,23 @@ function RouteComponent() {
     failedLoginAttempts: number
   }
 
-  const [activeTab, setActiveTab] = useState<'menu' | 'user'>('menu')
+  type FieldAccess = {
+    fieldId: number
+    fieldName: string
+
+    edit: boolean
+    render: boolean
+    createLog: boolean
+
+    approvalMode: 'USER' | 'CUSTOM' | 'NONE'
+
+    approver1: number | ''
+    approver2: number | ''
+    approver3: number | ''
+  }
+
+
+  const [activeTab, setActiveTab] = useState<'menu' | 'user' | 'field'>('menu')
   const [userList, setUserList] = useState<any[]>([])
   const [userLoading, setUserLoading] = useState(false)
   const [menuAccess, setMenuAccess] = useState<MenuAccess[]>([])
@@ -50,7 +70,11 @@ function RouteComponent() {
   const [openAddUser, setOpenAddUser] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [addingUser, setAddingUser] = useState(false)
-
+  const [fieldAccess, setFieldAccess] = useState<FieldAccess[]>([])
+  const [fieldLoading, setFieldLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 5 // how many rows per page
+  const [treeData, setTreeData] = useState<any[]>([])
 
   const menuData = [
     {
@@ -90,34 +114,10 @@ function RouteComponent() {
     },
   ]
 
-  const userData = [
-    {
-      id: 1,
-      userId: 'navink',
-      name: 'Navin Kumar',
-      designation: 'Manager',
-      department: 'Management',
-      location: 'Mumbai',
-      status: 'Active',
-    },
-    {
-      id: 2,
-      userId: 'gaurav',
-      name: 'Gaurav Rathore',
-      designation: 'Manager',
-      department: 'IT',
-      location: 'Indore',
-      status: 'Active',
-    },
-    {
-      id: 3,
-      userId: 'saurab',
-      name: 'Saurab Singh',
-      designation: 'Manager',
-      department: 'Operations',
-      location: 'Delhi',
-      status: 'Inactive',
-    },
+  const roleTabs = [
+    { value: 'menu', label: 'Menu' },
+    { value: 'user', label: 'User' },
+    { value: 'field', label: 'Field Access' },
   ]
 
   useEffect(() => {
@@ -141,8 +141,60 @@ function RouteComponent() {
       displayMenu(selectedRole)
     } else if (activeTab === 'user') {
       fetchUserList(selectedRole)
+    } else if (activeTab === 'field') {
+      fetchFieldAccess(selectedRole)
     }
   }, [activeTab])
+
+
+  useEffect(() => {
+    if (!selectedRole || activeTab !== 'field') return
+
+    const getHierarchy = async () => {
+      try {
+        const response = await HMSService.getHierarchyData({
+          roleId: selectedRole.roleId,
+          searchFor: 2,
+        })
+
+        if (response?.responseHeader?.errorCode === 1101) {
+          const apiMenu =
+            response?.responseBody?.uiMenuResponse?.uiMenu || []
+
+          const formattedTree = apiMenu.map((screen: any, i: number) => ({
+            id: `screen-${i}`,
+            name: screen.section,
+            type: 'root',
+            children:
+              screen.subSection?.map((tab: any, j: number) => ({
+                id: `screen-${i}-tab-${j}`,
+                name: tab.section,
+                type: 'module',
+                children:
+                  tab.subSection?.map((section: any, k: number) => ({
+                    id: `screen-${i}-tab-${j}-section-${k}`,
+                    name: section.section,
+                    type: 'menu',
+
+                    // store full fieldList for later use
+                    fieldList: section.fieldList || [],
+
+                    // do NOT show fields in tree
+                    children: [],
+                  })) || [],
+              })) || [],
+          }))
+
+          setTreeData(formattedTree)
+        }
+      } catch (error) {
+        console.error('Failed to fetch hierarchy:', error)
+      }
+    }
+
+    getHierarchy()
+  }, [selectedRole, activeTab])
+
 
 
   /* ================= MENU TABLE COLUMNS ================= */
@@ -172,10 +224,13 @@ function RouteComponent() {
   /* ================= USER TABLE COLUMNS ================= */
 
   const userColumns = [
-    { header: 'User ID', accessor: 'userId' },
-    { header: 'Username', accessor: 'username' },
     {
-      header: 'Email', accessor: (row: RoleUser) => (
+      header: 'Login ID',
+      accessor: 'username',
+    },
+    {
+      header: 'Email',
+      accessor: (row: RoleUser) => (
         <span
           className="block max-w-[240px] truncate"
           title={row.emailId}
@@ -211,8 +266,6 @@ function RouteComponent() {
       ),
     },
     { header: 'Failed Attempts', accessor: 'failedLoginAttempts' },
-
-    // 🔴 DELETE COLUMN (LAST)
     {
       header: 'Action',
       width: '80px',
@@ -227,6 +280,215 @@ function RouteComponent() {
       ),
     },
   ]
+
+  const fieldColumns = [
+    {
+      header: 'Field',
+      accessor: 'fieldName',
+    },
+    {
+      header: 'Edit',
+      accessor: (row: FieldAccess) => (
+        <input
+          type="checkbox"
+          checked={row.edit}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'edit', e.target.checked)
+          }
+        />
+      ),
+    },
+    {
+      header: 'Approver 1',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver1}
+          onChange={(e) =>
+            updateFieldAccess(
+              row.fieldId,
+              'approver1',
+              e.target.value ? Number(e.target.value) : ''
+            )}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Approver 2',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver2}
+          onChange={(e) =>
+            updateFieldAccess(
+              row.fieldId,
+              'approver2',
+              e.target.value ? Number(e.target.value) : ''
+            )}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Approver 3',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.approver3}
+          onChange={(e) =>
+            updateFieldAccess(
+              row.fieldId,
+              'approver3',
+              e.target.value ? Number(e.target.value) : ''
+            )}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Default Approver',
+      accessor: (row: FieldAccess) => (
+        <select
+          value={row.defaultApprover}
+          onChange={(e) =>
+            updateFieldAccess(row.fieldId, 'defaultApprover', e.target.value)
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">Select</option>
+          {roles.map(role => (
+            <option key={role.roleId} value={role.roleId}>
+              {role.roleName}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+  ]
+
+
+  const updateFieldAccess = async (
+    fieldId: number,
+    key: keyof FieldAccess,
+    value: boolean | string | number
+  ) => {
+    if (!selectedRole) return
+
+    let updatedRow: FieldAccess | null = null
+
+    // 1️⃣ Update UI first
+    setFieldAccess(prev =>
+      prev.map(row => {
+        if (row.fieldId !== fieldId) return row
+
+        let newRow: FieldAccess
+
+        if (key === 'approvalMode') {
+          newRow = {
+            ...row,
+            approvalMode: value as 'USER' | 'CUSTOM' | 'NONE',
+            approver1: '',
+            approver2: '',
+            approver3: '',
+          }
+        } else {
+          newRow = {
+            ...row,
+            [key]: value,
+          } as FieldAccess
+        }
+        updatedRow = newRow
+        return newRow
+      })
+    )
+
+    if (!updatedRow) return
+
+    // 2️⃣ Convert approvalMode → useDefaultApprover
+    let useDefaultApprover: boolean | null = null
+
+    const mode =
+      key === 'approvalMode'
+        ? (value as 'USER' | 'CUSTOM' | 'NONE')
+        : updatedRow.approvalMode
+
+    if (mode === 'USER') {
+      useDefaultApprover = true
+    } else if (mode === 'CUSTOM') {
+      useDefaultApprover = false
+    } else {
+      useDefaultApprover = null
+    }
+
+    if (updatedRow.approvalMode === 'USER') {
+      useDefaultApprover = true
+    } else if (updatedRow.approvalMode === 'CUSTOM') {
+      useDefaultApprover = false
+    } else {
+      useDefaultApprover = null
+    }
+
+    // 3️⃣ Prepare API payload
+    let payload = {}
+
+    if (useDefaultApprover == null || useDefaultApprover == true) {
+      payload = {
+        roleId: selectedRole.roleId,
+        cntrlId: updatedRow.fieldId,
+        render: updatedRow.render,
+        allowEdit: updatedRow.edit,
+        approverOneId: null,
+        approverTwoId: null,
+        approverThreeId: null,
+        useDefaultApprover,
+      }
+    }
+    else {
+      payload = {
+        roleId: selectedRole.roleId,
+        cntrlId: updatedRow.fieldId,
+        render: updatedRow.render,
+        allowEdit: updatedRow.edit,
+        approverOneId: updatedRow.approver1 || null,
+        approverTwoId: updatedRow.approver2 || null,
+        approverThreeId: updatedRow.approver3 || null,
+        useDefaultApprover,
+      }
+    }
+    console.log("myPayload", payload);
+    try {
+      const res = await HMSService.updateFieldAccess(payload)
+
+      if (res?.responseHeader?.errorCode !== 1101) {
+        Swal.fire('Error', 'Failed to update field access', 'error')
+      }
+      else {
+        Swal.fire('Success', 'Access updated successfully', 'success')
+      }
+    } catch (error) {
+      Swal.fire('Error', 'API Error while updating field access', 'error')
+    }
+  }
+
 
   const handleAddRole = async () => {
     if (!newRoleName.trim()) {
@@ -325,11 +587,15 @@ function RouteComponent() {
 
         const formattedMenu = apiMenu.map((item: any) => ({
           menuId: item.menuId,
-          menuName: item.menuName,
+          menuName: item.parentMenuName
+            ? `${item.parentMenuName} >> ${item.menuName}`
+            : item.menuName,
           hasAccess: item.hasAccess,
         }))
 
+
         setMenuAccess(formattedMenu)
+        setCurrentPage(1)
       } else {
         setMenuAccess([])
       }
@@ -340,6 +606,13 @@ function RouteComponent() {
       setMenuLoading(false)
     }
   }
+
+  const fetchFieldAccess = async (role: Role) => {
+    setFieldLoading(true)
+    setFieldAccess([])
+    setFieldLoading(false)
+  }
+
 
   const fetchUserList = async (role: Role) => {
     setUserLoading(true)
@@ -542,7 +815,7 @@ function RouteComponent() {
 
   const handleRoleClick = (role: Role) => {
     setSelectedRole(role)
-
+    setFieldAccess([])
     if (activeTab === 'menu') {
       displayMenu(role)
     } else if (activeTab === 'user') {
@@ -550,6 +823,13 @@ function RouteComponent() {
     }
   }
 
+
+  const totalPages = Math.ceil(menuAccess.length / pageSize)
+
+  const paginatedMenu = menuAccess.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   return (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -637,7 +917,7 @@ function RouteComponent() {
 
       <div className="flex gap-6">
         {/* LEFT SIDE - ROLES */}
-        <div className="bg-white rounded-2xl shadow-md border p-6 w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-md border p-6 w-85">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold">Roles</h2>
@@ -648,7 +928,7 @@ function RouteComponent() {
 
             <button
               onClick={() => setOpenAddRole(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
+              className="flex items-center gap-2 bg-blue-600 text-white px-2 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
               <Plus size={16} />
               Add Role
             </button>
@@ -670,7 +950,7 @@ function RouteComponent() {
                   <div className="h-7 w-7 flex items-center justify-center rounded-md bg-blue-50 text-blue-600">
                     <ShieldCheck size={16} />
                   </div>
-                  <span className="text-sm font-medium">dd{role.roleName}</span>
+                  <span className="text-sm font-medium">{role.roleName}</span>
                 </div>
 
                 {/* DELETE ICON */}
@@ -692,66 +972,342 @@ function RouteComponent() {
 
         {/* RIGHT SIDE */}
         {selectedRole && (
-          <div className="flex-1 bg-white rounded-2xl shadow-md border p-6">
+          <div className="flex-1 bg-gray-150 rounded-2xl shadow-md border p-6">
             <h3 className="text-lg font-semibold mb-4">
               {selectedRole?.roleName} - Role Details
             </h3>
 
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as 'menu' | 'user')}
-              className="w-full"
-            >
-              <TabsList>
-                <TabsTrigger value="menu">Menu</TabsTrigger>
-                <TabsTrigger value="user">User</TabsTrigger>
-              </TabsList>
+            {/* CUSTOM TABS (Same as Agent Page) */}
+            {/* TABS */}
 
-              {/* MENU TAB */}
-              <TabsContent value="menu" className="mt-4">
-                {menuLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">
-                      Loading menu access...
-                    </span>
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={menuColumns}
-                    data={menuAccess}
-                  />
+            {/* TAB + CONTENT WRAPPER */}
+            <div className="rounded-xl">
+
+              {/* TABS */}
+              <div className="-ml-px pt-2">
+                <CustomTabs
+                  tabs={roleTabs}
+                  defaultValue={activeTab}
+                  onValueChange={(value) =>
+                    setActiveTab(value as 'menu' | 'user' | 'field')
+                  }
+                />
+              </div>
+
+              {/* CONTENT */}
+              <div className="-ml-px p-4 -mt-px bg-white rounded-b-xl rounded-tr-xl">
+                {/* MENU TAB */}
+                {activeTab === 'menu' && (
+                  <>
+                    {menuLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading menu access...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <DataTable columns={menuColumns} data={paginatedMenu} />
+
+                        {totalPages > 1 && (
+                          <Pagination
+                            totalPages={totalPages}
+                            currentPage={currentPage}
+                            onPageChange={(page) => setCurrentPage(page)}
+                          />
+                        )}
+                      </>
+                    )}
+                  </>
                 )}
-              </TabsContent>
 
-              {/* USER TAB */}
-              <TabsContent value="user" className="mt-4">
-                {/* HEADER WITH ADD BUTTON */}
-                <div className="flex justify-end mb-4">
-                  <button
-                    onClick={() => setOpenAddUser(true)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
-                  >
-                    <Plus size={16} />
-                    Add User
-                  </button>
-                </div>
-                {userLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">
-                      Loading users...
-                    </span>
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={userColumns}
-                    data={userList}
-                  />
+                {/* USER TAB */}
+                {activeTab === 'user' && (
+                  <>
+                    <div className="flex justify-end mb-4">
+                      <button
+                        onClick={() => setOpenAddUser(true)}
+                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                      >
+                        <Plus size={16} />
+                        Add User
+                      </button>
+                    </div>
+
+                    {userLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading users...
+                        </span>
+                      </div>
+                    ) : (
+                      <DataTable columns={userColumns} data={userList} />
+                    )}
+                  </>
                 )}
-              </TabsContent>
 
-            </Tabs>
+                {/* FIELD TAB */}
+                {activeTab === 'field' && (
+                  <>
+                    {fieldLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-500">
+                          Loading field hierarchy...
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-12 gap-4 h-[600px]">
+
+                        {/* LEFT → TREE (SMALLER) */}
+                        <div className="col-span-3 h-full overflow-y-auto pr-2" >
+                          <FieldTreeView
+                            data={treeData}
+                            onSelect={(node) => {
+                              console.log('Selected node:', node)
+
+                              // Only load table if SECTION clicked
+                              if (node.type === 'menu' && node.fieldList) {
+                                const formattedFields = node.fieldList.map((field: any) => ({
+                                  fieldId: field.cntrlid,
+                                  fieldName: field.cntrlName,
+                                  edit: field.allowedit,
+                                  render: field.render,
+                                  createLog: false,
+                                  approvalMode: 'NONE',
+                                  approver1: '',
+                                  approver2: '',
+                                  approver3: '',
+                                }))
+
+                                setFieldAccess(formattedFields)
+                              }
+                            }}
+                          />
+
+                        </div>
+
+                        {/* RIGHT → TABLE (BIGGER) */}
+                        <div className="col-span-9 bg-white border rounded-lg p-4 h-full overflow-auto">
+                          <div className="overflow-auto">
+                            <table className="w-full border border-gray-300 text-sm">
+                              {/* HEADER */}
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  {/* FIELD COLUMN (WIDER) */}
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-left w-[200px] min-w-[150px]"
+                                  >
+                                    Field
+                                  </th>
+
+                                  {/* UI ELEMENTS (SMALLER) */}
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[120px] min-w-[50px]"
+                                  >
+                                    UI Elements
+                                  </th>
+
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[110px]"
+                                  >
+                                    Log Changes
+                                  </th>
+
+                                  <th
+                                    rowSpan={2}
+                                    className="border p-2 text-center w-[320px]"
+                                  >
+                                    Approver Matrix
+                                  </th>
+                                </tr>
+                              </thead>
+
+                              {/* BODY */}
+                              <tbody>
+                                {fieldAccess.length === 0 ? (
+                                  <tr>
+                                    <td colSpan={5} className="text-center py-8 text-gray-400">
+                                      Select a section from the tree to view field access
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  fieldAccess.map(row => (
+                                    <tr key={row.fieldId} className="hover:bg-gray-50 align-top">
+
+                                      {/* FIELD */}
+                                      <td className="border p-2">
+                                        {row.fieldName}
+                                      </td>
+
+                                      {/* ✅ UI ELEMENTS COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="space-y-4">
+
+                                          {/* EDIT */}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">Edit</span>
+                                            <Switch
+                                              checked={row.edit}
+                                              onCheckedChange={(checked) =>
+                                                updateFieldAccess(row.fieldId, 'edit', checked)
+                                              }
+                                            />
+                                          </div>
+
+                                          {/* RENDER */}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">Render</span>
+                                            <Switch
+                                              checked={row.render}
+                                              onCheckedChange={(checked) =>
+                                                updateFieldAccess(row.fieldId, 'render', checked)
+                                              }
+                                            />
+                                          </div>
+
+                                        </div>
+                                      </td>
+
+                                      {/* ✅ LOG CHANGES COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm text-gray-600">Log</span>
+                                          <Switch
+                                            checked={row.createLog}
+                                            onCheckedChange={(checked) =>
+                                              updateFieldAccess(row.fieldId, 'createLog', checked)
+                                            }
+                                          />
+                                        </div>
+                                      </td>
+
+                                      {/* ✅ APPROVER MATRIX COLUMN */}
+                                      <td className="border p-3 align-top">
+                                        <div className="space-y-3">
+
+                                          {/* Approval Mode */}
+                                          <div className="flex items-center justify-between gap-3">
+                                            {/* <label className="text-sm font-medium w-40">
+                                              Approval Mode
+                                            </label> */}
+
+                                            <select
+                                              value={row.approvalMode}
+                                              onChange={(e) =>
+                                                updateFieldAccess(row.fieldId, 'approvalMode', e.target.value)
+                                              }
+                                              className="border rounded px-2 py-1 w-full text-sm"
+                                            >
+                                              <option value="USER">Use User Hierarchy</option>
+                                              <option value="CUSTOM">Use Custom Hierarchy</option>
+                                              <option value="NONE">No Approval Required</option>
+                                            </select>
+                                          </div>
+
+                                          {/* Divider */}
+                                          <div className="border-t pt-3 space-y-3">
+
+                                            {/* Approver 1 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 1
+                                              </label>
+                                              <select
+                                                value={row.approver1}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver1',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                            {/* Approver 2 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 2
+                                              </label>
+                                              <select
+                                                value={row.approver2}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver2',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                            {/* Approver 3 */}
+                                            <div className="flex items-center justify-between gap-3">
+                                              <label className="text-sm text-gray-600 w-32">
+                                                Approver 3
+                                              </label>
+                                              <select
+                                                value={row.approver3}
+                                                disabled={row.approvalMode !== 'CUSTOM'}
+                                                onChange={(e) =>
+                                                  updateFieldAccess(
+                                                    row.fieldId,
+                                                    'approver3',
+                                                    e.target.value ? Number(e.target.value) : ''
+                                                  )}
+                                                className="border rounded px-2 py-1 w-full text-sm"
+                                              >
+                                                <option value="">Select</option>
+                                                {roles.map(role => (
+                                                  <option key={role.roleId} value={role.roleId}>
+                                                    {role.roleName}
+                                                  </option>
+                                                ))}
+                                              </select>
+                                            </div>
+
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+
+                    )}
+                  </>
+                )}
+
+              </div>
+            </div>
+
           </div>
         )}
       </div>
