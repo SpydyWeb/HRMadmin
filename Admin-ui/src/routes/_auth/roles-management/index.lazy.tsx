@@ -244,8 +244,8 @@ function RouteComponent() {
       accessor: (row: RoleUser) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium ${row.isActive
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
+            ? 'bg-green-100 text-green-700'
+            : 'bg-red-100 text-red-700'
             }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
@@ -257,8 +257,8 @@ function RouteComponent() {
       accessor: (row: RoleUser) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium ${row.isLocked
-              ? 'bg-red-100 text-red-700'
-              : 'bg-green-100 text-green-700'
+            ? 'bg-red-100 text-red-700'
+            : 'bg-green-100 text-green-700'
             }`}
         >
           {row.isLocked ? 'Yes' : 'No'}
@@ -426,6 +426,19 @@ function RouteComponent() {
     // 2️⃣ Convert approvalMode → useDefaultApprover
     let useDefaultApprover: boolean | null = null
 
+    const mode =
+      key === 'approvalMode'
+        ? (value as 'USER' | 'CUSTOM' | 'NONE')
+        : updatedRow.approvalMode
+
+    if (mode === 'USER') {
+      useDefaultApprover = true
+    } else if (mode === 'CUSTOM') {
+      useDefaultApprover = false
+    } else {
+      useDefaultApprover = null
+    }
+
     if (updatedRow.approvalMode === 'USER') {
       useDefaultApprover = true
     } else if (updatedRow.approvalMode === 'CUSTOM') {
@@ -435,23 +448,41 @@ function RouteComponent() {
     }
 
     // 3️⃣ Prepare API payload
-    const payload = {
-      roleId: selectedRole.roleId,
-      cntrlId: updatedRow.fieldId,
-      render: updatedRow.render,
-      allowEdit: updatedRow.edit,
-      approverOneId: updatedRow.approver1 || 0,
-      approverTwoId: updatedRow.approver2 || 0,
-      approverThreeId: updatedRow.approver3 || 0,
-      useDefaultApprover,
-    }
+    let payload = {}
 
+    if (useDefaultApprover == null || useDefaultApprover == true) {
+      payload = {
+        roleId: selectedRole.roleId,
+        cntrlId: updatedRow.fieldId,
+        render: updatedRow.render,
+        allowEdit: updatedRow.edit,
+        approverOneId: null,
+        approverTwoId: null,
+        approverThreeId: null,
+        useDefaultApprover,
+      }
+    }
+    else {
+      payload = {
+        roleId: selectedRole.roleId,
+        cntrlId: updatedRow.fieldId,
+        render: updatedRow.render,
+        allowEdit: updatedRow.edit,
+        approverOneId: updatedRow.approver1 || null,
+        approverTwoId: updatedRow.approver2 || null,
+        approverThreeId: updatedRow.approver3 || null,
+        useDefaultApprover,
+      }
+    }
     console.log("myPayload", payload);
     try {
       const res = await HMSService.updateFieldAccess(payload)
 
       if (res?.responseHeader?.errorCode !== 1101) {
         Swal.fire('Error', 'Failed to update field access', 'error')
+      }
+      else {
+        Swal.fire('Success', 'Access updated successfully', 'success')
       }
     } catch (error) {
       Swal.fire('Error', 'API Error while updating field access', 'error')
