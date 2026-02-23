@@ -325,7 +325,9 @@ const downloadReport = (data = {}, headers = {}) => {
   }
   return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, data, { headers, });
 }
-
+ const allowUiAccess = ( roleId,searchFor, headers = {}) => {
+  return apiClient.post(APIRoutes.UIACCESSALLOW, { roleId, searchFor }, { headers });
+}
 
 module.exports = {
   login,
@@ -370,5 +372,6 @@ module.exports = {
   getChannelStats,
   uploadFileList,
   downloadReport,
+  allowUiAccess
 
 };

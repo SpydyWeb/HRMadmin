@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { BiUser } from 'react-icons/bi'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
-import type { IAgent } from '@/models/agent'
+import type { IAgent, IEditAgentRequest } from '@/models/agent'
 import { useAppForm } from '@/components/form'
 import { Switch } from '@/components/ui/switch'
 import z from 'zod'
@@ -11,8 +11,9 @@ import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { useMasterData } from '@/hooks/useMasterData'
 import { agentService } from '@/services/agentService'
 import { showToast } from '@/components/ui/sonner'
+import { useUIAccess } from '@/hooks/uiAccess'
 
-const formatDateToISO = (dateString) => {
+const formatDateToISO = (dateString: string) => {
   if (!dateString) return null;
   
   // If it's already in the right format, return as is
@@ -52,10 +53,10 @@ const formatDateToISO = (dateString) => {
 
 
 // Helper function to format dates in form data
-const formatDatesInFormData = (formData, dateFields) => {
+const formatDatesInFormData = (formData: Record<string, any>, dateFields: string[]) => {
   const formattedData = { ...formData };
   
-  dateFields.forEach(field => {
+  dateFields.forEach((field: string) => {
     if (formattedData[field]) {
       formattedData[field] = formatDateToISO(formattedData[field]);
     }
@@ -69,14 +70,40 @@ const formatDatesInFormData = (formData, dateFields) => {
 type AgentDetailProps = {
   agent: any
   getOptions: any
+  activeTab: string
 }
 
-const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
+const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
   const [isEdit, setIsEdit] = useState(false)
+
+  // Get UI access permissions for agent section
+  // API expects "Agent" (capitalized) and "Screen" (capitalized)
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
 
   if (!agent) return null
 
   console.log('agent', agent)
+
+  // Helper function to filter fields based on UI access
+  // activeTab is the tab value from index.tsx (e.g., 'personaldetails')
+  // field.name is the field identifier
+  const filterFields = (fields: any[]) => {
+    if (uiAccessLoading) return fields // Return all fields while loading
+    
+    return fields.map(field => {
+      const fieldVisible = isFieldVisible(activeTab, field.name)
+      const fieldEditable = isFieldEditable(activeTab, field.name)
+      
+      return {
+        ...field,
+        // Hide field if not visible, but keep it in the array structure
+        // We'll filter it out in the render if needed
+        _isVisible: fieldVisible,
+        // Update readOnly based on editable permission
+        readOnly: !fieldEditable || field.readOnly
+      }
+    }).filter(field => field._isVisible !== false) // Remove hidden fields
+  }
 
 
 
@@ -238,7 +265,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       designationCode: z.any().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'channel',
         label: 'Channel Name',
@@ -275,7 +302,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         variant: 'custom',
         options: getOptions(MASTER_DATA_KEYS.DESIGNATION),
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -305,7 +332,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
           throw new Error('Agent ID is missing. Cannot update agent details.')
         }
 
-        const dateFieldsBySection = {
+        const dateFieldsBySection: Record<string, string[]> = {
           'employee_info': ['startDate', 'appointmentDate', 'incorporationDate'],
           'other_personal_details': ['dateOfBirth'],
           'financial_details': [], // Add any date fields in financial details if needed
@@ -322,9 +349,9 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         );
 
 
-        const payload: IEditAgentPayload = {
+        const payload = {
           ...formattedPayload,
-        }
+        } as IEditAgentRequest
 
         console.log('📤 Sending payload:', payload)
    
@@ -365,7 +392,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       gender: z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'title',
         label: 'Title',
@@ -416,7 +443,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -461,7 +488,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       cnctPersonDesig: z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       // ROW 1
       {
         name: 'mobileNo',
@@ -531,7 +558,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -587,7 +614,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
     }),
 
     // FIELDS
-    fields: [
+    fields: filterFields([
       {
         name: 'agentId',
         label: 'Agent ID',
@@ -699,7 +726,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       //   colSpan: 12,
       //   variant:"white",
       // },
-    ],
+    ]),
     // BUTTONS
 
     buttons: isEdit
@@ -762,7 +789,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
     }),
 
     // FIELDS
-    fields: [
+    fields: filterFields([
       {
         name: 'panAadharLinkFlag',
         label: 'Pan Aadhar Link Flag',
@@ -889,7 +916,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         variant: 'standard',
         options: getOptions(MASTER_DATA_KEYS.PAYMENT_MODE),
       },
-    ],
+    ]),
 
     // BUTTONS
     buttons: isEdit
@@ -956,7 +983,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
     // -----------------------------------------
     // FIELDS
     // -----------------------------------------
-    fields: [
+    fields: filterFields([
       {
         name: 'dateOfBirth',
         label: 'Date of Birth',
@@ -1075,7 +1102,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
     buttons: isEdit
       ? {
           gridCols: 4,
@@ -1122,7 +1149,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
       addressType: z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'addressType',
         label: 'Address Type',
@@ -1198,7 +1225,7 @@ const AgentDetail = ({ agent, getOptions }: AgentDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
