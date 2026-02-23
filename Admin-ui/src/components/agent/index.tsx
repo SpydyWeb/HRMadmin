@@ -49,7 +49,27 @@ const Agent: React.FC = () => {
 
   // Get UI access permissions for agent section
   // API expects "Agent" (capitalized) and "Screen" (capitalized)
-  const { isTabVisible, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+  const { isTabVisible, isLoading: uiAccessLoading, menuItem } = useUIAccess('Agent', 'Screen')
+
+  // Log the full UI access response for debugging
+  useEffect(() => {
+    if (menuItem) {
+      console.log('📋 Full UI Access Response for Agent Screen:', JSON.stringify(menuItem, null, 2));
+      console.log('🔍 Available tabs and fields:', menuItem.subSection?.map(tab => ({
+        tab: tab.section,
+        type: tab.type,
+        sections: tab.subSection?.map(sec => ({
+          section: sec.section,
+          fields: sec.fieldList?.map(f => ({
+            cntrlid: f.cntrlid,
+            cntrlName: f.cntrlName,
+            render: f.render,
+            allowedit: f.allowedit
+          }))
+        }))
+      })));
+    }
+  }, [menuItem]);
 
   // Filter tabs based on UI access permissions
   const tabs = allTabs.filter(tab => {

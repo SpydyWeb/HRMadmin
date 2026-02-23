@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { uiAccessService, UIAccessResponse, UIMenuItem, TAB_SECTION_MAP } from '@/services/uiAccessService';
 import { useAuth } from '@/hooks/useAuth';
+import { getCntrlId, getFieldName } from '@/utils/fieldControlMapping';
 
 export const useUIAccess = (section: string, type: string = 'Screen') => {
   // Get the current user's role ID from your auth store
@@ -27,6 +28,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   // Log the response for debugging
   if (uiAccessData) {
     console.log('📦 UI Access Data received:', uiAccessData);
+    console.log('🌳 Full UI Access Response Structure:', JSON.stringify(uiAccessData, null, 2));
     console.log('🔎 Looking for section:', section, 'type:', type);
   }
 
@@ -72,7 +74,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   };
   
   // Helper to find all fields in a tab (across all sections within the tab)
-  const findFieldsInTab = (tabValue: string): Array<{ cntrlName: string; render: boolean; allowedit: boolean }> => {
+  const findFieldsInTab = (tabValue: string): Array<{ cntrlid: number; cntrlName: string; render: boolean; allowedit: boolean }> => {
     if (!screen || !screen.subSection) return [];
     
     const apiSectionName = TAB_SECTION_MAP[tabValue] || tabValue;
@@ -83,11 +85,12 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     if (!tab || !tab.subSection) return [];
     
     // Collect all fields from all sections within this tab
-    const allFields: Array<{ cntrlName: string; render: boolean; allowedit: boolean }> = [];
+    const allFields: Array<{ cntrlid: number; cntrlName: string; render: boolean; allowedit: boolean }> = [];
     tab.subSection.forEach(section => {
       if (section.type === 'Section' && section.fieldList) {
         section.fieldList.forEach(field => {
           allFields.push({
+            cntrlid: field.cntrlid,
             cntrlName: field.cntrlName,
             render: field.render,
             allowedit: field.allowedit
@@ -96,9 +99,20 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       }
     });
     
+    console.log(`📋 Fields found in tab "${tabValue}":`, allFields);
     return allFields;
   };
   
+  // Helper to normalize field names for matching
+  const normalizeFieldName = (name: string): string => {
+    return name.toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/agent\s*/gi, '')
+      .replace(/bank\s*/gi, '')
+      .replace(/\s*type/gi, '')
+      .trim();
+  };
+
   // Check if a specific field is visible
   const isFieldVisible = (tabValue: string, fieldIdentifier: string): boolean => {
     const fields = findFieldsInTab(tabValue);
@@ -108,9 +122,31 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       return true; // Default to visible if no field restrictions
     }
     
-    const field = fields.find(f => f.cntrlName?.toLowerCase() === fieldIdentifier.toLowerCase());
+    // Try to match by cntrlid first (if fieldIdentifier is a number or we can map it)
+    const cntrlid = getCntrlId(fieldIdentifier);
+    let field = cntrlid 
+      ? fields.find(f => f.cntrlid === cntrlid)
+      : undefined;
+    
+    // If not found by cntrlid, try matching by cntrlName or field name
+    if (!field) {
+      const normalizedIdentifier = normalizeFieldName(fieldIdentifier);
+      field = fields.find(f => {
+        const fieldName = getFieldName(f.cntrlid);
+        const normalizedCntrlName = normalizeFieldName(f.cntrlName || '');
+        const normalizedMappedName = fieldName ? normalizeFieldName(fieldName) : '';
+        
+        return normalizedMappedName === normalizedIdentifier ||
+               normalizedCntrlName === normalizedIdentifier ||
+               normalizedCntrlName.includes(normalizedIdentifier) ||
+               normalizedIdentifier.includes(normalizedCntrlName) ||
+               f.cntrlName?.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
+               fieldIdentifier.toLowerCase().includes(f.cntrlName?.toLowerCase() || '');
+      });
+    }
+    
     const isVisible = field ? field.render : true;
-    console.log(`🔍 Field "${fieldIdentifier}" in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`);
+    console.log(`🔍 Field "${fieldIdentifier}" (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, render: field.render } : 'not found');
     return isVisible; // Default to visible if field not found
   };
   
@@ -120,9 +156,31 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     
     if (fields.length === 0) return true; // Default to editable if no field restrictions
     
-    const field = fields.find(f => f.cntrlName?.toLowerCase() === fieldIdentifier.toLowerCase());
+    // Try to match by cntrlid first (if fieldIdentifier is a number or we can map it)
+    const cntrlid = getCntrlId(fieldIdentifier);
+    let field = cntrlid 
+      ? fields.find(f => f.cntrlid === cntrlid)
+      : undefined;
+    
+    // If not found by cntrlid, try matching by cntrlName or field name
+    if (!field) {
+      const normalizedIdentifier = normalizeFieldName(fieldIdentifier);
+      field = fields.find(f => {
+        const fieldName = getFieldName(f.cntrlid);
+        const normalizedCntrlName = normalizeFieldName(f.cntrlName || '');
+        const normalizedMappedName = fieldName ? normalizeFieldName(fieldName) : '';
+        
+        return normalizedMappedName === normalizedIdentifier ||
+               normalizedCntrlName === normalizedIdentifier ||
+               normalizedCntrlName.includes(normalizedIdentifier) ||
+               normalizedIdentifier.includes(normalizedCntrlName) ||
+               f.cntrlName?.toLowerCase().includes(fieldIdentifier.toLowerCase()) ||
+               fieldIdentifier.toLowerCase().includes(f.cntrlName?.toLowerCase() || '');
+      });
+    }
+    
     const isEditable = field ? field.allowedit : true;
-    console.log(`🔍 Field "${fieldIdentifier}" in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`);
+    console.log(`🔍 Field "${fieldIdentifier}" (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : 'not found');
     return isEditable; // Default to editable if field not found
   };
 
