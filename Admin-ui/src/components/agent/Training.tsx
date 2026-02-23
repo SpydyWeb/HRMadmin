@@ -11,6 +11,7 @@ import DisplaySection from '../ui/displaySection'
 import { agentService } from '@/services/agentService'
 import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { showToast } from '@/components/ui/sonner'
+import { useUIAccess } from '@/hooks/uiAccess'
 
 
 type TrainingDetailProps = {
@@ -20,6 +21,27 @@ type TrainingDetailProps = {
 
 const Training = ({ agent }: TrainingDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) 
+
+  // Get UI access permissions for agent section
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+
+  // Helper function to filter fields based on UI access
+  // For Training tab, the tab value is 'training'
+  const filterFields = (fields: any[]) => {
+    if (uiAccessLoading) return fields // Return all fields while loading
+    
+    return fields.map(field => {
+      const fieldVisible = isFieldVisible('training', field.name, field.label)
+      const fieldEditable = isFieldEditable('training', field.name, field.label)
+      
+      return {
+        ...field,
+        _isVisible: fieldVisible,
+        readOnly: !fieldEditable || field.readOnly
+      }
+    }).filter(field => field._isVisible === true) // Remove hidden fields
+  }
+
   // console.log('agent', agent)
 
   if (!agent) return null
@@ -68,7 +90,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
       
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'confirmationDate',
         label: 'Confirmation Date',
@@ -117,7 +139,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
 
 
 
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -148,7 +170,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
       branchName: z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'branchCode',
         label: 'Branch Code',
@@ -165,7 +187,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -213,7 +235,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
     inductionTrngDate: z.string().optional(),
   }),
 
-  fields: [
+  fields: filterFields([
     {
       name: 'ic36TrngCompletionDate',
       label: 'IC36 Trng Completion Date',
@@ -284,7 +306,7 @@ const Training = ({ agent }: TrainingDetailProps) => {
       colSpan: 1,
       readOnly: !isEdit,
     },
-  ],
+  ]),
 
   buttons: isEdit
     ? {

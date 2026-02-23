@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent } from '../ui/card'
 import DynamicFormBuilder from '../form/DynamicFormBuilder'
 import { Switch } from '@/components/ui/switch'
@@ -6,6 +6,7 @@ import z from 'zod'
 import { agentService } from '@/services/agentService'
 import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { showToast } from '@/components/ui/sonner'
+import { useUIAccess } from '@/hooks/uiAccess'
 
 type FinanceDetailProps = {
   agent: any
@@ -15,12 +16,55 @@ type FinanceDetailProps = {
 const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
 
+  // Get UI access permissions for agent section
+  // API expects "Agent" (capitalized) and "Screen" (capitalized)
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+
+  // Helper function to filter fields based on UI access
+  // For Financial tab, the tab value is 'financialdetails'
+  const filterFields = (fields: any[]) => {
+    if (uiAccessLoading) {
+      console.log('⏳ UI Access still loading, showing all fields temporarily')
+      return fields // Return all fields while loading
+    }
+    
+    console.log('✅ UI Access loaded, filtering fields based on permissions')
+    
+    return fields.map(field => {
+      const fieldVisible = isFieldVisible('financialdetails', field.name, field.label)
+      const fieldEditable = isFieldEditable('financialdetails', field.name, field.label)
+      
+      // Debug logging
+      console.log(`🔍 Financial field "${field.name}" (${field.label}): visible=${fieldVisible}, editable=${fieldEditable}`)
+      
+      return {
+        ...field,
+        // Hide field if not visible, but keep it in the array structure
+        // We'll filter it out in the render if needed
+        _isVisible: fieldVisible,
+        // Update readOnly based on editable permission
+        readOnly: !fieldEditable || field.readOnly
+      }
+    }).filter(field => {
+      // Only show fields that are explicitly visible (true)
+      // Hide fields that are false or undefined
+      const shouldShow = field._isVisible === true
+      if (!shouldShow) {
+        console.log(`❌ Hiding field "${field.name}" (${field.label}) - _isVisible=${field._isVisible}`)
+      } else {
+        console.log(`✅ Showing field "${field.name}" (${field.label})`)
+      }
+      return shouldShow
+    })
+  }
+
 console.log('agent in financial', agent)
 
 
   if (!agent) return null
 
-  const financialConfig = {
+  // Memoize config to recalculate when UI access data loads or edit mode changes
+  const financialConfig = useMemo(() => ({
     gridCols: 3,
     sectionName: 'bank_details',
     defaultValues: {
@@ -41,7 +85,6 @@ console.log('agent in financial', agent)
       micr: z.string().optional(),
       branchName: z.string().optional(),
       accountNumber: z.string().optional(),
-      AccountType: z.string().optional(),
       accountType: z.string().optional(),
       factoringHouse: z.string().optional(),
       accountHolderName: z.string().optional(),
@@ -49,7 +92,7 @@ console.log('agent in financial', agent)
     
     }),
 
-    fields: [
+    fields: filterFields([
       {
     name: 'bankName',
     label: 'Bank Name',
@@ -125,7 +168,7 @@ console.log('agent in financial', agent)
   //   readOnly: !isEdit,
   //   variant: 'standard',
   // },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -141,7 +184,7 @@ console.log('agent in financial', agent)
           ],
         }
       : null,
-  }
+  }), [agent, isEdit, uiAccessLoading, isFieldVisible, isFieldEditable, getOptions])
 
   const handleSectionSubmit =
   (sectionName: string) => async (formData: Record<string, any>) => {

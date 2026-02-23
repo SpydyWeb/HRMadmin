@@ -10,7 +10,7 @@ import type { IAgent } from '@/models/agent'
 import { agentService } from '@/services/agentService'
 import { MASTER_DATA_KEYS, NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { showToast } from '@/components/ui/sonner'
-
+import { useUIAccess } from '@/hooks/uiAccess'
 
 type LicenseDetailProps = {
   agent: any
@@ -19,6 +19,26 @@ type LicenseDetailProps = {
 
 const License = ({ agent, getOptions }: LicenseDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) // ✅ Add state here
+
+  // Get UI access permissions for agent section
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+
+  // Helper function to filter fields based on UI access
+  // For License tab, the tab value is 'licensedetails'
+  const filterFields = (fields: any[]) => {
+    if (uiAccessLoading) return fields // Return all fields while loading
+    
+    return fields.map(field => {
+      const fieldVisible = isFieldVisible('licensedetails', field.name, field.label)
+      const fieldEditable = isFieldEditable('licensedetails', field.name, field.label)
+      
+      return {
+        ...field,
+        _isVisible: fieldVisible,
+        readOnly: !fieldEditable || field.readOnly
+      }
+    }).filter(field => field._isVisible === true) // Remove hidden fields
+  }
 
  
   if (!agent) return null
@@ -74,7 +94,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       commissionClass:  z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'cnctPersonName',
         label: 'Contact Person Name',
@@ -153,7 +173,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         options: getOptions(MASTER_DATA_KEYS.COMMISSION_CLASS),
       },
       
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -185,7 +205,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       refresherTrainingCompleted:  z.string().optional(),
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'trainingGroupType',
         label: 'Training Group Type',
@@ -202,7 +222,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         readOnly: !isEdit,
         variant: 'standard',
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -236,7 +256,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'ulipFlag',
         label: 'Ulip Flag',
@@ -246,7 +266,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         variant: 'standard',
       },
 
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -277,7 +297,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
       
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'ifs',
         label: 'Channel Name',
@@ -287,7 +307,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         variant: 'standard',
       },
     
-    ],
+    ]),
 
     buttons: isEdit
       ? {
@@ -326,7 +346,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
      
     }),
 
-    fields: [
+    fields: filterFields([
       {
         name: 'isMigrated',
         label: 'Is Migrated',
@@ -368,7 +388,7 @@ const License = ({ agent, getOptions }: LicenseDetailProps) => {
         variant: 'standard',
         options: getOptions(MASTER_DATA_KEYS.VERTICAL),
       },
-    ],
+    ]),
 
     buttons: isEdit
       ? {

@@ -20,6 +20,7 @@ import { useMasterData } from '@/hooks/useMasterData'
 import { useQuery } from '@tanstack/react-query'
 import { agentService } from '@/services/agentService'
 import { useUIAccess } from '@/hooks/uiAccess'
+import { TAB_SECTION_MAP } from '@/services/uiAccessService'
 
 const allTabs = [
   { value: 'personaldetails', label: 'Personal' },
@@ -49,7 +50,7 @@ const Agent: React.FC = () => {
 
   // Get UI access permissions for agent section
   // API expects "Agent" (capitalized) and "Screen" (capitalized)
-  const { isTabVisible, isLoading: uiAccessLoading, menuItem } = useUIAccess('Agent', 'Screen')
+  const { isTabVisible, isFieldVisible, isFieldEditable, isLoading: uiAccessLoading, menuItem } = useUIAccess('Agent', 'Screen')
 
   // Log the full UI access response for debugging
   useEffect(() => {
@@ -76,7 +77,32 @@ const Agent: React.FC = () => {
     // If UI access is loading or no restrictions, show all tabs
     if (uiAccessLoading) return true
     // Check if tab is visible based on permissions
-    return isTabVisible(tab.value)
+    console.log(`Checking visibility for tab "${tab.value}"...`)
+    const tabVisible = isTabVisible(tab.value)
+    
+    // Also log field information for this tab if it's visible
+    if (tabVisible && menuItem) {
+      const apiSectionName = TAB_SECTION_MAP[tab.value] || tab.value
+      const tabData = menuItem.subSection?.find(t => 
+        t.type === 'Tab' && t.section?.toLowerCase() === apiSectionName.toLowerCase()
+      )
+      if (tabData?.subSection) {
+        tabData.subSection.forEach(section => {
+          if (section.type === 'Section' && section.fieldList) {
+            console.log(`📋 Fields in tab "${tab.value}" (API: "${apiSectionName}"), section "${section.section}":`, 
+              section.fieldList.map(f => ({
+                cntrlid: f.cntrlid,
+                cntrlName: f.cntrlName,
+                render: f.render,
+                allowedit: f.allowedit
+              }))
+            )
+          }
+        })
+      }
+    }
+    
+    return tabVisible
   })
 
   // encryption gating
@@ -212,7 +238,7 @@ const Agent: React.FC = () => {
           <AgentDetail agent={firstAgent} getOptions={getOptions} activeTab={activeTab} />
         ) : (
           <div className="p-4 text-gray-600">No agent found.</div>
-        )
+        ) 
       ) : activeTab === 'peoplehierarchy' ? (
         <Hierarchy Agent={firstAgent} highlightAgentCode={agentId} />
       ) : activeTab === 'geographicalhierarchy' ? (
