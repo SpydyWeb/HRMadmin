@@ -110,4 +110,13 @@ export const agentService = {
     console.warn("⚠️ Could not find geoAgentHierarchy in response structure")
     return null
   },
+
+  allowUiAccess: async (roleId: number, searchFor: number) => {
+    const response = await callApi<ApiResponse<any>>(APIRoutes.ALLOW_UI_ACCESS, [
+      roleId,
+      searchFor,
+    ])
+    console.log('UI Access response:', response)
+    return response.responseBody || null
+  },
 }

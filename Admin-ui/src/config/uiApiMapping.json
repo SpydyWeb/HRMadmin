@@ -1,0 +1,50 @@
+{
+  "screens": {
+    "AgentDetails": "Agent"
+  },
+  "tabs": {
+    "personaldetails": "Personal",
+    "peoplehierarchy": "People Hierarchy",
+    "geographicalhierarchy": "Geographical Hierarchy",
+    "partnersmapped": "Partners Mapped",
+    "auditlog": "Audit Log",
+    "licensedetails": "License",
+    "financialdetails": "Financial",
+    "entity360": "Entity 360°",
+    "training": "Training"
+  },
+  "sections": {
+    "agent": {
+      "personaldetails": {
+        "individual_agent_action": "Individual Agent Action",
+        "personal_details": "Personal Details",
+        "contact_information": "Contact Information",
+        "employee_info": "Employee Information",
+        "financial_details": "Financial Details",
+        "other_personal_details": "Other Personal Details",
+        "address_info": "Address Information"
+      }
+    }
+  },
+  "fields": {
+    "agent": {
+      "personaldetails": {
+        "individual_agent_action": {
+          "channel": "channel",
+          "subChannel": "subChannel",
+          "locationCode": "locationCode",
+          "designationCode": "designationCode",
+          "commissionClass": "commissionClass"
+        },
+        "personal_details": {
+          "title": "title",
+          "firstName": "firstName",
+          "middleName": "middleName",
+          "lastName": "lastName",
+          "father_Husband_Nm": "father_Husband_Nm",
+          "gender": "gender"
+        }
+      }
+    }
+  }
+}
