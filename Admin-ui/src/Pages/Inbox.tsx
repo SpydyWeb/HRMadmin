@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Button from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { FiExternalLink } from "react-icons/fi";
 import {
@@ -97,15 +96,6 @@ const formatDate = (date: Date): string => {
 const Inbox = () => {
   const [tasks] = useState<Task[]>(generateMockTasks());
 
-  const handleApproval = (taskId: string) => {
-    console.log("Approving task:", taskId);
-    // TODO: Implement approval logic
-  };
-
-  const handleRejection = (taskId: string) => {
-    console.log("Rejecting task:", taskId);
-    // TODO: Implement rejection logic
-  };
 
   return (
     <div className="container mx-auto p-6">
@@ -174,15 +164,14 @@ const Inbox = () => {
                     <TableCell>{formatDate(task.receivedOn)}</TableCell>
                     
                     <TableCell>
-                      <a
-                        href={task.taskDetailsLink}
+                      <Link
+                        to="/inbox/$taskId"
+                        params={{ taskId: task.id }}
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
                       >
                         View Details
                         <FiExternalLink className="w-4 h-4" />
-                      </a>
+                      </Link>
                     </TableCell>
                     
                    

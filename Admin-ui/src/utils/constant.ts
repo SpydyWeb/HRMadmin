@@ -24,6 +24,7 @@ export const RoutePaths = {
   CONFIG_COMMISSION: '/commission/configcomission',
   CONFIG_COMMISSION_NEW: '/commission/configcommission-list/new-commission-creation',
   COMMISSION_HISTORY: '/commission/configcommission-list/history',
+  INBOX: '/inbox',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {

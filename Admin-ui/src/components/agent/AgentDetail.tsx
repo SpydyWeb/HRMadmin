@@ -78,7 +78,7 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
 
   // Get UI access permissions for agent section
   // API expects "Agent" (capitalized) and "Screen" (capitalized)
-  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading, isSectionVisible } = useUIAccess('Agent', 'Screen')
 
   if (!agent) return null
 
@@ -103,6 +103,33 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
         readOnly: !fieldEditable || field.readOnly
       }
     }).filter(field => field._isVisible !== false) // Remove hidden fields
+  }
+
+  // Helper function to check if a section should be visible
+  // A section is visible if it has at least one visible field
+  // configFields: the already-filtered fields array from the config
+  // sectionName: the section name for API matching
+  const shouldShowSection = (configFields: any[], sectionName: string): boolean => {
+    if (uiAccessLoading) return true // Show all sections while loading
+    
+    // If no visible fields after filtering, hide the section
+    if (configFields.length === 0) {
+      console.log(`❌ Section "${sectionName}": No visible fields, hiding section`)
+      return false
+    }
+    
+    // Also check using isSectionVisible if available (for API-level section checks)
+    // Use field names from the filtered fields for the API check
+    if (isSectionVisible) {
+      const fieldNames = configFields.map(f => f.name)
+      const sectionVisible = isSectionVisible(activeTab, sectionName, fieldNames)
+      if (!sectionVisible) {
+        console.log(`❌ Section "${sectionName}": Not visible according to API, hiding section`)
+        return false
+      }
+    }
+    
+    return true
   }
 
 
@@ -1305,60 +1332,70 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
             </CardContent>{' '}
           </Card>
 
-          <Card className="flex justify-center items-center bg-white w-full  !m-0  p-4 w-[100%] !rounded-sm overflow-y-auto bg-[#F2F2F7] w-[100%]">
-            <CardContent className="w-[100%] p-0">
-              <DynamicFormBuilder
-                config={agentChannelConfig}
-                onSubmit={handleSectionSubmit(agentChannelConfig.sectionName)}
-                onFieldClick={handleFieldClick}
-              />
+          {shouldShowSection(agentChannelConfig.fields, agentChannelConfig.sectionName) && (
+            <Card className="flex justify-center items-center bg-white w-full  !m-0  p-4 w-[100%] !rounded-sm overflow-y-auto bg-[#F2F2F7] w-[100%]">
+              <CardContent className="w-[100%] p-0">
+                <DynamicFormBuilder
+                  config={agentChannelConfig}
+                  onSubmit={handleSectionSubmit(agentChannelConfig.sectionName)}
+                  onFieldClick={handleFieldClick}
+                />
 
-              {/* some form inputs here */}
-            </CardContent>
-          </Card>
+                {/* some form inputs here */}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* --------------Personal Details----------------- */}
 
-        <div className="flex justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
-            Personal Details
-          </h2>
-        </div>
-        <div className="flex gap-2">
-          <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
-            <CardContent className="!px-0 !py-0 w-[100%]">
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={PersonalDetailsConfig}
-                  onSubmit={handleSectionSubmit(
-                    PersonalDetailsConfig.sectionName,
-                  )}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(PersonalDetailsConfig.fields, PersonalDetailsConfig.sectionName) && (
+          <>
+            <div className="flex justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
+                Personal Details
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden w-[100%]  bg-[#F2F2F7]">
+                <CardContent className="!px-0 !py-0 w-[100%]">
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={PersonalDetailsConfig}
+                      onSubmit={handleSectionSubmit(
+                        PersonalDetailsConfig.sectionName,
+                      )}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         {/* --------------Contact Information----------------- */}
 
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Contact Information
-        </h2>
-        <div className="flex gap-2">
-          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={contactInformationConfig}
-                  onSubmit={handleSectionSubmit(
-                    contactInformationConfig.sectionName,
-                  )}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(contactInformationConfig.fields, contactInformationConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+              Contact Information
+            </h2>
+            <div className="flex gap-2">
+              <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+                <CardContent>
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={contactInformationConfig}
+                      onSubmit={handleSectionSubmit(
+                        contactInformationConfig.sectionName,
+                      )}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
         {/* -------------------hirarchy Information Config------------------------------- */}
 
         {/* <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
@@ -1380,76 +1417,92 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
 
         {/* -------------------employee Information Config------------------------------- */}
 
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Employee Information Config
-        </h2>
-        <div className="flex gap-2">
-          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={employeeInformationConfig}
-                  onSubmit={handleSectionSubmit(
-                    employeeInformationConfig.sectionName,
-                  )}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(employeeInformationConfig.fields, employeeInformationConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+              Employee Information Config
+            </h2>
+            <div className="flex gap-2">
+              <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+                <CardContent>
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={employeeInformationConfig}
+                      onSubmit={handleSectionSubmit(
+                        employeeInformationConfig.sectionName,
+                      )}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
         {/* ---------------financialDetailsConfig--------------- */}
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Financial Details
-        </h2>
-        <div className="flex gap-2">
-          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={financialDetailsConfig}
-                  onSubmit={handleSectionSubmit(
-                    financialDetailsConfig.sectionName,
-                  )}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(financialDetailsConfig.fields, financialDetailsConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+              Financial Details
+            </h2>
+            <div className="flex gap-2">
+              <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+                <CardContent>
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={financialDetailsConfig}
+                      onSubmit={handleSectionSubmit(
+                        financialDetailsConfig.sectionName,
+                      )}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
         {/*  Other Personal Details Config */}
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Other Personal Details
-        </h2>
-        <div className="flex gap-2">
-          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={otherPersonalDetailsConfig}
-                  onSubmit={handleSectionSubmit(
-                    otherPersonalDetailsConfig.sectionName,
-                  )}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(otherPersonalDetailsConfig.fields, otherPersonalDetailsConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+              Other Personal Details
+            </h2>
+            <div className="flex gap-2">
+              <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+                <CardContent>
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={otherPersonalDetailsConfig}
+                      onSubmit={handleSectionSubmit(
+                        otherPersonalDetailsConfig.sectionName,
+                      )}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         {/* addressConfig */}
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
-          Address
-        </h2>
-        <div className="flex gap-2">
-          <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
-            <CardContent>
-              <AutoAccordionSection id="sec-1">
-                <DynamicFormBuilder
-                  config={addressConfig}
-                  onSubmit={handleSectionSubmit(addressConfig.sectionName)}
-                />
-              </AutoAccordionSection>
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(addressConfig.fields, addressConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 font-poppins font-semibold !text-[20px]">
+              Address
+            </h2>
+            <div className="flex gap-2">
+              <Card className="bg-white !px-1 w-full mt-5 overflow-y-auto bg-[#F2F2F7]">
+                <CardContent>
+                  <AutoAccordionSection id="sec-1">
+                    <DynamicFormBuilder
+                      config={addressConfig}
+                      onSubmit={handleSectionSubmit(addressConfig.sectionName)}
+                    />
+                  </AutoAccordionSection>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
