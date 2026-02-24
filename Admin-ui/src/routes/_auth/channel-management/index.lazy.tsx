@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import CustomTabs from '@/components/CustomTabs'
-import { HMSService } from '@/services/HMSService'
+import { HMSService } from '@/services/hmsService'
 import { useEffect } from 'react'
 
 export const Route = createLazyFileRoute('/_auth/channel-management/')({
