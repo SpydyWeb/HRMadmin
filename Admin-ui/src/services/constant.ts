@@ -39,6 +39,7 @@ export const APIRoutes = {
   ROLE_USER_LIST: "userList",
   GRANT_MENU_ACCESS: "grantMenu",
   REVOKE_MENU_ACCESS: "revokeMenu",
+  SUB_CHANNEL_LIST: "getSubChannel",
   ALLOW_UI_ACCESS: "allowUiAccess",
 }
 

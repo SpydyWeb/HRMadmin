@@ -40,6 +40,9 @@ const AuthInboxIndexLazyRouteImport = createFileRoute('/_auth/inbox/')()
 const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
 const AuthCommissionIndexLazyRouteImport =
   createFileRoute('/_auth/commission/')()
+const AuthChannelManagementIndexLazyRouteImport = createFileRoute(
+  '/_auth/channel-management/',
+)()
 const AuthSearchDashboardIndexLazyRouteImport = createFileRoute(
   '/_auth/search/dashboard/',
 )()
@@ -131,6 +134,14 @@ const AuthCommissionIndexLazyRoute = AuthCommissionIndexLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_auth/commission/index.lazy').then((d) => d.Route),
 )
+const AuthChannelManagementIndexLazyRoute =
+  AuthChannelManagementIndexLazyRouteImport.update({
+    id: '/channel-management/',
+    path: '/channel-management/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/channel-management/index.lazy').then((d) => d.Route),
+  )
 const AuthSearchIndexRoute = AuthSearchIndexRouteImport.update({
   id: '/search/',
   path: '/search/',
@@ -368,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
+  '/channel-management': typeof AuthChannelManagementIndexLazyRoute
   '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
@@ -407,6 +419,7 @@ export interface FileRoutesByTo {
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
+  '/channel-management': typeof AuthChannelManagementIndexLazyRoute
   '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
@@ -448,6 +461,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
   '/_auth/search/': typeof AuthSearchIndexRoute
+  '/_auth/channel-management/': typeof AuthChannelManagementIndexLazyRoute
   '/_auth/commission/': typeof AuthCommissionIndexLazyRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/inbox/': typeof AuthInboxIndexLazyRoute
@@ -489,6 +503,7 @@ export interface FileRouteTypes {
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
+    | '/channel-management'
     | '/commission'
     | '/dashboard'
     | '/inbox'
@@ -528,6 +543,7 @@ export interface FileRouteTypes {
     | '/dashboard/termination'
     | '/search/$agentId'
     | '/search'
+    | '/channel-management'
     | '/commission'
     | '/dashboard'
     | '/inbox'
@@ -568,6 +584,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/termination'
     | '/_auth/search/$agentId'
     | '/_auth/search/'
+    | '/_auth/channel-management/'
     | '/_auth/commission/'
     | '/_auth/dashboard/'
     | '/_auth/inbox/'
@@ -663,6 +680,13 @@ declare module '@tanstack/react-router' {
       path: '/commission'
       fullPath: '/commission'
       preLoaderRoute: typeof AuthCommissionIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/channel-management/': {
+      id: '/_auth/channel-management/'
+      path: '/channel-management'
+      fullPath: '/channel-management'
+      preLoaderRoute: typeof AuthChannelManagementIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/search/': {
@@ -883,6 +907,7 @@ interface AuthRouteChildren {
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
   AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
   AuthSearchIndexRoute: typeof AuthSearchIndexRoute
+  AuthChannelManagementIndexLazyRoute: typeof AuthChannelManagementIndexLazyRoute
   AuthCommissionIndexLazyRoute: typeof AuthCommissionIndexLazyRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthInboxIndexLazyRoute: typeof AuthInboxIndexLazyRoute
@@ -921,6 +946,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
   AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
   AuthSearchIndexRoute: AuthSearchIndexRoute,
+  AuthChannelManagementIndexLazyRoute: AuthChannelManagementIndexLazyRoute,
   AuthCommissionIndexLazyRoute: AuthCommissionIndexLazyRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
   AuthInboxIndexLazyRoute: AuthInboxIndexLazyRoute,

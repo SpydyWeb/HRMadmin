@@ -19,7 +19,8 @@ const resources = [
   { title: "Review Masters", link: "/review-masters" },
   { title: "Review Structure", link: "/review-structure" },
   { title: "Review Access", link: "/review-access" },
-  { title: "Roles Management", link: "/roles-management" }, // ✅ FIXED
+  { title: "Roles Management", link: "/roles-management" }, 
+  { title: "Channel Management", link: "/channel-management" }, 
    { title: "Inbox", link: "/inbox" },
 ];
 

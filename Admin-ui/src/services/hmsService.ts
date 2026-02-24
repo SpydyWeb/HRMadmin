@@ -214,4 +214,37 @@ export const HMSService = {
       [payload]
     )
   },
+
+
+  getChannel: async (payload: {
+    channelId: null,
+    channelCode: null,
+    channelName: null,
+    description: null,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "getChannel",
+      [payload]
+    )
+  },
+
+  subChannelList: async (payload: {
+    subChannelId: null,
+    subChannelCode: null,
+    channelCode: string,
+    subChannelName: string,
+    description: string,
+    isActive: boolean,
+    channelId: number,
+  }) => {
+    return callApi(
+      "getSubChannel",
+      [payload]
+    )
+  },
 }
+
+
+
+
