@@ -284,6 +284,81 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     return isEditable;
   };
 
+  // Check if a section is visible (has at least one visible field)
+  // sectionName: the section name from the config (e.g., 'personal_details', 'contact_information')
+  // This function should only hide sections if they're explicitly marked as hidden in the API
+  // If the API doesn't have section-level restrictions, default to showing if fields are visible
+  const isSectionVisible = (tabValue: string, sectionName: string, fieldNames: string[]): boolean => {
+    if (isLoading) return true; // Show all sections while loading
+    
+    // If no screen or tabs, default to visible (no restrictions)
+    if (!screen || !screen.subSection) {
+      console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No screen or tabs, defaulting to visible`);
+      return true; // Default to visible if no restrictions
+    }
+    
+    const apiSectionName = TAB_SECTION_MAP[tabValue] || tabValue;
+    const tab = screen.subSection.find(t => 
+      t.type === 'Tab' && t.section?.toLowerCase() === apiSectionName.toLowerCase()
+    );
+    
+    // If tab not found, default to visible (no tab-level restrictions)
+    if (!tab || !tab.subSection) {
+      console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No tab or sections found, defaulting to visible`);
+      return true; // Default to visible if no tab restrictions
+    }
+    
+    // Map UI section names to API section names (normalize for comparison)
+    const normalizeSectionName = (name: string): string => {
+      return name.toLowerCase()
+        .replace(/_/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    const normalizedSectionName = normalizeSectionName(sectionName);
+    
+    // Find the section in the API response
+    const apiSection = tab.subSection.find(s => {
+      if (s.type !== 'Section') return false;
+      const normalizedApiSection = normalizeSectionName(s.section || '');
+      return normalizedApiSection === normalizedSectionName || 
+             normalizedApiSection.includes(normalizedSectionName) ||
+             normalizedSectionName.includes(normalizedApiSection);
+    });
+    
+    // If section doesn't exist in API response, default to visible
+    // (Only hide if explicitly marked as hidden or if all fields are hidden)
+    if (!apiSection) {
+      console.log(`🔍 Section "${sectionName}" NOT FOUND in API response for tab "${tabValue}", defaulting to visible (no section-level restrictions)`);
+      return true; // Default to visible - let field-level filtering handle visibility
+    }
+    
+    // If section exists but has no fields, check if we should show it
+    if (!apiSection.fieldList || apiSection.fieldList.length === 0) {
+      console.log(`⚠️ Section "${sectionName}" exists in API but has no fields, defaulting to visible`);
+      return true; // Default to visible - section exists but no field restrictions
+    }
+    
+    // Check if at least one field in this section is visible
+    const hasVisibleField = fieldNames.some(fieldName => {
+      // We need to check if any field in the section matches our field names
+      return apiSection.fieldList?.some(field => {
+        const normalizedFieldName = normalizeFieldName(field.cntrlName || '');
+        const normalizedFieldIdentifier = normalizeFieldName(fieldName);
+        return field.render && (
+          normalizedFieldName === normalizedFieldIdentifier ||
+          normalizedFieldName.includes(normalizedFieldIdentifier) ||
+          normalizedFieldIdentifier.includes(normalizedFieldName)
+        );
+      });
+    });
+    
+    const isVisible = hasVisibleField;
+    console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'} (${fieldNames.length} fields checked, ${apiSection.fieldList.length} fields in API)`);
+    return isVisible;
+  };
+
   return {
     isLoading,
     isError,
@@ -291,6 +366,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     menuItem: screen, // Keep for backward compatibility
     isTabVisible,
     isFieldVisible,
-    isFieldEditable
+    isFieldEditable,
+    isSectionVisible
   };
 };

@@ -23,7 +23,9 @@ const Training = ({ agent }: TrainingDetailProps) => {
   const [isEdit, setIsEdit] = useState(false) 
 
   // Get UI access permissions for agent section
-  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading, isSectionVisible } = useUIAccess('Agent', 'Screen')
+
+  const activeTab = 'training' // Training tab value
 
   // Helper function to filter fields based on UI access
   // For Training tab, the tab value is 'training'
@@ -31,8 +33,8 @@ const Training = ({ agent }: TrainingDetailProps) => {
     if (uiAccessLoading) return fields // Return all fields while loading
     
     return fields.map(field => {
-      const fieldVisible = isFieldVisible('training', field.name, field.label)
-      const fieldEditable = isFieldEditable('training', field.name, field.label)
+      const fieldVisible = isFieldVisible(activeTab, field.name, field.label)
+      const fieldEditable = isFieldEditable(activeTab, field.name, field.label)
       
       return {
         ...field,
@@ -40,6 +42,24 @@ const Training = ({ agent }: TrainingDetailProps) => {
         readOnly: !fieldEditable || field.readOnly
       }
     }).filter(field => field._isVisible === true) // Remove hidden fields
+  }
+
+  // Helper function to check if a section should be visible
+  // Primary rule: If there are visible fields, show the section
+  // Only hide if there are no visible fields
+  const shouldShowSection = (configFields: any[], sectionName: string): boolean => {
+    if (uiAccessLoading) return true // Show all sections while loading
+    
+    // Primary check: If no visible fields after filtering, hide the section
+    if (configFields.length === 0) {
+      console.log(`❌ Section "${sectionName}": No visible fields, hiding section`)
+      return false
+    }
+    
+    // If we have visible fields, show the section
+    // The isSectionVisible check is now optional and defaults to true if no restrictions
+    console.log(`✅ Section "${sectionName}": ${configFields.length} visible fields, showing section`)
+    return true
   }
 
   // console.log('agent', agent)
@@ -380,51 +400,59 @@ const handleSectionSubmit =(sectionName: string) => async (formData: Record<stri
           </div>
         </div>
 
-        <div className="flex gap-10">
-     
+        {shouldShowSection(branchConfig.fields, branchConfig.sectionName) && (
+          <div className="flex gap-10">
+            <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
+              <CardContent>
+                <DynamicFormBuilder
+                  config={branchConfig}
+                  onSubmit={agentForm.handleSubmit}
+                />
 
-          <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
-            <CardContent>
-              <DynamicFormBuilder
-                config={branchConfig}
-                onSubmit={agentForm.handleSubmit}
-              />
+                {/* some form inputs here */}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-              {/* some form inputs here */}
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(organisationConfig.fields, organisationConfig.sectionName) && (
+          <>
+            <div className="flex justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
+               Organisation
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
+                <CardContent>
+                  <DynamicFormBuilder
+                    config={organisationConfig}
+                    onSubmit={agentForm.handleSubmit}
+                  />
+                  {/* some form inputs here */}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
-        <div className="flex justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 mt-6 font-poppins font-semibold text-[20px]">
-           Organisation
-          </h2>
-        </div>
-        <div className="flex gap-2">
-          <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[550px] overflow-y-auto overflow-x-hidden">
-            <CardContent>
-              <DynamicFormBuilder
-                config={organisationConfig}
-                onSubmit={agentForm.handleSubmit}
-              />
-              {/* some form inputs here */}
-            </CardContent>
-          </Card>
-        </div>
+        {shouldShowSection(otherTrainingConfig.fields, otherTrainingConfig.sectionName) && (
+          <>
+            <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
+              Other Training
+            </h2>
 
-        <h2 className="text-xl mt-6 font-semibold text-gray-900 mb-6 font-poppins font-semibold !text-[20px]">
-          Other Training
-        </h2>
-
-        <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[600px] overflow-y-auto">
-          <CardContent>
-            <DynamicFormBuilder
-              config={otherTrainingConfig}
-              onSubmit={handleSectionSubmit(otherTrainingConfig.sectionName)}
-              />
-            {/* some form inputs */}
-          </CardContent>
-        </Card>
+            <Card className="bg-[#F2F2F7] w-full mt-5 max-h-[600px] overflow-y-auto">
+              <CardContent>
+                <DynamicFormBuilder
+                  config={otherTrainingConfig}
+                  onSubmit={handleSectionSubmit(otherTrainingConfig.sectionName)}
+                  />
+                {/* some form inputs */}
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   )

@@ -18,7 +18,9 @@ const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
 
   // Get UI access permissions for agent section
   // API expects "Agent" (capitalized) and "Screen" (capitalized)
-  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading } = useUIAccess('Agent', 'Screen')
+  const { isFieldVisible, isFieldEditable, isLoading: uiAccessLoading, isSectionVisible } = useUIAccess('Agent', 'Screen')
+
+  const activeTab = 'financialdetails' // Financial tab value
 
   // Helper function to filter fields based on UI access
   // For Financial tab, the tab value is 'financialdetails'
@@ -31,8 +33,8 @@ const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
     console.log('✅ UI Access loaded, filtering fields based on permissions')
     
     return fields.map(field => {
-      const fieldVisible = isFieldVisible('financialdetails', field.name, field.label)
-      const fieldEditable = isFieldEditable('financialdetails', field.name, field.label)
+      const fieldVisible = isFieldVisible(activeTab, field.name, field.label)
+      const fieldEditable = isFieldEditable(activeTab, field.name, field.label)
       
       // Debug logging
       console.log(`🔍 Financial field "${field.name}" (${field.label}): visible=${fieldVisible}, editable=${fieldEditable}`)
@@ -56,6 +58,24 @@ const Finance = ({ agent,getOptions }: FinanceDetailProps) => {
       }
       return shouldShow
     })
+  }
+
+  // Helper function to check if a section should be visible
+  // Primary rule: If there are visible fields, show the section
+  // Only hide if there are no visible fields
+  const shouldShowSection = (configFields: any[], sectionName: string): boolean => {
+    if (uiAccessLoading) return true // Show all sections while loading
+    
+    // Primary check: If no visible fields after filtering, hide the section
+    if (configFields.length === 0) {
+      console.log(`❌ Section "${sectionName}": No visible fields, hiding section`)
+      return false
+    }
+    
+    // If we have visible fields, show the section
+    // The isSectionVisible check is now optional and defaults to true if no restrictions
+    console.log(`✅ Section "${sectionName}": ${configFields.length} visible fields, showing section`)
+    return true
   }
 
 console.log('agent in financial', agent)
@@ -184,7 +204,7 @@ console.log('agent in financial', agent)
           ],
         }
       : null,
-  }), [agent, isEdit, uiAccessLoading, isFieldVisible, isFieldEditable, getOptions])
+  }), [agent, isEdit, uiAccessLoading, isFieldVisible, isFieldEditable, getOptions, activeTab])
 
   const handleSectionSubmit =
   (sectionName: string) => async (formData: Record<string, any>) => {
@@ -257,20 +277,22 @@ console.log('agent in financial', agent)
             />
           </div>
         </div>
-        {/* license */}
-        <div className="flex gap-10">
-          <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
-            <CardContent>
-              <DynamicFormBuilder
-                config={financialConfig}
-                onSubmit={handleSectionSubmit(financialConfig.sectionName)}
+        {/* Financial Details */}
+        {shouldShowSection(financialConfig.fields, financialConfig.sectionName) && (
+          <div className="flex gap-10">
+            <Card className="bg-[#F2F2F7] w-full overflow-y-auto">
+              <CardContent>
+                <DynamicFormBuilder
+                  config={financialConfig}
+                  onSubmit={handleSectionSubmit(financialConfig.sectionName)}
 
-              />
+                />
 
-              {/* some form inputs here */}
-            </CardContent>
-          </Card>
-        </div>
+                {/* some form inputs here */}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )

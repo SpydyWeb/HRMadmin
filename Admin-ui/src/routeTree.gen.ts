@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthTerminationRouteImport } from './routes/_auth/termination'
 import { Route as AuthSearchIndexRouteImport } from './routes/_auth/search/index'
 import { Route as AuthSearchAgentIdRouteImport } from './routes/_auth/search/$agentId'
+import { Route as AuthInboxTaskIdRouteImport } from './routes/_auth/inbox/$taskId'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
 import { Route as AuthDashboardCreateBulkRouteImport } from './routes/_auth/dashboard/create-bulk'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
@@ -150,6 +151,11 @@ const AuthSearchIndexRoute = AuthSearchIndexRouteImport.update({
 const AuthSearchAgentIdRoute = AuthSearchAgentIdRouteImport.update({
   id: '/search/$agentId',
   path: '/search/$agentId',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthInboxTaskIdRoute = AuthInboxTaskIdRouteImport.update({
+  id: '/inbox/$taskId',
+  path: '/inbox/$taskId',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthDashboardTerminationRoute =
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
   '/channel-management': typeof AuthChannelManagementIndexLazyRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
   '/search': typeof AuthSearchIndexRoute
   '/channel-management': typeof AuthChannelManagementIndexLazyRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/_auth/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
+  '/_auth/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
   '/_auth/search/': typeof AuthSearchIndexRoute
   '/_auth/channel-management/': typeof AuthChannelManagementIndexLazyRoute
@@ -501,6 +510,7 @@ export interface FileRouteTypes {
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
     | '/dashboard/termination'
+    | '/inbox/$taskId'
     | '/search/$agentId'
     | '/search'
     | '/channel-management'
@@ -541,6 +551,7 @@ export interface FileRouteTypes {
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
     | '/dashboard/termination'
+    | '/inbox/$taskId'
     | '/search/$agentId'
     | '/search'
     | '/channel-management'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/certification-update'
     | '/_auth/dashboard/create-bulk'
     | '/_auth/dashboard/termination'
+    | '/_auth/inbox/$taskId'
     | '/_auth/search/$agentId'
     | '/_auth/search/'
     | '/_auth/channel-management/'
@@ -701,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/search/$agentId'
       fullPath: '/search/$agentId'
       preLoaderRoute: typeof AuthSearchAgentIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/inbox/$taskId': {
+      id: '/_auth/inbox/$taskId'
+      path: '/inbox/$taskId'
+      fullPath: '/inbox/$taskId'
+      preLoaderRoute: typeof AuthInboxTaskIdRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/dashboard/termination': {
@@ -905,6 +924,7 @@ interface AuthRouteChildren {
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
   AuthDashboardCreateBulkRoute: typeof AuthDashboardCreateBulkRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
+  AuthInboxTaskIdRoute: typeof AuthInboxTaskIdRoute
   AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
   AuthSearchIndexRoute: typeof AuthSearchIndexRoute
   AuthChannelManagementIndexLazyRoute: typeof AuthChannelManagementIndexLazyRoute
@@ -944,6 +964,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
   AuthDashboardCreateBulkRoute: AuthDashboardCreateBulkRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
+  AuthInboxTaskIdRoute: AuthInboxTaskIdRoute,
   AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
   AuthSearchIndexRoute: AuthSearchIndexRoute,
   AuthChannelManagementIndexLazyRoute: AuthChannelManagementIndexLazyRoute,
