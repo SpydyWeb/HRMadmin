@@ -36,6 +36,7 @@ const AgentByCode = (data, headers = {}) => {
 const GetMasters = (data, headers = {}) => {
   return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
 };
+
 const file = (data, headers = {}) => {
   console.log('====================================');
   console.log('File upload request:');
@@ -175,11 +176,37 @@ const fieldUpdate = async (data, headers = {}) => {
       approverTwoId: data.approverTwoId,
       approverThreeId: data.approverThreeId,
       useDefaultApprover: data.useDefaultApprover,
-    },      
+    },
     { headers }
   );
 };
 
+const getChannel = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.CHANNELLIST,
+    {
+      channelId: data.channelId,
+      channelCode: data.channelCode,
+      channelName: data.channelName,
+      description: data.description,
+      isActive: data.isActive,
+    },
+    { headers }
+  );
+}
+
+const getSubChannel = async (data, headers = {}) => {
+  const { channelId, ...body } = data
+
+  return apiClient.post(
+    `${APIRoutes.SUBCHANNELLIST}/${channelId}/SubChannel/Fetch`,
+    {
+      ...body,
+      channelId 
+    },
+    { headers }
+  )
+}
 
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
@@ -333,11 +360,13 @@ module.exports = {
   searchbycode,
   loadEncryptionConfig,
   getHRMChunks,
+  getChannel,
   Agentbyid,
   AgentByCode,
   GetMasters,
   file,
   userList,
+  getSubChannel,
   fetchMenu,
   rolesList,
   grantMenu,

@@ -479,10 +479,26 @@ function RouteComponent() {
       const res = await HMSService.updateFieldAccess(payload)
 
       if (res?.responseHeader?.errorCode !== 1101) {
-        Swal.fire('Error', 'Failed to update field access', 'error')
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Failed to update field access',
+          showConfirmButton: false,
+          timer: 2000, // disappears after 2 seconds
+          timerProgressBar: true,
+        })
       }
       else {
-        Swal.fire('Success', 'Access updated successfully', 'success')
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Access updated successfully',
+          showConfirmButton: false,
+          timer: 2000, // disappears after 2 seconds
+          timerProgressBar: true,
+        })
       }
     } catch (error) {
       Swal.fire('Error', 'API Error while updating field access', 'error')

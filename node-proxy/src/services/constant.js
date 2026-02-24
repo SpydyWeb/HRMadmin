@@ -38,6 +38,8 @@ const APIRoutes = {
   ADDUSER:"/api/Access/Role/AddUser",
   GETHIERARCHY:"/api/Access/Role/UI/Control/AccessList",
   FIELDUPDATE:"/api/Access/Role/UI/Control/UpdateAccess",
+  CHANNELLIST:"api/AppMasters/Channel/Fetch",
+  SUBCHANNELLIST:"api/AppMasters",
 };
 
 module.exports = { APIRoutes };
