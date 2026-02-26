@@ -3,6 +3,7 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import CustomTabs from '@/components/CustomTabs'
 import { HMSService } from '@/services/hmsService'
 import { useEffect } from 'react'
+import FieldTreeView from '@/components/ui/FieldTreeView'
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -61,6 +62,14 @@ function RouteComponent() {
     const [locations, setLocations] = useState<any[]>([])
     const [loadingLocations, setLoadingLocations] = useState(false)
     const [globalLoading, setGlobalLoading] = useState(false)
+    const [designationTreeData, setDesignationTreeData] = useState<any[]>([])
+    const [designationFields, setDesignationFields] = useState<any[]>([])
+    const [loadingDesignation, setLoadingDesignation] = useState(false)
+    const [selectedDesignation, setSelectedDesignation] = useState<{
+        id: number
+        name: string
+        code: string
+    } | null>(null)
 
     const channelTabs = [
         { value: 'designation', label: 'Designation' },
@@ -113,6 +122,16 @@ function RouteComponent() {
 
     useEffect(() => {
         if (
+            activeTab === "designation" &&
+            selectedChannel &&
+            selectedSubChannel
+        ) {
+            fetchDesignationHierarchy()
+        }
+    }, [activeTab, selectedChannel, selectedSubChannel])
+
+    useEffect(() => {
+        if (
             activeTab === "location" &&
             selectedChannel &&
             selectedSubChannel
@@ -125,7 +144,6 @@ function RouteComponent() {
         if (!selectedChannel || !selectedSubChannel) return
 
         try {
-            setGlobalLoading(true)   // 👈 start loader
             setLoadingLocations(true)
 
             const res = await HMSService.fetchLocations(
@@ -146,7 +164,51 @@ function RouteComponent() {
             console.error("Failed to fetch locations", error)
         } finally {
             setLoadingLocations(false)
-            setGlobalLoading(false)  // 👈 stop loader
+        }
+    }
+
+    const fetchDesignationHierarchy = async () => {
+        if (!selectedChannel || !selectedSubChannel) return
+
+        try {
+            setLoadingDesignation(true)
+
+            const res = await HMSService.getDesignationHierarchy({
+                designationId: 0,
+                parentDesignationId: 0,
+                designationCode: "null",
+                designationName: "null",
+                designationLevel: 0,
+                isActive: true,
+                channelId: selectedChannel,
+                codeFormat: "null",
+                subChannelId: selectedSubChannel.subChannelId,
+            })
+
+            const apiData =
+                res?.responseBody?.designationHierarchy || []
+
+            // 🔥 Convert recursive API structure → TreeView structure
+            const formatTree = (data: any[]): any[] => {
+                return data.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    code: item.code, // ✅ store code
+                    type: "designation",
+                    children: item.reportingDesignations?.length
+                        ? formatTree(item.reportingDesignations)
+                        : [],
+                }))
+            }
+
+            const formattedTree = formatTree(apiData)
+
+            setDesignationTreeData(formattedTree)
+
+        } catch (error) {
+            console.error("Failed to fetch designation hierarchy", error)
+        } finally {
+            setLoadingDesignation(false)
         }
     }
 
@@ -317,6 +379,53 @@ function RouteComponent() {
             showToast(NOTIFICATION_CONSTANTS.ERROR, "Server error while updating")
         }
         finally {
+            setGlobalLoading(false)
+        }
+    }
+
+    const handleSaveDesignation = async () => {
+        if (!selectedChannel || !selectedSubChannel) return
+
+        if (!selectedDesignation) {
+            showToast(NOTIFICATION_CONSTANTS.WARNING, "Please select a designation")
+            return
+        }
+
+        try {
+            setGlobalLoading(true)
+
+            const payload = {
+                designationId: selectedDesignation.id ?? 0,
+                parentDesignationId: 0, // update if needed
+                designationCode: selectedDesignation.code ?? "",
+                designationName: selectedDesignation.name ?? "",
+                designationLevel: 0,
+                isActive: true,
+                channelId: selectedChannel,
+                codeFormat: null,
+                subChannelId: selectedSubChannel.subChannelId,
+            }
+
+            const res = await HMSService.saveDesignation(payload)
+
+            if (res?.responseHeader?.errorCode === 1101) {
+                showToast(
+                    NOTIFICATION_CONSTANTS.SUCCESS,
+                    "Designation saved successfully"
+                )
+                fetchDesignationHierarchy()
+            } else {
+                showToast(
+                    NOTIFICATION_CONSTANTS.ERROR,
+                    res?.responseHeader?.errorMessage || "Save failed"
+                )
+            }
+        } catch (error) {
+            showToast(
+                NOTIFICATION_CONSTANTS.ERROR,
+                "Server error while saving designation"
+            )
+        } finally {
             setGlobalLoading(false)
         }
     }
@@ -620,20 +729,119 @@ function RouteComponent() {
                             <div className="-ml-px p-4 -mt-px bg-white rounded-b-xl rounded-tr-xl h-[500px]">
 
                                 {activeTab === 'designation' && (
-                                    <div className="text-gray-600">
-                                        Designation Tree View Area
-                                    </div>
+                                    <>
+                                        {loadingDesignation ? (
+                                            <div className="flex justify-center items-center py-10">
+                                                <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                                <span className="ml-2 text-sm text-gray-500">
+                                                    Loading hierarchy...
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-12 gap-4 h-[500px]">
+
+                                                {/* LEFT → TREE */}
+                                                <div className="col-span-3 h-full overflow-y-auto pr-2">
+                                                    <FieldTreeView
+                                                        data={designationTreeData}
+                                                        onSelect={(node) => {
+                                                            if (node.type === "designation") {
+                                                                setSelectedDesignation({
+                                                                    id: node.id,
+                                                                    name: node.name,
+                                                                    code: node.code,
+                                                                })
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* RIGHT → TABLE */}
+                                                <div className="col-span-9 bg-white border rounded-xl p-6 h-full">
+
+                                                    {!selectedDesignation ? (
+                                                        <div className="flex items-center justify-center h-full text-gray-400">
+                                                            Select a designation from the hierarchy
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="max-w-xl">
+
+                                                                <h4 className="text-lg font-semibold text-gray-800 mb-6">
+                                                                    Designation Details
+                                                                </h4>
+
+                                                                <div className="space-y-4">
+
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Designation ID
+                                                                        </span>
+                                                                        <span className="text-sm font-semibold text-gray-800">
+                                                                            {selectedDesignation.id}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Designation Name
+                                                                        </span>
+                                                                        <span className="text-sm font-semibold text-gray-800">
+                                                                            {selectedDesignation.name}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Designation Code
+                                                                        </span>
+                                                                        <span className="text-sm font-semibold text-blue-600">
+                                                                            {selectedDesignation.code}
+                                                                        </span>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                            {/* ✅ SAVE BUTTON RIGHT SIDE */}
+                                                            <div className="flex justify-start pt-6  mt-6">
+                                                                <button
+                                                                    onClick={handleSaveDesignation}
+                                                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg 
+                           hover:bg-blue-700 transition font-medium"
+                                                                >
+                                                                    Save
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {activeTab === 'location' && (
-                                    <div className="text-gray-600">
-                                        <DataTable
-                                            columns={locationColumns}
-                                            data={locations}
-                                            loading={loadingLocations}
-                                            noDataMessage="No Locations Found"
-                                        />
-                                    </div>
+                                    <>
+                                        {loadingLocations ? (
+                                            <div className="flex justify-center items-center h-full">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                                    <span className="text-sm text-gray-500">
+                                                        Loading locations...
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-gray-600">
+                                                <DataTable
+                                                    columns={locationColumns}
+                                                    data={locations}
+                                                    noDataMessage="No Locations Found"
+                                                />
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {activeTab === 'branch' && (

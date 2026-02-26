@@ -299,6 +299,39 @@ export const HMSService = {
       "saveLocations",
       [payload]
     )
+  },
+
+  getDesignationHierarchy: async (payload: {
+    designationId: 0,
+    parentDesignationId: 0,
+    designationName: null,
+    designationLevel: 0,
+    isActive: boolean,
+    channelId: number,
+    codeFormat: "null",
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "getDesignationHierarchy",
+      [payload]
+    )
+  },
+
+  saveDesignation: async (payload: {
+    designationId: number,
+    parentDesignationId: number, 
+    designationCode: string,
+    designationName: string,
+    designationLevel: number,
+    isActive: boolean,
+    channelId: number,
+    codeFormat: null,
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "saveDesignation",
+      [payload]
+    )
   }
 }
 

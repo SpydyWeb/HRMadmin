@@ -234,6 +234,20 @@ const saveLocations = async (data, headers = {}) => {
   )
 }
 
+
+const getDesignationHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Designation/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
 const createChannel = async (data, headers = {}) => {
   return apiClient.post(
     APIRoutes.CREATECHANNEL,
@@ -256,6 +270,19 @@ const createSubChannel = async (data, headers = {}) => {
     {
       ...body,
       channelId
+    },
+    { headers }
+  )
+}
+
+const saveDesignation = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Designation/Save`,
+    {
+      ...body,
+      channelId,
+      subChannelId
     },
     { headers }
   )
@@ -443,6 +470,7 @@ module.exports = {
   configList,
   updateCron,
   addUser,
+  saveDesignation,
   updateStatus,
   searchFieldsConfig,
   editAgentDetails,
@@ -453,6 +481,7 @@ module.exports = {
   downloadRecord,
   GeoHierarchy,
   saveLocations,
+  getDesignationHierarchy,
   GeoHierarchyTable,
   hmsDashboard,
   getChannelStats,
