@@ -202,7 +202,60 @@ const getSubChannel = async (data, headers = {}) => {
     `${APIRoutes.SUBCHANNELLIST}/${channelId}/SubChannel/Fetch`,
     {
       ...body,
-      channelId 
+      channelId
+    },
+    { headers }
+  )
+}
+
+const fetchLocations = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Location/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+const saveLocations = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Location/Save`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+const createChannel = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.CREATECHANNEL,
+    {
+      channelId: data.channelId,
+      channelCode: data.channelCode,
+      channelName: data.channelName,
+      description: data.description,
+      isActive: data.isActive,
+    },
+    { headers }
+  );
+}
+
+const createSubChannel = async (data, headers = {}) => {
+  const { channelId, ...body } = data
+
+  return apiClient.post(
+    `${APIRoutes.CREATESUBCHANNEL}/${channelId}/SubChannel/Create`,
+    {
+      ...body,
+      channelId
     },
     { headers }
   )
@@ -352,7 +405,7 @@ const downloadReport = (data = {}, headers = {}) => {
   }
   return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, data, { headers, });
 }
- const allowUiAccess = ( roleId,searchFor, headers = {}) => {
+const allowUiAccess = (roleId, searchFor, headers = {}) => {
   return apiClient.post(APIRoutes.GETHIERARCHY, { roleId, searchFor }, { headers });
 }
 
@@ -369,8 +422,10 @@ module.exports = {
   file,
   userList,
   getSubChannel,
+  createChannel,
   fetchMenu,
   rolesList,
+  fetchLocations,
   grantMenu,
   createRole,
   removeUser,
@@ -383,6 +438,7 @@ module.exports = {
   approveCommission,
   configcommission,
   deleteRole,
+  createSubChannel,
   updateConditionConfig,
   configList,
   updateCron,
@@ -396,6 +452,7 @@ module.exports = {
   fieldUpdate,
   downloadRecord,
   GeoHierarchy,
+  saveLocations,
   GeoHierarchyTable,
   hmsDashboard,
   getChannelStats,

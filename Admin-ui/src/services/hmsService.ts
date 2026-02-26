@@ -243,6 +243,63 @@ export const HMSService = {
       [payload]
     )
   },
+
+
+  createChannel: async (payload: {
+    channelId: null,
+    channelCode: string,
+    channelName: string,
+    description: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "createChannel",
+      [payload]
+    )
+  },
+
+  createSubChannel: async (payload: {
+    subChannelId: null,
+    subChannelCode: string,
+    channelCode: string,
+    subChannelName: string,
+    description: string,
+    isActive: boolean,
+    channelId: number,
+  }) => {
+    return callApi(
+      "createSubChannel",
+      [payload]
+    )
+  },
+
+  fetchLocations: async (payload: {
+    locationMasterId: null,
+    channelId: number,
+    subChannelId: number,
+    locationCode: string,
+    locationDesc: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "fetchLocations",
+      [payload]
+    )
+  },
+
+  saveLocation: async (payload: {
+    locationMasterId: null,
+    channelId: number,
+    subChannelId: number,
+    locationCode: string,
+    locationDesc: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "saveLocations",
+      [payload]
+    )
+  }
 }
 
 

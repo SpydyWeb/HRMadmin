@@ -15,8 +15,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import Swal from 'sweetalert2'
 import FieldTreeView from '../../../components/ui/FieldTreeView'
+import { showToast } from "@/components/ui/sonner"
+import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import Loading from '@/components/ui/Loading'
 
 export const Route = createLazyFileRoute('/_auth/roles-management/')({
   component: RouteComponent,
@@ -75,6 +77,8 @@ function RouteComponent() {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 5 // how many rows per page
   const [treeData, setTreeData] = useState<any[]>([])
+  const [globalLoading, setGlobalLoading] = useState(false)
+
 
   const menuData = [
     {
@@ -196,6 +200,17 @@ function RouteComponent() {
   }, [selectedRole, activeTab])
 
 
+
+  const handleApiToast = (res: any) => {
+    const message =
+      res?.responseHeader?.errorMessage || 'Unexpected response'
+
+    if (res?.responseHeader?.errorCode === 1101) {
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, message)
+    } else {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+    }
+  }
 
   /* ================= MENU TABLE COLUMNS ================= */
 
@@ -476,39 +491,26 @@ function RouteComponent() {
     }
     console.log("myPayload", payload);
     try {
+      setGlobalLoading(true)
       const res = await HMSService.updateFieldAccess(payload)
-
-      if (res?.responseHeader?.errorCode !== 1101) {
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'error',
-          title: 'Failed to update field access',
-          showConfirmButton: false,
-          timer: 2000, // disappears after 2 seconds
-          timerProgressBar: true,
-        })
-      }
-      else {
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Access updated successfully',
-          showConfirmButton: false,
-          timer: 2000, // disappears after 2 seconds
-          timerProgressBar: true,
-        })
-      }
+      handleApiToast(res)
     } catch (error) {
-      Swal.fire('Error', 'API Error while updating field access', 'error')
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Server error'
+      )
+    }
+    finally {
+      setGlobalLoading(false)
     }
   }
 
 
   const handleAddRole = async () => {
     if (!newRoleName.trim()) {
-      Swal.fire('Required', 'Role name is required', 'warning')
+      showToast(NOTIFICATION_CONSTANTS.WARNING, 'Role name is required')
       return
     }
 
@@ -531,17 +533,16 @@ function RouteComponent() {
 
         setOpenAddRole(false)
         setNewRoleName('')
-
-        Swal.fire('Success', 'Role created successfully', 'success')
-      } else {
-        Swal.fire(
-          'Error',
-          res?.responseHeader?.errorMessage || 'Failed to create role',
-          'error'
-        )
       }
+      handleApiToast(res)
+
     } catch (error) {
-      Swal.fire('Error', 'Server error while creating role', 'error')
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Server error'
+      )
     } finally {
       setAddingRole(false)
     }
@@ -552,7 +553,7 @@ function RouteComponent() {
     if (!selectedRole) return
 
     if (!newUsername.trim()) {
-      Swal.fire('Required', 'Username is required', 'warning')
+      showToast(NOTIFICATION_CONSTANTS.WARNING, 'Username is required')
       return
     }
 
@@ -571,21 +572,16 @@ function RouteComponent() {
 
         setOpenAddUser(false)
         setNewUsername('')
-
-        Swal.fire(
-          'Success',
-          'User added to role successfully',
-          'success'
-        )
-      } else {
-        Swal.fire(
-          'Error',
-          res?.responseHeader?.errorMessage || 'Failed to add user',
-          'error'
-        )
       }
+      handleApiToast(res)
+
     } catch (error) {
-      Swal.fire('Error', 'Server error while adding user', 'error')
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Server error'
+      )
     } finally {
       setAddingUser(false)
     }
@@ -615,9 +611,14 @@ function RouteComponent() {
       } else {
         setMenuAccess([])
       }
-    } catch (error) {
+    } catch (error: any) {
       setMenuAccess([])
-      Swal.fire('Error', 'Something went wrong...!', 'error')
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Failed to load menu'
+      )
     } finally {
       setMenuLoading(false)
     }
@@ -652,9 +653,14 @@ function RouteComponent() {
       } else {
         setUserList([])
       }
-    } catch (error) {
+    } catch (error: any) {
       setUserList([])
-      Swal.fire('Error', 'Failed to load users', 'error')
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Failed to load users'
+      )
     } finally {
       setUserLoading(false)
     }
@@ -678,51 +684,14 @@ function RouteComponent() {
           : menu
       )
     )
-
     try {
       let res
-
       if (isChecked) {
-        res = await HMSService.grantMenuAccess({
-          roleId,
-          menuId,
-        })
-        if (res?.responseHeader?.errorCode == 1101) {
-          Swal.fire(
-            'Success',
-            'Menu Access granted successfully...!',
-            'success'
-          )
-        }
-        else {
-          Swal.fire(
-            'Error',
-            'Failed to update menu access...!',
-            'error'
-          )
-        }
+        res = await HMSService.grantMenuAccess({ roleId, menuId })
       } else {
-        res = await HMSService.revokeMenuAccess({
-          roleId,
-          menuId,
-        })
-        if (res?.responseHeader?.errorCode == 1101) {
-          Swal.fire(
-            'Success',
-            'Menu Access revoked successfully...!',
-            'success'
-          )
-        }
-        else {
-          Swal.fire(
-            'Error',
-            'Failed to update menu access...!',
-            'error'
-          )
-        }
+        res = await HMSService.revokeMenuAccess({ roleId, menuId })
       }
-
-
+      handleApiToast(res)
     }
     catch (error) {
       // 🔴 Rollback if API fails
@@ -733,102 +702,74 @@ function RouteComponent() {
             : menu
         )
       )
-
-      Swal.fire(
-        'Error',
-        'Failed to update menu access...!',
-        'error'
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Failed to update menu access'
       )
     }
   }
 
-  const handleDeleteRole = (roleId: number) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'You want to delete this role',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-    }).then(async (result) => {
-      if (!result.isConfirmed) return
+  const handleDeleteRole = async (roleId: number) => {
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this role?'
+    )
+    if (!confirmDelete) return
 
-      try {
-        const res = await HMSService.deleteRoles(roleId)
+    try {
+      const res = await HMSService.deleteRoles(roleId)
 
-        console.log('Delete role response:', res)
-
-        if (res?.responseHeader?.errorCode === 1101) {
-          // ✅ Update UI
-          setRoles(prev => prev.filter(r => r.roleId !== roleId))
-          setSelectedRole(prev =>
-            prev?.roleId === roleId ? null : prev
-          )
-
-          Swal.fire('Deleted!', 'Role has been deleted.', 'success')
-        } else {
-          Swal.fire(
-            'Error',
-            res?.responseHeader?.errorMessage || 'Delete failed',
-            'error'
-          )
-        }
-      } catch (error) {
-        Swal.fire('Error', 'Server error while deleting role', 'error')
-      }
-    })
-  }
-
-  const handleDeleteUser = (userName: string) => {
-    if (!selectedRole) return
-    const roleId = selectedRole.roleId
-
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'You want to remove this user from the role',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, remove!',
-    }).then(async (result) => {
-      if (!result.isConfirmed) return
-
-      try {
-        const res = await HMSService.removeUserFromRole({
-          userName,
-          roleId
-        })
-
-        if (res?.responseHeader?.errorCode === 1101) {
-          // ✅ Remove from UI using username (since API uses userName)
-          setUserList(prev =>
-            prev.filter(u => u.username !== userName)
-          )
-
-          Swal.fire(
-            'Removed!',
-            'User removed from role successfully.',
-            'success'
-          )
-        } else {
-          Swal.fire(
-            'Error',
-            res?.responseHeader?.errorMessage || 'Operation failed',
-            'error'
-          )
-        }
-      } catch (error) {
-        Swal.fire(
-          'Error',
-          'Server error while removing user',
-          'error'
+      if (res?.responseHeader?.errorCode === 1101) {
+        setRoles(prev => prev.filter(r => r.roleId !== roleId))
+        setSelectedRole(prev =>
+          prev?.roleId === roleId ? null : prev
         )
       }
-    })
+
+      handleApiToast(res)
+
+    } catch (error: any) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Server error'
+      )
+    }
   }
 
+  const handleDeleteUser = async (userName: string) => {
+    if (!selectedRole) return
+
+    const confirmDelete = window.confirm(
+      'Are you sure you want to remove this user from the role?'
+    )
+    if (!confirmDelete) return
+
+    try {
+      const res = await HMSService.removeUserFromRole({
+        userName,
+        roleId: selectedRole.roleId,
+      })
+
+      if (res?.responseHeader?.errorCode === 1101) {
+        setUserList(prev =>
+          prev.filter(u => u.username !== userName)
+        )
+      }
+
+      handleApiToast(res)
+
+    } catch (error: any) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.response?.data?.responseHeader?.errorMessage ||
+        error?.message ||
+        'Server error'
+      )
+    }
+  }
   const handleRoleClick = (role: Role) => {
     setSelectedRole(role)
     setFieldAccess([])
@@ -849,6 +790,7 @@ function RouteComponent() {
 
   return (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      {globalLoading && <Loading />}
       <AlertDialog open={openAddRole} onOpenChange={setOpenAddRole}>
         <AlertDialogContent className="sm:max-w-md rounded-xl">
           <AlertDialogHeader>
