@@ -355,6 +355,12 @@ const downloadReport = (data = {}, headers = {}) => {
  const allowUiAccess = ( roleId,searchFor, headers = {}) => {
   return apiClient.post(APIRoutes.GETHIERARCHY, { roleId, searchFor }, { headers });
 }
+ const fetchInboxData = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.FETCHINBOX, data, { headers });
+}
+ const updateSrDecision = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.UPDATESRDECISION, data, { headers });
+}
 
 module.exports = {
   login,
@@ -401,6 +407,8 @@ module.exports = {
   getChannelStats,
   uploadFileList,
   downloadReport,
-  allowUiAccess
+  allowUiAccess,
+  fetchInboxData,
+  updateSrDecision
 
 };

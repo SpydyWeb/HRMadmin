@@ -40,6 +40,8 @@ const APIRoutes = {
   FIELDUPDATE:"/api/Access/Role/UI/Control/UpdateAccess",
   CHANNELLIST:"api/AppMasters/Channel/Fetch",
   SUBCHANNELLIST:"api/AppMasters",
+  FETCHINBOX:"/FetchSr",
+  UPDATESRDECISION:"/UpdateSrDecision",
 };
 
 module.exports = { APIRoutes };
