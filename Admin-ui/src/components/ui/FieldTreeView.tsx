@@ -11,6 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type TreeNode = {
     id: string
@@ -97,9 +103,18 @@ export default function FieldTreeView({ data, onSelect }: Props) {
                     )}
 
                     {/* Name */}
-                    <span className="text-sm truncate flex-1">
-                        {node.name}
-                    </span>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-sm truncate flex-1 cursor-default">
+                                    {node.name}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                                {node.name}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
 
                     {/* Type Badge (shows on hover or selected) */}
                     <Badge

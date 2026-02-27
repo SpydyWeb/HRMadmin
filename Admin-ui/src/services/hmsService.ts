@@ -243,8 +243,161 @@ export const HMSService = {
       [payload]
     )
   },
-}
 
+
+  createChannel: async (payload: {
+    channelId: null,
+    channelCode: string,
+    channelName: string,
+    description: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "createChannel",
+      [payload]
+    )
+  },
+
+  createSubChannel: async (payload: {
+    subChannelId: null,
+    subChannelCode: string,
+    channelCode: string,
+    subChannelName: string,
+    description: string,
+    isActive: boolean,
+    channelId: number,
+  }) => {
+    return callApi(
+      "createSubChannel",
+      [payload]
+    )
+  },
+
+  fetchLocations: async (payload: {
+    locationMasterId: null,
+    channelId: number,
+    subChannelId: number,
+    locationCode: string,
+    locationDesc: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "fetchLocations",
+      [payload]
+    )
+  },
+
+  saveLocation: async (payload: {
+    locationMasterId: null,
+    channelId: number,
+    subChannelId: number,
+    locationCode: string,
+    locationDesc: string,
+    isActive: boolean,
+  }) => {
+    return callApi(
+      "saveLocations",
+      [payload]
+    )
+  },
+
+  getDesignationHierarchy: async (payload: {
+    designationId: 0,
+    parentDesignationId: 0,
+    designationName: null,
+    designationLevel: 0,
+    isActive: boolean,
+    channelId: number,
+    codeFormat: "null",
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "getDesignationHierarchy",
+      [payload]
+    )
+  },
+
+  saveDesignation: async (payload: {
+    designationId: number,
+    parentDesignationId: number,
+    designationCode: string,
+    designationName: string,
+    designationLevel: number,
+    isActive: boolean,
+    channelId: number,
+    codeFormat: null,
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "saveDesignation",
+      [payload]
+    )
+  },
+
+
+
+  getBranchHierarchy: async (payload: {
+    branchId: number,
+    branchCode: null,
+    branchName: null,
+    address: null,
+    state: number,
+    phoneNumber: null,
+    emailId: null,
+    isActive: boolean,
+    locationMasterId: number,
+    parentBranchId: number,
+    channelId: number,
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "getBranchHierarchy",
+      [payload]
+    )
+  },
+
+  saveBranch: async (payload: {
+    branchId: number,
+    branchCode: string,
+    branchName: string,
+    address: null,
+    state: number,
+    phoneNumber: null,
+    emailId: null,
+    isActive: boolean,
+    locationMasterId: number,
+    parentBranchId: number,
+    channelId: number,
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "saveBranch",
+      [payload]
+    )
+  },
+
+
+  getPartnerHierarchy: async (payload: {
+    partnerBranchHierarchyId: number,
+    parentBranchHierarchyId: number,
+    orgId: number,
+    channelId: number,
+    subChannelId: number,
+    partnerBranchCode: string,
+    partnerBranch: string,
+    partnerAddress: string,
+    partnerMail: string,
+    partnerPhone: string,
+    hierarchyPath: string,
+    relationMgr: number
+  }) => {
+    return callApi(
+      "getPartnerHierarchy",
+      [payload]
+    )
+  },
+
+}
 
 
 

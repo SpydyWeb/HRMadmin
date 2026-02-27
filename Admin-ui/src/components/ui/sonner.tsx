@@ -65,7 +65,7 @@ export const ToastProvider: React.FC<ToasterProps> = (props) => {
   return (
     <Sonner
       theme={theme}
-      position="bottom-right"
+      position="top-center"
       closeButton
       richColors
       expand={false}

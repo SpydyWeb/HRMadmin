@@ -42,6 +42,8 @@ const APIRoutes = {
   SUBCHANNELLIST:"api/AppMasters",
   FETCHINBOX:"/FetchSr",
   UPDATESRDECISION:"/UpdateSrDecision",
+  CREATECHANNEL:"api/AppMasters/Channel/Create",
+  CREATESUBCHANNEL:"api/AppMasters",
 };
 
 module.exports = { APIRoutes };

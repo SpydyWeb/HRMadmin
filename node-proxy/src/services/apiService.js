@@ -202,7 +202,123 @@ const getSubChannel = async (data, headers = {}) => {
     `${APIRoutes.SUBCHANNELLIST}/${channelId}/SubChannel/Fetch`,
     {
       ...body,
-      channelId 
+      channelId
+    },
+    { headers }
+  )
+}
+
+const fetchLocations = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Location/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+const saveLocations = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Location/Save`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+
+const getDesignationHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Designation/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+const createChannel = async (data, headers = {}) => {
+  return apiClient.post(
+    APIRoutes.CREATECHANNEL,
+    {
+      channelId: data.channelId,
+      channelCode: data.channelCode,
+      channelName: data.channelName,
+      description: data.description,
+      isActive: data.isActive,
+    },
+    { headers }
+  );
+}
+
+const createSubChannel = async (data, headers = {}) => {
+  const { channelId, ...body } = data
+
+  return apiClient.post(
+    `${APIRoutes.CREATESUBCHANNEL}/${channelId}/SubChannel/Create`,
+    {
+      ...body,
+      channelId
+    },
+    { headers }
+  )
+}
+
+const saveDesignation = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Designation/Save`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
+const getBranchHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Branch/Fetch`,
+    {
+      ...body,
+    },
+    { headers }
+  )
+}
+
+const saveBranch = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Branch/Save`,
+    {
+      ...body,
+    },
+    { headers }
+  )
+}
+
+
+const getPartnerHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/PartnerBranchHierarchy/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
     },
     { headers }
   )
@@ -352,7 +468,7 @@ const downloadReport = (data = {}, headers = {}) => {
   }
   return apiClient.post(`${APIRoutes.DOWNLOADREPORT}/${id}/${reportType}`, data, { headers, });
 }
- const allowUiAccess = ( roleId,searchFor, headers = {}) => {
+const allowUiAccess = (roleId, searchFor, headers = {}) => {
   return apiClient.post(APIRoutes.GETHIERARCHY, { roleId, searchFor }, { headers });
 }
  const fetchInboxData = (data = {}, headers = {}) => {
@@ -375,8 +491,10 @@ module.exports = {
   file,
   userList,
   getSubChannel,
+  createChannel,
   fetchMenu,
   rolesList,
+  fetchLocations,
   grantMenu,
   createRole,
   removeUser,
@@ -389,10 +507,15 @@ module.exports = {
   approveCommission,
   configcommission,
   deleteRole,
+  getBranchHierarchy,
+  createSubChannel,
   updateConditionConfig,
   configList,
   updateCron,
+  saveBranch,
+  getPartnerHierarchy,
   addUser,
+  saveDesignation,
   updateStatus,
   searchFieldsConfig,
   editAgentDetails,
@@ -402,6 +525,8 @@ module.exports = {
   fieldUpdate,
   downloadRecord,
   GeoHierarchy,
+  saveLocations,
+  getDesignationHierarchy,
   GeoHierarchyTable,
   hmsDashboard,
   getChannelStats,
