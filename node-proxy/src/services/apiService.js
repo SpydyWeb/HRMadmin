@@ -288,6 +288,29 @@ const saveDesignation = async (data, headers = {}) => {
   )
 }
 
+const getBranchHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Branch/Fetch`,
+    {
+      ...body,
+    },
+    { headers }
+  )
+}
+
+const saveBranch = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/Branch/Save`,
+    {
+      ...body,
+    },
+    { headers }
+  )
+}
+
+
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
     try {
@@ -465,10 +488,12 @@ module.exports = {
   approveCommission,
   configcommission,
   deleteRole,
+  getBranchHierarchy,
   createSubChannel,
   updateConditionConfig,
   configList,
   updateCron,
+  saveBranch,
   addUser,
   saveDesignation,
   updateStatus,
