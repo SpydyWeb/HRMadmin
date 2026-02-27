@@ -374,10 +374,30 @@ export const HMSService = {
       "saveBranch",
       [payload]
     )
-  }
+  },
+
+
+  getPartnerHierarchy: async (payload: {
+    partnerBranchHierarchyId: number,
+    parentBranchHierarchyId: number,
+    orgId: number,
+    channelId: number,
+    subChannelId: number,
+    partnerBranchCode: string,
+    partnerBranch: string,
+    partnerAddress: string,
+    partnerMail: string,
+    partnerPhone: string,
+    hierarchyPath: string,
+    relationMgr: number
+  }) => {
+    return callApi(
+      "getPartnerHierarchy",
+      [payload]
+    )
+  },
 
 }
-
 
 
 

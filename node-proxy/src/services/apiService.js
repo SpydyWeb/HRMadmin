@@ -311,6 +311,19 @@ const saveBranch = async (data, headers = {}) => {
 }
 
 
+const getPartnerHierarchy = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/PartnerBranchHierarchy/Fetch`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
+
 const GetMastersBulk = async (keys, headers = {}) => {
   const promises = keys.map(async (key) => {
     try {
@@ -494,6 +507,7 @@ module.exports = {
   configList,
   updateCron,
   saveBranch,
+  getPartnerHierarchy,
   addUser,
   saveDesignation,
   updateStatus,
