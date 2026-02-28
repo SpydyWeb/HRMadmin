@@ -310,6 +310,18 @@ const saveBranch = async (data, headers = {}) => {
   )
 }
 
+const savePartner = async (data, headers = {}) => {
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(
+    `/${APIRoutes.SUBCHANNELLIST}/${channelId}/${subChannelId}/PartnerBranchHierarchy/Save`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    },
+    { headers }
+  )
+}
 
 const getPartnerHierarchy = async (data, headers = {}) => {
   const { channelId, subChannelId, ...body } = data
@@ -471,10 +483,10 @@ const downloadReport = (data = {}, headers = {}) => {
 const allowUiAccess = (roleId, searchFor, headers = {}) => {
   return apiClient.post(APIRoutes.GETHIERARCHY, { roleId, searchFor }, { headers });
 }
- const fetchInboxData = (data = {}, headers = {}) => {
+const fetchInboxData = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHINBOX, data, { headers });
 }
- const updateSrDecision = (data = {}, headers = {}) => {
+const updateSrDecision = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATESRDECISION, data, { headers });
 }
 
@@ -508,6 +520,7 @@ module.exports = {
   configcommission,
   deleteRole,
   getBranchHierarchy,
+  savePartner,
   createSubChannel,
   updateConditionConfig,
   configList,

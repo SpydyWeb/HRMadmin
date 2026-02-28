@@ -17,7 +17,8 @@ import DataTable from '@/components/table/DataTable'
 import { showToast } from "@/components/ui/sonner"
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import Loading from '@/components/ui/Loading'
-import { Plus, Pencil } from 'lucide-react'
+import { Plus, Pencil, Save } from 'lucide-react'
+import { MdCancel } from 'react-icons/md'
 
 export const Route = createLazyFileRoute('/_auth/channel-management/')({
     component: RouteComponent,
@@ -46,6 +47,7 @@ function RouteComponent() {
     const [loadingSubChannels, setLoadingSubChannels] = useState(false)
     const [selectedChannel, setSelectedChannel] = useState<number | null>(null)
     const [selectedSubChannel, setSelectedSubChannel] = useState<SubChannel | null>(null)
+    const [isEditingDesignation, setIsEditingDesignation] = useState(false)
     const [activeTab, setActiveTab] = useState<
         'designation' | 'location' | 'branch' | 'partner'
     >('designation')
@@ -87,15 +89,45 @@ function RouteComponent() {
         id: number
         name: string
         code: string
+        address: string
+        mail: string
+        phone: string
+        relationMgr: number,
     } | null>(null)
+    const [openAddDesignation, setOpenAddDesignation] = useState(false)
+    const [newDesignationName, setNewDesignationName] = useState('')
+    const [newDesignationCode, setNewDesignationCode] = useState('')
+    const [addingDesignation, setAddingDesignation] = useState(false)
     const channelTabs = [
         { value: 'designation', label: 'Designation' },
         { value: 'location', label: 'Locations' },
         { value: 'branch', label: 'Branch' },
         { value: 'partner', label: 'Partner' },   // ✅ new tab
     ]
+    const [isEditingBranch, setIsEditingBranch] = useState(false)
+    const [openAddBranch, setOpenAddBranch] = useState(false)
+    const [newBranchName, setNewBranchName] = useState('')
+    const [newBranchCode, setNewBranchCode] = useState('')
+    const [addingBranch, setAddingBranch] = useState(false)
 
+    const [openEditLocation, setOpenEditLocation] = useState(false)
+    const [editingLocation, setEditingLocation] = useState<Location | null>(null)
+    const [editLocationCode, setEditLocationCode] = useState("")
+    const [editLocationDesc, setEditLocationDesc] = useState("")
+    const [updatingLocation, setUpdatingLocation] = useState(false)
+
+    const [addingPartner, setAddingPartner] = useState(false)
+    const [isEditingPartner, setIsEditingPartner] = useState(false)
+    const [openAddPartner, setOpenAddPartner] = useState(false)
+    const [newPartnerName, setNewPartnerName] = useState('')
+    const [newPartnerCode, setNewPartnerCode] = useState('')
+
+    const [newPartnerAddress, setNewPartnerAddress] = useState('')
+    const [newPartnerMail, setNewPartnerMail] = useState('')
+    const [newPartnerPhone, setNewPartnerPhone] = useState('')
+    const [newRelationMgr, setNewRelationMgr] = useState('')
     const locationColumns = [
+
         {
             header: "Location ID",
             accessor: "locationMasterId",
@@ -301,6 +333,7 @@ function RouteComponent() {
 
         try {
             setLoadingPartner(true)
+
             const res = await HMSService.getPartnerHierarchy({
                 partnerBranchHierarchyId: 0,
                 parentBranchHierarchyId: 0,
@@ -316,16 +349,20 @@ function RouteComponent() {
                 relationMgr: 0
             })
 
-            const apiData = res?.responseBody?.partnerHierarchy || []
+            const apiData = res?.responseBody?.partnerBranchNode || []
 
             const formatTree = (data: any[]): any[] => {
                 return data.map((item) => ({
-                    id: item.id,
+                    id: item.partnerBranchHeirarchyId,
                     name: item.name,
-                    code: item.code,
+                    code: item.partnerBranchCode,
+                    partnerAddress: item.partnerAddress,
+                    partnerMail: item.partnerMail,
+                    partnerPhone: item.partnerPhone,
+                    relationMgr: item.relationMgr,
                     type: "partner",
-                    children: item.reportingPartners?.length
-                        ? formatTree(item.reportingPartners)
+                    children: item.reportingBranches?.length
+                        ? formatTree(item.reportingBranches)
                         : [],
                 }))
             }
@@ -480,17 +517,25 @@ function RouteComponent() {
     }
 
 
-    const handleEditLocation = async (row: any) => {
-        if (!selectedChannel || !selectedSubChannel) return
+    const handleEditLocation = (row: Location) => {
+        setEditingLocation(row)
+        setEditLocationCode(row.locationCode)
+        setEditLocationDesc(row.locationDesc)
+        setOpenEditLocation(true)
+    }
+
+    const updateLocation = async () => {
+        if (!selectedChannel || !selectedSubChannel || !editingLocation) return
 
         try {
-            setGlobalLoading(true)
+            setUpdatingLocation(true)
+
             const payload = {
-                locationMasterId: row.locationMasterId ?? 0,
+                locationMasterId: editingLocation.locationMasterId,
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
-                locationCode: row.locationCode,
-                locationDesc: row.locationDesc,
+                locationCode: editLocationCode,
+                locationDesc: editLocationDesc,
                 isActive: true,
             }
 
@@ -498,15 +543,18 @@ function RouteComponent() {
 
             if (res?.responseHeader?.errorCode === 1101) {
                 showToast(NOTIFICATION_CONSTANTS.SUCCESS, "Location updated successfully")
+                setOpenEditLocation(false)
                 fetchLocations()
             } else {
-                showToast(NOTIFICATION_CONSTANTS.ERROR, res?.responseHeader?.errorMessage || "Update failed")
+                showToast(
+                    NOTIFICATION_CONSTANTS.ERROR,
+                    res?.responseHeader?.errorMessage || "Update failed"
+                )
             }
         } catch (error) {
             showToast(NOTIFICATION_CONSTANTS.ERROR, "Server error while updating")
-        }
-        finally {
-            setGlobalLoading(false)
+        } finally {
+            setUpdatingLocation(false)
         }
     }
 
@@ -607,24 +655,25 @@ function RouteComponent() {
     }
 
     const handleSavePartner = async () => {
-        if (!selectedChannel || !selectedSubChannel) return
-
-        if (!selectedPartner) {
-            showToast(NOTIFICATION_CONSTANTS.WARNING, "Please select a partner")
-            return
-        }
+        if (!selectedPartner || !selectedChannel || !selectedSubChannel) return
 
         try {
             setGlobalLoading(true)
 
             const payload = {
-                partnerId: selectedPartner.id ?? 0,
-                partnerCode: selectedPartner.code ?? "",
-                partnerName: selectedPartner.name ?? "",
-                isActive: true,
-                parentPartnerId: 0,
+                partnerBranchHierarchyId: selectedPartner.id ?? 0,
+                parentBranchHierarchyId: 0,
+                orgId: 0,
+                partnerBranch: selectedPartner.name ?? "",
+                partnerBranchCode: selectedPartner.code ?? "",
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
+                partnerAddress: selectedPartner.address,
+                partnerMail: selectedPartner.mail,
+                partnerPhone: selectedPartner.phone,
+                hierarchyPath: null,
+                relationMgr: selectedPartner.relationMgr,
+                isActive: true,
             }
 
             const res = await HMSService.savePartner(payload)
@@ -634,6 +683,7 @@ function RouteComponent() {
                     NOTIFICATION_CONSTANTS.SUCCESS,
                     "Partner saved successfully"
                 )
+                setIsEditingPartner(false)
                 fetchPartnerHierarchy()
             } else {
                 showToast(
@@ -650,10 +700,451 @@ function RouteComponent() {
             setGlobalLoading(false)
         }
     }
+
+    const handleAddDesignation = async () => {
+        if (!selectedChannel || !selectedSubChannel) return
+
+        if (!selectedDesignation) {
+            showToast(
+                NOTIFICATION_CONSTANTS.WARNING,
+                "Please select parent designation"
+            )
+            return
+        }
+
+        if (!newDesignationName.trim()) {
+            showToast(
+                NOTIFICATION_CONSTANTS.WARNING,
+                "Designation name is required"
+            )
+            return
+        }
+
+        try {
+            setAddingDesignation(true)
+
+            const payload = {
+                designationId: 0, // 🔥 new designation
+                parentDesignationId: selectedDesignation.id, // 🔥 important
+                designationCode: newDesignationCode,
+                designationName: newDesignationName,
+                designationLevel: 0,
+                isActive: true,
+                channelId: selectedChannel,
+                codeFormat: null,
+                subChannelId: selectedSubChannel.subChannelId,
+            }
+
+            const res = await HMSService.saveDesignation(payload)
+
+            if (res?.responseHeader?.errorCode === 1101) {
+                showToast(
+                    NOTIFICATION_CONSTANTS.SUCCESS,
+                    "Designation added successfully"
+                )
+
+                setOpenAddDesignation(false)
+                setNewDesignationName('')
+                setNewDesignationCode('')
+
+                fetchDesignationHierarchy()
+            } else {
+                showToast(
+                    NOTIFICATION_CONSTANTS.ERROR,
+                    res?.responseHeader?.errorMessage || "Save failed"
+                )
+            }
+        } catch (error) {
+            showToast(
+                NOTIFICATION_CONSTANTS.ERROR,
+                "Server error while adding designation"
+            )
+        } finally {
+            setAddingDesignation(false)
+        }
+    }
+
+    const handleAddBranch = async () => {
+        if (!selectedChannel || !selectedSubChannel) return
+
+        if (!selectedBranch) {
+            showToast(
+                NOTIFICATION_CONSTANTS.WARNING,
+                "Please select parent branch"
+            )
+            return
+        }
+
+        if (!newBranchName.trim()) {
+            showToast(
+                NOTIFICATION_CONSTANTS.WARNING,
+                "Branch name is required"
+            )
+            return
+        }
+
+        try {
+            setAddingBranch(true)
+
+            const payload = {
+                branchId: 0,  // 🔥 new branch
+                branchCode: newBranchCode,
+                branchName: newBranchName,
+                address: null,
+                state: 0,
+                phoneNumber: null,
+                emailId: null,
+                isActive: true,
+                locationMasterId: 0,
+                parentBranchId: selectedBranch.id,  // 🔥 important
+                channelId: selectedChannel,
+                subChannelId: selectedSubChannel.subChannelId,
+            }
+
+            const res = await HMSService.saveBranch(payload)
+
+            if (res?.responseHeader?.errorCode === 1101) {
+                showToast(
+                    NOTIFICATION_CONSTANTS.SUCCESS,
+                    "Branch added successfully"
+                )
+
+                setOpenAddBranch(false)
+                setNewBranchName('')
+                setNewBranchCode('')
+
+                fetchBranchHierarchy()
+            } else {
+                showToast(
+                    NOTIFICATION_CONSTANTS.ERROR,
+                    res?.responseHeader?.errorMessage || "Save failed"
+                )
+            }
+        } catch (error) {
+            showToast(
+                NOTIFICATION_CONSTANTS.ERROR,
+                "Server error while adding branch"
+            )
+        } finally {
+            setAddingBranch(false)
+        }
+    }
+
+    const handleAddPartner = async () => {
+        if (!newPartnerName || !newPartnerCode) {
+            showToast(NOTIFICATION_CONSTANTS.ERROR, "Please fill all fields")
+            return
+        }
+
+        try {
+            setAddingPartner(true)
+
+            await HMSService.savePartner({
+                partnerBranchHierarchyId: selectedPartner.id ?? 0,
+                parentBranchHierarchyId: 0,
+                orgId: 0,
+                partnerBranch: selectedPartner.name ?? "",
+                partnerBranchCode: selectedPartner.code ?? "",
+                channelId: selectedChannel,
+                subChannelId: selectedSubChannel.subChannelId,
+                partnerAddress: selectedPartner.address,
+                partnerMail: selectedPartner.mail,
+                partnerPhone: selectedPartner.phone,
+                hierarchyPath: null,
+                relationMgr: selectedPartner.relationMgr,
+                isActive: true,
+
+
+                name: newPartnerName,
+                partnerBranchCode: newPartnerCode,
+                partnerAddress: newPartnerAddress,
+                partnerMail: newPartnerMail,
+                partnerPhone: newPartnerPhone,
+                relationMgr: Number(newRelationMgr),
+                parentId: selectedPartner?.id || null,
+            })
+
+            showToast(NOTIFICATION_CONSTANTS.SUCCESS, "Partner added successfully")
+
+            setOpenAddPartner(false)
+            fetchPartnerHierarchy()
+
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setAddingPartner(false)
+        }
+    }
+
     return (
         <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             {globalLoading && <Loading />}
+            <AlertDialog
+                open={openAddPartner}
+                onOpenChange={(open) => {
+                    setOpenAddPartner(open)
+                    if (!open) {
+                        setNewPartnerName('')
+                        setNewPartnerCode('')
+                        setNewPartnerAddress('')
+                        setNewPartnerMail('')
+                        setNewPartnerPhone('')
+                        setNewRelationMgr('')
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Add Partner</AlertDialogTitle>
+                    </AlertDialogHeader>
 
+                    <div className="space-y-3 mt-3">
+                        <input
+                            placeholder="Partner Name"
+                            value={newPartnerName}
+                            onChange={(e) => setNewPartnerName(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                        <input
+                            placeholder="Partner Code"
+                            value={newPartnerCode}
+                            onChange={(e) => setNewPartnerCode(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                        <input
+                            placeholder="Partner Address"
+                            value={newPartnerAddress}
+                            onChange={(e) => setNewPartnerAddress(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                        <input
+                            placeholder="Partner Mail"
+                            value={newPartnerMail}
+                            onChange={(e) => setNewPartnerMail(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                        <input
+                            placeholder="Partner Phone"
+                            value={newPartnerPhone}
+                            onChange={(e) => setNewPartnerPhone(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                        <input
+                            placeholder="Relation Manager ID"
+                            value={newRelationMgr}
+                            onChange={(e) => setNewRelationMgr(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 text-sm"
+                        />
+
+                    </div>
+
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel asChild>
+                            <button
+                                onClick={() => {
+                                    setNewPartnerName('')
+                                    setNewPartnerCode('')
+                                    setNewPartnerAddress('')
+                                    setNewPartnerMail('')
+                                    setNewPartnerPhone('')
+                                    setNewRelationMgr('')
+                                }}
+                                className="px-4 py-2 text-sm border rounded-md flex items-center gap-1"
+                            >
+                                <MdCancel size={16} />
+                                Cancel
+                            </button>
+                        </AlertDialogCancel>
+
+                        <button
+                            onClick={handleAddPartner}
+                            disabled={addingPartner}
+                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            <Save size={16} />
+                            {addingPartner ? "Saving..." : "Save"}
+                        </button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={openEditLocation} onOpenChange={setOpenEditLocation}>
+                <AlertDialogContent className="max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Edit Location</AlertDialogTitle>
+                    </AlertDialogHeader>
+
+                    <div className="space-y-4 mt-2">
+                        <div>
+                            <label className="text-sm font-medium">Location Code</label>
+                            <input
+                                type="text"
+                                value={editLocationCode}
+                                onChange={(e) => setEditLocationCode(e.target.value)}
+                                className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium">Location Description</label>
+                            <input
+                                type="text"
+                                value={editLocationDesc}
+                                onChange={(e) => setEditLocationDesc(e.target.value)}
+                                className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel asChild>
+                            <button className="px-4 py-2 text-sm border rounded-md flex items-center gap-1">
+                                <MdCancel size={16} /> Cancel
+                            </button>
+                        </AlertDialogCancel>
+
+                        <button
+                            onClick={updateLocation}
+                            disabled={updatingLocation}
+                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            <Save size={16} />
+                            {updatingLocation ? "Updating..." : "Update"}
+                        </button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={openAddBranch} onOpenChange={setOpenAddBranch}>
+                <AlertDialogContent className="sm:max-w-md rounded-xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Add New Branch
+                        </AlertDialogTitle>
+                    </AlertDialogHeader>
+
+                    <div className="space-y-4 mt-4">
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Branch Code
+                            </label>
+                            <input
+                                type="text"
+                                value={newBranchCode}
+                                onChange={(e) => setNewBranchCode(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Branch Name
+                            </label>
+                            <input
+                                type="text"
+                                value={newBranchName}
+                                onChange={(e) => setNewBranchName(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 text-sm"
+                            />
+                        </div>
+
+                    </div>
+
+                    <AlertDialogFooter className="mt-6">
+
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setNewBranchName('')
+                                setNewBranchCode('')
+                            }}
+                        >
+                            <button className="px-2 py-2 text-sm border rounded-md flex items-center gap-1">
+                                <MdCancel size={16} /> Cancel
+                            </button>
+                        </AlertDialogCancel>
+
+                        <button
+                            onClick={handleAddBranch}
+                            disabled={addingBranch}
+                            className="flex items-center bg-blue-600 gap-1 text-white px-5 py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
+                        >
+                            <Save size={14} />
+                            {addingDesignation ? "Saving..." : "Save"}
+                        </button>
+
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={openAddDesignation} onOpenChange={setOpenAddDesignation}>
+                <AlertDialogContent className="sm:max-w-md rounded-xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Add New Designation
+                        </AlertDialogTitle>
+                    </AlertDialogHeader>
+
+                    <div className="space-y-4 mt-4">
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Designation Code
+                            </label>
+                            <input
+                                type="text"
+                                value={newDesignationCode}
+                                onChange={(e) => setNewDesignationCode(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Designation Name
+                            </label>
+                            <input
+                                type="text"
+                                value={newDesignationName}
+                                onChange={(e) => setNewDesignationName(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                    </div>
+
+                    <AlertDialogFooter className="mt-6">
+                        {/* <AlertDialogCancel asChild>
+                            <button className="px-4 py-2 text-sm border rounded-md flex items-center gap-1">
+                                <MdCancel size={16} /> Cancel
+                            </button>
+                        </AlertDialogCancel> */}
+                        <AlertDialogCancel
+                            className="w-20"
+                            onClick={() => {
+                                setNewDesignationName('')
+                                setNewDesignationCode('')
+                            }}
+                        >
+                            <button className="px-2 py-2 text-sm border rounded-md flex items-center gap-1">
+                                <MdCancel size={16} /> Cancel
+                            </button>
+                        </AlertDialogCancel>
+
+                        <button
+                            onClick={handleAddDesignation}
+                            disabled={addingDesignation}
+                            className="flex items-center bg-blue-600 gap-1 text-white px-5 py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
+                        >
+                            <Save size={14} />
+                            {addingDesignation ? "Saving..." : "Save"}
+                        </button>
+
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <AlertDialog open={openAddChannel} onOpenChange={setOpenAddChannel}>
                 <AlertDialogContent className="sm:max-w-md rounded-xl">
                     <AlertDialogHeader>
@@ -939,7 +1430,7 @@ function RouteComponent() {
                                     defaultValue={activeTab}
                                     onValueChange={(value) =>
                                         setActiveTab(
-                                            value as 'designation' | 'location' | 'branch'
+                                            value as 'designation' | 'location' | 'branch' | 'partner'
                                         )
                                     }
                                 />
@@ -971,6 +1462,7 @@ function RouteComponent() {
                                                                     name: node.name,
                                                                     code: node.code,
                                                                 })
+                                                                setIsEditingDesignation(false)   // reset edit mode
                                                             }
                                                         }}
                                                     />
@@ -987,12 +1479,74 @@ function RouteComponent() {
                                                         <>
                                                             <div className="max-w-xl">
 
-                                                                <h4 className="text-lg font-semibold text-gray-800 mb-6">
-                                                                    Designation Details
-                                                                </h4>
+                                                                <div className="flex items-center justify-between mb-6">
+
+                                                                    <h4 className="text-lg font-semibold text-gray-800">
+                                                                        Designation Details
+                                                                    </h4>
+
+                                                                    <div className="flex items-center gap-2">
+
+                                                                        {!isEditingDesignation ? (
+                                                                            <>
+                                                                                {/* ADD NEW */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        if (!selectedDesignation) {
+                                                                                            showToast(
+                                                                                                NOTIFICATION_CONSTANTS.WARNING,
+                                                                                                "Please select parent designation"
+                                                                                            )
+                                                                                            return
+                                                                                        }
+                                                                                        setOpenAddDesignation(true)
+                                                                                    }}
+                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                                                >
+                                                                                    <Plus size={14} />
+                                                                                    Add New
+                                                                                </button>
+
+                                                                                {/* EDIT */}
+                                                                                <button
+                                                                                    onClick={() => setIsEditingDesignation(true)}
+                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
+                                                                                >
+                                                                                    <Pencil size={14} />
+                                                                                    Edit
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                {/* SAVE */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleSaveDesignation()
+                                                                                        setIsEditingDesignation(false)
+                                                                                    }}
+                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                                                >
+                                                                                    <Save size={14} />
+                                                                                    Save
+                                                                                </button>
+
+                                                                                {/* CANCEL */}
+                                                                                <button
+                                                                                    onClick={() => setIsEditingDesignation(false)}
+                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
+                                                                                >
+                                                                                    <MdCancel size={14} />
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+
+                                                                    </div>
+                                                                </div>
 
                                                                 <div className="space-y-4">
 
+                                                                    {/* ID (Always Readonly) */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Designation ID
@@ -1002,36 +1556,55 @@ function RouteComponent() {
                                                                         </span>
                                                                     </div>
 
+                                                                    {/* NAME */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Designation Name
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-gray-800">
-                                                                            {selectedDesignation.name}
-                                                                        </span>
+
+                                                                        {isEditingDesignation ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedDesignation.name}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedDesignation((prev) =>
+                                                                                        prev ? { ...prev, name: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedDesignation.name}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
+                                                                    {/* CODE */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Designation Code
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-blue-600">
-                                                                            {selectedDesignation.code}
-                                                                        </span>
+
+                                                                        {isEditingDesignation ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedDesignation.code}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedDesignation((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-blue-600">
+                                                                                {selectedDesignation.code}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
                                                                 </div>
-                                                            </div>
-
-                                                            {/* ✅ SAVE BUTTON RIGHT SIDE */}
-                                                            <div className="flex justify-start pt-6  mt-6">
-                                                                <button
-                                                                    onClick={handleSaveDesignation}
-                                                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg 
-                           hover:bg-blue-700 transition font-medium"
-                                                                >
-                                                                    Save
-                                                                </button>
                                                             </div>
                                                         </>
                                                     )}
@@ -1087,6 +1660,7 @@ function RouteComponent() {
                                                                     name: node.name,
                                                                     code: node.code,
                                                                 })
+                                                                setIsEditingBranch(false)   // reset edit mode
                                                             }
                                                         }}
                                                     />
@@ -1103,12 +1677,74 @@ function RouteComponent() {
                                                         <>
                                                             <div className="max-w-xl">
 
-                                                                <h4 className="text-lg font-semibold text-gray-800 mb-6">
-                                                                    Branch Details
-                                                                </h4>
+                                                                <div className="flex items-center justify-between mb-6">
+
+                                                                    <h4 className="text-lg font-semibold text-gray-800">
+                                                                        Branch Details
+                                                                    </h4>
+
+                                                                    <div className="flex items-center gap-2">
+
+                                                                        {!isEditingBranch ? (
+                                                                            <>
+                                                                                {/* ADD NEW */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        if (!selectedBranch) {
+                                                                                            showToast(
+                                                                                                NOTIFICATION_CONSTANTS.WARNING,
+                                                                                                "Please select parent branch"
+                                                                                            )
+                                                                                            return
+                                                                                        }
+                                                                                        setOpenAddBranch(true)
+                                                                                    }}
+                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                                                >
+                                                                                    <Plus size={14} />
+                                                                                    Add New
+                                                                                </button>
+
+                                                                                {/* EDIT */}
+                                                                                <button
+                                                                                    onClick={() => setIsEditingBranch(true)}
+                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
+                                                                                >
+                                                                                    <Pencil size={14} />
+                                                                                    Edit
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                {/* SAVE */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleSaveBranch()
+                                                                                        setIsEditingBranch(false)
+                                                                                    }}
+                                                                                    className="flex items-center bg-blue-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-green-700 transition font-medium"
+                                                                                >
+                                                                                    <Save size={14} />
+                                                                                    Save
+                                                                                </button>
+
+                                                                                {/* CANCEL */}
+                                                                                <button
+                                                                                    onClick={() => setIsEditingBranch(false)}
+                                                                                    className="flex items-center bg-gray-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
+                                                                                >
+                                                                                    <MdCancel size={14} />
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+
+                                                                    </div>
+                                                                </div>
 
                                                                 <div className="space-y-4">
 
+                                                                    {/* ID */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Branch ID
@@ -1118,28 +1754,60 @@ function RouteComponent() {
                                                                         </span>
                                                                     </div>
 
+                                                                    {/* NAME */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Branch Name
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-gray-800">
-                                                                            {selectedBranch.name}
-                                                                        </span>
+
+                                                                        {isEditingBranch ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedBranch.name}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedBranch((prev) =>
+                                                                                        prev ? { ...prev, name: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedBranch.name}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
+                                                                    {/* CODE */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Branch Code
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-blue-600">
-                                                                            {selectedBranch.code}
-                                                                        </span>
+
+                                                                        {isEditingBranch ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedBranch.code}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedBranch((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-blue-600">
+                                                                                {selectedBranch.code}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
                                                                 </div>
+
+
                                                             </div>
 
-                                                            <div className="flex justify-start pt-6 mt-6">
+                                                            {/* <div className="flex justify-start pt-6 mt-6">
                                                                 <button
                                                                     onClick={handleSaveBranch}
                                                                     className="bg-blue-600 text-white px-6 py-2 rounded-lg 
@@ -1147,7 +1815,7 @@ function RouteComponent() {
                                                                 >
                                                                     Save
                                                                 </button>
-                                                            </div>
+                                                            </div> */}
                                                         </>
                                                     )}
                                                 </div>
@@ -1178,7 +1846,12 @@ function RouteComponent() {
                                                                     id: node.id,
                                                                     name: node.name,
                                                                     code: node.code,
+                                                                    address: node.partnerAddress,
+                                                                    mail: node.partnerMail,
+                                                                    phone: node.partnerPhone,
+                                                                    relationMgr: node.relationMgr,
                                                                 })
+                                                                setIsEditingPartner(false)
                                                             }
                                                         }}
                                                     />
@@ -1195,12 +1868,75 @@ function RouteComponent() {
                                                         <>
                                                             <div className="max-w-xl">
 
-                                                                <h4 className="text-lg font-semibold text-gray-800 mb-6">
-                                                                    Partner Details
-                                                                </h4>
+                                                                <div className="flex items-center justify-between mb-6">
+
+                                                                    <h4 className="text-lg font-semibold text-gray-800">
+                                                                        Partner Details
+                                                                    </h4>
+
+                                                                    <div className="flex items-center gap-2">
+
+                                                                        {!isEditingPartner ? (
+                                                                            <>
+                                                                                {/* ADD NEW */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        if (!selectedPartner) {
+                                                                                            showToast(
+                                                                                                NOTIFICATION_CONSTANTS.WARNING,
+                                                                                                "Please select parent partner"
+                                                                                            )
+                                                                                            return
+                                                                                        }
+                                                                                        setOpenAddPartner(true)
+                                                                                    }}
+                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                                                >
+                                                                                    <Plus size={14} />
+                                                                                    Add New
+                                                                                </button>
+
+                                                                                {/* EDIT */}
+                                                                                <button
+                                                                                    onClick={() => setIsEditingPartner(true)}
+                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
+                                                                                >
+                                                                                    <Pencil size={14} />
+                                                                                    Edit
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                {/* SAVE */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleSavePartner()
+                                                                                    }}
+                                                                                    className="flex items-center bg-blue-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                                                >
+                                                                                    <Save size={14} />
+                                                                                    Save
+                                                                                </button>
+
+                                                                                {/* CANCEL */}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setIsEditingPartner(false)
+                                                                                    }}
+                                                                                    className="flex items-center bg-gray-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
+                                                                                >
+                                                                                    <MdCancel size={14} />
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+
+                                                                    </div>
+                                                                </div>
 
                                                                 <div className="space-y-4">
 
+                                                                    {/* ID */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Partner ID
@@ -1210,35 +1946,125 @@ function RouteComponent() {
                                                                         </span>
                                                                     </div>
 
+                                                                    {/* NAME */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Partner Name
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-gray-800">
-                                                                            {selectedPartner.name}
-                                                                        </span>
+
+                                                                        {isEditingPartner ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedPartner.name}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedPartner((prev) =>
+                                                                                        prev ? { ...prev, name: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedPartner.name}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
+                                                                    {/* CODE */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Partner Code
                                                                         </span>
-                                                                        <span className="text-sm font-semibold text-blue-600">
-                                                                            {selectedPartner.code}
+
+                                                                        {isEditingPartner ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedPartner.code}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedPartner((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedPartner.code}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    {/* CODE */}
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Partner Address
                                                                         </span>
+
+                                                                        {isEditingPartner ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedPartner.address}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedPartner((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedPartner.address}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
 
-                                                                </div>
-                                                            </div>
+                                                                    {/* CODE */}
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Partner Mail
+                                                                        </span>
 
-                                                            <div className="flex justify-start pt-6 mt-6">
-                                                                <button
-                                                                    onClick={handleSavePartner}
-                                                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg 
-                                    hover:bg-blue-700 transition font-medium"
-                                                                >
-                                                                    Save
-                                                                </button>
+                                                                        {isEditingPartner ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedPartner.mail}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedPartner((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedPartner.mail}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* CODE */}
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Partner Phone
+                                                                        </span>
+
+                                                                        {isEditingPartner ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedPartner.phone}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedPartner((prev) =>
+                                                                                        prev ? { ...prev, code: e.target.value } : null
+                                                                                    )
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedPartner.phone}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </>
                                                     )}
