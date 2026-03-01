@@ -477,6 +477,24 @@ const allowUiAccess = (roleId, searchFor, headers = {}) => {
  const updateSrDecision = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATESRDECISION, data, { headers });
 }
+ const getUserDetails = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GETUSERDETAILS, data, { headers });
+}
+ const createUser = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.CREATEUSER, data, { headers });
+}
+ const updateUser = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.UPDATEUSER, data, { headers });
+}
+ const updatePassword = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.UPDATEPASSWORD, data, { headers });
+}
+ const activateDeactivateUser = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.ACTIVEDEACTIVEUSER, data, { headers });
+}
+ const lockUnlockUser = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.LOCKUNLOCKUSER, data, { headers });
+}
 
 module.exports = {
   login,
@@ -534,6 +552,11 @@ module.exports = {
   downloadReport,
   allowUiAccess,
   fetchInboxData,
-  updateSrDecision
-
+  updateSrDecision,
+  getUserDetails,
+  createUser,
+  updateUser,
+  updatePassword,
+  activateDeactivateUser,
+  lockUnlockUser
 };
