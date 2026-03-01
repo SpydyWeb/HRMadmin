@@ -43,6 +43,12 @@ export const APIRoutes = {
   ALLOW_UI_ACCESS: "allowUiAccess",
   FETCH_INBOX_DATA: "fetchInboxData",
   UPDATE_SR_DECISION: "updateSrDecision",
+  GET_USER_DETAILS: "getUserDetails",
+  CREATE_USER: "createUser",
+  UPDATE_USER: "updateUser",
+  UPDATE_PASSWORD: "updatePassword",
+  ACTIVATE_DEACTIVATE_USER: "activateDeactivateUser",
+  LOCK_UNLOCK_USER: "lockUnlockUser"
 }
 
 export const LoginConstants = {

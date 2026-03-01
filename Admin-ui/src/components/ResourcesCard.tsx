@@ -22,6 +22,7 @@ const resources = [
   { title: "Roles Management", link: "/roles-management" }, 
   { title: "Channel Management", link: "/channel-management" }, 
    { title: "Inbox", link: "/inbox" },
+   { title: "User Management", link: "/user-management" },
 ];
 
 export default function ResourcesCard() {
