@@ -30,6 +30,8 @@ export default function UserManagement() {
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
 
+  console.log("merge check")
+
   // Fetch user details
   const fetchUserDetails = useCallback(async () => {
     if (!searchQuery.trim()) return null
