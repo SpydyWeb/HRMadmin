@@ -74,6 +74,14 @@ function RouteComponent() {
         name: string
         code: string
     } | null>(null)
+    const [parentOptions, setParentOptions] = useState<
+        { id: number; name: string }[]
+    >([])
+
+    const [selectedParentBranchId, setSelectedParentBranchId] = useState<number | null>(null)
+    const [branchParentOptions, setBranchParentOptions] = useState<
+        { id: number; name: string }[]
+    >([])
     const [branchTreeData, setBranchTreeData] = useState<any[]>([])
     const [loadingBranch, setLoadingBranch] = useState(false)
 
@@ -109,7 +117,7 @@ function RouteComponent() {
     const [newBranchName, setNewBranchName] = useState('')
     const [newBranchCode, setNewBranchCode] = useState('')
     const [addingBranch, setAddingBranch] = useState(false)
-
+    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null)
     const [openEditLocation, setOpenEditLocation] = useState(false)
     const [editingLocation, setEditingLocation] = useState<Location | null>(null)
     const [editLocationCode, setEditLocationCode] = useState("")
@@ -190,16 +198,35 @@ function RouteComponent() {
         }
     }, [activeTab, selectedChannel, selectedSubChannel])
 
+    useEffect(() => {
+        if (!branchTreeData.length) return
+
+        const collectBranches = (data: any[], arr: any[] = []) => {
+            data.forEach((item) => {
+                arr.push({ id: item.id, name: item.name })
+
+                if (item.children?.length) {
+                    collectBranches(item.children, arr)
+                }
+            })
+            return arr
+        }
+
+        const allBranches = collectBranches(branchTreeData)
+        setBranchParentOptions(allBranches)
+
+    }, [branchTreeData])
 
     useEffect(() => {
         if (
-            activeTab === "location" &&
+            (activeTab === "location" || activeTab === "branch") &&
             selectedChannel &&
             selectedSubChannel
         ) {
             fetchLocations()
         }
     }, [activeTab, selectedChannel, selectedSubChannel])
+
 
 
     useEffect(() => {
@@ -212,6 +239,24 @@ function RouteComponent() {
         }
     }, [activeTab, selectedChannel, selectedSubChannel])
 
+    useEffect(() => {
+        if (!designationTreeData.length) return
+
+        const flattenTree = (data: any[], arr: any[] = []) => {
+            data.forEach((item) => {
+                arr.push({ id: item.id, name: item.name })
+
+                if (item.children?.length) {
+                    flattenTree(item.children, arr)
+                }
+            })
+            return arr
+        }
+
+        const allDesignations = flattenTree(designationTreeData)
+        setParentOptions(allDesignations)
+
+    }, [designationTreeData])
 
     const fetchLocations = async () => {
         if (!selectedChannel || !selectedSubChannel) return
@@ -231,6 +276,7 @@ function RouteComponent() {
             )
 
             const list = res?.responseBody?.locations || []
+            console.log("this is location", list);
             setLocations(list)
 
         } catch (error) {
@@ -245,6 +291,7 @@ function RouteComponent() {
 
         try {
             setLoadingDesignation(true)
+            setSelectedDesignation(null)   // 👈 ADD THIS LINE
 
             const res = await HMSService.getDesignationHierarchy({
                 designationId: 0,
@@ -525,13 +572,13 @@ function RouteComponent() {
     }
 
     const updateLocation = async () => {
-        if (!selectedChannel || !selectedSubChannel || !editingLocation) return
+        if (!selectedChannel || !selectedSubChannel) return
 
         try {
             setUpdatingLocation(true)
 
             const payload = {
-                locationMasterId: editingLocation.locationMasterId,
+                locationMasterId: editingLocation?.locationMasterId ?? null, // ✅ allow null for new
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
                 locationCode: editLocationCode,
@@ -542,17 +589,26 @@ function RouteComponent() {
             const res = await HMSService.saveLocation(payload)
 
             if (res?.responseHeader?.errorCode === 1101) {
-                showToast(NOTIFICATION_CONSTANTS.SUCCESS, "Location updated successfully")
+                showToast(
+                    NOTIFICATION_CONSTANTS.SUCCESS,
+                    editingLocation
+                        ? "Location updated successfully"
+                        : "Location added successfully"
+                )
+
                 setOpenEditLocation(false)
                 fetchLocations()
             } else {
                 showToast(
                     NOTIFICATION_CONSTANTS.ERROR,
-                    res?.responseHeader?.errorMessage || "Update failed"
+                    res?.responseHeader?.errorMessage || "Operation failed"
                 )
             }
         } catch (error) {
-            showToast(NOTIFICATION_CONSTANTS.ERROR, "Server error while updating")
+            showToast(
+                NOTIFICATION_CONSTANTS.ERROR,
+                "Server error while saving location"
+            )
         } finally {
             setUpdatingLocation(false)
         }
@@ -571,7 +627,7 @@ function RouteComponent() {
 
             const payload = {
                 designationId: selectedDesignation.id ?? 0,
-                parentDesignationId: 0, // update if needed
+                parentDesignationId: selectedParentId ?? 0,  // 👈 dynamic parent
                 designationCode: selectedDesignation.code ?? "",
                 designationName: selectedDesignation.name ?? "",
                 designationLevel: 0,
@@ -624,8 +680,8 @@ function RouteComponent() {
                 phoneNumber: null,
                 emailId: null,
                 isActive: true,
-                locationMasterId: 0,
-                parentBranchId: 0,
+                locationMasterId: selectedLocationId ?? 0,
+                parentBranchId: selectedParentBranchId ?? 0,
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
             }
@@ -704,7 +760,10 @@ function RouteComponent() {
     const handleAddDesignation = async () => {
         if (!selectedChannel || !selectedSubChannel) return
 
-        if (!selectedDesignation) {
+        const isRootCreation = designationTreeData.length === 0
+
+        // ✅ Require parent only if hierarchy exists
+        if (!isRootCreation && !selectedDesignation) {
             showToast(
                 NOTIFICATION_CONSTANTS.WARNING,
                 "Please select parent designation"
@@ -724,8 +783,10 @@ function RouteComponent() {
             setAddingDesignation(true)
 
             const payload = {
-                designationId: 0, // 🔥 new designation
-                parentDesignationId: selectedDesignation.id, // 🔥 important
+                designationId: 0,
+                parentDesignationId: isRootCreation
+                    ? 0
+                    : selectedDesignation.id, // ✅ dynamic parent
                 designationCode: newDesignationCode,
                 designationName: newDesignationName,
                 designationLevel: 0,
@@ -767,7 +828,10 @@ function RouteComponent() {
     const handleAddBranch = async () => {
         if (!selectedChannel || !selectedSubChannel) return
 
-        if (!selectedBranch) {
+        const isRootCreation = branchTreeData.length === 0
+
+        // ✅ Require parent only if hierarchy exists
+        if (!isRootCreation && !selectedBranch) {
             showToast(
                 NOTIFICATION_CONSTANTS.WARNING,
                 "Please select parent branch"
@@ -787,7 +851,7 @@ function RouteComponent() {
             setAddingBranch(true)
 
             const payload = {
-                branchId: 0,  // 🔥 new branch
+                branchId: 0,
                 branchCode: newBranchCode,
                 branchName: newBranchName,
                 address: null,
@@ -796,7 +860,9 @@ function RouteComponent() {
                 emailId: null,
                 isActive: true,
                 locationMasterId: 0,
-                parentBranchId: selectedBranch.id,  // 🔥 important
+                parentBranchId: isRootCreation
+                    ? 0
+                    : selectedBranch.id, // ✅ dynamic parent
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
             }
@@ -839,30 +905,30 @@ function RouteComponent() {
         try {
             setAddingPartner(true)
 
-            await HMSService.savePartner({
-                partnerBranchHierarchyId: selectedPartner.id ?? 0,
-                parentBranchHierarchyId: 0,
-                orgId: 0,
-                partnerBranch: selectedPartner.name ?? "",
-                partnerBranchCode: selectedPartner.code ?? "",
-                channelId: selectedChannel,
-                subChannelId: selectedSubChannel.subChannelId,
-                partnerAddress: selectedPartner.address,
-                partnerMail: selectedPartner.mail,
-                partnerPhone: selectedPartner.phone,
-                hierarchyPath: null,
-                relationMgr: selectedPartner.relationMgr,
-                isActive: true,
+            // await HMSService.savePartner({
+            //     partnerBranchHierarchyId: selectedPartner.id ?? 0,
+            //     parentBranchHierarchyId: 0,
+            //     orgId: 0,
+            //     partnerBranch: selectedPartner.name ?? "",
+            //     partnerBranchCode: selectedPartner.code ?? "",
+            //     channelId: selectedChannel,
+            //     subChannelId: selectedSubChannel.subChannelId,
+            //     partnerAddress: selectedPartner.address,
+            //     partnerMail: selectedPartner.mail,
+            //     partnerPhone: selectedPartner.phone,
+            //     hierarchyPath: null,
+            //     relationMgr: selectedPartner.relationMgr,
+            //     isActive: true,
 
 
-                name: newPartnerName,
-                partnerBranchCode: newPartnerCode,
-                partnerAddress: newPartnerAddress,
-                partnerMail: newPartnerMail,
-                partnerPhone: newPartnerPhone,
-                relationMgr: Number(newRelationMgr),
-                parentId: selectedPartner?.id || null,
-            })
+            //     name: newPartnerName,
+            //     partnerBranchCode: newPartnerCode,
+            //     partnerAddress: newPartnerAddress,
+            //     partnerMail: newPartnerMail,
+            //     partnerPhone: newPartnerPhone,
+            //     relationMgr: Number(newRelationMgr),
+            //     parentId: selectedPartner?.id || null,
+            // })
 
             showToast(NOTIFICATION_CONSTANTS.SUCCESS, "Partner added successfully")
 
@@ -975,7 +1041,7 @@ function RouteComponent() {
             <AlertDialog open={openEditLocation} onOpenChange={setOpenEditLocation}>
                 <AlertDialogContent className="max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Edit Location</AlertDialogTitle>
+                        {editingLocation ? "Edit Location" : "Add New Location"}
                     </AlertDialogHeader>
 
                     <div className="space-y-4 mt-2">
@@ -1448,6 +1514,34 @@ function RouteComponent() {
                                                     Loading hierarchy...
                                                 </span>
                                             </div>
+                                        ) : designationTreeData.length === 0 ? (
+                                            <div className="flex justify-center items-center h-full text-gray-400">
+                                                No hierarchy data available
+                                                <button
+                                                    onClick={() => {
+                                                        // ✅ If no hierarchy exists → allow root creation
+                                                        if (designationTreeData.length === 0) {
+                                                            setOpenAddDesignation(true)
+                                                            return
+                                                        }
+
+                                                        // ✅ If hierarchy exists → parent required
+                                                        if (!selectedDesignation) {
+                                                            showToast(
+                                                                NOTIFICATION_CONSTANTS.WARNING,
+                                                                "Please select parent designation"
+                                                            )
+                                                            return
+                                                        }
+
+                                                        setOpenAddDesignation(true)
+                                                    }}
+                                                    className="flex ml-4 items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                >
+                                                    <Plus size={14} />
+                                                    Add New
+                                                </button>
+                                            </div>
                                         ) : (
                                             <div className="grid grid-cols-12 gap-4 h-[500px]">
 
@@ -1471,34 +1565,22 @@ function RouteComponent() {
                                                 {/* RIGHT → TABLE */}
                                                 <div className="col-span-9 bg-white border rounded-xl p-6 h-full">
 
-                                                    {!selectedDesignation ? (
-                                                        <div className="flex items-center justify-center h-full text-gray-400">
-                                                            Select a designation from the hierarchy
-                                                        </div>
-                                                    ) : (
+                                                    {selectedDesignation ? (   // ✅ FIXED
                                                         <>
                                                             <div className="max-w-xl">
 
                                                                 <div className="flex items-center justify-between mb-6">
-
                                                                     <h4 className="text-lg font-semibold text-gray-800">
                                                                         Designation Details
                                                                     </h4>
 
                                                                     <div className="flex items-center gap-2">
-
                                                                         {!isEditingDesignation ? (
                                                                             <>
                                                                                 {/* ADD NEW */}
                                                                                 <button
                                                                                     onClick={() => {
-                                                                                        if (!selectedDesignation) {
-                                                                                            showToast(
-                                                                                                NOTIFICATION_CONSTANTS.WARNING,
-                                                                                                "Please select parent designation"
-                                                                                            )
-                                                                                            return
-                                                                                        }
+                                                                                        if (!selectedDesignation) return
                                                                                         setOpenAddDesignation(true)
                                                                                     }}
                                                                                     className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
@@ -1532,7 +1614,11 @@ function RouteComponent() {
 
                                                                                 {/* CANCEL */}
                                                                                 <button
-                                                                                    onClick={() => setIsEditingDesignation(false)}
+                                                                                    onClick={() => {
+                                                                                        setIsEditingDesignation(false)
+                                                                                        setSelectedParentId(null)
+                                                                                    }}
+
                                                                                     className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
                                                                                 >
                                                                                     <MdCancel size={14} />
@@ -1540,13 +1626,12 @@ function RouteComponent() {
                                                                                 </button>
                                                                             </>
                                                                         )}
-
                                                                     </div>
                                                                 </div>
 
                                                                 <div className="space-y-4">
 
-                                                                    {/* ID (Always Readonly) */}
+                                                                    {/* ID */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
                                                                             Designation ID
@@ -1555,7 +1640,30 @@ function RouteComponent() {
                                                                             {selectedDesignation.id}
                                                                         </span>
                                                                     </div>
+                                                                    {/* 🔥 ADD HERE - Parent Designation */}
+                                                                    {isEditingDesignation && (
+                                                                        <div className="flex justify-between items-center border-b pb-3">
+                                                                            <span className="text-sm font-medium text-gray-500">
+                                                                                Parent Designation
+                                                                            </span>
 
+                                                                            <select
+                                                                                value={selectedParentId ?? ""}
+                                                                                onChange={(e) => setSelectedParentId(Number(e.target.value))}
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            >
+                                                                                <option value="">Select Parent</option>
+
+                                                                                {parentOptions
+                                                                                    .filter((item) => item.id !== selectedDesignation?.id)
+                                                                                    .map((item) => (
+                                                                                        <option key={item.id} value={item.id}>
+                                                                                            {item.name}
+                                                                                        </option>
+                                                                                    ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    )}
                                                                     {/* NAME */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
@@ -1607,7 +1715,12 @@ function RouteComponent() {
                                                                 </div>
                                                             </div>
                                                         </>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-full text-gray-400">
+                                                            Select a designation from the hierarchy
+                                                        </div>
                                                     )}
+
                                                 </div>
                                             </div>
                                         )}
@@ -1626,7 +1739,28 @@ function RouteComponent() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-gray-600">
+                                            <div className="bg-white border rounded-xl p-6">
+
+                                                {/* HEADER */}
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <h4 className="text-lg font-semibold text-gray-800">
+                                                        Location List
+                                                    </h4>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingLocation(null)
+                                                            setEditLocationCode("")
+                                                            setEditLocationDesc("")
+                                                            setOpenEditLocation(true)
+                                                        }}
+                                                        className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                    >
+                                                        <Plus size={14} />
+                                                        Add New
+                                                    </button>
+                                                </div>
+
                                                 <DataTable
                                                     columns={locationColumns}
                                                     data={locations}
@@ -1645,6 +1779,34 @@ function RouteComponent() {
                                                 <span className="ml-2 text-sm text-gray-500">
                                                     Loading hierarchy...
                                                 </span>
+                                            </div>
+                                        ) : branchTreeData.length === 0 ? (
+                                            <div className="flex justify-center items-center h-full text-gray-400">
+                                                No hierarchy data available
+                                                <button
+                                                    onClick={() => {
+                                                        // ✅ If no hierarchy exists → allow root creation
+                                                        if (branchTreeData.length === 0) {
+                                                            setOpenAddBranch(true)
+                                                            return
+                                                        }
+
+                                                        // ✅ If hierarchy exists → parent required
+                                                        if (!selectedDesignation) {
+                                                            showToast(
+                                                                NOTIFICATION_CONSTANTS.WARNING,
+                                                                "Please select parent designation"
+                                                            )
+                                                            return
+                                                        }
+
+                                                        setOpenAddBranch(true)
+                                                    }}
+                                                    className="flex ml-4 items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
+                                                >
+                                                    <Plus size={14} />
+                                                    Add New
+                                                </button>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-12 gap-4 h-[500px]">
@@ -1669,11 +1831,7 @@ function RouteComponent() {
                                                 {/* RIGHT → DETAILS */}
                                                 <div className="col-span-9 bg-white border rounded-xl p-6 h-full">
 
-                                                    {!selectedBranch ? (
-                                                        <div className="flex items-center justify-center h-full text-gray-400">
-                                                            Select a branch from the hierarchy
-                                                        </div>
-                                                    ) : (
+                                                    {selectedBranch ? (
                                                         <>
                                                             <div className="max-w-xl">
 
@@ -1721,6 +1879,8 @@ function RouteComponent() {
                                                                                     onClick={() => {
                                                                                         handleSaveBranch()
                                                                                         setIsEditingBranch(false)
+                                                                                        setSelectedLocationId(null)
+                                                                                        setSelectedParentBranchId(null)
                                                                                     }}
                                                                                     className="flex items-center bg-blue-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-green-700 transition font-medium"
                                                                                 >
@@ -1753,7 +1913,57 @@ function RouteComponent() {
                                                                             {selectedBranch.id}
                                                                         </span>
                                                                     </div>
+                                                                    {/* LOCATION DROPDOWN */}
+                                                                    {isEditingBranch && (
+                                                                        <div className="flex justify-between items-center border-b pb-3">
+                                                                            <span className="text-sm font-medium text-gray-500">
+                                                                                Location
+                                                                            </span>
 
+                                                                            <select
+                                                                                value={selectedLocationId ?? ""}
+                                                                                onChange={(e) => setSelectedLocationId(Number(e.target.value))}
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            >
+                                                                                <option value="">Select Location</option>
+
+                                                                                {locations.map((loc) => (
+                                                                                    <option
+                                                                                        key={loc.locationMasterId}
+                                                                                        value={loc.locationMasterId}
+                                                                                    >
+                                                                                        {loc.locationDesc}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {isEditingBranch && (
+                                                                        <div className="flex justify-between items-center border-b pb-3">
+                                                                            <span className="text-sm font-medium text-gray-500">
+                                                                                Parent Branch
+                                                                            </span>
+
+                                                                            <select
+                                                                                value={selectedParentBranchId ?? ""}
+                                                                                onChange={(e) =>
+                                                                                    setSelectedParentBranchId(Number(e.target.value))
+                                                                                }
+                                                                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                            >
+                                                                                <option value="">Select Parent</option>
+
+                                                                                {branchParentOptions
+                                                                                    .filter((item) => item.id !== selectedBranch?.id)
+                                                                                    .map((item) => (
+                                                                                        <option key={item.id} value={item.id}>
+                                                                                            {item.name}
+                                                                                        </option>
+                                                                                    ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    )}
                                                                     {/* NAME */}
                                                                     <div className="flex justify-between items-center border-b pb-3">
                                                                         <span className="text-sm font-medium text-gray-500">
@@ -1801,22 +2011,13 @@ function RouteComponent() {
                                                                             </span>
                                                                         )}
                                                                     </div>
-
                                                                 </div>
-
-
                                                             </div>
-
-                                                            {/* <div className="flex justify-start pt-6 mt-6">
-                                                                <button
-                                                                    onClick={handleSaveBranch}
-                                                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg 
-                                    hover:bg-blue-700 transition font-medium"
-                                                                >
-                                                                    Save
-                                                                </button>
-                                                            </div> */}
                                                         </>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-full text-gray-400">
+                                                            Select a branch from the hierarchy
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -2079,6 +2280,6 @@ function RouteComponent() {
                 )}
 
             </div>
-        </div>
+        </div >
     )
 }
