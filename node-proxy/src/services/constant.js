@@ -44,6 +44,12 @@ const APIRoutes = {
   UPDATESRDECISION:"/UpdateSrDecision",
   CREATECHANNEL:"api/AppMasters/Channel/Create",
   CREATESUBCHANNEL:"api/AppMasters",
+  GETUSERDETAILS:"/api/Users/GetUserDetails",
+  CREATEUSER:"/api/Users/CreateUser",
+  UPDATEUSER:"/api/Users/UpdateUser",
+  UPDATEPASSWORD:"/api/Users/UpdatePassword",
+  ACTIVEDEACTIVEUSER:"/api/Users/ActivateDeactivateUser",
+  LOCKUNLOCKUSER:"/api/Users/LockUnlockUser",
 };
 
 module.exports = { APIRoutes };

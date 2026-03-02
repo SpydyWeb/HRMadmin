@@ -34,6 +34,9 @@ import { Route as AuthCommissionProcesscommissionBulkActionRouteImport } from '.
 import { Route as AuthSearchDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/search/dashboard/code-movement/bulk-action'
 
 const LoginLazyRouteImport = createFileRoute('/login')()
+const AuthUserManagementIndexLazyRouteImport = createFileRoute(
+  '/_auth/user-management/',
+)()
 const AuthRolesManagementIndexLazyRouteImport = createFileRoute(
   '/_auth/roles-management/',
 )()
@@ -106,6 +109,14 @@ const AuthTerminationRoute = AuthTerminationRouteImport.update({
   path: '/termination',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthUserManagementIndexLazyRoute =
+  AuthUserManagementIndexLazyRouteImport.update({
+    id: '/user-management/',
+    path: '/user-management/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/user-management/index.lazy').then((d) => d.Route),
+  )
 const AuthRolesManagementIndexLazyRoute =
   AuthRolesManagementIndexLazyRouteImport.update({
     id: '/roles-management/',
@@ -391,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
   '/roles-management': typeof AuthRolesManagementIndexLazyRoute
+  '/user-management': typeof AuthUserManagementIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
@@ -432,6 +444,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
   '/roles-management': typeof AuthRolesManagementIndexLazyRoute
+  '/user-management': typeof AuthUserManagementIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
@@ -475,6 +488,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/inbox/': typeof AuthInboxIndexLazyRoute
   '/_auth/roles-management/': typeof AuthRolesManagementIndexLazyRoute
+  '/_auth/user-management/': typeof AuthUserManagementIndexLazyRoute
   '/_auth/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/_auth/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
@@ -518,6 +532,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inbox'
     | '/roles-management'
+    | '/user-management'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
     | '/search/dashboard/certification-update'
@@ -559,6 +574,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inbox'
     | '/roles-management'
+    | '/user-management'
     | '/commission/processcommission/bulk-action'
     | '/dashboard/code-movement/bulk-action'
     | '/search/dashboard/certification-update'
@@ -601,6 +617,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/'
     | '/_auth/inbox/'
     | '/_auth/roles-management/'
+    | '/_auth/user-management/'
     | '/_auth/commission/processcommission/bulk-action'
     | '/_auth/dashboard/code-movement/bulk-action'
     | '/_auth/search/dashboard/certification-update'
@@ -664,6 +681,13 @@ declare module '@tanstack/react-router' {
       path: '/termination'
       fullPath: '/termination'
       preLoaderRoute: typeof AuthTerminationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/user-management/': {
+      id: '/_auth/user-management/'
+      path: '/user-management'
+      fullPath: '/user-management'
+      preLoaderRoute: typeof AuthUserManagementIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/roles-management/': {
@@ -932,6 +956,7 @@ interface AuthRouteChildren {
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthInboxIndexLazyRoute: typeof AuthInboxIndexLazyRoute
   AuthRolesManagementIndexLazyRoute: typeof AuthRolesManagementIndexLazyRoute
+  AuthUserManagementIndexLazyRoute: typeof AuthUserManagementIndexLazyRoute
   AuthCommissionProcesscommissionBulkActionRoute: typeof AuthCommissionProcesscommissionBulkActionRoute
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
   AuthSearchDashboardCertificationUpdateRoute: typeof AuthSearchDashboardCertificationUpdateRoute
@@ -972,6 +997,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
   AuthInboxIndexLazyRoute: AuthInboxIndexLazyRoute,
   AuthRolesManagementIndexLazyRoute: AuthRolesManagementIndexLazyRoute,
+  AuthUserManagementIndexLazyRoute: AuthUserManagementIndexLazyRoute,
   AuthCommissionProcesscommissionBulkActionRoute:
     AuthCommissionProcesscommissionBulkActionRoute,
   AuthDashboardCodeMovementBulkActionRoute:
