@@ -117,7 +117,7 @@ export default function FieldTreeView({ data, onSelect }: Props) {
                     </TooltipProvider>
 
                     {/* Type Badge (shows on hover or selected) */}
-                    <Badge
+                    {/* <Badge
                         variant="secondary"
                         className={cn(
                             'text-xs px-1.5 py-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity',
@@ -125,7 +125,7 @@ export default function FieldTreeView({ data, onSelect }: Props) {
                         )}
                     >
                         {node.type}
-                    </Badge>
+                    </Badge> */}
 
                     {/* Children Count */}
                     {hasChildren && (

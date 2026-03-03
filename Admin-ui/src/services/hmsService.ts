@@ -325,7 +325,7 @@ export const HMSService = {
     designationLevel: number,
     isActive: boolean,
     channelId: number,
-    codeFormat: null,
+    codeFormat: string,
     subChannelId: number,
   }) => {
     return callApi(

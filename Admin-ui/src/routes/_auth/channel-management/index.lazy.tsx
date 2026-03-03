@@ -19,6 +19,8 @@ import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import Loading from '@/components/ui/Loading'
 import { Plus, Pencil, Save } from 'lucide-react'
 import { MdCancel } from 'react-icons/md'
+import { Pagination } from '@/components/table/Pagination'
+import Button from '@/components/ui/button'
 
 export const Route = createLazyFileRoute('/_auth/channel-management/')({
     component: RouteComponent,
@@ -47,11 +49,14 @@ function RouteComponent() {
     const [loadingSubChannels, setLoadingSubChannels] = useState(false)
     const [selectedChannel, setSelectedChannel] = useState<number | null>(null)
     const [selectedSubChannel, setSelectedSubChannel] = useState<SubChannel | null>(null)
+    const [showParent, setShowParent] = useState(false);
     const [isEditingDesignation, setIsEditingDesignation] = useState(false)
     const [activeTab, setActiveTab] = useState<
         'designation' | 'location' | 'branch' | 'partner'
     >('designation')
     const [openAddChannel, setOpenAddChannel] = useState(false)
+    const pageSize = 3 // how many rows per page
+    const [currentPage, setCurrentPage] = useState(1)
     const [channelCode, setChannelCode] = useState('')
     const [channelName, setChannelName] = useState('')
     const [description, setDescription] = useState('')
@@ -69,11 +74,13 @@ function RouteComponent() {
     const [designationTreeData, setDesignationTreeData] = useState<any[]>([])
     const [designationFields, setDesignationFields] = useState<any[]>([])
     const [loadingDesignation, setLoadingDesignation] = useState(false)
+    const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
     const [selectedDesignation, setSelectedDesignation] = useState<{
         id: number
         name: string
         code: string
     } | null>(null)
+
     const [parentOptions, setParentOptions] = useState<
         { id: number; name: string }[]
     >([])
@@ -105,6 +112,7 @@ function RouteComponent() {
     const [openAddDesignation, setOpenAddDesignation] = useState(false)
     const [newDesignationName, setNewDesignationName] = useState('')
     const [newDesignationCode, setNewDesignationCode] = useState('')
+    const [newDesignationCodeFormat, setNewDesignationCodeFormat] = useState('')
     const [addingDesignation, setAddingDesignation] = useState(false)
     const channelTabs = [
         { value: 'designation', label: 'Designation' },
@@ -224,6 +232,7 @@ function RouteComponent() {
             selectedSubChannel
         ) {
             fetchLocations()
+            setCurrentPage(1)
         }
     }, [activeTab, selectedChannel, selectedSubChannel])
 
@@ -263,7 +272,7 @@ function RouteComponent() {
 
         try {
             setLoadingLocations(true)
-
+            console.log("comming here.....")
             const res = await HMSService.fetchLocations(
                 {
                     locationMasterId: null,
@@ -285,7 +294,12 @@ function RouteComponent() {
             setLoadingLocations(false)
         }
     }
+    const totalPages = Math.ceil(locations.length / pageSize)
 
+    const paginatedMenu = locations.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    )
     const fetchDesignationHierarchy = async () => {
         if (!selectedChannel || !selectedSubChannel) return
 
@@ -633,7 +647,7 @@ function RouteComponent() {
                 designationLevel: 0,
                 isActive: true,
                 channelId: selectedChannel,
-                codeFormat: null,
+                codeFormat: newDesignationCodeFormat,
                 subChannelId: selectedSubChannel.subChannelId,
             }
 
@@ -784,15 +798,13 @@ function RouteComponent() {
 
             const payload = {
                 designationId: 0,
-                parentDesignationId: isRootCreation
-                    ? 0
-                    : selectedDesignation.id, // ✅ dynamic parent
+                parentDesignationId: selectedParentId ?? 0,
                 designationCode: newDesignationCode,
                 designationName: newDesignationName,
                 designationLevel: 0,
                 isActive: true,
                 channelId: selectedChannel,
-                codeFormat: null,
+                codeFormat: newDesignationCodeFormat,
                 subChannelId: selectedSubChannel.subChannelId,
             }
 
@@ -859,10 +871,8 @@ function RouteComponent() {
                 phoneNumber: null,
                 emailId: null,
                 isActive: true,
-                locationMasterId: 0,
-                parentBranchId: isRootCreation
-                    ? 0
-                    : selectedBranch.id, // ✅ dynamic parent
+                locationMasterId: selectedLocationId ?? 0,
+                parentBranchId: selectedParentBranchId ?? 0,
                 channelId: selectedChannel,
                 subChannelId: selectedSubChannel.subChannelId,
             }
@@ -1011,7 +1021,9 @@ function RouteComponent() {
 
                     <AlertDialogFooter className="mt-4">
                         <AlertDialogCancel asChild>
-                            <button
+                            <Button
+                                variant="default"
+                                size="sm"
                                 onClick={() => {
                                     setNewPartnerName('')
                                     setNewPartnerCode('')
@@ -1020,21 +1032,20 @@ function RouteComponent() {
                                     setNewPartnerPhone('')
                                     setNewRelationMgr('')
                                 }}
-                                className="px-4 py-2 text-sm border rounded-md flex items-center gap-1"
                             >
-                                <MdCancel size={16} />
                                 Cancel
-                            </button>
+                            </Button>
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
+                            variant="blue"
+                            size="sm"
                             onClick={handleAddPartner}
                             disabled={addingPartner}
                             className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
                         >
-                            <Save size={16} />
                             {addingPartner ? "Saving..." : "Save"}
-                        </button>
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1068,19 +1079,22 @@ function RouteComponent() {
 
                     <AlertDialogFooter className="mt-4">
                         <AlertDialogCancel asChild>
-                            <button className="px-4 py-2 text-sm border rounded-md flex items-center gap-1">
-                                <MdCancel size={16} /> Cancel
-                            </button>
+                            <Button
+                                variant="default"
+                                size="sm"
+                            >
+                                Cancel
+                            </Button>
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
+                            variant="blue"
+                            size="sm"
                             onClick={updateLocation}
                             disabled={updatingLocation}
-                            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
                         >
-                            <Save size={16} />
                             {updatingLocation ? "Updating..." : "Update"}
-                        </button>
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1093,6 +1107,54 @@ function RouteComponent() {
                     </AlertDialogHeader>
 
                     <div className="space-y-4 mt-4">
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Location
+                            </label>
+                            <select
+                                value={selectedLocationId ?? ""}
+                                onChange={(e) => setSelectedLocationId(Number(e.target.value))}
+                                className="w-full border rounded-md px-3 py-2 text-sm"
+                            >
+                                <option value="">Select Location</option>
+
+                                {locations.map((loc) => (
+                                    <option
+                                        key={loc.locationMasterId}
+                                        value={loc.locationMasterId}
+                                    >
+                                        {loc.locationDesc}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        {
+                            showParent && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Parent
+                                    </label>
+                                    <select
+                                        value={selectedParentBranchId ?? ""}
+                                        onChange={(e) =>
+                                            setSelectedParentBranchId(Number(e.target.value))
+                                        }
+                                        className="w-full border rounded-md px-3 py-2 text-sm"
+                                    >
+                                        <option value="">Select Parent</option>
+
+                                        {branchParentOptions
+                                            // .filter((item) => item.id !== selectedBranch?.id)
+                                            .map((item) => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+                            )
+                        }
 
                         <div>
                             <label className="block text-sm font-medium mb-1">
@@ -1128,19 +1190,22 @@ function RouteComponent() {
                                 setNewBranchCode('')
                             }}
                         >
-                            <button className="px-2 py-2 text-sm border rounded-md flex items-center gap-1">
-                                <MdCancel size={16} /> Cancel
-                            </button>
+                            <Button
+                                variant="default"
+                                size="sm"
+                            >
+                               Cancel
+                            </Button>
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
                             onClick={handleAddBranch}
                             disabled={addingBranch}
-                            className="flex items-center bg-blue-600 gap-1 text-white px-5 py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
+                            variant="blue"
+                            size="sm"
                         >
-                            <Save size={14} />
                             {addingDesignation ? "Saving..." : "Save"}
-                        </button>
+                        </Button>
 
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1154,6 +1219,25 @@ function RouteComponent() {
                     </AlertDialogHeader>
 
                     <div className="space-y-4 mt-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Designation Parent
+                            </label>
+                            <select
+                                value={selectedParentId ?? ""}
+                                onChange={(e) => setSelectedParentId(Number(e.target.value))}
+                                className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Parent</option>
+
+                                {parentOptions
+                                    .map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-1">
@@ -1167,6 +1251,17 @@ function RouteComponent() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Designation Code Format
+                            </label>
+                            <input
+                                type="text"
+                                value={newDesignationCodeFormat}
+                                onChange={(e) => setNewDesignationCodeFormat(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Designation Name
@@ -1194,19 +1289,21 @@ function RouteComponent() {
                                 setNewDesignationCode('')
                             }}
                         >
-                            <button className="px-2 py-2 text-sm border rounded-md flex items-center gap-1">
-                                <MdCancel size={16} /> Cancel
-                            </button>
+                            <Button
+                                variant="default"
+                                size="sm">
+                                Cancel
+                            </Button>
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
+                            variant="blue"
+                            size="sm"
                             onClick={handleAddDesignation}
                             disabled={addingDesignation}
-                            className="flex items-center bg-blue-600 gap-1 text-white px-5 py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
                         >
-                            <Save size={14} />
                             {addingDesignation ? "Saving..." : "Save"}
-                        </button>
+                        </Button>
 
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1285,18 +1382,23 @@ function RouteComponent() {
                                 setDescription('')
                                 setIsActive(true)
                             }}
-                            className="rounded-md border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                            className="w-20"
                         >
-                            Cancel
+                            <Button
+                                variant="default"
+                                size="sm">
+                                Cancel
+                            </Button>
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
                             onClick={handleAddChannel}
                             disabled={addingChannel}
-                            className="rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                            variant="blue"
+                            size="sm"
                         >
                             {addingChannel ? 'Saving...' : 'Save'}
-                        </button>
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1378,13 +1480,14 @@ function RouteComponent() {
                             Cancel
                         </AlertDialogCancel>
 
-                        <button
+                        <Button
+                            variant="blue"
+                            size="sm"
                             onClick={handleAddSubChannel}
                             disabled={addingSubChannel}
-                            className="rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                         >
                             {addingSubChannel ? 'Saving...' : 'Save'}
-                        </button>
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -1409,13 +1512,13 @@ function RouteComponent() {
                             Channel
                         </label>
 
-                        <button
+                        <Button
                             onClick={() => setOpenAddChannel(true)}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                            variant="green"
+                            size="sm"
                         >
-                            <Plus size={16} />
                             Add New
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Channel Dropdown */}
@@ -1448,13 +1551,13 @@ function RouteComponent() {
                             Sub Channels
                         </h3>
 
-                        <button
+                        <Button
+                            variant="green"
+                            size="sm"
                             onClick={() => setOpenAddSubChannel(true)}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
                         >
-                            <Plus size={16} />
                             Add New
-                        </button>
+                        </Button>
                     </div>
 
                     <ul className="space-y-1">
@@ -1517,7 +1620,9 @@ function RouteComponent() {
                                         ) : designationTreeData.length === 0 ? (
                                             <div className="flex justify-center items-center h-full text-gray-400">
                                                 No hierarchy data available
-                                                <button
+                                                <Button
+                                                    variant="blue"
+                                                    size="sm"
                                                     onClick={() => {
                                                         // ✅ If no hierarchy exists → allow root creation
                                                         if (designationTreeData.length === 0) {
@@ -1536,17 +1641,16 @@ function RouteComponent() {
 
                                                         setOpenAddDesignation(true)
                                                     }}
-                                                    className="flex ml-4 items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                 >
-                                                    <Plus size={14} />
+
                                                     Add New
-                                                </button>
+                                                </Button>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-12 gap-4 h-[500px]">
+                                            <div className="grid grid-cols-12 gap-4 h-[464px] min-h-0">
 
                                                 {/* LEFT → TREE */}
-                                                <div className="col-span-3 h-full overflow-y-auto pr-2">
+                                                <div className="col-span-4 h-full min-h-0 overflow-y-auto pr-2">
                                                     <FieldTreeView
                                                         data={designationTreeData}
                                                         onSelect={(node) => {
@@ -1563,7 +1667,7 @@ function RouteComponent() {
                                                 </div>
 
                                                 {/* RIGHT → TABLE */}
-                                                <div className="col-span-9 bg-white border rounded-xl p-6 h-full">
+                                                <div className="col-span-8 bg-white border rounded-xl p-6 h-full">
 
                                                     {selectedDesignation ? (   // ✅ FIXED
                                                         <>
@@ -1578,52 +1682,52 @@ function RouteComponent() {
                                                                         {!isEditingDesignation ? (
                                                                             <>
                                                                                 {/* ADD NEW */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         if (!selectedDesignation) return
                                                                                         setOpenAddDesignation(true)
                                                                                     }}
-                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                                                 >
-                                                                                    <Plus size={14} />
                                                                                     Add New
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* EDIT */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => setIsEditingDesignation(true)}
-                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
                                                                                 >
-                                                                                    <Pencil size={14} />
                                                                                     Edit
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         ) : (
                                                                             <>
                                                                                 {/* SAVE */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         handleSaveDesignation()
                                                                                         setIsEditingDesignation(false)
                                                                                     }}
-                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                                                 >
-                                                                                    <Save size={14} />
                                                                                     Save
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* CANCEL */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         setIsEditingDesignation(false)
                                                                                         setSelectedParentId(null)
                                                                                     }}
 
-                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
                                                                                 >
-                                                                                    <MdCancel size={14} />
                                                                                     Cancel
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         )}
                                                                     </div>
@@ -1747,25 +1851,32 @@ function RouteComponent() {
                                                         Location List
                                                     </h4>
 
-                                                    <button
+                                                    <Button
+                                                        variant="blue"
+                                                        size="sm"
                                                         onClick={() => {
                                                             setEditingLocation(null)
                                                             setEditLocationCode("")
                                                             setEditLocationDesc("")
                                                             setOpenEditLocation(true)
                                                         }}
-                                                        className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                     >
-                                                        <Plus size={14} />
                                                         Add New
-                                                    </button>
+                                                    </Button>
                                                 </div>
 
                                                 <DataTable
                                                     columns={locationColumns}
-                                                    data={locations}
-                                                    noDataMessage="No Locations Found"
+                                                    data={paginatedMenu} noDataMessage="No Locations Found"
                                                 />
+
+                                                {totalPages > 1 && (
+                                                    <Pagination
+                                                        totalPages={totalPages}
+                                                        currentPage={currentPage}
+                                                        onPageChange={(page) => setCurrentPage(page)}
+                                                    />
+                                                )}
                                             </div>
                                         )}
                                     </>
@@ -1783,11 +1894,15 @@ function RouteComponent() {
                                         ) : branchTreeData.length === 0 ? (
                                             <div className="flex justify-center items-center h-full text-gray-400">
                                                 No hierarchy data available
-                                                <button
+                                                <Button
+                                                    variant="blue"
+                                                    size="sm"
                                                     onClick={() => {
                                                         // ✅ If no hierarchy exists → allow root creation
                                                         if (branchTreeData.length === 0) {
+                                                            fetchLocations()
                                                             setOpenAddBranch(true)
+                                                            setShowParent(false)
                                                             return
                                                         }
 
@@ -1802,17 +1917,15 @@ function RouteComponent() {
 
                                                         setOpenAddBranch(true)
                                                     }}
-                                                    className="flex ml-4 items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                 >
-                                                    <Plus size={14} />
                                                     Add New
-                                                </button>
+                                                </Button>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-12 gap-4 h-[500px]">
+                                            <div className="grid grid-cols-12 gap-4 h-[464px] min-h-0">
 
                                                 {/* LEFT → TREE */}
-                                                <div className="col-span-3 h-full overflow-y-auto pr-2">
+                                                <div className="col-span-4 h-full overflow-y-auto pr-2">
                                                     <FieldTreeView
                                                         data={branchTreeData}
                                                         onSelect={(node) => {
@@ -1829,7 +1942,7 @@ function RouteComponent() {
                                                 </div>
 
                                                 {/* RIGHT → DETAILS */}
-                                                <div className="col-span-9 bg-white border rounded-xl p-6 h-full">
+                                                <div className="col-span-7 bg-white border rounded-xl p-6 h-full">
 
                                                     {selectedBranch ? (
                                                         <>
@@ -1846,7 +1959,9 @@ function RouteComponent() {
                                                                         {!isEditingBranch ? (
                                                                             <>
                                                                                 {/* ADD NEW */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         if (!selectedBranch) {
                                                                                             showToast(
@@ -1856,46 +1971,45 @@ function RouteComponent() {
                                                                                             return
                                                                                         }
                                                                                         setOpenAddBranch(true)
+                                                                                        setShowParent(true)
                                                                                     }}
-                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                                                 >
-                                                                                    <Plus size={14} />
                                                                                     Add New
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* EDIT */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => setIsEditingBranch(true)}
-                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
                                                                                 >
-                                                                                    <Pencil size={14} />
                                                                                     Edit
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         ) : (
                                                                             <>
                                                                                 {/* SAVE */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         handleSaveBranch()
                                                                                         setIsEditingBranch(false)
                                                                                         setSelectedLocationId(null)
                                                                                         setSelectedParentBranchId(null)
                                                                                     }}
-                                                                                    className="flex items-center bg-blue-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-green-700 transition font-medium"
                                                                                 >
-                                                                                    <Save size={14} />
                                                                                     Save
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* CANCEL */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => setIsEditingBranch(false)}
-                                                                                    className="flex items-center bg-gray-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
                                                                                 >
-                                                                                    <MdCancel size={14} />
                                                                                     Cancel
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         )}
 
@@ -2080,7 +2194,9 @@ function RouteComponent() {
                                                                         {!isEditingPartner ? (
                                                                             <>
                                                                                 {/* ADD NEW */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         if (!selectedPartner) {
                                                                                             showToast(
@@ -2091,44 +2207,42 @@ function RouteComponent() {
                                                                                         }
                                                                                         setOpenAddPartner(true)
                                                                                     }}
-                                                                                    className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                                                 >
-                                                                                    <Plus size={14} />
                                                                                     Add New
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* EDIT */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => setIsEditingPartner(true)}
-                                                                                    className="flex items-center gap-1.5 bg-gray-600 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-700 transition font-medium"
                                                                                 >
-                                                                                    <Pencil size={14} />
                                                                                     Edit
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         ) : (
                                                                             <>
                                                                                 {/* SAVE */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="blue"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         handleSavePartner()
                                                                                     }}
-                                                                                    className="flex items-center bg-blue-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition font-medium"
                                                                                 >
-                                                                                    <Save size={14} />
                                                                                     Save
-                                                                                </button>
+                                                                                </Button>
 
                                                                                 {/* CANCEL */}
-                                                                                <button
+                                                                                <Button
+                                                                                    variant="default"
+                                                                                    size="sm"
                                                                                     onClick={() => {
                                                                                         setIsEditingPartner(false)
                                                                                     }}
-                                                                                    className="flex items-center bg-gray-600 text-white gap-1.5 px-4 py-2 text-sm rounded-md hover:bg-gray-500 transition font-medium"
                                                                                 >
-                                                                                    <MdCancel size={14} />
                                                                                     Cancel
-                                                                                </button>
+                                                                                </Button>
                                                                             </>
                                                                         )}
 
