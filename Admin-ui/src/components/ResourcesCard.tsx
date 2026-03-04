@@ -36,7 +36,7 @@ export default function ResourcesCard() {
       <CardHeader>
         <CardTitle className="text-lg font-semibold">Resources</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="flex flex-col gap-3">
         {/* Search Input */}
         <div className="relative">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -51,7 +51,7 @@ export default function ResourcesCard() {
         </div>
 
         {/* Resource List */}
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
           {filteredResources.map((item, index) => (
             <Link
               key={index}

@@ -141,39 +141,6 @@ const CommissionCard: React.FC<CommissionCardProps> = ({ dashboardData }) => {
     },
   ]
 
-  // const columns = [
-  //   { header: 'Cycle', accessor: 'channel' },
-  //   {
-  //     header: 'Rev()',
-  //     accessor: (row: any) => (
-  //       <span className="px-2 py-1 rounded-md bg-green-100 text-green-800 font-medium">
-  //         {row.pending.toString().padStart(2, '0')}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     header: 'Comm()',
-  //     accessor: (row: any) => (
-  //       <span
-  //         className={`px-2 py-1 rounded-md font-medium ${priorityColor(
-  //           row.priority,
-  //         )}`}
-  //       >
-  //         {row.priority}
-  //       </span>
-  //     ),
-  //   },
-  //   { header: '%', accessor: 'updated' },
-
-  //   // {
-  //   //   header: 'Actions',
-  //   //   accessor: (row: any) => (
-  //   //     <Button variant="blue" onClick={() => handleRedirect(row.path)}>
-  //   //       Process Now
-  //   //     </Button>
-  //   //   ),
-  //   // },
-  // ]
   const columns = [
   { header: 'Cycle', accessor: 'channel' },
 
@@ -321,7 +288,7 @@ const channelTables = [
   return (
     <div className="flex gap-6">
       <div className="w-full space-y-4">
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 mb-16 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 mb-8 gap-10">
           {companyData.map((data, index) => (
             <Card
               className="rounded-md p-5 flex-1 min-w-0 bg-white"
@@ -340,47 +307,20 @@ const channelTables = [
               </div>
             </Card>
           ))}
-        </CardContent>
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">
-            Commission Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        </div>
+        <div className="">
+          <h2 className="text-2xl font-bold">
+            Commission Action
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 mb-6 gap-8">
           {buttons.map((data, id) => (
             <Button key={id} onClick={() => navigate({ to: buildPath(data.path) })}>
               {data.title}
             </Button>
           ))} 
-        </CardContent>
-    
-
-        {/* <Card className="shadow-md rounded-md grid grid-cols-1 md:grid-cols-2 gap-4">
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-          <CardContent>
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Channel</CardTitle>
-              <DataTable columns={columns} data={tableData} />
-            </CardHeader>
-          </CardContent>
-        </Card> */}
+        </div>
+  
         <Card className="shadow-md rounded-md grid grid-cols-1 md:grid-cols-2 gap-4">
   {channelTables.map((table, index) => (
     <CardContent key={index}>
