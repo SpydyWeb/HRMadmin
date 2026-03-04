@@ -1,15 +1,15 @@
 import { useCallback, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { showToast } from '@/components/ui/sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { CommonConstants } from '@/services/constant'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { userManagementService } from '@/services/userService'
-import type { IUserDetails, ICreateUserRequest } from '@/models/user'
+import type { IUserDetails, ICreateUserRequest, IUpdateUserRequest, IUpdatePasswordRequest } from '@/models/user'
 import DynamicFormBuilder from '@/components/form/DynamicFormBuilder'
 import AutoAccordionSection from '@/components/ui/autoAccordianSection'
 import {
@@ -22,8 +22,8 @@ import z from 'zod'
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
   const { user } = useAuth()
-  const [isEdit, setIsEdit] = useState(false)
   const [userDetails, setUserDetails] = useState<IUserDetails | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
@@ -85,7 +85,6 @@ export default function UserManagement() {
     }
     // Clear previous user details when starting a new search
     setUserDetails(null)
-    setIsEdit(false)
     // Trigger the API call
     refetchUserDetails()
   }
@@ -106,13 +105,9 @@ export default function UserManagement() {
     }
   }, [userData])
 
-  // Handle field click for buttons (Edit/Cancel)
+  // Handle field click for buttons
   const handleFieldClick = (fieldName: string) => {
-    if (fieldName === 'edit') {
-      setIsEdit(true)
-    } else if (fieldName === 'cancel') {
-      setIsEdit(false)
-    } else if (fieldName === 'resetPassword') {
+    if (fieldName === 'resetPassword') {
       setIsResetPasswordModalOpen(true)
     }
   }
@@ -120,8 +115,8 @@ export default function UserManagement() {
   // Handle password change
   const handlePasswordChange = async () => {
     try {
-      if (!userDetails?.userId) {
-        throw new Error('User ID is missing. Cannot change password.')
+      if (!userDetails?.username) {
+        throw new Error('Username is missing. Cannot change password.')
       }
 
       if (!oldPassword || !newPassword) {
@@ -129,14 +124,17 @@ export default function UserManagement() {
         return
       }
 
-      const updatePayload = {
-        userId: userDetails.userId,
+      const updatePasswordPayload: IUpdatePasswordRequest = {
+        username: userDetails.username,
         oldPassword: oldPassword,
-        password: newPassword,
+        newPassword: newPassword,
+        isActive: userDetails.isActive ?? true,
+        isLocked: userDetails.isLocked ?? false,
+        reportingMgr: userDetails.reportingMgr ?? 0,
       }
 
-      console.log('📤 Sending password change payload:', { ...updatePayload, oldPassword: '***', password: '***' })
-      const response = await userManagementService.UpdateUser(updatePayload)
+      console.log('📤 Sending password change payload:', { ...updatePasswordPayload, oldPassword: '***', newPassword: '***' })
+      const response = await userManagementService.UpdatePassword(updatePasswordPayload)
       
       if (!response) {
         throw new Error('No response received from server')
@@ -166,13 +164,65 @@ export default function UserManagement() {
         throw new Error('User ID is missing. Cannot update user details.')
       }
 
-      const updatePayload = {
+      // Fields that can be updated (excluding username)
+      const updatableFields = ['emailId', 'mobileNumber', 'reportingMgrName', 'isActive', 'isLocked']
+      
+      // Build update payload with userId and username (required by API)
+      const updatePayload: Partial<IUpdateUserRequest> & { userId: number; username?: string } = {
         userId: userDetails.userId,
-        ...formData,
+        username: userDetails.username, // Required by API even though it's not updated
       }
 
-      console.log('📤 Sending update payload:', updatePayload)
-      const response = await userManagementService.UpdateUser(updatePayload)
+      // Helper function to normalize values for comparison
+      const normalizeValue = (value: any): any => {
+        if (value === null || value === undefined) return undefined
+        if (typeof value === 'boolean') return Boolean(value)
+        if (typeof value === 'string') {
+          const trimmed = value.trim()
+          return trimmed === '' ? undefined : trimmed
+        }
+        return value
+      }
+
+      // Include all updatable fields that are present in formData
+      let hasAnyChanges = false
+      updatableFields.forEach((field) => {
+        const newValue = formData[field]
+        const oldValue = userDetails[field as keyof IUserDetails]
+        
+        // Normalize both values for comparison
+        const normalizedNew = normalizeValue(newValue)
+        const normalizedOld = normalizeValue(oldValue)
+        
+        // Check if value has changed (using strict comparison after normalization)
+        const hasChanged = normalizedNew !== normalizedOld
+        
+        console.log(`🔍 Field: ${field}, Old: ${JSON.stringify(oldValue)} (normalized: ${JSON.stringify(normalizedOld)}), New: ${JSON.stringify(newValue)} (normalized: ${JSON.stringify(normalizedNew)}), Changed: ${hasChanged}`)
+        
+        // Include field if it exists in formData
+        // For booleans, always include if they exist in formData (they might be false which is a valid value)
+        if (newValue !== undefined) {
+          const valueToSend = normalizedNew !== undefined ? normalizedNew : newValue
+          ;(updatePayload as any)[field] = valueToSend
+          
+          // Track if this field actually changed
+          if (hasChanged) {
+            hasAnyChanges = true
+          }
+        }
+      })
+
+      // Don't send if only userId and username are present (no changes)
+      if (!hasAnyChanges && Object.keys(updatePayload).length === 2) {
+        showToast(NOTIFICATION_CONSTANTS.ERROR, 'No changes detected. Please modify at least one field.')
+        return
+      }
+
+      console.log('📤 Sending update payload:', JSON.stringify(updatePayload, null, 2))
+      console.log('📤 Original userDetails:', JSON.stringify(userDetails, null, 2))
+      console.log('📤 Form data received:', JSON.stringify(formData, null, 2))
+      
+      const response = await userManagementService.UpdateUser(updatePayload as IUpdateUserRequest)
       
       if (!response) {
         throw new Error('No response received from server')
@@ -190,7 +240,6 @@ export default function UserManagement() {
           setUserDetails(updatedUser)
         }
         showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'User details updated successfully!')
-        setIsEdit(false)
       } else {
         throw new Error(errorMessage || 'Failed to update user details')
       }
@@ -203,15 +252,21 @@ export default function UserManagement() {
   // Handle form submission for creating user
   const handleCreateUser = async (formData: Record<string, any>) => {
     try {
-      const createPayload: ICreateUserRequest = {
+      // Validate required fields
+      if (!formData.username || !formData.emailId || !formData.password || !formData.mobileNumber) {
+        showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please fill in all required fields')
+        return
+      }
+
+      const createPayload: ICreateUserRequest & { reportingMgrName?: string; reportingMgrId?: string } = {
         username: formData.username || '',
         emailId: formData.emailId || '',
         password: formData.password || '',
         mobileNumber: formData.mobileNumber || '',
-        reportingMgrName: formData.reportingMgrName ? Number(formData.reportingMgrName) : undefined,
+        reportingMgrName: formData.reportingMgrName || '',
       }
 
-      console.log('📤 Sending create user payload:', createPayload)
+      console.log('📤 Sending create user payload:', { ...createPayload, password: '***' })
       const response = await userManagementService.CreateUser(createPayload)
       
       if (!response) {
@@ -220,18 +275,31 @@ export default function UserManagement() {
 
       const { errorCode, errorMessage } = response.responseHeader
       if (errorCode === CommonConstants.SUCCESS) {
-        showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'User created successfully!')
+        // Success notification
+        showToast(
+          NOTIFICATION_CONSTANTS.SUCCESS,
+          'User created successfully!',
+        )
+
+        // Action notification with link to roles management (no auto-redirect)
+        showToast(NOTIFICATION_CONSTANTS.ACTION, 'Assign roles to this user', {
+          description: 'Click below to go to Roles Management and assign roles for the newly created user.',
+          actionLabel: 'Go to Roles Management',
+          onAction: () => navigate({ to: '/roles-management' }),
+          duration: 8000,
+        })
+
         setIsCreateModalOpen(false)
         // Clear search and user details to return to search page
         setSearchQuery('')
         setUserDetails(null)
-        setIsEdit(false)
       } else {
         throw new Error(errorMessage || 'Failed to create user')
       }
     } catch (error: any) {
       console.error('❌ Error creating user:', error)
       showToast(NOTIFICATION_CONSTANTS.ERROR, error.message || 'Failed to create user. Please try again.')
+      // Don't close modal on error so user can fix and retry
     }
   }
 
@@ -261,7 +329,7 @@ export default function UserManagement() {
         label: 'Username',
         type: 'text',
         colSpan: 1,
-        readOnly: !isEdit,
+        readOnly: true,
         variant: 'standard',
       },
       {
@@ -269,7 +337,7 @@ export default function UserManagement() {
         label: 'Email ID',
         type: 'email',
         colSpan: 1,
-        readOnly: !isEdit,
+        readOnly: false,
         variant: 'standard',
       },
       {
@@ -277,7 +345,7 @@ export default function UserManagement() {
         label: 'Mobile Number',
         type: 'text',
         colSpan: 1,
-        readOnly: !isEdit,
+        readOnly: false,
         variant: 'standard',
       },
     
@@ -286,7 +354,7 @@ export default function UserManagement() {
         label: 'Reporting Manager',
         type: 'text',
         colSpan: 1,
-        readOnly: true,
+        readOnly: false,
         variant: 'standard',
       },
       {
@@ -294,18 +362,17 @@ export default function UserManagement() {
         label: 'Is Active',
         type: 'boolean',
         colSpan: 1,
-        readOnly: !isEdit,
+        readOnly: false,
       },
       {
         name: 'isLocked',
         label: 'Is Locked',
         type: 'boolean',
         colSpan: 1,
-        readOnly: !isEdit,
+        readOnly: false,
       },
     ],
-    buttons: isEdit
-      ? {
+    buttons:  {
           gridCols: 6,
           items: [
             {
@@ -319,28 +386,108 @@ export default function UserManagement() {
             {
               label: 'Cancel',
               type: 'button',
-              variant: 'outline',
-              colSpan: 2,
-              size: 'md',
-              className: 'whitespace-nowrap mt-4',
-              name: 'cancel',
-            },
-          ],
-        }
-      : {
-          gridCols: 6,
-          items: [
-            {
-              label: 'Reset Password',
-              type: 'button',
               variant: 'orange',
               colSpan: 2,
               size: 'md',
               className: 'whitespace-nowrap mt-4',
-              name: 'resetPassword',
             },
+
           ],
         },
+  }
+
+  // Create User Form Configuration
+  const createUserConfig = {
+    gridCols: 8,
+    sectionName: 'create_user',
+    defaultValues: {
+      username: '',
+      emailId: '',
+      password: '',
+      mobileNumber: '',
+      reportingMgrName: '',
+      reportingMgrId: '',
+    },
+    schema: z.object({
+      username: z.string().min(3, 'Username must be at least 3 characters'),
+      emailId: z.string().email('Invalid email address').min(1, 'Email is required'),
+      password: z.string().min(1, 'Password is required'),
+      mobileNumber: z.string()
+        .regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits (Indian number without +91)')
+        .min(1, 'Mobile number is required'),
+      reportingMgrName: z.string().min(1, 'Reporting manager name is required'),
+      reportingMgrId: z.string().optional(),
+    }),
+    fields: [
+      {
+        name: 'username',
+        label: 'Username',
+        type: 'text',
+        colSpan: 4,
+        readOnly: false,
+        variant: 'standard',
+        required: true,
+      },
+      {
+        name: 'emailId',
+        label: 'Email ID',
+        type: 'email',
+        colSpan: 4,
+        readOnly: false,
+        variant: 'standard',
+        required: true,
+      },
+      {
+        name: 'password',
+        label: 'Password',
+        type: 'password',
+        colSpan: 4,
+        readOnly: false,
+        variant: 'standard',
+        required: true,
+      },
+      {
+        name: 'mobileNumber',
+        label: 'Mobile Number',
+        type: 'text',
+        colSpan: 4,
+        readOnly: false,
+        variant: 'standard',
+        required: true,
+      },
+      {
+        name: 'reportingMgrName',
+        label: 'Reporting Manager Name',
+        type: 'text',
+        colSpan: 4,
+        readOnly: false,
+        variant: 'standard',
+        required: true,
+      },
+  
+    ],
+    buttons: {
+      gridCols: 4,
+      items: [
+        {
+          label: 'Create User',
+          type: 'submit',
+          variant: 'orange',
+          colSpan: 6,
+          size: 'md',
+          className: 'whitespace-nowrap mt-4',
+        },
+        {
+          label: 'Cancel',
+          type: 'button',
+          variant: 'outline',
+          colSpan: 6,
+          size: 'md',
+          className: 'whitespace-nowrap mt-4',
+          name: 'cancel',
+        },
+      ],
+    },
   }
 
   return (
@@ -410,28 +557,28 @@ export default function UserManagement() {
           {/* User Details Form */}
           {userDetails && (
             <div className="mt-8">
-              {/* <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 font-poppins text-[20px]">
-                  User Details
-                </h2>
-              </div> */}
+              
               <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden bg-[#fff]">
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl text-start font-semibold text-gray-900 font-poppins text-[20px]">User Details</CardTitle>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600">Edit Mode</span>
-                      <Switch
-                        checked={isEdit}
-                        onCheckedChange={setIsEdit}
-                      />
+                    {/* add the reset password button here  we dont required edit mode */}
+                    <Button
+                      variant="orange"
+                      onClick={() => setIsResetPasswordModalOpen(true)}
+                      size="sm"
+                    >
+                      Reset Password
+                    </Button>
+                     
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="!px-0 !py-0 w-[100%]">
                   <AutoAccordionSection id="user-details-sec">
                     <DynamicFormBuilder
-                      key={`user-details-${userDetails?.userId}-${isEdit}`}
+                      key={`user-details-${userDetails?.userId}`}
                       config={userDetailsConfig}
                       onSubmit={handleUserUpdate}
                       onFieldClick={handleFieldClick}
@@ -445,24 +592,52 @@ export default function UserManagement() {
       </CardContent>
 
       {/* Create User Modal */}
-      {/* <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <AlertDialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <AlertDialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[95vh] overflow-y-auto p-8">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-semibold">Create New User</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-semibold pr-8">Create New User</AlertDialogTitle>
+            <button
+              onClick={() => setIsCreateModalOpen(false)}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Close"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <path d="M18 6L6 18" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
           </AlertDialogHeader>
-          <div className="mt-4">
-            <DynamicFormBuilder
-              config={createUserConfig}
-              onSubmit={handleCreateUser}
-              onFieldClick={(fieldName: string) => {
-                if (fieldName === 'cancel') {
-                  setIsCreateModalOpen(false)
-                }
-              }}
-            />
+          <div className="mt-2">
+            {createUserConfig ? (
+              <DynamicFormBuilder
+                key={`create-user-form-${isCreateModalOpen}`}
+                config={createUserConfig}
+                onSubmit={handleCreateUser}
+                onFieldClick={(fieldName: string) => {
+                  if (fieldName === 'cancel') {
+                    setIsCreateModalOpen(false)
+                  }
+                }}
+              />
+            ) : (
+              <div className="p-4 text-center text-red-600">
+                Error loading form. Please close and try again.
+              </div>
+            )}
           </div>
         </AlertDialogContent>
-      </AlertDialog> */}
+      </AlertDialog>
 
       {/* Reset Password Modal */}
       <AlertDialog open={isResetPasswordModalOpen} onOpenChange={setIsResetPasswordModalOpen}>

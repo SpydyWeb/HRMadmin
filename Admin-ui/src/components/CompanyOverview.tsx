@@ -120,7 +120,7 @@ const CompanyOverview = () => {
   return (
     <Card className="shadow-md rounded-md">
       <CardContent>
-          <Card className="bg-gray-100 px-0 py-3 gap-2 mb-5 rounded-md">
+          {/* <Card className="bg-gray-100 px-0 py-3 gap-2 mb-5 rounded-md">
           <CardHeader className="flex flex-row justify-between items-center px-3">
             <CardTitle className="text-xl font-semibold">
               Company Overview
@@ -156,7 +156,7 @@ const CompanyOverview = () => {
               </Card>
             ))}
           </CardContent>
-        </Card>
+        </Card> */}
         <DataTable columns={columns} data={tableData} />
       </CardContent>
     </Card>

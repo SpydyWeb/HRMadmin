@@ -88,10 +88,11 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
       console.error('Full Error Meta:', errors)
     },
     validatorAdapter: zodValidator,
-
-
-
-    
+    ...(config.schema && {
+      validators: {
+        onChange: config.schema,
+      },
+    }),
   })
 
   const linkField = config.fields.find((field: any) => field.type === 'link')
@@ -100,15 +101,17 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   )
 
   const renderField = (field: any) => {
-    const fieldSchema = config.schema.shape[field.name]
+    const fieldSchema = config.schema?.shape?.[field.name]
 
     return (
       <form.Field
         key={field.name}
         name={field.name}
-        // validators={{
-        //   onChange: fieldSchema,
-        // }}
+        {...(fieldSchema && {
+          validators: {
+            onChange: fieldSchema,
+          },
+        })}
       >
         {(fieldApi) => {
           const handleChange = (value: any) => {
@@ -333,9 +336,9 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 </div>
               )}
 
-              {/* {fieldApi.state.meta.errors.length > 0 && (
-    <FieldError field={fieldApi.state.meta} />
-  )} */}
+              {fieldApi.state.meta.errors.length > 0 && (
+                <FieldError field={fieldApi.state.meta} />
+              )}
             </div>
           )
         }}
