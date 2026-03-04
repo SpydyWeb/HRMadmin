@@ -5,6 +5,7 @@ import type {
   IGetUserDetailsRequest,
   ICreateUserRequest,
   IUpdateUserRequest,
+  IUpdatePasswordRequest,
   IUserDetailsResponseBody,
 } from '@/models/user'
 
@@ -70,6 +71,27 @@ export const userManagementService = {
       return response     
     } catch (error) {
       console.error("❌ UpdateUser service error:", error);
+      throw error;
+    }
+  },
+
+  UpdatePassword: async (data: IUpdatePasswordRequest) => {
+    try {
+      console.log("📬 UpdatePassword service called with data:", JSON.stringify({ ...data, oldPassword: '***', newPassword: '***' }, null, 2));
+      
+      const response = await callApi<ApiResponse<IUserDetailsResponseBody>>(
+        APIRoutes.UPDATE_PASSWORD,
+        [data],
+      )
+     
+      if (!response) {
+        console.warn("⚠️ UpdatePassword - Response is undefined or null");
+        return null;
+      }
+
+      return response     
+    } catch (error) {
+      console.error("❌ UpdatePassword service error:", error);
       throw error;
     }
   },

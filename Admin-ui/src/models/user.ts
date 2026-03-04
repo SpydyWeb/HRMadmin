@@ -55,3 +55,13 @@ export interface IUpdateUserRequest {
   roleId?: number
   [key: string]: any
 }
+
+// Request interface for UpdatePassword API
+export interface IUpdatePasswordRequest {
+  username: string
+  oldPassword: string
+  newPassword: string
+  isActive: boolean
+  isLocked: boolean
+  reportingMgr: number
+}
