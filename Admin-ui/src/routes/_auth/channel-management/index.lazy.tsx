@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import CustomTabs from '@/components/CustomTabs'
 import { HMSService } from '@/services/hmsService'
@@ -21,7 +21,6 @@ import { Plus, Pencil, Save } from 'lucide-react'
 import { MdCancel } from 'react-icons/md'
 import { Pagination } from '@/components/table/Pagination'
 import Button from '@/components/ui/button'
-
 export const Route = createLazyFileRoute('/_auth/channel-management/')({
     component: RouteComponent,
 })
@@ -50,7 +49,9 @@ function RouteComponent() {
     const [selectedChannel, setSelectedChannel] = useState<number | null>(null)
     const [selectedSubChannel, setSelectedSubChannel] = useState<SubChannel | null>(null)
     const [showParent, setShowParent] = useState(false);
+    const [agents, setAgents] = useState<any[]>([])
     const [isEditingDesignation, setIsEditingDesignation] = useState(false)
+    const [selectedAgentCode, setSelectedAgentCode] = useState<number | null>(null)
     const [activeTab, setActiveTab] = useState<
         'designation' | 'location' | 'branch' | 'partner'
     >('designation')
@@ -75,6 +76,7 @@ function RouteComponent() {
     const [designationFields, setDesignationFields] = useState<any[]>([])
     const [loadingDesignation, setLoadingDesignation] = useState(false)
     const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
+    const [selectedPartnerParentId, setSelectedPartnerParentId] = useState<number | null>(null)
     const [selectedDesignation, setSelectedDesignation] = useState<{
         id: number
         name: string
@@ -142,6 +144,7 @@ function RouteComponent() {
     const [newPartnerMail, setNewPartnerMail] = useState('')
     const [newPartnerPhone, setNewPartnerPhone] = useState('')
     const [newRelationMgr, setNewRelationMgr] = useState('')
+    const [searchCondition, setSearchCondition] = useState('')
     const locationColumns = [
 
         {
@@ -176,6 +179,35 @@ function RouteComponent() {
         },
     ]
 
+const agentColumns = [
+  {
+    header: "",
+    accessor: (row: any) => (
+      <input
+        type="radio"
+        name="relationMgr"
+        checked={selectedAgentCode === row.agentCode}
+        onChange={() => setSelectedAgentCode(row.agentCode)}
+      />
+    ),
+    width: "60px",
+  },
+  {
+    header: "Agent Code",
+    accessor: "agentCode",
+    width: "30%",
+  },
+  {
+    header: "Agent Name",
+    accessor: "agentName",
+    width: "40%",
+  },
+  {
+    header: "Status Date",
+    accessor: (row: any) => formatDate(row.statusDate),
+    width: "30%",
+  },
+]
     useEffect(() => {
         fetchChannels()
     }, [])
@@ -294,6 +326,29 @@ function RouteComponent() {
             setLoadingLocations(false)
         }
     }
+
+
+    const partnerParentOptions = useMemo(() => {
+        const flatten = (data: any[]): any[] => {
+            let result: any[] = []
+
+            data.forEach((item) => {
+                result.push({
+                    id: item.id,
+                    name: item.name
+                })
+
+                if (item.children?.length) {
+                    result = result.concat(flatten(item.children))
+                }
+            })
+
+            return result
+        }
+
+        return flatten(partnerTreeData)
+    }, [partnerTreeData])
+
     const totalPages = Math.ceil(locations.length / pageSize)
 
     const paginatedMenu = locations.slice(
@@ -732,7 +787,7 @@ function RouteComponent() {
 
             const payload = {
                 partnerBranchHierarchyId: selectedPartner.id ?? 0,
-                parentBranchHierarchyId: 0,
+                parentBranchHierarchyId: selectedPartnerParentId ?? 0,
                 orgId: 0,
                 partnerBranch: selectedPartner.name ?? "",
                 partnerBranchCode: selectedPartner.code ?? "",
@@ -915,30 +970,19 @@ function RouteComponent() {
         try {
             setAddingPartner(true)
 
-            // await HMSService.savePartner({
-            //     partnerBranchHierarchyId: selectedPartner.id ?? 0,
-            //     parentBranchHierarchyId: 0,
-            //     orgId: 0,
-            //     partnerBranch: selectedPartner.name ?? "",
-            //     partnerBranchCode: selectedPartner.code ?? "",
-            //     channelId: selectedChannel,
-            //     subChannelId: selectedSubChannel.subChannelId,
-            //     partnerAddress: selectedPartner.address,
-            //     partnerMail: selectedPartner.mail,
-            //     partnerPhone: selectedPartner.phone,
-            //     hierarchyPath: null,
-            //     relationMgr: selectedPartner.relationMgr,
-            //     isActive: true,
-
-
-            //     name: newPartnerName,
-            //     partnerBranchCode: newPartnerCode,
-            //     partnerAddress: newPartnerAddress,
-            //     partnerMail: newPartnerMail,
-            //     partnerPhone: newPartnerPhone,
-            //     relationMgr: Number(newRelationMgr),
-            //     parentId: selectedPartner?.id || null,
-            // })
+            await HMSService.savePartner({
+                partnerBranchHierarchyId: null,
+                parentBranchHierarchyId: selectedPartnerParentId ?? selectedPartner?.id ?? 0,
+                partnerBranch: newPartnerName,
+                partnerBranchCode: newPartnerCode,
+                channelId: selectedChannel,
+                subChannelId: selectedSubChannel.subChannelId,
+                partnerAddress: newPartnerAddress,
+                partnerMail: newPartnerMail,
+                partnerPhone: newPartnerPhone,
+                hierarchyPath: null,
+                relationMgr: selectedAgentCode,
+            })
 
             showToast(NOTIFICATION_CONSTANTS.SUCCESS, "Partner added successfully")
 
@@ -950,6 +994,22 @@ function RouteComponent() {
         } finally {
             setAddingPartner(false)
         }
+    }
+    const formatDate = (date: string) => {
+        if (!date) return ""
+        return new Date(date).toLocaleDateString("en-US")
+    }
+
+    const handleSearch = async () => {
+        const payload = {
+            searchCondition: searchCondition,
+            zone: "All Zone",
+            channelId: selectedChannel,
+            subChannelId: selectedSubChannel.subChannelId,
+        }
+
+        const response = await HMSService.search(payload)
+        setAgents(response.responseBody.agents)
     }
 
     return (
@@ -974,6 +1034,29 @@ function RouteComponent() {
                         <AlertDialogTitle>Add Partner</AlertDialogTitle>
                     </AlertDialogHeader>
 
+                    {isEditingPartner && (
+                        <div className="flex justify-between items-center border-b pb-3">
+                            <span className="text-sm font-medium text-gray-500">
+                                Parent Partner
+                            </span>
+
+                            <select
+                                value={selectedPartnerParentId ?? ""}
+                                onChange={(e) => setSelectedPartnerParentId(Number(e.target.value))}
+                                className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Parent</option>
+
+                                {partnerParentOptions
+                                    .filter((item) => item.id !== selectedPartner?.id)
+                                    .map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                    )}
                     <div className="space-y-3 mt-3">
                         <input
                             placeholder="Partner Name"
@@ -1010,13 +1093,40 @@ function RouteComponent() {
                             className="w-full border rounded-md px-3 py-2 text-sm"
                         />
 
-                        <input
+                        {/* <input
                             placeholder="Relation Manager ID"
                             value={newRelationMgr}
                             onChange={(e) => setNewRelationMgr(e.target.value)}
                             className="w-full border rounded-md px-3 py-2 text-sm"
-                        />
+                        /> */}
 
+                        <div className="relative w-full">
+                            <input
+                                placeholder="Agent Code"
+                                value={searchCondition}
+                                onChange={(e) => setSearchCondition(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 pr-24 text-sm"
+                            />
+
+                            <Button
+                                variant="blue"
+                                size="sm"
+                                onClick={() => handleSearch()}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
+                            >
+                                Search
+                            </Button>
+                        </div>
+
+                        {agents.length > 0 && (
+                            <div className="mt-3">
+                                <DataTable
+                                    columns={agentColumns}
+                                    data={agents}
+                                    noDataMessage="No Agents Found"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <AlertDialogFooter className="mt-4">
@@ -1194,7 +1304,7 @@ function RouteComponent() {
                                 variant="default"
                                 size="sm"
                             >
-                               Cancel
+                                Cancel
                             </Button>
                         </AlertDialogCancel>
 

@@ -398,9 +398,8 @@ export const HMSService = {
   },
 
   savePartner: async (payload: {
-    partnerBranchHierarchyId: number,
+    partnerBranchHierarchyId: number | null,
     parentBranchHierarchyId: number,
-    orgId: number,
     partnerBranch: string,
     partnerBranchCode: string,
     channelId: number,
@@ -409,8 +408,7 @@ export const HMSService = {
     partnerMail: string,
     partnerPhone: string,
     hierarchyPath: null,
-    relationMgr: number,
-    isActive: boolean,
+    relationMgr: string,
   }) => {
     return callApi(
       "savePartner",
@@ -418,6 +416,17 @@ export const HMSService = {
     )
   },
 
+  search: async (payload: {
+    searchCondition: string,
+    zone: string,
+    channelId: number,
+    subChannelId: number,
+  }) => {
+    return callApi(
+      "searchForPartner",
+      [payload]
+    )
+  },
 }
 
 
