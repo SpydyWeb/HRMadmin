@@ -6,49 +6,61 @@ import { HMSService } from './hmsService'
 
 const api = axios.create({
   baseURL: APIRoutes.BASEURL,
-  // headers: { 'Content-Type': 'application/json' },
-  validateStatus: () => true, // so 400/401 don't throw
 })
 
 api.interceptors.request.use((config) => {
   const token = storage.get(TOKEN_KEY)
-  console.log(token)
+
   if (token) {
-    const jwt = JSON.parse(token) // assuming token stored as JSON { token: "xxx" }
+    const jwt = JSON.parse(token)
+
     config.headers = config.headers ?? {}
-    ;(config.headers as any).Authorization = `Bearer ${jwt.token}`
+      ; (config.headers as any).Authorization = `Bearer ${jwt.token}`
   }
+
   return config
 })
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("SUCCESS:", response.status, response.config.url)
+    return response
+  },
 
   async (error) => {
+    console.log("ERROR INTERCEPTOR HIT")
+    console.log("STATUS:", error?.response?.status)
+    console.log("URL:", error?.config?.url)
+
+    const originalRequest = error.config
+
     if (error.response?.status === 401) {
+      console.log("401 DETECTED")
+
       try {
         const refreshResponse = await HMSService.getRefreshToken()
+
+        console.log("REFRESH SUCCESS")
 
         const { token, expiration } =
           refreshResponse.responseBody.loginResponse
 
-        storage.set(
-          TOKEN_KEY,
-          JSON.stringify({ token, expiration })
-        )
+        storage.set(TOKEN_KEY, JSON.stringify({ token, expiration }))
 
-        error.config.headers.Authorization = `Bearer ${token}`
+        originalRequest.headers = originalRequest.headers ?? {}
+        originalRequest.headers.Authorization = `Bearer ${token}`
 
-        return api(error.config)
-      } catch {
+        return api(originalRequest)
+      } catch (err) {
+        console.log("REFRESH FAILED")
         storage.remove(TOKEN_KEY)
-        window.location.href = "/login"
       }
     }
 
     return Promise.reject(error)
   }
 )
+
 const request = async <T>(
   method: 'get' | 'post' | 'put' | 'delete',
   url: string,

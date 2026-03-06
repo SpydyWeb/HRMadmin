@@ -350,7 +350,7 @@ const searchForPartner = (data, headers = {}) => {
 
 const getRefreshToken = (data, headers = {}) => {
   console.log("getting refreshToken");
-  return apiClient.post(APIRoutes.REFRESHTOKEN, data, { headers });
+  return apiClient.post(APIRoutes.REFRESHTOKEN);
 };
 
 const GetMastersBulk = async (keys, headers = {}) => {

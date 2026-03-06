@@ -557,6 +557,8 @@ function RouteComponent() {
     }
 
     const handleAddChannel = async () => {
+        const refreshResponse = await HMSService.getRefreshToken()
+            
         if (!channelName.trim()) {
             showToast(NOTIFICATION_CONSTANTS.WARNING, "Channel name is required")
             return
