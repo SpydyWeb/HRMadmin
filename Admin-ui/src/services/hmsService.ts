@@ -13,6 +13,7 @@ import type {
   IFileUploadApiResponse,
 } from '@/models/hmsdashboard'
 import { apiClient } from './apiClient'
+import { auth } from '@/auth'
 
 export const HMSService = {
   hmsDashboard: async (data: IHmsDashboardResponseBody) => {
@@ -429,7 +430,7 @@ export const HMSService = {
   },
 
   getRefreshToken: async () => {
-    return callApi("getRefreshToken", [{}])
+    return callApi("getRefreshToken", [{refreshToken: JSON.parse(auth.getToken())?.refreshToken}])
   },
 }
 

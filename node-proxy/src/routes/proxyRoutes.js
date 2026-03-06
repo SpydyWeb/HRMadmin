@@ -114,10 +114,10 @@ router.post("/proxy", async (req, res) => {
     const safeData = { ...result };
 
     if (encryptionEnabled) {
-      const ciphertextResp = encryptionService.encryptObject(safeData);
-      return res.json({ responseEncryptedString: ciphertextResp });
+      const ciphertextResp = encryptionService.encryptObject(safeData.data);
+      return res.status(safeData.status).json({ responseEncryptedString: ciphertextResp });
     }
-    return res.json(safeData);
+    return res.status(safeData.status).json(safeData.data);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message || String(err) });

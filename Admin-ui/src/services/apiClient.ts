@@ -1,8 +1,8 @@
 // src/apiClient.ts
 import axios, { AxiosRequestConfig } from 'axios'
 import { APIRoutes, TOKEN_KEY } from './constant'
-import { storage } from '@/utils/storage'
 import { HMSService } from './hmsService'
+import { storage } from '@/utils/storage'
 
 const api = axios.create({
   baseURL: APIRoutes.BASEURL,
@@ -22,45 +22,27 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (response) => {
-    console.log("SUCCESS:", response.status, response.config.url)
-    return response
-  },
+  (response) => response,
 
   async (error) => {
-    console.log("ERROR INTERCEPTOR HIT")
-    console.log("STATUS:", error?.response?.status)
-    console.log("URL:", error?.config?.url)
-
-    const originalRequest = error.config
-
-    if (error.response?.status === 401) {
-      console.log("401 DETECTED")
-
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
       try {
         const refreshResponse = await HMSService.getRefreshToken()
-
-        console.log("REFRESH SUCCESS")
-
-        const { token, expiration } =
-          refreshResponse.responseBody.loginResponse
-
+        const { token, expiration } = refreshResponse.responseBody.loginResponse
         storage.set(TOKEN_KEY, JSON.stringify({ token, expiration }))
-
-        originalRequest.headers = originalRequest.headers ?? {}
-        originalRequest.headers.Authorization = `Bearer ${token}`
-
+        originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` }
         return api(originalRequest)
-      } catch (err) {
-        console.log("REFRESH FAILED")
+      } catch {
         storage.remove(TOKEN_KEY)
+        window.location.href = "/login"
       }
     }
 
     return Promise.reject(error)
   }
 )
-
 const request = async <T>(
   method: 'get' | 'post' | 'put' | 'delete',
   url: string,
