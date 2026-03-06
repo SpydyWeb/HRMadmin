@@ -348,13 +348,10 @@ const searchForPartner = (data, headers = {}) => {
     , { headers });
 };
 
-const getRefreshToken = (data, header = {}) => {
-  console.log("getting refreshToken",header.Authorization);
+const getRefreshToken = (data, headers = {}) => {
+  console.log("getting refreshToken",data);
 
-  const headers = {
-    "Cookie":"refreshToken=" + data.refreshToken,
-  }
-  return apiClient.post(APIRoutes.REFRESHTOKEN,{}, { headers });
+  return apiClient.post(APIRoutes.REFRESHTOKEN,data, {  });
 };
 
 const GetMastersBulk = async (keys, headers = {}) => {
