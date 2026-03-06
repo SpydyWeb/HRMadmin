@@ -2,6 +2,7 @@
 import axios, { AxiosRequestConfig } from 'axios'
 import { APIRoutes, TOKEN_KEY } from './constant'
 import { storage } from '@/utils/storage'
+import { HMSService } from './hmsService'
 
 const api = axios.create({
   baseURL: APIRoutes.BASEURL,
@@ -20,6 +21,34 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+api.interceptors.response.use(
+  (response) => response,
+
+  async (error) => {
+    if (error.response?.status === 401) {
+      try {
+        const refreshResponse = await HMSService.getRefreshToken()
+
+        const { token, expiration } =
+          refreshResponse.responseBody.loginResponse
+
+        storage.set(
+          TOKEN_KEY,
+          JSON.stringify({ token, expiration })
+        )
+
+        error.config.headers.Authorization = `Bearer ${token}`
+
+        return api(error.config)
+      } catch {
+        storage.remove(TOKEN_KEY)
+        window.location.href = "/login"
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
 const request = async <T>(
   method: 'get' | 'post' | 'put' | 'delete',
   url: string,

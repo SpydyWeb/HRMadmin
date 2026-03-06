@@ -139,6 +139,7 @@ function RouteComponent() {
     const [addingPartner, setAddingPartner] = useState(false)
     const [isEditingPartner, setIsEditingPartner] = useState(false)
     const [openAddPartner, setOpenAddPartner] = useState(false)
+    const [showParentPartner, setShowParentPartner] = useState(false)
     const [newPartnerName, setNewPartnerName] = useState('')
     const [newPartnerCode, setNewPartnerCode] = useState('')
 
@@ -799,7 +800,7 @@ function RouteComponent() {
                 partnerMail: selectedPartner.mail,
                 partnerPhone: selectedPartner.phone,
                 hierarchyPath: null,
-                relationMgr: selectedPartner.relationMgr,
+                relationMgr: selectedAgentId,
                 isActive: true,
             }
 
@@ -1052,30 +1053,33 @@ function RouteComponent() {
 
                     <div className="space-y-4 mt-4">
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Parent Partner
-                            </label>
+                        {
+                            showParentPartner && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Parent Partner
+                                    </label>
 
-                            <select
-                                value={selectedPartnerParentId ?? ""}
-                                onChange={(e) =>
-                                    setSelectedPartnerParentId(
-                                        e.target.value ? Number(e.target.value) : null
-                                    )
-                                }
-                                className="w-full border rounded-md px-3 py-2 text-sm"
-                            >
-                                <option value="">Select Parent Partner</option>
+                                    <select
+                                        value={selectedPartnerParentId ?? ""}
+                                        onChange={(e) =>
+                                            setSelectedPartnerParentId(
+                                                e.target.value ? Number(e.target.value) : null
+                                            )
+                                        }
+                                        className="w-full border rounded-md px-3 py-2 text-sm"
+                                    >
+                                        <option value="">Select Parent Partner</option>
 
-                                {partnerParentOptions.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
+                                        {partnerParentOptions.map((item) => (
+                                            <option key={item.id} value={item.id}>
+                                                {item.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )
+                        }
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Partner Name
@@ -1138,7 +1142,7 @@ function RouteComponent() {
 
                         <div>
                             <label className="block text-sm font-medium mb-1">
-                                Agent Code
+                                Manager Id
                             </label>
 
                             <div className="relative w-full">
@@ -2307,6 +2311,30 @@ function RouteComponent() {
                                                     Loading hierarchy...
                                                 </span>
                                             </div>
+                                        ) : partnerTreeData.length === 0 ? (
+                                            <div className="flex justify-center items-center h-full text-gray-400 mr-2">
+                                                No hierarchy data available
+                                                <Button
+                                                    variant="blue"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setShowParentPartner(false)
+                                                        setOpenAddPartner(true)
+                                                        setNewPartnerName('')
+                                                        setNewPartnerCode('')
+                                                        setNewPartnerAddress('')
+                                                        setNewPartnerMail('')
+                                                        setNewPartnerPhone('')
+                                                        setNewRelationMgr('')
+                                                        setSelectedPartnerParentId(null)
+                                                        setSelectedAgentId(null)
+                                                        SetShowAgents(false)
+                                                        setSearchCondition('')
+                                                    }}
+                                                >
+                                                    Add New
+                                                </Button>
+                                            </div>
                                         ) : (
                                             <div className="grid grid-cols-12 gap-4 h-[464px] min-h-0">
 
@@ -2365,6 +2393,17 @@ function RouteComponent() {
                                                                                             return
                                                                                         }
                                                                                         setOpenAddPartner(true)
+                                                                                        setShowParentPartner(true)
+                                                                                        setNewPartnerName('')
+                                                                                        setNewPartnerCode('')
+                                                                                        setNewPartnerAddress('')
+                                                                                        setNewPartnerMail('')
+                                                                                        setNewPartnerPhone('')
+                                                                                        setNewRelationMgr('')
+                                                                                        setSelectedPartnerParentId(null)
+                                                                                        setSelectedAgentId(null)
+                                                                                        SetShowAgents(false)
+                                                                                        setSearchCondition('')
                                                                                     }}
                                                                                 >
                                                                                     Add New
@@ -2374,7 +2413,11 @@ function RouteComponent() {
                                                                                 <Button
                                                                                     variant="default"
                                                                                     size="sm"
-                                                                                    onClick={() => setIsEditingPartner(true)}
+                                                                                    onClick={() => {
+                                                                                        setIsEditingPartner(true);
+                                                                                        setShowParentPartner(true);
+                                                                                        SetShowAgents(false);
+                                                                                    }}
                                                                                 >
                                                                                     Edit
                                                                                 </Button>
@@ -2568,6 +2611,52 @@ function RouteComponent() {
                                                                                 </span>
                                                                             )}
                                                                         </div>
+
+                                                                        {
+
+                                                                        }
+                                                                        <div className="flex justify-between items-center border-b pb-3">
+                                                                            <span className="text-sm font-medium text-gray-500">
+                                                                                Partner Relation Manager
+                                                                            </span>
+
+                                                                            {isEditingPartner ? (
+                                                                                <div className="relative w-70 ">
+                                                                                    <input
+                                                                                        value={searchCondition}
+                                                                                        onChange={(e) => setSearchCondition(e.target.value)}
+                                                                                        className="w-full border rounded-md px-3 py-2 pr-24 text-sm"
+                                                                                    />
+
+                                                                                    <Button
+                                                                                        variant="blue"
+                                                                                        size="sm"
+                                                                                        onClick={() => handleSearch()}
+                                                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
+                                                                                    >
+                                                                                        {searching ? "Searching..." : "Search"}
+
+                                                                                    </Button>
+
+
+                                                                                </div>
+
+                                                                            ) : (
+                                                                                <span className="text-sm font-semibold text-gray-800">
+                                                                                    {selectedPartner.relationMgr}
+                                                                                </span>
+                                                                            )}
+
+                                                                        </div>
+                                                                        {agents.length > 0 && ShowAgents && isEditingPartner && (
+                                                                            <div className="mt-3">
+                                                                                <DataTable
+                                                                                    columns={agentColumns}
+                                                                                    data={agents}
+                                                                                    noDataMessage="No Agents Found"
+                                                                                />
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
 

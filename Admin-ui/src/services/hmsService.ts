@@ -427,6 +427,10 @@ export const HMSService = {
       [payload]
     )
   },
+
+  getRefreshToken: async () => {
+    return callApi("getRefreshToken", [{}])
+  },
 }
 
 
