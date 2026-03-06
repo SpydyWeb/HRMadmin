@@ -110,10 +110,11 @@ function RouteComponent() {
         code: string
         address: string
         mail: string
-        phone: string
+        phone: stringopenAddDesignation
         relationMgr: number,
     } | null>(null)
     const [openAddDesignation, setOpenAddDesignation] = useState(false)
+    const [showParentDesignation, setShowParentDesignation] = useState(false)
     const [newDesignationName, setNewDesignationName] = useState('')
     const [newDesignationCode, setNewDesignationCode] = useState('')
     const [newDesignationCodeFormat, setNewDesignationCodeFormat] = useState('')
@@ -558,7 +559,7 @@ function RouteComponent() {
 
     const handleAddChannel = async () => {
         const refreshResponse = await HMSService.getRefreshToken()
-            
+
         if (!channelName.trim()) {
             showToast(NOTIFICATION_CONSTANTS.WARNING, "Channel name is required")
             return
@@ -1384,26 +1385,30 @@ function RouteComponent() {
                     </AlertDialogHeader>
 
                     <div className="space-y-4 mt-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Designation Parent
-                            </label>
-                            <select
-                                value={selectedParentId ?? ""}
-                                onChange={(e) => setSelectedParentId(Number(e.target.value))}
-                                className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Select Parent</option>
+                        {
+                             showParentDesignation && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Designation Parent
+                                    </label>
+                                    <select
+                                        value={selectedParentId ?? ""}
+                                        onChange={(e) => setSelectedParentId(Number(e.target.value))}
+                                        className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">Select Parent</option>
 
-                                {parentOptions
-                                    .map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
+                                        {parentOptions
+                                            .map((item) => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
 
+                            )
+                        }
                         <div>
                             <label className="block text-sm font-medium mb-1">
                                 Designation Code
@@ -1792,6 +1797,7 @@ function RouteComponent() {
                                                         // ✅ If no hierarchy exists → allow root creation
                                                         if (designationTreeData.length === 0) {
                                                             setOpenAddDesignation(true)
+                                                            setShowParentDesignation(false);
                                                             return
                                                         }
 
@@ -1805,6 +1811,7 @@ function RouteComponent() {
                                                         }
 
                                                         setOpenAddDesignation(true)
+                                                        setShowParentDesignation(false);
                                                     }}
                                                 >
 
@@ -1853,6 +1860,7 @@ function RouteComponent() {
                                                                                     onClick={() => {
                                                                                         if (!selectedDesignation) return
                                                                                         setOpenAddDesignation(true)
+                                                                                        setShowParentDesignation(true)
                                                                                     }}
                                                                                 >
                                                                                     Add New
@@ -1862,7 +1870,10 @@ function RouteComponent() {
                                                                                 <Button
                                                                                     variant="default"
                                                                                     size="sm"
-                                                                                    onClick={() => setIsEditingDesignation(true)}
+                                                                                    onClick={() => {
+                                                                                        setIsEditingDesignation(true);
+                                                                                        setShowParentDesignation(true);
+                                                                                    }}
                                                                                 >
                                                                                     Edit
                                                                                 </Button>
