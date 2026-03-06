@@ -7,7 +7,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FiExternalLink } from "react-icons/fi";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,22 +19,42 @@ import { Link } from "@tanstack/react-router";
 import { RoutePaths } from "@/utils/constant";
 import { useQuery } from "@tanstack/react-query";
 import { inboxService } from "@/services/inboxServices";
+import { HMSService } from "@/services/hmsService";
 import Loader from "@/components/Loader";
 import type { IInboxItem } from "@/models/inbox";
+import { SrStatus } from "@/models/inbox";
 import type { ApiResponse } from "@/models/api";
 import type { IInboxResponseBody } from "@/models/inbox";
+import { useState, useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/button";
 
 
-const calculateAging = (createdOn: string | Date): number => {
+const toValidDate = (value?: string | Date | null): Date | null => {
+  if (!value) return null;
+  const d = typeof value === "string" ? new Date(value) : value;
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const calculateAging = (createdOn?: string | Date | null): number | null => {
   const now = new Date();
-  const createdDate = typeof createdOn === 'string' ? new Date(createdOn) : createdOn;
+  const createdDate = toValidDate(createdOn);
+  if (!createdDate) return null;
   const diffTime = Math.abs(now.getTime() - createdDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 };
 
-const formatDate = (date: string | Date): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+const formatDate = (date?: string | Date | null): string => {
+  const dateObj = toValidDate(date);
+  if (!dateObj) return "—";
   return dateObj.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -46,13 +65,57 @@ const formatDate = (date: string | Date): string => {
 type InboxResponse = ApiResponse<IInboxResponseBody>;
 
 const Inbox = () => {
+  type SrStatusFilterValue = "ALL" | `${SrStatus}`;
+
+  const [srStatusFilter, setSrStatusFilter] =
+    useState<SrStatusFilterValue>("ALL");
+  const [createdDateFrom, setCreatedDateFrom] = useState<string | null>(null);
+  const [createdDateTo, setCreatedDateTo] = useState<string | null>(null);
+  const [agentCodeInput, setAgentCodeInput] = useState<string>("");
+  const [agentCode, setAgentCode] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<number | null>(null);
+  const [roles, setRoles] = useState<Array<{ roleId: number; roleName: string }>>([]);
+
+  // Fetch roles on component mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await HMSService.getRoles();
+        const apiRoles = response?.responseBody?.roles || [];
+        setRoles(apiRoles);
+      } catch (error) {
+        console.error("Failed to fetch roles:", error);
+      }
+    };
+    fetchRoles();
+  }, []);
+
+  // Helper function to format date to ISO format with specific time
+  const formatDateForAPI = (dateString: string | null, isEndOfDay: boolean = false): string | null => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isEndOfDay) {
+      date.setHours(23, 59, 59, 999);
+    } else {
+      date.setHours(0, 0, 0, 0);
+    }
+    return date.toISOString();
+  };
+
   const { data: inboxResponse, isLoading } = useQuery<InboxResponse | null>({
-    queryKey: ['inbox-list'],
+    queryKey: ["inbox-list", srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole],
     queryFn: async () => {
       const requestData = {
-        srStatus: null,
-        createdDateFrom: null,
-        createdDateTo: null,
+        srNo: null,
+        createdDateFrom: formatDateForAPI(createdDateFrom, false),
+        createdDateTo: formatDateForAPI(createdDateTo, true),
+        pageNo: 1,
+        pageSize: 10,
+        agentCode: agentCode.trim() ? agentCode.trim().toUpperCase() : null,
+        allocateToRole: selectedRole,
+        ...(srStatusFilter === "ALL"
+          ? {}
+          : { srStatus: Number(srStatusFilter) as SrStatus }),
       };
       const response = await inboxService.InboxList(requestData);
       if (!response) {
@@ -97,10 +160,124 @@ const Inbox = () => {
         </div>
         <Card className="col-span-12 w-full">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">User Inbox</CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            Review and approve pending service requests
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-2xl font-semibold">User Inbox</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Review and approve pending service requests
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-end gap-4">
+              {/* Status Filter */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Status
+                </label>
+                <Select
+                  value={srStatusFilter}
+                  onValueChange={(v) =>
+                    setSrStatusFilter(v as SrStatusFilterValue)
+                  }
+                >
+                  <SelectTrigger className="w-52 border-gray-400 !text-base">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value={`${SrStatus.Created}`}>Created</SelectItem>
+                    <SelectItem value={`${SrStatus.PendingDecision}`}>
+                      Pending Decision
+                    </SelectItem>
+                    <SelectItem value={`${SrStatus.Approved}`}>Approved</SelectItem>
+                    <SelectItem value={`${SrStatus.Rejected}`}>Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range Filters */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Date Range
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    variant="standard"
+                    label=""
+                    type="date"
+                    value={createdDateFrom ?? ""}
+                    onChange={(e) => {
+                      const next = e.target.value || null;
+                      setCreatedDateFrom(next);
+                    }}
+                    className="w-40"
+                  />
+                  <span className="text-sm text-gray-500">to</span>
+                  <Input
+                    variant="standard"
+                    label=""
+                    type="date"
+                    value={createdDateTo ?? ""}
+                    onChange={(e) => {
+                      const next = e.target.value || null;
+                      setCreatedDateTo(next);
+                    }}
+                    className="w-40"
+                  />
+                </div>
+              </div>
+
+              {/* Agent Code Search */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Agent Code
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    variant="standard"
+                    label=""
+                    type="text"
+                    placeholder="e.g., ag0033"
+                    value={agentCodeInput}
+                    onChange={(e) => setAgentCodeInput(e.target.value)}
+                    className="w-40"
+                  />
+                  <Button
+                    variant="blue"
+                    onClick={() => setAgentCode(agentCodeInput.trim())}
+                    className="whitespace-nowrap"
+                  >
+                    Search
+                  </Button>
+                </div>
+              </div>
+
+              {/* Role Filter */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Role
+                </label>
+                <Select
+                  value={selectedRole ? String(selectedRole) : "ALL"}
+                  onValueChange={(v) => {
+                    setSelectedRole(v === "ALL" ? null : Number(v));
+                  }}
+                >
+                  <SelectTrigger className="w-52 border-gray-400 !text-base">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role.roleId} value={String(role.roleId)}>
+                        {role.roleName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-5">
           <div className="">
@@ -129,6 +306,8 @@ const Inbox = () => {
                 ) : (
                   tasks.map((task, index) => {
                     const aging = calculateAging(task.createdDate);
+                    const requestDets = task.requestDets ?? "";
+                    const requestorNote = task.requestorNote ?? "";
                     return (
                       <TableRow key={`${task.controlId}-${task.srNo}-${index}`}>
                         <TableCell className="font-medium">
@@ -136,28 +315,30 @@ const Inbox = () => {
                         </TableCell>
                         <TableCell className="font-medium">
                          
-                          {task.requestDets?.length > 25
-    ? task.requestDets.slice(0, 25) + "..."
-    : task.requestDets}
+                          {requestDets.length > 25
+                            ? requestDets.slice(0, 25) + "..."
+                            : (requestDets || "—")}
                         </TableCell>
                         <TableCell>
-                         <div title={task.requestorNote}>
-  {task.requestorNote?.length > 25
-    ? task.requestorNote.slice(0, 25) + "..."
-    : task.requestorNote}
+                         <div title={requestorNote}>
+  {requestorNote.length > 25
+    ? requestorNote.slice(0, 25) + "..."
+    : (requestorNote || "—")}
 </div>
                         </TableCell>
                         <TableCell>
                           <span
                             className={`font-medium whitespace-nowrap ${
-                              aging > 7
+                              aging === null
+                                ? "text-gray-600"
+                                : aging > 7
                                 ? "text-red-600"
                                 : aging > 3
                                 ? "text-orange-600"
                                 : "text-green-600"
                             }`}
                           >
-                            {aging} days
+                            {aging === null ? "—" : `${aging} days`}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -167,13 +348,25 @@ const Inbox = () => {
                         <TableCell className="whitespace-nowrap">{formatDate(task.statusModifiedOn)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
-                            task.srStatus === 1 
+                            task.srStatus === SrStatus.Created 
                               ? "bg-blue-100 text-blue-800" 
-                              : task.srStatus === 2 
+                              : task.srStatus === SrStatus.PendingDecision 
                               ? "bg-yellow-100 text-yellow-800"
+                              : task.srStatus === SrStatus.Approved
+                              ? "bg-green-100 text-green-800"
+                              : task.srStatus === SrStatus.Rejected
+                              ? "bg-red-100 text-red-800"
                               : "bg-gray-100 text-gray-800"
                           }`}>
-                            {task.srStatus === 1 ? "New" : task.srStatus === 2 ? "Pending" : `Status ${task.srStatus}`}
+                            {task.srStatus === SrStatus.Created 
+                              ? "Created" 
+                              : task.srStatus === SrStatus.PendingDecision 
+                              ? "Pending Decision"
+                              : task.srStatus === SrStatus.Approved
+                              ? "Approved"
+                              : task.srStatus === SrStatus.Rejected
+                              ? "Rejected"
+                              : `Status ${task.srStatus}`}
                           </span>
                         </TableCell>
                         <TableCell className="text-center">

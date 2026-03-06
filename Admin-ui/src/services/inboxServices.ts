@@ -7,6 +7,7 @@ import type { IInboxRequest, IInboxResponseBody } from '@/models/inbox'
 export interface IUpdateSrDecisionRequest {
   srNo: number
   approverDecision: number // 2 for approve, 3 for reject
+  comments?: string // Optional comments/reason for approval/rejection
 }
 
 export const inboxService = {

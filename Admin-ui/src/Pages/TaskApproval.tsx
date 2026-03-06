@@ -5,6 +5,16 @@ import { RoutePaths } from "@/utils/constant";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { inboxService } from "@/services/inboxServices";
 import Loader from "@/components/Loader";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { IInboxItem } from "@/models/inbox";
 import type { ApiResponse } from "@/models/api";
 import type { IInboxResponseBody } from "@/models/inbox";
@@ -15,6 +25,7 @@ const TaskApproval = () => {
   //take the srNo from the response 
   const { taskId } = useParams({ from: "/_auth/inbox/$taskId" });
   const navigate = useNavigate();
+  const [comments, setComments] = useState<string>("");
 
   // Call the same API with srNo to get specific task details
   const { data: inboxResponse, isLoading, isError } = useQuery<InboxResponse | null>({
@@ -40,8 +51,15 @@ const TaskApproval = () => {
   const tasks: IInboxItem[] = inboxResponse?.responseBody?.inboxData || [];
   const taskData = tasks.length > 0 ? tasks[0] : null;
 
-  const formatDate = (date: string | Date): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const toValidDate = (value?: string | Date | null): Date | null => {
+    if (!value) return null;
+    const d = typeof value === "string" ? new Date(value) : value;
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const formatDate = (date?: string | Date | null): string => {
+    const dateObj = toValidDate(date);
+    if (!dateObj) return "—";
     return dateObj.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -49,15 +67,72 @@ const TaskApproval = () => {
     });
   };
 
+  type FieldChangeRow = {
+    FieldName?: string | null;
+    OldValue?: string | null;
+    NewValue?: string | null;
+  };
+
+  const parseFieldChanges = (
+    value: unknown,
+  ): FieldChangeRow[] | null => {
+    if (!value) return null;
+
+    const normalize = (rows: unknown): FieldChangeRow[] | null => {
+      if (!Array.isArray(rows)) return null;
+      const mapped = rows
+        .map((r) => r as Record<string, unknown>)
+        .map((r) => ({
+          FieldName:
+            (r.FieldName as string | null | undefined) ??
+            (r.fieldName as string | null | undefined) ??
+            null,
+          OldValue:
+            (r.OldValue as string | null | undefined) ??
+            (r.oldValue as string | null | undefined) ??
+            null,
+          NewValue:
+            (r.NewValue as string | null | undefined) ??
+            (r.newValue as string | null | undefined) ??
+            null,
+        }));
+
+      // If everything is empty, treat as not-a-match
+      const hasAny = mapped.some(
+        (m) => (m.FieldName ?? m.OldValue ?? m.NewValue) !== null,
+      );
+      return hasAny ? mapped : null;
+    };
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      // Try JSON first (your example)
+      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          return normalize(parsed);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    // If backend already gives it as array/object
+    return normalize(value);
+  };
+
   // Mutation for updating SR decision
   const updateDecisionMutation = useMutation({
-    mutationFn: async (decision: number) => {
+    mutationFn: async ({ decision, comments }: { decision: number; comments: string }) => {
       if (!taskData?.srNo) {
         throw new Error("SR No is required");
       }
       return await inboxService.updateSrDecision({
         srNo: taskData.srNo,
         approverDecision: decision,
+        comments: comments.trim() || undefined,
       });
     },
     onSuccess: (response) => {
@@ -74,13 +149,13 @@ const TaskApproval = () => {
   const handleApprove = () => {
     console.log("Approving task:", taskId);
     // approverDecision: 2 for approve
-    updateDecisionMutation.mutate(2);
+    updateDecisionMutation.mutate({ decision: 2, comments });
   };
 
   const handleReject = () => {
     console.log("Rejecting task:", taskId);
     // approverDecision: 3 for reject
-    updateDecisionMutation.mutate(3);
+    updateDecisionMutation.mutate({ decision: 3, comments });
   };
 
   if (isLoading) {
@@ -140,7 +215,55 @@ const TaskApproval = () => {
             {/* Requestor Comments */}
             <div>
               <div className="text-sm font-medium text-gray-700 mb-2">Requestor Comments</div>
-              <div className="text-base whitespace-pre-wrap">{taskData.requestorNote || "No comments"}</div>
+              {(() => {
+                const rows = parseFieldChanges(taskData.requestorNote);
+                if (rows && rows.length > 0) {
+                  return (
+                    <div className="rounded-md border border-gray-200 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Field Name</TableHead>
+                            <TableHead>Old Value</TableHead>
+                            <TableHead>New Value</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {rows.map((r, idx) => (
+                            <TableRow key={`${r.FieldName ?? "field"}-${idx}`}>
+                              <TableCell className="font-medium">
+                                {r.FieldName ?? "—"}
+                              </TableCell>
+                              <TableCell>{r.OldValue ?? "—"}</TableCell>
+                              <TableCell>{r.NewValue ?? "—"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="text-base whitespace-pre-wrap">
+                    {taskData.requestorNote || "No comments"}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Comments Section */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">
+                Comments / Reason <span className="text-gray-500">(Optional)</span>
+              </div>
+              <Textarea
+                placeholder="Enter reason for approval or rejection..."
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                className="w-full min-h-24"
+                rows={4}
+              />
             </div>
 
             {/* Action Buttons */}
