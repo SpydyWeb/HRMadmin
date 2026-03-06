@@ -212,9 +212,9 @@ const CommissionOverview: React.FC<CommissionOverviewProps> = ({
     dashboardData?.performanceSnapshot?.[0]?.periodTo;
 
   return (
-    <Card className="px-0 py-3 gap-2 mb-5 rounded-md border border-gray-100">
+    <Card className="p-2 gap-2 mb-5 rounded-md border border-gray-100">
       {/* Summary Cards */}
-      <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 px-4">
+      <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 p-2">
         {companyData.map((data, index) => (
           <div
             key={index}
@@ -235,7 +235,7 @@ const CommissionOverview: React.FC<CommissionOverviewProps> = ({
       {/* 3 Commission Cards (match image layout) */}
       <CardHeader className="px-4 pt-2 pb-0" />
 
-      <CardContent className="px-4 pb-4">
+      <CardContent className="p-2">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Individual Commission */}
           <CommissionActionCard
