@@ -1,8 +1,19 @@
+export enum SrStatus {
+  Created = 1,
+  PendingDecision = 2,
+  Approved = 3,
+  Rejected = 4,
+}
+
 export interface IInboxRequest {
-  srStatus?: number | null
+  srStatus?: SrStatus | null
   createdDateFrom?: string | null
   createdDateTo?: string | null
   srNo?: number | null
+  pageNo?: number
+  pageSize?: number
+  agentCode?: string | null
+  allocateToRole?: number | null
 }
 export interface IResponseHeader {
 
@@ -15,16 +26,16 @@ export interface IResponseHeader {
 export interface IInboxItem {
   srNo: number
   orgId: number
-  requestDets: string
-  requestorNote: string
+  requestDets?: string | null
+  requestorNote?: string | null
   createdBy: number
-  createdDate: string
-  srStatus: number
-  statusUpdatedBy: number
-  statusModifiedOn: string
+  createdDate?: string | null
+  srStatus: SrStatus
+  statusUpdatedBy?: number | null
+  statusModifiedOn?: string | null
   controlId: number
-  allocatedToRole: number
-  createdByUsername: string
+  allocatedToRole?: number | null
+  createdByUsername?: string | null
 }
 
 export interface IInboxResponseBody {

@@ -1,7 +1,5 @@
 import React from 'react'
 import { useForm } from '@tanstack/react-form'
-import { zodValidator } from '@tanstack/zod-form-adapter'
-import { FieldError } from './field-error'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Button from '@/components/ui/button'
@@ -36,19 +34,6 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  // Helper function to recursively sanitize default values
-  const sanitizeValues = (values: Record<string, any>) => {
-    if (!values) return {}
-    return Object.entries(values).reduce(
-      (acc, [key, value]) => {
-        // Convert null to undefined so Zod optional() validation works
-        acc[key] = value === null ? undefined : value
-        return acc
-      },
-      {} as Record<string, any>,
-    )
-  }
-
   const form = useForm({
     defaultValues: {
       ...config.fields.reduce((acc: any, field: any) => {
@@ -57,7 +42,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         return acc
       }, {}),
 
-      ...sanitizeValues(config.defaultValues || {}),
+      ...(config.defaultValues || {}),
     },
     onSubmit: async ({ value }) => {
       console.log('✅ Form submitted with values:', value)
@@ -75,24 +60,6 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         setIsSubmitting(false)
       }
     },
-    onSubmitInvalid: ({ value, formApi }) => {
-      console.error('❌ Form validation failed!')
-      console.error('Values:', value)
-      // Helper to log actual errors
-      const errors = formApi.state.fieldMeta
-      Object.keys(errors).forEach((key) => {
-        if (errors[key].errors && errors[key].errors.length > 0) {
-          console.error(`Field '${key}' Error:`, errors[key].errors)
-        }
-      })
-      console.error('Full Error Meta:', errors)
-    },
-    validatorAdapter: zodValidator,
-    ...(config.schema && {
-      validators: {
-        onChange: config.schema,
-      },
-    }),
   })
 
   const linkField = config.fields.find((field: any) => field.type === 'link')
@@ -101,17 +68,10 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   )
 
   const renderField = (field: any) => {
-    const fieldSchema = config.schema?.shape?.[field.name]
-
     return (
       <form.Field
         key={field.name}
         name={field.name}
-        {...(fieldSchema && {
-          validators: {
-            onChange: fieldSchema,
-          },
-        })}
       >
         {(fieldApi) => {
           const handleChange = (value: any) => {
@@ -336,9 +296,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
                 </div>
               )}
 
-              {fieldApi.state.meta.errors.length > 0 && (
-                <FieldError field={fieldApi.state.meta} />
-              )}
+              {/* Validation messages removed for this dynamic form */}
             </div>
           )
         }}
