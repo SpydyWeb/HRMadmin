@@ -1,7 +1,9 @@
-import axios, { AxiosRequestConfig, AxiosError } from "axios"
-import { APIRoutes, TOKEN_KEY } from "./constant"
-import { storage } from "@/utils/storage"
-import { HMSService } from "./hmsService"
+import axios, { AxiosRequestConfig, AxiosError } from 'axios'
+import { APIRoutes, TOKEN_KEY } from './constant'
+import { storage } from '@/utils/storage'
+import { HMSService } from './hmsService'
+import { authStore } from '@/store/authStore'
+import { auth } from '@/auth'
 
 const api = axios.create({
   baseURL: APIRoutes.BASEURL,
@@ -18,28 +20,66 @@ const processQueue = (error: any, token: string | null = null) => {
       prom.resolve(token)
     }
   })
-
   failedQueue = []
 }
 
+/**
+ * Updates the Authorization token inside the request body payload.
+ * The backend reads the token from body.headers.Authorization,
+ * so we must re-stamp it with the fresh token before retrying.
+ */
+const stampBodyToken = (request: AxiosRequestConfig, token: string) => {
+  if (request.data && typeof request.data === 'object' && request.data.headers) {
+    request.data = {
+      ...request.data,
+      headers: {
+        ...request.data.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  } else if (typeof request.data === 'string') {
+    try {
+      const parsed = JSON.parse(request.data)
+      if (parsed.headers) {
+        parsed.headers.Authorization = `Bearer ${token}`
+        request.data = JSON.stringify(parsed)
+      }
+    } catch {
+      // Not JSON, skip
+    }
+  }
+}
+
+/* ---------------- REQUEST INTERCEPTOR ---------------- */
+
 api.interceptors.request.use((config) => {
-  const token = storage.get(TOKEN_KEY)
+  const stored = storage.get(TOKEN_KEY)
 
-  if (token) {
-    const jwt = typeof token === "string" ? JSON.parse(token) : token
+  if (stored) {
+    try {
+      const jwt = typeof stored === 'string' ? JSON.parse(stored) : stored
 
-    config.headers = config.headers ?? {}
-    ;(config.headers as any).Authorization = `Bearer ${jwt.token}`
+      if (jwt?.token) {
+        config.headers = config.headers ?? {}
+        config.headers.Authorization = `Bearer ${jwt.token}`
+      }
+    } catch {
+      console.warn('Invalid token in storage')
+    }
   }
 
   return config
 })
 
+/* ---------------- RESPONSE INTERCEPTOR ---------------- */
+
 api.interceptors.response.use(
   (response) => response,
 
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean
+    }
 
     if (error.response?.status !== 401) {
       return Promise.reject(error)
@@ -49,15 +89,21 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    /* ---- WAIT IF REFRESH ALREADY RUNNING ---- */
+
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject })
       })
         .then((token) => {
-          originalRequest.headers = {
-            ...originalRequest.headers,
-            Authorization: `Bearer ${token}`,
+          // Remove stale Authorization from HTTP headers.
+          if (originalRequest.headers) {
+            delete originalRequest.headers.Authorization
           }
+
+          // Re-stamp the token inside the request body payload.
+          stampBodyToken(originalRequest, token as string)
+
           return api(originalRequest)
         })
         .catch((err) => Promise.reject(err))
@@ -67,21 +113,42 @@ api.interceptors.response.use(
     isRefreshing = true
 
     try {
+      /* ---- CALL REFRESH TOKEN API ---- */
+
       const refreshResponse = await HMSService.getRefreshToken()
 
-      const { token, expiration } =
-        refreshResponse.responseBody.loginResponse
+      const data = refreshResponse.responseBody.loginResponse
+      const newToken = data.token
 
-      storage.set(TOKEN_KEY, JSON.stringify({ token, expiration }))
+      /* ---- SAVE NEW TOKEN ---- */
 
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+      storage.set(TOKEN_KEY, JSON.stringify(data))
 
-      processQueue(null, token)
+      // Reset the auth module's in-memory cache so auth.getToken()
+      // returns the fresh token on subsequent calls.
+      auth.setToken(JSON.stringify(data))
 
-      originalRequest.headers = {
-        ...originalRequest.headers,
-        Authorization: `Bearer ${token}`,
+      authStore.setState({
+        token: data.token,
+        user: data,
+      })
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+
+      /* ---- RELEASE QUEUED REQUESTS ---- */
+
+      processQueue(null, newToken)
+
+      /* ---- RETRY ORIGINAL REQUEST ---- */
+
+      // Remove stale Authorization from HTTP headers — the request
+      // interceptor will read the latest token from storage.
+      if (originalRequest.headers) {
+        delete originalRequest.headers.Authorization
       }
+
+      // Also re-stamp the token inside the request body payload,
+      // since the backend reads Authorization from body.headers.
+      stampBodyToken(originalRequest, newToken)
 
       return api(originalRequest)
     } catch (err) {
@@ -89,20 +156,22 @@ api.interceptors.response.use(
 
       storage.remove(TOKEN_KEY)
 
-      window.location.href = "/login"
+      window.location.href = '/login'
 
       return Promise.reject(err)
     } finally {
       isRefreshing = false
     }
-  }
+  },
 )
 
+/* ---------------- GENERIC REQUEST WRAPPER ---------------- */
+
 const request = async <T>(
-  method: "get" | "post" | "put" | "delete",
+  method: 'get' | 'post' | 'put' | 'delete',
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: AxiosRequestConfig,
 ): Promise<T> => {
   const response = await api.request<T>({
     method,
@@ -114,18 +183,20 @@ const request = async <T>(
   return response.data
 }
 
+/* ---------------- API CLIENT ---------------- */
+
 export const apiClient = {
   get: <T>(url: string, config?: AxiosRequestConfig) =>
-    request<T>("get", url, undefined, config),
+    request<T>('get', url, undefined, config),
 
   post: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
-    request<T>("post", url, data, config),
+    request<T>('post', url, data, config),
 
   put: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
-    request<T>("put", url, data, config),
+    request<T>('put', url, data, config),
 
   delete: <T>(url: string, config?: AxiosRequestConfig) =>
-    request<T>("delete", url, undefined, config),
+    request<T>('delete', url, undefined, config),
 }
 
 export default api
