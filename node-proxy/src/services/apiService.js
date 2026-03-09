@@ -338,7 +338,20 @@ const getPartnerHierarchy = async (data, headers = {}) => {
 }
 
 const searchForPartner = (data, headers = {}) => {
-  return apiClient.post(APIRoutes.AGENTSEARCH, data, { headers });
+  const { channelId, subChannelId, ...body } = data
+  return apiClient.post(`${APIRoutes.AGENTSEARCHFORPARTNER}/${channelId}/${subChannelId}/Agent/Search`,
+    {
+      ...body,
+      channelId,
+      subChannelId
+    }
+    , { headers });
+};
+
+const getRefreshToken = (data, headers = {}) => {
+  console.log("getting refreshToken",data);
+
+  return apiClient.post(APIRoutes.REFRESHTOKEN,data, {  });
 };
 
 const GetMastersBulk = async (keys, headers = {}) => {
@@ -525,6 +538,7 @@ module.exports = {
   GetMasters,
   file,
   userList,
+  getRefreshToken,
   getSubChannel,
   createChannel,
   fetchMenu,

@@ -71,7 +71,10 @@ const request = async (method, url, data, config = {}) => {
     if (response.data && response.data.data) {
       return JSON.parse(response.data.data);
     }
-    return response.data;
+    return {
+  status: response.status,
+  data: response.data
+};
   } catch (error) {
     console.error("API Client Error:", error.message);
     throw error;
