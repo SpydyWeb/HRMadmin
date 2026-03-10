@@ -12,7 +12,7 @@ module.exports = {
   cors: {
     allowedOrigins: [
       "https://hrmadmin.netlify.app",
-      "https://hms-7n35.vercel.app",
+      "https://hms-alpha-eight.vercel.app",
       "http://localhost:3000",
     ],
   },  // Example: 16-char IV
