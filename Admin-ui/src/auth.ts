@@ -21,9 +21,13 @@ export const auth = {
     return _token
   },
 
+  /** Update the in-memory token cache (called after token refresh). */
+  setToken(token: string | null): void {
+    _token = token
+  },
+
   isAuthenticated(): boolean {
     //return true;
-    if (typeof window === 'undefined') return false // SSR guard
     const token = this.getToken()
     if (!token) return false
 

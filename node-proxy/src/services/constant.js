@@ -52,6 +52,8 @@ const APIRoutes = {
   LOCKUNLOCKUSER:"/api/Users/LockUnlockUser",
   ORGCONFIG:"/api/Access/ApprovalSettings/Fetch",
   ORGCONFIGUPDATE:"/api/Access/ApprovalSettings/Save",
+  REFRESHTOKEN: "/api/Auth/refreshtoken",
+  AGENTSEARCHFORPARTNER: "/api/Agent",
 };
 
 module.exports = { APIRoutes };

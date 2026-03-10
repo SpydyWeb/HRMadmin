@@ -12,6 +12,8 @@ import type {
   fileResponseBody,
   IFileUploadApiResponse,
 } from '@/models/hmsdashboard'
+import { apiClient } from './apiClient'
+import { auth } from '@/auth'
 
 export const HMSService = {
   hmsDashboard: async (data: IHmsDashboardResponseBody) => {
@@ -425,6 +427,10 @@ export const HMSService = {
       "searchForPartner",
       [payload]
     )
+  },
+
+  getRefreshToken: async () => {
+    return callApi("getRefreshToken", [{refreshToken: JSON.parse(auth.getToken())?.refreshToken}])
   },
 }
 
