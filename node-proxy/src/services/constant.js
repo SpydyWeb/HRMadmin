@@ -40,8 +40,8 @@ const APIRoutes = {
   FIELDUPDATE:"/api/Access/Role/UI/Control/UpdateAccess",
   CHANNELLIST:"api/AppMasters/Channel/Fetch",
   SUBCHANNELLIST:"api/AppMasters",
-  FETCHINBOX:"/FetchSr",
-  UPDATESRDECISION:"/UpdateSrDecision",
+  FETCHINBOX:"/api/UserInbox/FetchSr",
+  UPDATESRDECISION:"/api/UserInbox/UpdateSrDecision",
   CREATECHANNEL:"api/AppMasters/Channel/Create",
   CREATESUBCHANNEL:"api/AppMasters",
   GETUSERDETAILS:"/api/Users/GetUserDetails",
@@ -50,6 +50,8 @@ const APIRoutes = {
   UPDATEPASSWORD:"/api/Users/UpdatePassword",
   ACTIVEDEACTIVEUSER:"/api/Users/ActivateDeactivateUser",
   LOCKUNLOCKUSER:"/api/Users/LockUnlockUser",
+  ORGCONFIG:"/api/Access/ApprovalSettings/Fetch",
+  ORGCONFIGUPDATE:"/api/Access/ApprovalSettings/Save",
 };
 
 module.exports = { APIRoutes };

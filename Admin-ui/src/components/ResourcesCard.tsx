@@ -17,7 +17,7 @@ const resources = [
   { title: "Tips", link: "/tips" },
   { title: "User Manual", link: "/manual" },
   { title: "Review Structure", link: "/review-structure" },
-  { title: "Review Access", link: "/review-access" },
+  { title: "Org Configuration", link: "/org-configuration" },
   { title: "Roles Management", link: "/roles-management" }, 
   { title: "Channel Management", link: "/channel-management" }, 
    { title: "Inbox", link: "/inbox" },

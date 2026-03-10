@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { IInboxItem } from "@/models/inbox";
+import { SrStatus } from "@/models/inbox";
 import type { ApiResponse } from "@/models/api";
 import type { IInboxResponseBody } from "@/models/inbox";
 
@@ -50,6 +51,7 @@ const TaskApproval = () => {
   // Get the task data from the response
   const tasks: IInboxItem[] = inboxResponse?.responseBody?.inboxData || [];
   const taskData = tasks.length > 0 ? tasks[0] : null;
+  const isPendingStatus = taskData?.srStatus === SrStatus.Pending;
 
   const toValidDate = (value?: string | Date | null): Date | null => {
     if (!value) return null;
@@ -64,6 +66,18 @@ const TaskApproval = () => {
       year: "numeric",
       month: "short",
       day: "numeric",
+    });
+  };
+
+  const formatDateTime = (date?: string | Date | null): string => {
+    const dateObj = toValidDate(date);
+    if (!dateObj) return "—";
+    return dateObj.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -207,8 +221,8 @@ const TaskApproval = () => {
                 <div className="text-base">{taskData.createdByUsername || `User ${taskData.createdBy}`}</div>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">Status Modified On</div>
-                <div className="text-base">{formatDate(taskData.statusModifiedOn)}</div>
+                <div className="text-sm font-medium text-gray-700 mb-2">Status</div>
+                <div className="text-base">{taskData.srStatusDesc}</div>
               </div>
             </div>
 
@@ -252,19 +266,52 @@ const TaskApproval = () => {
               })()}
             </div>
 
-            {/* Comments Section */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">
-                Comments / Reason <span className="text-gray-500">(Optional)</span>
+            {/* Approver Comments History */}
+            {taskData.approverComments && taskData.approverComments.length > 0 && (
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-2">Approver Comments</div>
+                <div className="rounded-md border border-gray-200 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Approver</TableHead>
+                        <TableHead>Decision On</TableHead>
+                        <TableHead>Comments</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {taskData.approverComments.map((c, idx) => (
+                        <TableRow key={`${c.approverName ?? "approver"}-${idx}`}>
+                          <TableCell className="font-medium">
+                            {c.approverName || "—"}
+                          </TableCell>
+                          <TableCell>{formatDateTime(c.decisionOn)}</TableCell>
+                          <TableCell className="whitespace-pre-wrap">
+                            {c.comments || "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-              <Textarea
-                placeholder="Enter reason for approval or rejection..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="w-full min-h-24"
-                rows={4}
-              />
-            </div>
+            )}
+
+            {/* Comments Section - only when status is Pending */}
+            {isPendingStatus && (
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-2">
+                  Comments / Reason <span className="text-gray-500">(Optional)</span>
+                </div>
+                <Textarea
+                  placeholder="Enter reason for approval or rejection..."
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  className="w-full min-h-24"
+                  rows={4}
+                />
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
@@ -272,7 +319,7 @@ const TaskApproval = () => {
                 variant="green"
                 onClick={handleApprove}
                 className="min-w-[120px]"
-                disabled={updateDecisionMutation.isPending}
+                disabled={!isPendingStatus || updateDecisionMutation.isPending}
               >
                 {updateDecisionMutation.isPending ? "Processing..." : "Approve"}
               </Button>
@@ -280,7 +327,7 @@ const TaskApproval = () => {
                 variant="red"
                 onClick={handleReject}
                 className="min-w-[120px]"
-                disabled={updateDecisionMutation.isPending}
+                disabled={!isPendingStatus || updateDecisionMutation.isPending}
               >
                 {updateDecisionMutation.isPending ? "Processing..." : "Reject"}
               </Button>

@@ -40,6 +40,9 @@ const AuthUserManagementIndexLazyRouteImport = createFileRoute(
 const AuthRolesManagementIndexLazyRouteImport = createFileRoute(
   '/_auth/roles-management/',
 )()
+const AuthOrgConfigurationIndexLazyRouteImport = createFileRoute(
+  '/_auth/org-configuration/',
+)()
 const AuthInboxIndexLazyRouteImport = createFileRoute('/_auth/inbox/')()
 const AuthDashboardIndexLazyRouteImport = createFileRoute('/_auth/dashboard/')()
 const AuthCommissionIndexLazyRouteImport =
@@ -124,6 +127,14 @@ const AuthRolesManagementIndexLazyRoute =
     getParentRoute: () => AuthRoute,
   } as any).lazy(() =>
     import('./routes/_auth/roles-management/index.lazy').then((d) => d.Route),
+  )
+const AuthOrgConfigurationIndexLazyRoute =
+  AuthOrgConfigurationIndexLazyRouteImport.update({
+    id: '/org-configuration/',
+    path: '/org-configuration/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/org-configuration/index.lazy').then((d) => d.Route),
   )
 const AuthInboxIndexLazyRoute = AuthInboxIndexLazyRouteImport.update({
   id: '/inbox/',
@@ -401,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
+  '/org-configuration': typeof AuthOrgConfigurationIndexLazyRoute
   '/roles-management': typeof AuthRolesManagementIndexLazyRoute
   '/user-management': typeof AuthUserManagementIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
@@ -443,6 +455,7 @@ export interface FileRoutesByTo {
   '/commission': typeof AuthCommissionIndexLazyRoute
   '/dashboard': typeof AuthDashboardIndexLazyRoute
   '/inbox': typeof AuthInboxIndexLazyRoute
+  '/org-configuration': typeof AuthOrgConfigurationIndexLazyRoute
   '/roles-management': typeof AuthRolesManagementIndexLazyRoute
   '/user-management': typeof AuthUserManagementIndexLazyRoute
   '/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
@@ -487,6 +500,7 @@ export interface FileRoutesById {
   '/_auth/commission/': typeof AuthCommissionIndexLazyRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexLazyRoute
   '/_auth/inbox/': typeof AuthInboxIndexLazyRoute
+  '/_auth/org-configuration/': typeof AuthOrgConfigurationIndexLazyRoute
   '/_auth/roles-management/': typeof AuthRolesManagementIndexLazyRoute
   '/_auth/user-management/': typeof AuthUserManagementIndexLazyRoute
   '/_auth/commission/processcommission/bulk-action': typeof AuthCommissionProcesscommissionBulkActionRoute
@@ -531,6 +545,7 @@ export interface FileRouteTypes {
     | '/commission'
     | '/dashboard'
     | '/inbox'
+    | '/org-configuration'
     | '/roles-management'
     | '/user-management'
     | '/commission/processcommission/bulk-action'
@@ -573,6 +588,7 @@ export interface FileRouteTypes {
     | '/commission'
     | '/dashboard'
     | '/inbox'
+    | '/org-configuration'
     | '/roles-management'
     | '/user-management'
     | '/commission/processcommission/bulk-action'
@@ -616,6 +632,7 @@ export interface FileRouteTypes {
     | '/_auth/commission/'
     | '/_auth/dashboard/'
     | '/_auth/inbox/'
+    | '/_auth/org-configuration/'
     | '/_auth/roles-management/'
     | '/_auth/user-management/'
     | '/_auth/commission/processcommission/bulk-action'
@@ -695,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/roles-management'
       fullPath: '/roles-management'
       preLoaderRoute: typeof AuthRolesManagementIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/org-configuration/': {
+      id: '/_auth/org-configuration/'
+      path: '/org-configuration'
+      fullPath: '/org-configuration'
+      preLoaderRoute: typeof AuthOrgConfigurationIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/inbox/': {
@@ -955,6 +979,7 @@ interface AuthRouteChildren {
   AuthCommissionIndexLazyRoute: typeof AuthCommissionIndexLazyRoute
   AuthDashboardIndexLazyRoute: typeof AuthDashboardIndexLazyRoute
   AuthInboxIndexLazyRoute: typeof AuthInboxIndexLazyRoute
+  AuthOrgConfigurationIndexLazyRoute: typeof AuthOrgConfigurationIndexLazyRoute
   AuthRolesManagementIndexLazyRoute: typeof AuthRolesManagementIndexLazyRoute
   AuthUserManagementIndexLazyRoute: typeof AuthUserManagementIndexLazyRoute
   AuthCommissionProcesscommissionBulkActionRoute: typeof AuthCommissionProcesscommissionBulkActionRoute
@@ -996,6 +1021,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthCommissionIndexLazyRoute: AuthCommissionIndexLazyRoute,
   AuthDashboardIndexLazyRoute: AuthDashboardIndexLazyRoute,
   AuthInboxIndexLazyRoute: AuthInboxIndexLazyRoute,
+  AuthOrgConfigurationIndexLazyRoute: AuthOrgConfigurationIndexLazyRoute,
   AuthRolesManagementIndexLazyRoute: AuthRolesManagementIndexLazyRoute,
   AuthUserManagementIndexLazyRoute: AuthUserManagementIndexLazyRoute,
   AuthCommissionProcesscommissionBulkActionRoute:

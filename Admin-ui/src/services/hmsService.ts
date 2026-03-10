@@ -12,7 +12,6 @@ import type {
   fileResponseBody,
   IFileUploadApiResponse,
 } from '@/models/hmsdashboard'
-import { apiClient } from './apiClient'
 
 export const HMSService = {
   hmsDashboard: async (data: IHmsDashboardResponseBody) => {

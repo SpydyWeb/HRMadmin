@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import { Pagination } from "@/components/table/Pagination";
 
 
 const toValidDate = (value?: string | Date | null): Date | null => {
@@ -65,16 +66,18 @@ const formatDate = (date?: string | Date | null): string => {
 type InboxResponse = ApiResponse<IInboxResponseBody>;
 
 const Inbox = () => {
-  type SrStatusFilterValue = "ALL" | `${SrStatus}`;
+  type SrStatusFilterValue = "PENDING" | "ALL" | `${SrStatus}`;
 
   const [srStatusFilter, setSrStatusFilter] =
-    useState<SrStatusFilterValue>("ALL");
+    useState<SrStatusFilterValue>("PENDING");
   const [createdDateFrom, setCreatedDateFrom] = useState<string | null>(null);
   const [createdDateTo, setCreatedDateTo] = useState<string | null>(null);
   const [agentCodeInput, setAgentCodeInput] = useState<string>("");
   const [agentCode, setAgentCode] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
   const [roles, setRoles] = useState<Array<{ roleId: number; roleName: string }>>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
 
   // Fetch roles on component mount
   useEffect(() => {
@@ -90,6 +93,11 @@ const Inbox = () => {
     fetchRoles();
   }, []);
 
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole]);
+
   // Helper function to format date to ISO format with specific time
   const formatDateForAPI = (dateString: string | null, isEndOfDay: boolean = false): string | null => {
     if (!dateString) return null;
@@ -103,17 +111,19 @@ const Inbox = () => {
   };
 
   const { data: inboxResponse, isLoading } = useQuery<InboxResponse | null>({
-    queryKey: ["inbox-list", srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole],
+    queryKey: ["inbox-list", srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole, page, pageSize],
     queryFn: async () => {
       const requestData = {
         srNo: null,
         createdDateFrom: formatDateForAPI(createdDateFrom, false),
         createdDateTo: formatDateForAPI(createdDateTo, true),
-        pageNo: 1,
-        pageSize: 10,
+        pageNo: page,
+        pageSize: pageSize,
         agentCode: agentCode.trim() ? agentCode.trim().toUpperCase() : null,
         allocateToRole: selectedRole,
-        ...(srStatusFilter === "ALL"
+        ...(srStatusFilter === "PENDING"
+          ? { srStatus: SrStatus.Pending }
+          : srStatusFilter === "ALL"
           ? {}
           : { srStatus: Number(srStatusFilter) as SrStatus }),
       };
@@ -137,6 +147,11 @@ const Inbox = () => {
   }
 
   const tasks: IInboxItem[] = inboxResponse?.responseBody?.inboxData || [];
+  const paginationData = inboxResponse?.responseBody?.pagination || {};
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
  
   return (
     <div className="w-full px-6 py-4">
@@ -184,10 +199,11 @@ const Inbox = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="ALL">All</SelectItem>
                     <SelectItem value={`${SrStatus.Created}`}>Created</SelectItem>
-                    <SelectItem value={`${SrStatus.PendingDecision}`}>
-                      Pending Decision
+                    <SelectItem value={`${SrStatus.Pending}`}>
+                      Pending
                     </SelectItem>
                     <SelectItem value={`${SrStatus.Approved}`}>Approved</SelectItem>
                     <SelectItem value={`${SrStatus.Rejected}`}>Rejected</SelectItem>
@@ -286,11 +302,11 @@ const Inbox = () => {
                 <TableRow>
                   <TableHead>SR No</TableHead>
                   <TableHead>Request Details</TableHead>
-                  <TableHead>Requestor Note</TableHead>
+                  
                   <TableHead>Aging (Days)</TableHead>
                   <TableHead>Created By</TableHead>
                   <TableHead>Created Date</TableHead>
-                  <TableHead>Status Modified On</TableHead>
+                  
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -319,13 +335,7 @@ const Inbox = () => {
                             ? requestDets.slice(0, 25) + "..."
                             : (requestDets || "—")}
                         </TableCell>
-                        <TableCell>
-                         <div title={requestorNote}>
-  {requestorNote.length > 25
-    ? requestorNote.slice(0, 25) + "..."
-    : (requestorNote || "—")}
-</div>
-                        </TableCell>
+                       
                         <TableCell>
                           <span
                             className={`font-medium whitespace-nowrap ${
@@ -345,12 +355,11 @@ const Inbox = () => {
                           {task.createdByUsername || `User ${task.createdBy}`}
                         </TableCell>
                         <TableCell className="whitespace-nowrap">{formatDate(task.createdDate)}</TableCell>
-                        <TableCell className="whitespace-nowrap">{formatDate(task.statusModifiedOn)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
                             task.srStatus === SrStatus.Created 
                               ? "bg-blue-100 text-blue-800" 
-                              : task.srStatus === SrStatus.PendingDecision 
+                              : task.srStatus === SrStatus.Pending
                               ? "bg-yellow-100 text-yellow-800"
                               : task.srStatus === SrStatus.Approved
                               ? "bg-green-100 text-green-800"
@@ -360,7 +369,7 @@ const Inbox = () => {
                           }`}>
                             {task.srStatus === SrStatus.Created 
                               ? "Created" 
-                              : task.srStatus === SrStatus.PendingDecision 
+                              : task.srStatus === SrStatus.Pending
                               ? "Pending Decision"
                               : task.srStatus === SrStatus.Approved
                               ? "Approved"
@@ -373,7 +382,7 @@ const Inbox = () => {
                           <Link
                             to="/inbox/$taskId"
                             params={{ taskId: String(task?.srNo) }}
-                            className="flex items-center justify-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
+                            className="flex  gap-1 text-blue-600 hover:text-blue-800 hover:underline"
                           >
                             View Details
                           
@@ -385,6 +394,16 @@ const Inbox = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="flex justify-between items-center mt-4">
+            <span className="font-semibold text-lg text-gray-700">
+              Page {page} of {paginationData.totalPages || 1} ({paginationData.totalItems || 0} total items)
+            </span>
+            <Pagination
+              totalPages={paginationData.totalPages || 1}
+              currentPage={page}
+              onPageChange={handlePageChange}
+            />
           </div>
         </CardContent>
       </Card>
