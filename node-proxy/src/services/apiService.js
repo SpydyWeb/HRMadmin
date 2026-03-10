@@ -525,6 +525,12 @@ const activateDeactivateUser = (data = {}, headers = {}) => {
 const lockUnlockUser = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.LOCKUNLOCKUSER, data, { headers });
 }
+const orgConfiguration = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.ORGCONFIG, data, { headers });
+}
+const orgConfigUpdate = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.ORGCONFIGUPDATE, data, { headers });
+}
 
 module.exports = {
   login,
@@ -591,5 +597,7 @@ module.exports = {
   updateUser,
   updatePassword,
   activateDeactivateUser,
-  lockUnlockUser
+  lockUnlockUser,
+  orgConfiguration,
+  orgConfigUpdate
 };

@@ -1,6 +1,6 @@
 export enum SrStatus {
   Created = 1,
-  PendingDecision = 2,
+  Pending = 2,
   Approved = 3,
   Rejected = 4,
 }
@@ -31,11 +31,17 @@ export interface IInboxItem {
   createdBy: number
   createdDate?: string | null
   srStatus: SrStatus
+  srStatusDesc?: string | null
   statusUpdatedBy?: number | null
   statusModifiedOn?: string | null
   controlId: number
   allocatedToRole?: number | null
   createdByUsername?: string | null
+  approverComments?: {
+    approverName: string
+    decisionOn?: string | null
+    comments?: string | null
+  }[]
 }
 
 export interface IInboxResponseBody {

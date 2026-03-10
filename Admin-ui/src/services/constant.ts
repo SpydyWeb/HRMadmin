@@ -48,7 +48,9 @@ export const APIRoutes = {
   UPDATE_USER: "updateUser",
   UPDATE_PASSWORD: "updatePassword",
   ACTIVATE_DEACTIVATE_USER: "activateDeactivateUser",
-  LOCK_UNLOCK_USER: "lockUnlockUser"
+  LOCK_UNLOCK_USER: "lockUnlockUser",
+  ORG_CONFIG:"orgConfiguration",
+  ORG_CONFIG_UPDATE:"orgConfigUpdate"
 }
 
 export const LoginConstants = {
