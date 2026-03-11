@@ -37,18 +37,43 @@ const Dashboard = () => {
     retry: 1,
   })
 
+  const {
+    data: graphDataResp,
+    isLoading: graphLoading,
+    isError: graphError,
+    error: graphErrorObj,
+  } = useQuery<any>({
+    queryKey: ['hms-graph-data'],
+    enabled: canFetch,
+    queryFn: () =>
+      HMSService.getGraphData({
+        startDate: '2025-04-01T00:00:00.000Z',
+        endDate: '2026-03-31T23:59:59.000Z',
+        groupBy: 2,
+      }),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    refetchOnWindowFocus: false,
+    retry: 1,
+  })
+
   useEffect(() => {
     if (hmsQueryError) {
       const msg =
         (hmsQueryErrorObj as any)?.message ||
         'Failed to fetch HMS dashboard'
       setLocalError(msg)
+    } else if (graphError) {
+      const msg =
+        (graphErrorObj as any)?.message ||
+        'Failed to fetch graph data'
+      setLocalError(msg)
     } else {
       setLocalError(null)
     }
-  }, [hmsQueryError, hmsQueryErrorObj])
+  }, [hmsQueryError, hmsQueryErrorObj, graphError, graphErrorObj])
 
-  const dashboardData = hmsDashboardData?.responseBody?.hmsDashboard
+  const dashboardData =
+    hmsDashboardData?.responseBody?.responseBody?.hmsDashboard?.[0]
   // console.log("dashbaord data", dashboardData)
   // console.log("full response", hmsDashboardData)
 
@@ -173,7 +198,7 @@ const Dashboard = () => {
     <div className="flex gap-6">
       
       <div className="w-full space-y-3">
-          <MetricsCard metrics={metrics} />
+          <MetricsCard metrics={metrics} graphData={graphDataResp} graphLoading={graphLoading} />
           <AlertCard dashboardData={dashboardData} />
           <PendingActionsTable />
           <CompanyOverview />

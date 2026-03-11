@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import Button from "@/components/ui/button";
-import { RoutePaths } from "@/utils/constant";
+import { RoutePaths, NOTIFICATION_CONSTANTS } from "@/utils/constant";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { inboxService } from "@/services/inboxServices";
 import Loader from "@/components/Loader";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { showToast } from "@/components/ui/sonner";
 import {
   Table,
   TableBody,
@@ -81,6 +82,18 @@ const TaskApproval = () => {
     });
   };
 
+  const formatTaskName = (value?: string | null): string => {
+    if (!value) return "-";
+    // Replace underscores with spaces and normalise whitespace
+    const withSpaces = value.replace(/_/g, " ").trim();
+    // Title-case each word
+    return withSpaces
+      .toLowerCase()
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   type FieldChangeRow = {
     FieldName?: string | null;
     OldValue?: string | null;
@@ -149,14 +162,42 @@ const TaskApproval = () => {
         comments: comments.trim() || undefined,
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       console.log("Decision updated successfully:", response);
+      
+      // Check if response contains an error code (API might return 200 with error in body)
+      const errorCode = response?.responseHeader?.errorCode;
+      const errorMessage = response?.responseHeader?.errorMessage;
+      
+      if (errorCode === 4001 || errorMessage) {
+        // Show error toast and don't navigate
+        showToast(NOTIFICATION_CONSTANTS.ERROR, errorMessage || "You are not authorized to approve this level.");
+        return;
+      }
+      
       // Navigate back to inbox after successful update
       navigate({ to: RoutePaths.INBOX });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error updating decision:", error);
-      // You can add toast notification here if needed
+      
+      // Check if error has the specific 4001 error code for authorization issues
+      const errorCode = error?.response?.responseHeader?.errorCode || 
+                       error?.responseHeader?.errorCode ||
+                       error?.responseBody?.responseHeader?.errorCode;
+      
+      const errorMessage = error?.response?.responseHeader?.errorMessage || 
+                          error?.responseHeader?.errorMessage ||
+                          error?.responseBody?.responseHeader?.errorMessage ||
+                          "Already approved at this level. Sent for next approval. Please wait until the approval process is complete";
+      
+      if (errorCode === 4001) {
+        // Show the specific authorization error message in toast
+        showToast(NOTIFICATION_CONSTANTS.ERROR, errorMessage);
+      } else {
+        // Show generic error for other cases
+        showToast(NOTIFICATION_CONSTANTS.ERROR, errorMessage);
+      }
     },
   });
 
@@ -196,60 +237,110 @@ const TaskApproval = () => {
 
   return (
     <div className="container mx-auto p-6">
-
       <Card className="w-full">
         <CardContent className="pt-6">
           <div className="space-y-6">
-            {/* Task Name */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Task Name</div>
-              <div className="text-base">{taskData.requestDets}</div>
-            </div>
+            {/* Section 1: Task Summary */}
+            <div className="text-md font-semibold uppercase tracking-wide text-gray-500">
+                Task Details
+              </div>
+            <section className="rounded-sm border border-gray-200 bg-gray-50 p-4 space-y-4">
+              {/* <div className="text-md font-semibold uppercase tracking-wide text-gray-500">
+                Task Details
+              </div> */}
+              <div>
+                <div className="text-sm font-medium text-gray-500 mb-1">Task Name</div>
+                <div className="text-sm text-gray-900">
+                  {formatTaskName(taskData.requestDets)}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">SR No</div>
+                  <div className="text-sm text-gray-900">{taskData.srNo}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">Created On</div>
+                  <div className="text-sm text-gray-900">
+                    {formatDate(taskData.createdDate)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">Created By</div>
+                  <div className="text-sm text-gray-900">
+                    {taskData.createdByUsername || `User ${taskData.createdBy}`}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-gray-500 mb-1">Status</div>
+                  <div className="mt-0.5">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
+                        taskData.srStatus === SrStatus.Created
+                          ? "bg-blue-100 text-blue-800"
+                          : taskData.srStatus === SrStatus.Pending
+                          ? "bg-yellow-100 text-yellow-800"
+                          : taskData.srStatus === SrStatus.Approved
+                          ? "bg-green-100 text-green-800"
+                          : taskData.srStatus === SrStatus.Rejected
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {taskData.srStatus === SrStatus.Created
+                        ? "Created"
+                        : taskData.srStatus === SrStatus.Pending
+                        ? "Pending Decision"
+                        : taskData.srStatus === SrStatus.Approved
+                        ? "Approved"
+                        : taskData.srStatus === SrStatus.Rejected
+                        ? "Rejected"
+                        : taskData.srStatusDesc || `Status ${taskData.srStatus}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-            {/* Metadata Fields */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">SR No</div>
-                <div className="text-base">{taskData.srNo}</div>
+            {/* Section 2: Requestor Comments */}
+            <section className="rounded-sm  bg-white  space-y-3">
+              <div className="text-md font-semibold uppercase tracking-wide text-gray-500">
+                Requestor Comments
               </div>
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">Created On</div>
-                <div className="text-base">{formatDate(taskData.createdDate)}</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">Created By</div>
-                <div className="text-base">{taskData.createdByUsername || `User ${taskData.createdBy}`}</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">Status</div>
-                <div className="text-base">{taskData.srStatusDesc}</div>
-              </div>
-            </div>
-
-            {/* Requestor Comments */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Requestor Comments</div>
               {(() => {
                 const rows = parseFieldChanges(taskData.requestorNote);
                 if (rows && rows.length > 0) {
                   return (
-                    <div className="rounded-md border border-gray-200 overflow-hidden">
-                      <Table>
-                        <TableHeader>
+                    <div className="rounded-sm border border-gray-200 overflow-hidden bg-gray-50">
+                      <Table className="w-full text-sm">
+                        <TableHeader className="bg-gray-100">
                           <TableRow>
-                            <TableHead>Field Name</TableHead>
-                            <TableHead>Old Value</TableHead>
-                            <TableHead>New Value</TableHead>
+                            <TableHead className="text-xs font-semibold text-gray-600">
+                              Field Name
+                            </TableHead>
+                            <TableHead className="text-xs font-semibold text-gray-600">
+                              Old Value
+                            </TableHead>
+                            <TableHead className="text-xs font-semibold text-gray-600">
+                              New Value
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {rows.map((r, idx) => (
-                            <TableRow key={`${r.FieldName ?? "field"}-${idx}`}>
-                              <TableCell className="font-medium">
+                            <TableRow
+                              key={`${r.FieldName ?? "field"}-${idx}`}
+                              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                            >
+                              <TableCell className="font-medium text-gray-900">
                                 {r.FieldName ?? "—"}
                               </TableCell>
-                              <TableCell>{r.OldValue ?? "—"}</TableCell>
-                              <TableCell>{r.NewValue ?? "—"}</TableCell>
+                              <TableCell className="text-gray-700">
+                                {r.OldValue ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-gray-700">
+                                {r.NewValue ?? "—"}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -259,34 +350,47 @@ const TaskApproval = () => {
                 }
 
                 return (
-                  <div className="text-base whitespace-pre-wrap">
+                  <div className="text-sm whitespace-pre-wrap text-gray-800 rounded-md border border-dashed border-gray-300 bg-gray-50 p-3">
                     {taskData.requestorNote || "No comments"}
                   </div>
                 );
               })()}
-            </div>
+            </section>
 
-            {/* Approver Comments History */}
+            {/* Section 3: Approver Comments History */}
             {taskData.approverComments && taskData.approverComments.length > 0 && (
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">Approver Comments</div>
-                <div className="rounded-md border border-gray-200 overflow-hidden">
-                  <Table>
-                    <TableHeader>
+              <section className="rounded-sm  bg-white space-y-3">
+                <div className="text-md font-semibold uppercase tracking-wide text-gray-500">
+                  Approver Comments
+                </div>
+                <div className="rounded-sm border border-gray-200 overflow-hidden bg-gray-50">
+                  <Table className="w-full text-sm">
+                    <TableHeader className="bg-gray-100">
                       <TableRow>
-                        <TableHead>Approver</TableHead>
-                        <TableHead>Decision On</TableHead>
-                        <TableHead>Comments</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">
+                          Approver
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">
+                          Decision On
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">
+                          Comments
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {taskData.approverComments.map((c, idx) => (
-                        <TableRow key={`${c.approverName ?? "approver"}-${idx}`}>
-                          <TableCell className="font-medium">
+                        <TableRow
+                          key={`${c.approverName ?? "approver"}-${idx}`}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <TableCell className="font-medium text-gray-900">
                             {c.approverName || "—"}
                           </TableCell>
-                          <TableCell>{formatDateTime(c.decisionOn)}</TableCell>
-                          <TableCell className="whitespace-pre-wrap">
+                          <TableCell className="text-gray-700">
+                            {formatDateTime(c.decisionOn)}
+                          </TableCell>
+                          <TableCell className="whitespace-pre-wrap text-gray-700">
                             {c.comments || "—"}
                           </TableCell>
                         </TableRow>
@@ -294,44 +398,45 @@ const TaskApproval = () => {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Comments Section - only when status is Pending */}
-            {isPendingStatus && (
-              <div>
-                <div className="text-sm font-medium text-gray-700 mb-2">
-                  Comments / Reason <span className="text-gray-500">(Optional)</span>
+            {/* Section 4: Approver Input & Actions */}
+            <section className="rounded-sm border border-gray-200 bg-white p-4 space-y-4">
+              {isPendingStatus && (
+                <div>
+                  <div className="text-md font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                    Comments / Reason <span className="text-gray-500 normal-case">(Optional)</span>
+                  </div>
+                  <Textarea
+                    placeholder="Enter reason for approval or rejection..."
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    className="w-full min-h-24"
+                    rows={4}
+                  />
                 </div>
-                <Textarea
-                  placeholder="Enter reason for approval or rejection..."
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  className="w-full min-h-24"
-                  rows={4}
-                />
-              </div>
-            )}
+              )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-4">
-              <Button
-                variant="green"
-                onClick={handleApprove}
-                className="min-w-[120px]"
-                disabled={!isPendingStatus || updateDecisionMutation.isPending}
-              >
-                {updateDecisionMutation.isPending ? "Processing..." : "Approve"}
-              </Button>
-              <Button
-                variant="red"
-                onClick={handleReject}
-                className="min-w-[120px]"
-                disabled={!isPendingStatus || updateDecisionMutation.isPending}
-              >
-                {updateDecisionMutation.isPending ? "Processing..." : "Reject"}
-              </Button>
-            </div>
+              <div className="flex flex-wrap gap-4 pt-2 border-t border-gray-200 mt-2 justify-end">
+                <Button
+                  variant="green"
+                  onClick={handleApprove}
+                  className="min-w-[120px]"
+                  disabled={!isPendingStatus || updateDecisionMutation.isPending}
+                >
+                  {updateDecisionMutation.isPending ? "Processing..." : "Approve"}
+                </Button>
+                <Button
+                  variant="red"
+                  onClick={handleReject}
+                  className="min-w-[120px]"
+                  disabled={!isPendingStatus || updateDecisionMutation.isPending}
+                >
+                  {updateDecisionMutation.isPending ? "Processing..." : "Reject"}
+                </Button>
+              </div>
+            </section>
           </div>
         </CardContent>
       </Card>

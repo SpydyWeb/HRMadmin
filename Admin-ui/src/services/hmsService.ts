@@ -30,6 +30,21 @@ export const HMSService = {
     }
   },
 
+  getGraphData: async (payload: {
+    startDate: string
+    endDate: string
+    groupBy: number
+  }) => {
+    try {
+      // External graph endpoint is proxied via node-proxy as `getGraphData`
+      const response = await callApi<any>(APIRoutes.GET_GRAPH_DATA, [payload])
+      return response
+    } catch (error) {
+      console.error('getGraphData error', error)
+      throw error
+    }
+  },
+
   hmsOverviewStats: async () => {
     try {
       const response = await callApi<ApiResponse<IChannelStatsApiResponse>>(

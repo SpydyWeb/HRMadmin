@@ -41,7 +41,7 @@ const autoSizeColumns = (data: JsonElement[]) =>
     wch: Math.max(key.length, ...data.map((row) => String(row[key] ?? '').length)) + 2,
   }))
 
-const downloadExcel = (row: any) => {
+const downloadExcel = async (row: any) => {
   if (row.Activity === 'Code Movement') {
     excelData = [{ 'Agent Code': null, Channel: null, 'Start Date': null, 'End Date': null }]
   } else if (row.Activity === 'Change in Status') {

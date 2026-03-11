@@ -73,11 +73,24 @@ const Inbox = () => {
   const [createdDateFrom, setCreatedDateFrom] = useState<string | null>(null);
   const [createdDateTo, setCreatedDateTo] = useState<string | null>(null);
   const [agentCodeInput, setAgentCodeInput] = useState<string>("");
-  const [agentCode, setAgentCode] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
   const [roles, setRoles] = useState<Array<{ roleId: number; roleName: string }>>([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
+
+  const [appliedFilters, setAppliedFilters] = useState<{
+    srStatusFilter: SrStatusFilterValue;
+    createdDateFrom: string | null;
+    createdDateTo: string | null;
+    agentCode: string;
+    selectedRole: number | null;
+  }>({
+    srStatusFilter: "PENDING",
+    createdDateFrom: null,
+    createdDateTo: null,
+    agentCode: "",
+    selectedRole: null,
+  });
 
   // Fetch roles on component mount
   useEffect(() => {
@@ -93,10 +106,13 @@ const Inbox = () => {
     fetchRoles();
   }, []);
 
-  // Reset page to 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole]);
+  const {
+    srStatusFilter: appliedSrStatus,
+    createdDateFrom: appliedCreatedFrom,
+    createdDateTo: appliedCreatedTo,
+    agentCode: appliedAgentCode,
+    selectedRole: appliedRole,
+  } = appliedFilters;
 
   // Helper function to format date to ISO format with specific time
   const formatDateForAPI = (dateString: string | null, isEndOfDay: boolean = false): string | null => {
@@ -111,21 +127,32 @@ const Inbox = () => {
   };
 
   const { data: inboxResponse, isLoading } = useQuery<InboxResponse | null>({
-    queryKey: ["inbox-list", srStatusFilter, createdDateFrom, createdDateTo, agentCode, selectedRole, page, pageSize],
+    queryKey: [
+      "inbox-list",
+      appliedSrStatus,
+      appliedCreatedFrom,
+      appliedCreatedTo,
+      appliedAgentCode,
+      appliedRole,
+      page,
+      pageSize,
+    ],
     queryFn: async () => {
       const requestData = {
         srNo: null,
-        createdDateFrom: formatDateForAPI(createdDateFrom, false),
-        createdDateTo: formatDateForAPI(createdDateTo, true),
+        createdDateFrom: formatDateForAPI(appliedCreatedFrom, false),
+        createdDateTo: formatDateForAPI(appliedCreatedTo, true),
         pageNo: page,
         pageSize: pageSize,
-        agentCode: agentCode.trim() ? agentCode.trim().toUpperCase() : null,
-        allocateToRole: selectedRole,
-        ...(srStatusFilter === "PENDING"
+        agentCode: appliedAgentCode.trim()
+          ? appliedAgentCode.trim().toUpperCase()
+          : null,
+        allocateToRole: appliedRole,
+        ...(appliedSrStatus === "PENDING"
           ? { srStatus: SrStatus.Pending }
-          : srStatusFilter === "ALL"
+          : appliedSrStatus === "ALL"
           ? {}
-          : { srStatus: Number(srStatusFilter) as SrStatus }),
+          : { srStatus: Number(appliedSrStatus) as SrStatus }),
       };
       const response = await inboxService.InboxList(requestData);
       if (!response) {
@@ -258,13 +285,6 @@ const Inbox = () => {
                     onChange={(e) => setAgentCodeInput(e.target.value)}
                     className="w-40"
                   />
-                  <Button
-                    variant="blue"
-                    onClick={() => setAgentCode(agentCodeInput.trim())}
-                    className="whitespace-nowrap"
-                  >
-                    Search
-                  </Button>
                 </div>
               </div>
 
@@ -291,6 +311,28 @@ const Inbox = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5 ml-auto">
+                <label className="text-sm font-medium text-transparent whitespace-nowrap select-none">
+                  Search
+                </label>
+                <Button
+                  variant="blue"
+                  onClick={() => {
+                    setAppliedFilters({
+                      srStatusFilter,
+                      createdDateFrom,
+                      createdDateTo,
+                      agentCode: agentCodeInput.trim(),
+                      selectedRole,
+                    });
+                    setPage(1);
+                  }}
+                  className="whitespace-nowrap"
+                >
+                  Search
+                </Button>
               </div>
             </div>
           </div>

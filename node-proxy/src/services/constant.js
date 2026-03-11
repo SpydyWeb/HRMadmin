@@ -54,6 +54,8 @@ const APIRoutes = {
   ORGCONFIGUPDATE:"/api/Access/ApprovalSettings/Save",
   REFRESHTOKEN: "/api/Auth/refreshtoken",
   AGENTSEARCHFORPARTNER: "/api/Agent",
+  // Graph (external service)
+  GETGRAPHDATA: "http://hmsapi.ezytekapis.com/GetGraphData",
 };
 
 module.exports = { APIRoutes };
