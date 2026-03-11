@@ -19,6 +19,14 @@ export default defineConfig({
     }),
     viteReact(),
   ],
+  optimizeDeps: {
+    exclude: ['xlsx'],
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
   // server: {
   //   proxy: {
   //     '/api': {
