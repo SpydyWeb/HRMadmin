@@ -480,6 +480,10 @@ const hmsDashboard = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.HMSDASHBOARD, data, { headers });
 }
 
+const getGraphData = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GETGRAPHDATA, data, { headers });
+}
+
 const getChannelStats = (data = {}, headers = {}) => {
   console.log("Fetching channel stats with data:", data);
   console.log("Fetching channel stats with headers:", headers);
@@ -586,6 +590,7 @@ module.exports = {
   getDesignationHierarchy,
   GeoHierarchyTable,
   hmsDashboard,
+  getGraphData,
   getChannelStats,
   uploadFileList,
   downloadReport,

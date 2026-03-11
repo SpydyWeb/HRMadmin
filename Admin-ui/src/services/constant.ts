@@ -29,6 +29,7 @@ export const APIRoutes = {
   GEO_HIERARCHY: 'GeoHierarchy',
   GEO_HIERARCHY_TABLE: 'GeoHierarchyTable',
   HMS_DASHBOARD: 'hmsDashboard',
+  GET_GRAPH_DATA: 'getGraphData',
   HMS_OVERVIEW_STATS: 'getChannelStats',
   UPLOAD_FILE_LIST: 'uploadFileList',
   DOWNLOAD_REPORT: 'downloadReport',
