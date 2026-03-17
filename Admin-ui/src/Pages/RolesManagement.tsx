@@ -125,6 +125,7 @@ const RolesManagement = () => {
       try {
         const response = await HMSService.getRoles()
         const apiRoles = response?.responseBody?.roles || []
+          console.log("apiRoles",apiRoles)
         setRoles(apiRoles) // apiRoles must contain roleId + roleName
       } catch (error) {
         console.error('Failed to fetch roles:', error)
@@ -133,6 +134,7 @@ const RolesManagement = () => {
 
     fetchRoles()
   }, [])
+
 
   useEffect(() => {
     if (!selectedRole) return

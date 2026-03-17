@@ -25,12 +25,6 @@ export type TCommissionStatus =
 
 
 
-// ================================
-
-// Individual Commission
-
-// ================================
-
 export interface IIndividualCommission {
 
  commissionId: number;
@@ -52,13 +46,6 @@ export interface IIndividualCommission {
 }
 
 
-
-// ================================
-
-// Cycle Commission
-
-// ================================
-
 export interface ICycleCommission {
 
  cycleId: number;
@@ -79,13 +66,6 @@ export interface ICycleCommission {
 
 }
 
-
-
-// ================================
-
-// Adhoc Commission
-
-// ================================
 
 export interface IAdhocCommission {
 
@@ -109,23 +89,15 @@ export interface IAdhocCommission {
 
 }
 
-
-
-// ================================
-
-// Performance Snapshot
-
-// ================================
-
 export interface IPerformanceSnapshot {
 
  orgId: number;
 
  snapshotId: number;
 
- periodFrom: string; // ISO Date
+ periodFrom: string; 
 
- periodTo: string;  // ISO Date
+ periodTo: string; 
 
  commissionBudget: number;
 
@@ -133,21 +105,9 @@ export interface IPerformanceSnapshot {
 
 }
 
-
-
-// ================================
-
-// Commission Management Dashboard
-
-// ================================
-
 export interface ICommissionMgmtDashboard {
 
  orgId: number;
-
-
-
- // Summary Cards
 
  commissionBudget: number;
 
@@ -156,10 +116,6 @@ export interface ICommissionMgmtDashboard {
  commissionOnHold: number;
 
  commissionNotPaid: number;
-
-
-
- // Cycle Metrics
 
  lastCycleCommission: number;
 
@@ -171,10 +127,6 @@ export interface ICommissionMgmtDashboard {
 
  thisCycleAvgCommission: number;
 
-
-
- // Detail Sections
-
  individualCommissions: IIndividualCommission[];
 
  cycleCommissions: ICycleCommission[];
@@ -182,10 +134,6 @@ export interface ICommissionMgmtDashboard {
  adhocCommissions: IAdhocCommission[];
 
  performanceSnapshot: IPerformanceSnapshot[];
-
-
-
- // Optional / Future
 
  currentBusinessCycles?: any | null;
 
@@ -195,11 +143,6 @@ export interface ICommissionMgmtDashboard {
 
 }
 
-// ================================
-
-// Commission process 
-
-// ================================
 export interface IProcessCommissionList {
   totalCount: number
   orgId:number
@@ -218,12 +161,12 @@ export interface IHoldRecords {
   reason: string
   amount: number
   status: 'Released' | 'Hold' | string
-  heldOn: string // ISO date string
+  heldOn: string 
   canRelease: boolean
 }
 export interface IAdjustRecords {
   adjustmentId: number
-  date:string // ISO date string
+  date:string 
   period: string 
   adjustmentType: string
   uploadedBy: string
@@ -232,7 +175,7 @@ export interface IAdjustRecords {
 }
 export interface IApproveRecords {
   approvalId: number
-  date:string // ISO date string
+  date:string 
   period: string 
   submittedBy: string
   amount:number
@@ -240,13 +183,6 @@ export interface IApproveRecords {
   canApprove: Boolean
   canDownload: Boolean 
 }
-
-
-// ================================
-
-// Response Body
-
-// ================================
 
 export interface ICommissionMgmtResponseBody {
 
@@ -284,7 +220,6 @@ export interface IApproveCommissionResponseBody {
   records: IApproveRecords[]
 
 }
-// Response structure: responseBody.commissionConfig[0].commissionConfigId
 export interface ICommissionConfigItem {
   commissionConfigId: number
   commissionName: string
@@ -383,15 +318,6 @@ export interface IFileDownload {
 export interface IDownloadRecordResponseBody {
   fileDownload: IFileDownload | null
 }
-
-
-
-
-// ================================
-
-// Final API Response
-
-// ================================
 
 export interface ICommissionMgmtApiResponse {
 

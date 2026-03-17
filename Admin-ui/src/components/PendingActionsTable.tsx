@@ -29,11 +29,11 @@ type JsonElement = { [key: string]: string | number | boolean | null }
 let excelData: JsonElement[] = []
 
 const tableData = [
-  { Activity: 'Code Movement', Template: 'Download', Upload: '', Summary: '', Action: RoutePaths.CODEMOVEMENT },
-  { Activity: 'Certification Update', Template: 'Download', Upload: '', Summary: '', Action: RoutePaths.CODEMOVEMENT },
-  { Activity: 'Change in Status', Template: 'Download', Upload: '', Summary: '', Action: RoutePaths.CODEMOVEMENT },
-  { Activity: 'Manager Update', Template: 'Download', Upload: '', Summary: '', Action: RoutePaths.CODEMOVEMENT },
-  { Activity: 'Designation Update', Template: 'Download', Upload: '', Summary: '', Action: RoutePaths.CODEMOVEMENT },
+  { Activity: 'Location Update', Template: 'Download', Upload: '', Summary: 'No Summary', Action: RoutePaths.CODEMOVEMENT },
+  // { Activity: 'Certification Update', Template: 'Download', Upload: '', Summary: 'No Summary', Action: RoutePaths.CODEMOVEMENT },
+  { Activity: 'Change in Status', Template: 'Download', Upload: '', Summary: 'No Summary', Action: RoutePaths.CODEMOVEMENT },
+  { Activity: 'Manager Update', Template: 'Download', Upload: '', Summary: 'No Summary', Action: RoutePaths.CODEMOVEMENT },
+  { Activity: 'Designation Update', Template: 'Download', Upload: '', Summary: 'No Summary', Action: RoutePaths.CODEMOVEMENT },
 ]
 
 const autoSizeColumns = (data: JsonElement[]) =>
@@ -42,14 +42,14 @@ const autoSizeColumns = (data: JsonElement[]) =>
   }))
 
 const downloadExcel = async (row: any) => {
-  if (row.Activity === 'Code Movement') {
+  if (row.Activity === 'Location Update') {
     excelData = [{ 'Agent Code': null, Channel: null, 'Start Date': null, 'End Date': null }]
   } else if (row.Activity === 'Change in Status') {
-    excelData = [{ 'Agent Code': null, 'Status (Active/Inactive/Terminated)': null, 'Business Effective Date': null }]
+    excelData = [{ 'Agent Code': null, 'Status': null, 'Business Effective Date': null }]
   } else if (row.Activity === 'Manager Update') {
-    excelData = [{ 'Agent Code': null, 'Reporting Manager / Supervisor Code': null, 'Effective Date of Change': null }]
+    excelData = [{ 'Agent Code': null, 'Supervisor Code': null, 'Effective Date of Change': null }]
   } else if (row.Activity === 'Designation Update') {
-    excelData = [{ 'Agent Code': null, Designation: null, Grade: null, 'Business Effective Date': null }]
+    excelData = [{ 'Agent Code': null, Designation: null, Grade: null, 'Business Effective Date Of Change': null }]
   } else return
 
   const worksheet = XLSX.utils.json_to_sheet(excelData)
@@ -62,8 +62,7 @@ const downloadExcel = async (row: any) => {
 // Helper function to map activity name to filetype
 const getFileTypeFromActivity = (activity: string): string => {
   const mapping: { [key: string]: string } = {
-    'Code Movement': 'UpdateLocation',
-    'Certification Update': 'CertificateUpdate',
+    'Location Update': 'UpdateLocation',
     'Change in Status': 'UpdateStatus',
     'Manager Update': 'ManagerUpdate',
     'Designation Update': 'UpdateDesignation',
@@ -146,14 +145,14 @@ export default function PendingActionsTable() {
       ),
     },
     { header: 'Summary', accessor: 'Summary' },
-    {
-      header: 'Action',
-      accessor: (row: any) => (
-        <Button variant="blue" onClick={() => handleRedirect(row.Action)}>
-          Process Now
-        </Button>
-      ),
-    },
+    // {
+    //   header: 'Action',
+    //   accessor: (row: any) => (
+    //     <Button variant="blue" onClick={() => handleRedirect(row.Action)}>
+    //       Process Now
+    //     </Button>
+    //   ),
+    // },
   ]
 
   return (
@@ -209,18 +208,16 @@ export default function PendingActionsTable() {
             </div>
 
             <div className="flex items-center gap-4 mt-4">
-              <button
+              <Button
+                variant="blue"
+                size="md"
                 onClick={handleUpload}
-                disabled={!selectedFile || isLoading}
-                className="inline-flex items-center justify-center
-                  rounded-md bg-emerald-600 px-6 py-2.5
-                  text-sm font-semibold text-white
-                  shadow-sm transition
-                  hover:bg-emerald-700
-                  disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!selectedFile}
+                isLoading={isLoading}
+                loadingText="Uploading..."
               >
-                {isLoading ? 'Uploading...' : 'Upload'}
-              </button>
+                Upload
+              </Button>
             </div>
 
             <p className="mt-2 text-xs text-gray-500">
@@ -248,7 +245,7 @@ export default function PendingActionsTable() {
           <CardTitle className="text-xl font-semibold">
             Movement & Updation
           </CardTitle>
-          <Select defaultValue="this-month">
+          {/* <Select defaultValue="this-month">
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
@@ -257,7 +254,7 @@ export default function PendingActionsTable() {
               <SelectItem value="last-month">Last Month</SelectItem>
               <SelectItem value="this-week">This Week</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </CardHeader>
         <CardContent>
           <DataTable columns={columns} data={tableData} />

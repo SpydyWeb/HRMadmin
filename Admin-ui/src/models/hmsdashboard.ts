@@ -84,6 +84,14 @@ export interface IChannelStatsResponseBody {
 
   activeEntities: number;
   terminatedEntities: number;
+  pagination?: IPagination;
+}
+
+export interface IPagination {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalItems: number;
 }
 export interface IDownloadReportRequest {
   id: number;
@@ -114,4 +122,19 @@ export interface IFileUpload {
   fileName: string
   filePath: string
   fileType: string
+}
+
+export interface IBatch {
+  batchId: string
+  fileName: string
+  uploadedBy: string
+  uploadedOn: string
+  total: number
+  success: number
+  failed: number
+  status: string
+}
+
+export interface IUploadFileListResponseBody {
+  batches: IBatch[]
 }

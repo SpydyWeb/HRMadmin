@@ -34,8 +34,8 @@ export interface UIAccessResponse {
 // Mapping between tab values in the UI and section names in the API
 export const TAB_SECTION_MAP: Record<string, string> = {
   'personaldetails': 'Personal',
-  'peoplehierarchy': 'People Hierarchy',
-  'geographicalhierarchy': 'Geographical Hierarchy',
+  'peoplehierarchy': 'People Heirarchy',
+  'geographicalhierarchy': 'Geographic Heirarchy',
   'partnersmapped': 'Partners Mapped',
   'auditlog': 'Audit Log',
   'licensedetails': 'License',

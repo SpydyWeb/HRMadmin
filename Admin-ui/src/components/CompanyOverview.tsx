@@ -1,24 +1,24 @@
 import { FiEye } from 'react-icons/fi'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import  Button  from './ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select'
 import DataTable from './table/DataTable'
 import { ApiResponse } from '@/models/api'
 import { HMSService } from '@/services/hmsService'
 import { useQuery } from '@tanstack/react-query'
 import { useEncryption } from '@/store/encryptionStore'
 import encryptionService from '@/services/encryptionService'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { IChannelStatsApiResponse, IChannel, IChannelStatsResponseBody } from '@/models/hmsdashboard'
+import { Pagination } from '@/components/table/Pagination'
+import Loader from '@/components/Loader'
 
 const columns = [
-  { header: 'Channel Name', accessor: 'channelName' },
+  {
+    header: 'Channel Name',
+    accessor: (row: IChannel) => (
+      <span className="capitalize">{row.channelName}</span>
+    ),
+  },
   { header: 'Total Entities', accessor: 'totalEntities' },
   {
     header: 'Created',
@@ -52,6 +52,8 @@ const columns = [
 type CompanyOverviewResponse = ApiResponse<IChannelStatsApiResponse>
 
 const CompanyOverview = () => {
+  const [page, setPage] = useState(1) 
+  const [pageSize] = useState(10)
   const encryptionEnabled = useEncryption()
   const keyReady = !!encryptionService.getHrm_Key()
   const canFetch = !encryptionEnabled || keyReady
@@ -61,50 +63,38 @@ const CompanyOverview = () => {
     isLoading: companyOverviewLoading,
     isError: companyOverviewQueryError,
   } = useQuery<CompanyOverviewResponse>({
-    queryKey: ['hms-channel-stats'],
+    queryKey: ['hms-channel-stats', page, pageSize],
     enabled: canFetch,
-    queryFn: () => HMSService.hmsOverviewStats(),
-    staleTime: 1000 * 60 * 60,// 1 hour
+    queryFn: () => HMSService.hmsOverviewStats({ pageNumber: page, pageSize }),
+    staleTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
     retry: 1,
   })
 
-  // Extract data from API response - responseBody contains IChannelStatsApiResponse, then its responseBody contains the actual data
-  const channelStatsApiResponse = companyOverviewData?.responseBody
-  const responseBody: IChannelStatsResponseBody | undefined = companyOverviewData?.responseBody
+  const responseBody: IChannelStatsResponseBody | undefined = useMemo(() => {
+    if (!companyOverviewData) return undefined
+
+    
+    const raw: any = companyOverviewData.responseBody
+    const candidate = raw?.responseBody ?? raw
+
+    return candidate as IChannelStatsResponseBody | undefined
+  }, [companyOverviewData])
   // console.log("channelStatsOverview", companyOverviewData)
   // console.log("responseBody", responseBody)
 
-  // Memoize company overview stats
-  const companyStats = useMemo(() => [
-    {
-      name: 'Total Entities',
-      value: responseBody?.totalEntities ?? 0,
-      color: 'var(--brand-blue)'
-    },
-    {
-      name: 'Active Entities',
-      value: responseBody?.activeEntities ?? 0,
-      color: 'var(--brand-green)'
-    },
-    {
-      name: 'Terminated Entities',
-      value: responseBody?.terminatedEntities ?? 0,
-      color: 'var(--destructive)'
-    },
-  ], [responseBody])
 
-  // Memoize table data from channels
   const tableData = useMemo(() => responseBody?.channels ?? [], [responseBody])
+  const paginationData = responseBody?.pagination
+
+  const handlePageChange = (newPage: number) => {
+    const totalPages = paginationData?.totalPages ?? 1
+    const bounded = Math.min(Math.max(1, newPage), totalPages)
+    setPage(bounded)
+  }
 
   if (companyOverviewLoading) {
-    return (
-      <Card className="shadow-md rounded-md">
-        <CardContent className="flex items-center justify-center py-10">
-          <span className="text-gray-500">Loading company overview...</span>
-        </CardContent>
-      </Card>
-    )
+    return <Loader />
   }
 
   if (companyOverviewQueryError) {
@@ -119,45 +109,23 @@ const CompanyOverview = () => {
 
   return (
     <Card className="shadow-md rounded-md">
+       <CardHeader className="flex flex-row justify-between items-center">
+          <CardTitle className="text-xl font-semibold">
+           Title Here
+          </CardTitle>
+        </CardHeader>
       <CardContent>
-          {/* <Card className="bg-gray-100 px-0 py-3 gap-2 mb-5 rounded-md">
-          <CardHeader className="flex flex-row justify-between items-center px-3">
-            <CardTitle className="text-xl font-semibold">
-              Company Overview
-            </CardTitle>
-            <Select defaultValue="this-month">
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Select range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="this-month">This Month</SelectItem>
-                <SelectItem value="last-month">Last Month</SelectItem>
-                <SelectItem value="this-week">This Week</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {companyStats.map((data, index) => (
-              <Card
-                className="rounded-md p-5 flex-1 min-w-0 bg-white"
-                key={index}
-              >
-                <div className="text-center">
-                  <span className="text-sm font-medium text-gray-600 mb-2">
-                    {data.name}
-                  </span>
-                  <div
-                    className={`text-2xl font-bold`}
-                    style={{ color: data.color }}
-                  >
-                    {data.value}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </CardContent>
-        </Card> */}
         <DataTable columns={columns} data={tableData} />
+        <div className="flex justify-between items-center mt-4">
+          <span className="font-semibold text-lg text-gray-700">
+            Page {page} of {paginationData?.totalPages || 1} ({paginationData?.totalItems || tableData.length} total items)
+          </span>
+          <Pagination
+            totalPages={paginationData?.totalPages || 1}
+            currentPage={page}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </CardContent>
     </Card>
   )

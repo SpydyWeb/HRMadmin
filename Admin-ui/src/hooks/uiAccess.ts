@@ -99,7 +99,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       }
     });
     
-    console.log(`📋 Fields found in tab "${tabValue}":`, allFields);
+    // console.log(`📋 Fields found in tab "${tabValue}":`, allFields);
     return allFields;
   };
   

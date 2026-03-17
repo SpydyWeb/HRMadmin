@@ -12,9 +12,6 @@ import encryptionService from '@/services/encryptionService'
 import { HMSService } from '@/services/hmsService'
 import Loader from '@/components/Loader'
 import type { ApiResponse } from '@/models/api'
-import type { IHmsDashboardApiResponse } from '@/models/hmsdashboard'
-
-type DashboardResponse = ApiResponse<IHmsDashboardApiResponse>
 
 
 const Dashboard = () => {
@@ -28,7 +25,7 @@ const Dashboard = () => {
     isLoading: hmsLoading,
     isError: hmsQueryError,
     error: hmsQueryErrorObj,
-  } = useQuery<DashboardResponse>({
+  } = useQuery<ApiResponse<any>>({
     queryKey: ['hms-dashboard'],
     enabled: canFetch,
     queryFn: () => HMSService.hmsDashboard({} as any),
@@ -51,7 +48,7 @@ const Dashboard = () => {
         endDate: '2026-03-31T23:59:59.000Z',
         groupBy: 2,
       }),
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60, 
     refetchOnWindowFocus: false,
     retry: 1,
   })
@@ -72,10 +69,21 @@ const Dashboard = () => {
     }
   }, [hmsQueryError, hmsQueryErrorObj, graphError, graphErrorObj])
 
-  const dashboardData =
-    hmsDashboardData?.responseBody?.responseBody?.hmsDashboard?.[0]
-  // console.log("dashbaord data", dashboardData)
-  // console.log("full response", hmsDashboardData)
+  // Support both old & new API shapes:
+  // New (your example):
+  //   ApiResponse<{ hmsDashboard: {...} }>
+  // Old:
+  //   ApiResponse<{ responseBody: { hmsDashboard: [...] } }>
+  const dashboardData = (() => {
+    if (!hmsDashboardData) return undefined
+
+    const raw: any = hmsDashboardData.responseBody
+    const hms = raw?.hmsDashboard ?? raw?.responseBody?.hmsDashboard
+
+    if (!hms) return undefined
+
+    return Array.isArray(hms) ? hms[0] : hms
+  })()
 
   // Map API response to metrics format
  
@@ -86,13 +94,12 @@ const Dashboard = () => {
     return <div className="p-4 text-red-600">Error: {localError}</div>
 
   // Map API response to metrics format with proper null checks
-  const metrics = dashboardData
-    ? [
+  const metrics = [
         {
           title: 'Total Entities',
-          value: dashboardData.totalEntitiesCount?.toString() || '0',
-          change: dashboardData.totalEntitiesThisMonth
-            ? `+${dashboardData.totalEntitiesThisMonth}`
+          value: dashboardData?.totalEntitiesCount,
+          change: dashboardData?.totalEntitiesThisMonth
+            ? `+${dashboardData?.totalEntitiesThisMonth}`
             : '+0',
           changeType: 'positive' as const,
           chartColor: '#10b981',
@@ -100,22 +107,22 @@ const Dashboard = () => {
         },
         {
           title: 'Created This Month',
-          value: dashboardData.entitiesCreatedThisMonth?.toString() || '0',
+          value: dashboardData?.entitiesCreatedThisMonth,
           change:
-            dashboardData.entitiesCreatedThisMonth -
-              dashboardData.entitiesCreatedPrevMonth >=
+            dashboardData?.entitiesCreatedThisMonth -
+              dashboardData?.entitiesCreatedPrevMonth >=
             0
               ? `+${dashboardData.entitiesCreatedThisMonth - dashboardData.entitiesCreatedPrevMonth}`
-              : `${dashboardData.entitiesCreatedThisMonth - dashboardData.entitiesCreatedPrevMonth}`,
+                  : `${dashboardData?.entitiesCreatedThisMonth - dashboardData?.entitiesCreatedPrevMonth}`,
           changeType:
-            dashboardData.entitiesCreatedThisMonth -
-              dashboardData.entitiesCreatedPrevMonth >=
+            dashboardData?.entitiesCreatedThisMonth -
+              dashboardData?.entitiesCreatedPrevMonth >=
             0
               ? ('positive' as const)
               : ('negative' as const),
           chartColor:
-            dashboardData.entitiesCreatedThisMonth -
-              dashboardData.entitiesCreatedPrevMonth >=
+            dashboardData?.entitiesCreatedThisMonth -
+              dashboardData?.entitiesCreatedPrevMonth >=
             0
               ? '#10b981'
               : '#ef4444',
@@ -123,22 +130,22 @@ const Dashboard = () => {
         },
         {
           title: 'Terminated This Month',
-          value: dashboardData.entitiesTerminatedThisMonth?.toString() || '0',
+          value: dashboardData?.entitiesTerminatedThisMonth,
           change:
-            dashboardData.entitiesTerminatedThisMonth -
-              dashboardData.entitiesTerminatedPrevMonth >=
+            dashboardData?.entitiesTerminatedThisMonth -
+              dashboardData?.entitiesTerminatedPrevMonth >=
             0
-              ? `+${dashboardData.entitiesTerminatedThisMonth - dashboardData.entitiesTerminatedPrevMonth}`
-              : `${dashboardData.entitiesTerminatedThisMonth - dashboardData.entitiesTerminatedPrevMonth}`,
+              ? `+${dashboardData?.entitiesTerminatedThisMonth - dashboardData?.entitiesTerminatedPrevMonth}`
+              : `${dashboardData?.entitiesTerminatedThisMonth - dashboardData?.entitiesTerminatedPrevMonth}`,
           changeType:
-            dashboardData.entitiesTerminatedThisMonth -
-              dashboardData.entitiesTerminatedPrevMonth >=
+            dashboardData?.entitiesTerminatedThisMonth -
+              dashboardData?.entitiesTerminatedPrevMonth >=
             0
               ? ('positive' as const)
               : ('negative' as const),
           chartColor:
-            dashboardData.entitiesTerminatedThisMonth -
-              dashboardData.entitiesTerminatedPrevMonth >=
+            dashboardData?.entitiesTerminatedThisMonth -
+              dashboardData?.entitiesTerminatedPrevMonth >=
             0
               ? '#10b981'
               : '#ef4444',
@@ -146,54 +153,20 @@ const Dashboard = () => {
         },
         {
           title: 'Net Entity This Month',
-          value: dashboardData.entitiesNetThisMonth?.toString() || '0',
-          change: dashboardData.entitiesNetThisMonth >= 0 
-            ? `+${dashboardData.entitiesNetThisMonth}` 
-            : `${dashboardData.entitiesNetThisMonth}`,
-          changeType: dashboardData.entitiesNetThisMonth >= 0 
+          value: dashboardData?.entitiesNetThisMonth,
+          change: dashboardData?.entitiesNetThisMonth >= 0 
+            ? `+${dashboardData?.entitiesNetThisMonth}` 
+            : `${dashboardData?.entitiesNetThisMonth}`,
+          changeType: dashboardData?.entitiesNetThisMonth >= 0 
             ? ('positive' as const) 
             : ('negative' as const),
-          chartColor: dashboardData.entitiesNetThisMonth >= 0 
+          chartColor: dashboardData?.entitiesNetThisMonth >= 0 
             ? '#10b981' 
             : '#ef4444',
           chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25],
         },
       ]
-    : [
-        {
-          title: 'Total Entities',
-          value: '0',
-          change: '+0',
-          changeType: 'positive' as const,
-          chartColor: '#10b981',
-          chartData: [15, 18, 16, 22, 25, 28, 32, 35, 40],
-        },
-        {
-          title: 'Created This Month',
-          value: '0',
-          change: '+0',
-          changeType: 'positive' as const,
-          chartColor: '#10b981',
-          chartData: [35, 38, 42, 40, 38, 35, 32, 28, 25],
-        },
-        {
-          title: 'Terminated This Month',
-          value: '0',
-          change: '+0',
-          changeType: 'positive' as const,
-          chartColor: '#10b981',
-          chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25],
-        },
-        {
-          title: 'Net Entity This Month',
-          value: '0',
-          change: '+0',
-          changeType: 'positive' as const,
-          chartColor: '#10b981',
-          chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25],
-        },
-      ]
-
+    
   return (
     <div className="flex gap-6">
       
