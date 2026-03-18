@@ -364,7 +364,12 @@ const GetMastersBulk = async (keys, headers = {}) => {
           headers,
         }
       );
-      return [key, res?.responseBody?.master || []];
+      // apiClient.post() returns { status, data } where backend response is under data.
+      const master =
+        res?.data?.responseBody?.master ??
+        res?.responseBody?.master ?? // fallback if apiClient shape changes
+        [];
+      return [key, master];
     } catch (err) {
       console.error(`Error fetching master ${key}`, err);
       return [key, []];

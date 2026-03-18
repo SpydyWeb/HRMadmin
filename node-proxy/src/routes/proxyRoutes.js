@@ -111,13 +111,29 @@ router.post("/proxy", async (req, res) => {
       return res.send(result);
     }
 
-    const safeData = { ...result };
+    // `apiService[fn]` may return either an axios-like response { status, data }
+    // or plain JSON. Express requires a valid integer status code.
+    const status = Number.isInteger(result?.status)
+      ? result.status
+      : Number.isInteger(result?.statusCode)
+        ? result.statusCode
+        : 200;
+
+    const payload =
+      result && typeof result === "object" && Object.prototype.hasOwnProperty.call(result, "data")
+        ? result.data
+        : result;
+
+    // Some clients treat non-2xx as transport failure. For login, prefer 200 and
+    // let the app-level `responseHeader.errorCode` drive UX.
+    const statusToSend = fn === "login" ? 200 : status;
 
     if (encryptionEnabled) {
-      const ciphertextResp = encryptionService.encryptObject(safeData.data);
-      return res.status(safeData.status).json({ responseEncryptedString: ciphertextResp });
+      const ciphertextResp = encryptionService.encryptObject(payload);
+      return res.status(statusToSend).json({ responseEncryptedString: ciphertextResp });
     }
-    return res.status(safeData.status).json(safeData.data);
+    return res.status(statusToSend).json(payload);
+    
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message || String(err) });

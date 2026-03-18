@@ -220,9 +220,10 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       }
     }
     
-    // If field restrictions exist but field is not found, hide it
-    // If no field restrictions exist, show it (default behavior)
-    const isVisible = field ? field.render : (fields.length === 0 ? true : false);
+    // Section-driven behavior:
+    // - If a field is explicitly present in API, honor its `render` flag.
+    // - If the API doesn't mention a field, default to visible (show all fields in allowed sections).
+    const isVisible = field ? field.render : true;
     
     // Enhanced logging
     if (!field && fields.length > 0) {
@@ -327,36 +328,17 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
              normalizedSectionName.includes(normalizedApiSection);
     });
     
-    // If section doesn't exist in API response, default to visible
-    // (Only hide if explicitly marked as hidden or if all fields are hidden)
+    // Section-driven behavior:
+    // If the API returns sections for this tab, only those sections should render.
     if (!apiSection) {
-      // console.log(`🔍 Section "${sectionName}" NOT FOUND in API response for tab "${tabValue}", defaulting to visible (no section-level restrictions)`);
-      return true; // Default to visible - let field-level filtering handle visibility
+      return false;
     }
     
-    // If section exists but has no fields, check if we should show it
-    if (!apiSection.fieldList || apiSection.fieldList.length === 0) {
-      // console.log(`⚠️ Section "${sectionName}" exists in API but has no fields, defaulting to visible`);
-      return true; // Default to visible - section exists but no field restrictions
-    }
+    // If section exists but has no fields, show it (no field-level restrictions)
+    if (!apiSection.fieldList || apiSection.fieldList.length === 0) return true;
     
-    // Check if at least one field in this section is visible
-    const hasVisibleField = fieldNames.some(fieldName => {
-      // We need to check if any field in the section matches our field names
-      return apiSection.fieldList?.some(field => {
-        const normalizedFieldName = normalizeFieldName(field.cntrlName || '');
-        const normalizedFieldIdentifier = normalizeFieldName(fieldName);
-        return field.render && (
-          normalizedFieldName === normalizedFieldIdentifier ||
-          normalizedFieldName.includes(normalizedFieldIdentifier) ||
-          normalizedFieldIdentifier.includes(normalizedFieldName)
-        );
-      });
-    });
-    
-    const isVisible = hasVisibleField;
-    // console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'} (${fieldNames.length} fields checked, ${apiSection.fieldList.length} fields in API)`);
-    return isVisible;
+    // Section exists => visible. Fields inside are handled by `isFieldVisible`.
+    return true;
   };
 
   return {
