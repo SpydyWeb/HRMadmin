@@ -16,6 +16,7 @@ export const masterService = {
         APIRoutes.GETMASTERS,
         [data],
       )
+      console.log('response from getmasters', response)
       return response
     } catch (error) {
       console.error(error)
@@ -26,6 +27,7 @@ export const masterService = {
     const response = await callApi<Record<string, any[]>>('GetMastersBulk', [
       keys,
     ])
+    console.log('response from getMastersBulk', response)
     return response
   },
 }

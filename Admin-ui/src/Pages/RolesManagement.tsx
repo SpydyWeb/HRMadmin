@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { HMSService } from '@/services/hmsService'
 import DataTable from '@/components/table/DataTable'
 import { Pagination } from '@/components/table/Pagination'
@@ -38,6 +36,13 @@ const RolesManagement = () => {
     isLocked: boolean
     failedLoginAttempts: number
   }
+  type UserLookup = {
+    userId?: number
+    username: string
+    emailId?: string
+    mobileNumber?: string
+    isActive?: boolean
+  }
 
   type FieldAccess = {
     fieldId: number
@@ -66,7 +71,11 @@ const RolesManagement = () => {
   const [newRoleName, setNewRoleName] = useState('')
   const [addingRole, setAddingRole] = useState(false)
   const [openAddUser, setOpenAddUser] = useState(false)
-  const [newUsername, setNewUsername] = useState('')
+  const [userSearchText, setUserSearchText] = useState('')
+  const [selectedUsernames, setSelectedUsernames] = useState<string[]>([])
+  const [userSuggestions, setUserSuggestions] = useState<UserLookup[]>([])
+  const [userSuggestionsLoading, setUserSuggestionsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [addingUser, setAddingUser] = useState(false)
   const [fieldAccess, setFieldAccess] = useState<FieldAccess[]>([])
   const [fieldLoading, setFieldLoading] = useState(false)
@@ -74,6 +83,107 @@ const RolesManagement = () => {
   const pageSize = 5 // how many rows per page
   const [treeData, setTreeData] = useState<any[]>([])
   const [globalLoading, setGlobalLoading] = useState(false)
+  const searchDebounceRef = useRef<number | null>(null)
+  const selectedSet = useMemo(
+    () => new Set(selectedUsernames.map(u => u.toLowerCase())),
+    [selectedUsernames]
+  )
+
+  const addUsernameTag = (raw: string) => {
+    const username = raw.trim()
+    if (!username) return
+    setSelectedUsernames(prev => {
+      const exists = prev.some(u => u.toLowerCase() === username.toLowerCase())
+      return exists ? prev : [...prev, username]
+    })
+  }
+
+  const removeUsernameTag = (username: string) => {
+    setSelectedUsernames(prev => prev.filter(u => u !== username))
+  }
+
+  const clearAddUserDialog = () => {
+    setUserSearchText('')
+    setSelectedUsernames([])
+    setUserSuggestions([])
+    setShowSuggestions(false)
+  }
+
+  const commitInputTokens = (value: string) => {
+    const parts = value
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
+
+    if (parts.length === 0) return
+
+    parts.forEach(p => addUsernameTag(p))
+    setUserSearchText('')
+    setShowSuggestions(false)
+  }
+
+  useEffect(() => {
+    if (!openAddUser) return
+
+    // Load all users (or top list) on open, and refresh suggestions as user types.
+    const query = userSearchText.trim()
+
+    if (searchDebounceRef.current) {
+      window.clearTimeout(searchDebounceRef.current)
+    }
+
+    searchDebounceRef.current = window.setTimeout(async () => {
+      setUserSuggestionsLoading(true)
+      try {
+        const res = await HMSService.getUserIds({
+          username: query,
+          emailId: '',
+          mobileNumber: '',
+          isActive: true,
+        })
+
+        // API response shape can vary; normalize to array of user-like objects.
+        const list: any[] =
+          res?.responseBody?.userList ||
+          res?.responseBody?.users ||
+          res?.responseBody ||
+          res?.data?.responseBody?.userList ||
+          res?.data?.responseBody?.users ||
+          res?.data?.responseBody ||
+          res?.data ||
+          []
+
+        const normalized: UserLookup[] = Array.isArray(list)
+          ? list.map((u: any) => ({
+              userId: u.userId ?? u.id ?? u.user_ID,
+              username: u.username ?? u.userName ?? u.loginId ?? u.loginID ?? u,
+              emailId: u.emailId ?? u.email ?? u.emailID,
+              mobileNumber: u.mobileNumber ?? u.mobile ?? u.phone,
+              isActive: u.isActive,
+            }))
+          : []
+
+        setUserSuggestions(normalized.filter(u => Boolean(u.username)))
+      } catch (error: any) {
+        setUserSuggestions([])
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          error?.response?.data?.responseHeader?.errorMessage ||
+            error?.message ||
+            'Failed to load users'
+        )
+      } finally {
+        setUserSuggestionsLoading(false)
+      }
+    }, query.length === 0 ? 0 : 250)
+
+    return () => {
+      if (searchDebounceRef.current) {
+        window.clearTimeout(searchDebounceRef.current)
+        searchDebounceRef.current = null
+      }
+    }
+  }, [openAddUser, userSearchText])
 
 
   const menuData = [
@@ -584,28 +694,60 @@ const RolesManagement = () => {
   const handleAddUser = async () => {
     if (!selectedRole) return
 
-    if (!newUsername.trim()) {
-      showToast(NOTIFICATION_CONSTANTS.WARNING, 'Username is required')
+    // Build final username list using current state + current input text (state updates are async)
+    const inputParts = userSearchText
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
+
+    const finalUsernames = Array.from(
+      new Set(
+        [...selectedUsernames, ...inputParts].map(u => u.trim()).filter(Boolean)
+      )
+    )
+
+    if (finalUsernames.length === 0) {
+      showToast(NOTIFICATION_CONSTANTS.WARNING, 'Please add at least one user')
       return
     }
 
     setAddingUser(true)
 
     try {
-      const res = await HMSService.assignUserToRole({
-        userName: newUsername,
-        roleId: selectedRole.roleId
-      })
+      const results = await Promise.allSettled(
+        finalUsernames.map((userName) =>
+          HMSService.assignUserToRole({
+            userName,
+            roleId: selectedRole.roleId,
+          })
+        )
+      )
 
-      if (res?.responseHeader?.errorCode === 1101) {
+      const successes = results.filter(
+        (r) => r.status === 'fulfilled' && r.value?.responseHeader?.errorCode === 1101
+      ).length
 
-        // 🔥 Refresh user list
+      const failures = results.length - successes
+
+      if (successes > 0) {
+        showToast(
+          NOTIFICATION_CONSTANTS.SUCCESS,
+          `Added ${successes} user${successes === 1 ? '' : 's'} to role`
+        )
         await fetchUserList(selectedRole)
-
-        setOpenAddUser(false)
-        setNewUsername('')
       }
-      handleApiToast(res)
+
+      if (failures > 0) {
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          `${failures} user${failures === 1 ? '' : 's'} could not be added`
+        )
+      }
+
+      if (successes > 0 && failures === 0) {
+        setOpenAddUser(false)
+        clearAddUserDialog()
+      }
 
     } catch (error) {
       showToast(
@@ -774,33 +916,34 @@ const RolesManagement = () => {
   const handleDeleteUser = async (userName: string) => {
     if (!selectedRole) return
 
-    const confirmDelete = window.confirm(
-      'Are you sure you want to remove this user from the role?'
-    )
-    if (!confirmDelete) return
+    const roleId = selectedRole.roleId
+    showToast(NOTIFICATION_CONSTANTS.ACTION, 'Remove user from this role?', {
+      description: `User: ${userName}`,
+      actionLabel: 'Remove',
+      onAction: async () => {
+        try {
+          const res: any = await HMSService.removeUserFromRole({
+            userName,
+            roleId,
+          })
 
-    try {
-      const res = await HMSService.removeUserFromRole({
-        userName,
-        roleId: selectedRole.roleId,
-      })
+          if (res?.responseHeader?.errorCode === 1101) {
+            setUserList(prev => prev.filter(u => u.username !== userName))
+          }
 
-      if (res?.responseHeader?.errorCode === 1101) {
-        setUserList(prev =>
-          prev.filter(u => u.username !== userName)
-        )
-      }
+          handleApiToast(res)
+        } catch (error: any) {
+          showToast(
+            NOTIFICATION_CONSTANTS.ERROR,
+            error?.response?.data?.responseHeader?.errorMessage ||
+              error?.message ||
+              'Server error'
+          )
+        }
+      },
+    })
+    return
 
-      handleApiToast(res)
-
-    } catch (error: any) {
-      showToast(
-        NOTIFICATION_CONSTANTS.ERROR,
-        error?.response?.data?.responseHeader?.errorMessage ||
-        error?.message ||
-        'Server error'
-      )
-    }
   }
   const handleRoleClick = (role: Role) => {
     setSelectedRole(role)
@@ -865,7 +1008,13 @@ const RolesManagement = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={openAddUser} onOpenChange={setOpenAddUser}>
+      <AlertDialog
+        open={openAddUser}
+        onOpenChange={(open) => {
+          setOpenAddUser(open)
+          if (!open) clearAddUserDialog()
+        }}
+      >
         <AlertDialogContent className="sm:max-w-md rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold text-gray-800">
@@ -875,20 +1024,109 @@ const RolesManagement = () => {
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
+              Users
             </label>
-            <input
-              type="text"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-              placeholder="Enter username"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+
+            {/* Tag input */}
+            <div
+              className="w-full rounded-md border border-gray-300 px-2 py-2 text-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 bg-white"
+              onClick={() => setShowSuggestions(true)}
+            >
+              <div className="flex flex-wrap gap-2">
+                {selectedUsernames.map((u) => (
+                  <span
+                    key={u}
+                    className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs"
+                    title={u}
+                  >
+                    <span className="max-w-[180px] truncate">{u}</span>
+                    <button
+                      type="button"
+                      className="text-blue-700/80 hover:text-blue-900"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeUsernameTag(u)
+                      }}
+                      aria-label={`Remove ${u}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+
+                <input
+                  type="text"
+                  value={userSearchText}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setUserSearchText(val)
+                    setShowSuggestions(true)
+                    // If user typed comma, commit immediately.
+                    if (val.includes(',')) commitInputTokens(val)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      commitInputTokens(userSearchText)
+                    }
+                    if (e.key === 'Backspace' && userSearchText.length === 0 && selectedUsernames.length > 0) {
+                      removeUsernameTag(selectedUsernames[selectedUsernames.length - 1])
+                    }
+                  }}
+                  onBlur={() => {
+                    // Give time for click selection from dropdown.
+                    window.setTimeout(() => setShowSuggestions(false), 150)
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  placeholder={selectedUsernames.length ? 'Type more...' : 'Type username(s) and press Enter or comma'}
+                  className="flex-1 min-w-[140px] outline-none border-0 px-1 py-1 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Suggestions */}
+            {showSuggestions && (
+              <div className="relative">
+                <div className="absolute z-50 mt-2 w-full max-h-56 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                  {userSuggestionsLoading ? (
+                    <div className="p-3 text-sm text-gray-500">Loading...</div>
+                  ) : userSuggestions.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">No users found</div>
+                  ) : (
+                    userSuggestions
+                      .filter((u) => !selectedSet.has((u.username || '').toLowerCase()))
+                      .slice(0, 20)
+                      .map((u) => (
+                        <button
+                          key={`${u.userId ?? u.username}-${u.username}`}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            addUsernameTag(u.username)
+                            setUserSearchText('')
+                            setShowSuggestions(false)
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 transition"
+                        >
+                          <div className="text-sm font-medium text-gray-800">{u.username}</div>
+                          {u.emailId && (
+                            <div className="text-xs text-gray-500 truncate">{u.emailId}</div>
+                          )}
+                        </button>
+                      ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            <p className="mt-2 text-xs text-gray-500">
+              Tip: you can paste <span className="font-medium">user1,user2</span> and press Enter.
+            </p>
           </div>
 
           <AlertDialogFooter className="mt-6 flex justify-end gap-3">
             <AlertDialogCancel
-              onClick={() => setNewUsername('')}
+              onClick={() => clearAddUserDialog()}
               className="rounded-md border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
               Cancel

@@ -204,6 +204,15 @@ export const HMSService = {
     ])
   },
 
+  getUserIds: async (payload: {
+    username: string
+    emailId: string
+    mobileNumber: string
+    isActive: boolean
+  }) => {
+    return callApi<unknown>('getUserIds', [payload])
+  },
+
   getHierarchyData: async (payload: {
     roleId: number
     searchFor: number
