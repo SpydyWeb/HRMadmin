@@ -45,7 +45,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
       ...(config.defaultValues || {}),
     },
     onSubmit: async ({ value }) => {
-      console.log('✅ Form submitted with values:', value)
+      // console.log('✅ Form submitted with values:', value)
       if (!onSubmit) {
         console.warn('⚠️ onSubmit prop is missing in DynamicFormBuilder')
         return
@@ -306,7 +306,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
   const handleButtonClick = async (button: any) => {
     if (button.type === 'submit') {
-      console.log('clicked submit button')
+      // console.log('clicked submit button')
       await form.handleSubmit()
     } else if (button.type === 'reset') {
       form.reset()
@@ -339,7 +339,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               size={ele.size || 'default'}
               onClick={() => {
                 if (ele.type === 'submit') {
-                  console.log('Submitting form...')
+                  // console.log('Submitting form...')
                   handleButtonClick(ele)
                 } else {
                   onFieldClick(ele.name, ele.data)

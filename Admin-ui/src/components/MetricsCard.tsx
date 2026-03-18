@@ -158,7 +158,7 @@ export const MetricsCard = ({
           return (
             <Card key={index} className="rounded-md p-2 flex-1 min-w-0 p-2">
               <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <div className="flex-1 p-2">
                   <h3 className="text-gray-500 text-xs font-medium mb-1">
                     {metric.title}
                   </h3>

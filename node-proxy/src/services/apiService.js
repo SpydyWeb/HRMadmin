@@ -26,7 +26,7 @@ const search = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTSEARCH, data, { headers });
 };
 const searchbycode = (data, headers = {}) => {
-  return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers });
+  return apiClient.post(APIRoutes.AGENTBYCODE, data, { headers })
 };
 const Agentbyid = (data, headers = {}) => {
   return apiClient.post(APIRoutes.AGENTBYID, data, { headers });
@@ -511,6 +511,9 @@ const fetchInboxData = (data = {}, headers = {}) => {
 const updateSrDecision = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPDATESRDECISION, data, { headers });
 }
+const getUserIds = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GETUSERIDS, data, { headers });
+}
 const getUserDetails = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETUSERDETAILS, data, { headers });
 }
@@ -597,6 +600,7 @@ module.exports = {
   allowUiAccess,
   fetchInboxData,
   updateSrDecision,
+  getUserIds,
   getUserDetails,
   createUser,
   updateUser,

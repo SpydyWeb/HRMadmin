@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { BiSearch } from 'react-icons/bi'
-import { MdMonitor } from 'react-icons/md'
+// import { MdMonitor } from 'react-icons/md'
+import { MdDashboard, MdAccountBalance, MdCardGiftcard, MdAssessment, MdReceipt } from 'react-icons/md'
 import { IoIosArrowRoundForward } from 'react-icons/io'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -30,45 +31,45 @@ export default function SearchInterface() {
     navigate({ to: route })
   }
 }
-  const moduleCards = [
-    {
-      id: 'hms',
-      title: 'H.M.S',
-      icon: MdMonitor,
-      color: 'bg-blue-600 hover:bg-blue-700',
-      isActive: true,
-      route:'/search/dashboard'
-    },
-    {
-      id: 'commissions',
-      title: 'Commissions',
-      icon: MdMonitor,
-      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-      isActive: false,
-       route:'/search/commission'
-    },
-    {
-      id: 'incentive',
-      title: 'Incentive / Rewards',
-      icon: MdMonitor,
-      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-      isActive: false,
-    },
-    {
-      id: 'pms',
-      title: 'PMS',
-      icon: MdMonitor,
-      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-      isActive: false,
-    },
-    {
-      id: 'invoices',
-      title: 'Invoices',
-      icon: MdMonitor,
-      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-      isActive: false,
-    },
-  ]
+ const moduleCards = [
+  {
+    id: 'hms',
+    title: 'H.M.S',
+    icon: MdDashboard, // Dashboard/overview icon
+    color: 'bg-blue-600 hover:bg-blue-700',
+    isActive: true,
+    route:'/search/dashboard'
+  },
+  {
+    id: 'commissions',
+    title: 'Commissions',
+    icon: MdAccountBalance, // Financial/money icon
+    color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
+    isActive: false,
+    route:'/search/commission'
+  },
+  {
+    id: 'incentive',
+    title: 'Incentive / Rewards',
+    icon: MdCardGiftcard, // Gift/reward icon
+    color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
+    isActive: false,
+  },
+  {
+    id: 'pms',
+    title: 'PMS',
+    icon: MdAssessment, // Performance/analytics icon
+    color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
+    isActive: false,
+  },
+  {
+    id: 'invoices',
+    title: 'Invoices',
+    icon: MdReceipt, // Document/receipt icon
+    color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
+    isActive: false,
+  },
+]
 
   const dynamicColumns = [
     {
@@ -166,7 +167,7 @@ export default function SearchInterface() {
                 </Button>
               </div>
             </div>
-            <ZoneList />
+            {/* <ZoneList /> */}
           </div>
 
           {/* Module Cards */}

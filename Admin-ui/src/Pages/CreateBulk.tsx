@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FiFileText, FiSettings } from 'react-icons/fi'
 import { BiDownload, BiSend, BiUpload } from 'react-icons/bi'
 import { FaRegFileExcel } from 'react-icons/fa6'
@@ -8,14 +8,7 @@ import type { IBatch } from '@/models/hmsdashboard'
 import { useMutation } from '@tanstack/react-query'
 import { showToast } from '@/components/ui/sonner'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import DataTable from '@/components/table/DataTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import {
@@ -54,7 +47,7 @@ const CreateBulk = () => {
   const [batches, setBatches] = useState<IBatch[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeStep, setActiveStep] = useState<number>(2) // default to upload step per requirement
+  const [activeStep, setActiveStep] = useState<number>(1) // default to upload step per requirement
   const [downloadingBatchId, setDownloadingBatchId] = useState<string | null>(null)
   const [downloadingType, setDownloadingType] = useState<'success' | 'failed' | null>(null)
 
@@ -114,7 +107,7 @@ const CreateBulk = () => {
       case 'completedwitherrors':
         return 'bg-amber-100 text-amber-700'
       case 'pending':
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-yellow-100 text-slate-700'
       case 'failed':
         return 'bg-rose-100 text-rose-700'
       case 'processing':
@@ -245,9 +238,9 @@ const CreateBulk = () => {
                     Supported formats: .xls, .xlsx, .csv (max 10 MB)
                   </p>
                 </div>
-                <Button variant="outline" size="sm">
+                {/* <Button variant="outline" size="sm">
                   Browse Files
-                </Button>
+                </Button> */}
               </label>
               <input
                 ref={inputRef}
@@ -320,6 +313,54 @@ const CreateBulk = () => {
     }
   }
 
+  // Define table columns
+  const tableColumns = useMemo(() => [
+    { header: 'Batch ID', accessor: (row: any) => <span className="font-semibold text-slate-900">{row.batchId}</span>, width: '120px', align: 'center' as const },
+    { header: 'File Name', accessor: 'fileName', width: '250px', align: 'center' as const },
+    { header: 'Uploaded By', accessor: 'uploadedBy', align: 'center' as const },
+    { header: 'Uploaded On', accessor: (row: any) => formatDate(row.uploadedOn), align: 'center' as const },
+    { header: 'Total', accessor: 'total', align: 'center' as const },
+    {
+      header: 'Success',
+      align: 'center' as const,
+      accessor: (row: any) => (
+        <button
+          onClick={() => handleDownloadReport(row.batchId, 'success')}
+          disabled={!row.success || row.success === 0 || (downloadingBatchId === row.batchId && downloadingType === 'success')}
+          className={`text-green-600 hover:text-green-700 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
+            downloadingBatchId === row.batchId && downloadingType === 'success' ? 'opacity-50' : ''
+          }`}
+          title="Download success report"
+        >
+          {downloadingBatchId === row.batchId && downloadingType === 'success' ? 'Downloading...' : row.success}
+        </button>
+      ),
+    },
+    {
+      header: 'Failed',
+      accessor: (row: any) => (
+        <button
+          onClick={() => handleDownloadReport(row.batchId, 'failed')}
+          disabled={!row.failed || row.failed === 0 || (downloadingBatchId === row.batchId && downloadingType === 'failed')}
+          className={`text-rose-500 hover:text-rose-600 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
+            downloadingBatchId === row.batchId && downloadingType === 'failed' ? 'opacity-50' : ''
+          }`}
+          title="Download failed report"
+        >
+          {downloadingBatchId === row.batchId && downloadingType === 'failed' ? 'Downloading...' : row.failed}
+        </button>
+      ),
+    },
+    {
+      header: 'Status',
+      accessor: (row: any) => (
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(row.status)}`}>
+          {row.status}
+        </span>
+      ),
+    },
+  ], [downloadingBatchId, downloadingType])
+
   return (
     <div className="space-y-6 py-4">
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -365,7 +406,7 @@ const CreateBulk = () => {
           })}
         </div>
 
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-8">
           {renderStepContent()}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button
@@ -460,74 +501,17 @@ const CreateBulk = () => {
   </div>
 </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-              <span className="ml-3 text-slate-600">Loading batches...</span>
-            </div>
-          ) : error ? (
+          {error ? (
             <div className="flex items-center justify-center py-10 text-rose-500">
               {error}
             </div>
-          ) : batches.length === 0 ? (
-            <div className="flex items-center justify-center py-10 text-slate-500">
-              No uploaded batches found.
-            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Batch ID</TableHead>
-                  <TableHead>File Name</TableHead>
-                  <TableHead>Uploaded By</TableHead>
-                  <TableHead>Uploaded On</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Success</TableHead>
-                  <TableHead>Failed</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {batches.map((batch) => (
-                  <TableRow key={batch.batchId}>
-                    <TableCell className="font-semibold text-slate-900">{batch.batchId}</TableCell>
-                    <TableCell>{batch.fileName}</TableCell>
-                    <TableCell>{batch.uploadedBy}</TableCell>
-                    <TableCell>{formatDate(batch.uploadedOn)}</TableCell>
-                    <TableCell>{batch.total}</TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => handleDownloadReport(batch.batchId, 'success')}
-                        disabled={!batch.success || batch.success === 0 || (downloadingBatchId === batch.batchId && downloadingType === 'success')}
-                        className={`text-green-600 hover:text-green-700 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
-                          downloadingBatchId === batch.batchId && downloadingType === 'success' ? 'opacity-50' : ''
-                        }`}
-                        title="Download success report"
-                      >
-                        {downloadingBatchId === batch.batchId && downloadingType === 'success' ? 'Downloading...' : batch.success}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => handleDownloadReport(batch.batchId, 'failed')}
-                        disabled={!batch.failed || batch.failed === 0 || (downloadingBatchId === batch.batchId && downloadingType === 'failed')}
-                        className={`text-rose-500 hover:text-rose-600 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline ${
-                          downloadingBatchId === batch.batchId && downloadingType === 'failed' ? 'opacity-50' : ''
-                        }`}
-                        title="Download failed report"
-                      >
-                        {downloadingBatchId === batch.batchId && downloadingType === 'failed' ? 'Downloading...' : batch.failed}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(batch.status)}`}>
-                        {batch.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={tableColumns}
+              data={batches}
+              loading={isLoading}
+              noDataMessage="No uploaded batches found."
+            />
           )}
         </CardContent>
       </Card>

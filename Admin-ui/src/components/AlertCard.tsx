@@ -40,7 +40,7 @@ export const AlertCard = ({ dashboardData }: { dashboardData: any }) => {
   return (
     <Card className="max-w-7xl gap-0 rounded-md">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold">Urgent Alerts</CardTitle>
+        <CardTitle className="text-xl font-semibold mb-2">Urgent Alerts</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {alerts.map((alert, index) => (

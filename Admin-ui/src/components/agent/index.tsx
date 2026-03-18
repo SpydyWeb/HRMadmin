@@ -25,7 +25,7 @@ import { TAB_SECTION_MAP } from '@/services/uiAccessService'
 const allTabs = [
   { value: 'personaldetails', label: 'Personal' },
   { value: 'peoplehierarchy', label: 'People Hierarchy' },
-  { value: 'geographicalhierarchy', label: 'Geographical Hierarchy' },
+  { value: 'geographicalhierarchy', label: 'Geographic Heirarchy' },
   { value: 'partnersmapped', label: 'Partners Mapped' },
   { value: 'auditlog', label: 'Audit Log' },
   { value: 'licensedetails', label: 'License' },

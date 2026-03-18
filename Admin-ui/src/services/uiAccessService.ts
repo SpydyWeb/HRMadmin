@@ -34,8 +34,8 @@ export interface UIAccessResponse {
 // Mapping between tab values in the UI and section names in the API
 export const TAB_SECTION_MAP: Record<string, string> = {
   'personaldetails': 'Personal',
-  'peoplehierarchy': 'People Hierarchy',
-  'geographicalhierarchy': 'Geographical Hierarchy',
+  'peoplehierarchy': 'People Heirarchy',
+  'geographicalhierarchy': 'Geographic Heirarchy',
   'partnersmapped': 'Partners Mapped',
   'auditlog': 'Audit Log',
   'licensedetails': 'License',
@@ -46,21 +46,21 @@ export const TAB_SECTION_MAP: Record<string, string> = {
 
 export const uiAccessService = {
   getUIAccessPermissions: async (roleId: number, searchFor: number): Promise<UIAccessResponse> => {
-    console.log('🚀 Calling allowUiAccess API with payload:', { roleId, searchFor });
+    // // console.log('🚀 Calling allowUiAccess API with payload:', { roleId, searchFor });
     try {
       const response = await callApi<ApiResponse<UIAccessResponse>>(
         APIRoutes.ALLOW_UI_ACCESS,
         [roleId, searchFor]
       )
-      console.log('📥 Raw UI Access API response:', response);
-      console.log('📦 Response body:', response?.responseBody);
-      console.log('🌳 UI Menu structure:', JSON.stringify(response?.responseBody, null, 2));
+      // console.log('📥 Raw UI Access API response:', response);
+      // console.log('📦 Response body:', response?.responseBody);
+      // console.log('🌳 UI Menu structure:', JSON.stringify(response?.responseBody, null, 2));
       
       const result = response?.responseBody || { uiMenuResponse: { uiMenu: [] } };
-      console.log('✅ Returning UI Access data:', result);
+      // console.log('✅ Returning UI Access data:', result);
       return result;
     } catch (error) {
-      console.error('❌ Error calling UI Access API:', error);
+      // console.error('❌ Error calling UI Access API:', error);
       throw error;
     }
   },

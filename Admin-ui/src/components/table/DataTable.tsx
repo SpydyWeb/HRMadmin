@@ -5,6 +5,7 @@ interface Column {
   header: string;
   accessor: string | ((row: any) => React.ReactNode);
   width?: string; // Optional column width like "150px" or "20%"
+  align?: 'left' | 'center' | 'right'; // Optional text alignment
 }
 
 interface DataTableProps {  
@@ -32,7 +33,9 @@ export default function DataTable({
             {columns.map((col, idx) => (
               <TableHead
                 key={idx}
-                className="px-4 py-2 text-left font-semibold text-gray-700 uppercase"
+                className={`px-4 py-2 font-semibold text-gray-700 uppercase ${
+                  col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                }`}
                 style={{ width: col.width || defaultWidth }}
               >
                 {col.header}
@@ -75,7 +78,9 @@ export default function DataTable({
                 {columns.map((col, colIdx) => (
                   <TableCell
                     key={colIdx}
-                    className="px-4 py-4 text-left"
+                    className={`px-4 py-4 ${
+                      col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                    }`}
                     style={{ width: col.width || defaultWidth }}
                   >
                     {typeof col.accessor === "function"

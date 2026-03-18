@@ -45,11 +45,11 @@ export const HMSService = {
     }
   },
 
-  hmsOverviewStats: async () => {
+  hmsOverviewStats: async (payload?: { pageNumber: number; pageSize: number }) => {
     try {
       const response = await callApi<ApiResponse<IChannelStatsApiResponse>>(
         APIRoutes.HMS_OVERVIEW_STATS,
-        [{}], // Pass empty object as data parameter
+        [payload ?? {}], // Pass empty object as data parameter
       )
       console.log('hms channel stats response', response)
       return response
@@ -202,6 +202,15 @@ export const HMSService = {
     return callApi("addUser", [
       payload
     ])
+  },
+
+  getUserIds: async (payload: {
+    username: string
+    emailId: string
+    mobileNumber: string
+    isActive: boolean
+  }) => {
+    return callApi<unknown>('getUserIds', [payload])
   },
 
   getHierarchyData: async (payload: {

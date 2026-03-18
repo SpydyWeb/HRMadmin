@@ -44,6 +44,7 @@ const APIRoutes = {
   UPDATESRDECISION:"/api/UserInbox/UpdateSrDecision",
   CREATECHANNEL:"api/AppMasters/Channel/Create",
   CREATESUBCHANNEL:"api/AppMasters",
+  GETUSERIDS: "/api/Users/GetUserIds",
   GETUSERDETAILS:"/api/Users/GetUserDetails",
   CREATEUSER:"/api/Users/CreateUser",
   UPDATEUSER:"/api/Users/UpdateUser",

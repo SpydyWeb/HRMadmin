@@ -82,7 +82,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
         case LoginConstants.INVALID_CREDENTIALS:
           showToast(
             NOTIFICATION_CONSTANTS.ERROR,
-            'Invalid username or password',
+            errorMessage || 'Invalid Credentials',
           )
           break
         case LoginConstants.ACCOUNT_LOCKED:
@@ -104,10 +104,49 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
           )
       }
     } catch (err: any) {
-      showToast(
-        NOTIFICATION_CONSTANTS.ERROR,
-        'Login failed: ' + (err.message || 'Unknown error'),
-      )
+      // Check if error has response data with the expected structure
+      // Error can be in err.response.data (axios error) or err.data (decrypted error)
+      const errorResponse = err?.response?.data || err?.data || err
+      
+      if (errorResponse?.responseHeader) {
+        const { errorCode, errorMessage } = errorResponse.responseHeader
+        switch (errorCode) {
+          case LoginConstants.INVALID_CREDENTIALS:
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              errorMessage || 'Invalid Credentials',
+            )
+            break
+          case LoginConstants.ACCOUNT_LOCKED:
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              errorMessage || 'Your account is locked. Contact support.',
+            )
+            break
+          case LoginConstants.NO_ACTIVE_PRIMARY_ROLE:
+            showToast(
+              NOTIFICATION_CONSTANTS.WARNING,
+              errorMessage || 'No active role assigned to your account',
+            )
+            break
+          default:
+            showToast(
+              NOTIFICATION_CONSTANTS.ERROR,
+              errorMessage || 'Unexpected error occurred',
+            )
+        }
+      } else {
+        // Fallback for unexpected error format
+        const errorMsg = 
+          errorResponse?.responseHeader?.errorMessage ||
+          errorResponse?.errorMessage ||
+          err?.message ||
+          'Login failed: Unknown error'
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          errorMsg,
+        )
+      }
     }
   }
   const handleFieldClick = (type: string) => {

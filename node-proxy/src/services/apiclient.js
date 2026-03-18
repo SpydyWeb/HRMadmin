@@ -67,14 +67,17 @@ const request = async (method, url, data, config = {}) => {
       return response.data;
     }
 
-    // Decrypt response if `data` field exists
-    if (response.data && response.data.data) {
-      return JSON.parse(response.data.data);
+    // If backend wraps payload under `data`, unwrap it but keep HTTP status.
+    // The /api/proxy route expects this function to ALWAYS return { status, data }.
+    let responseData = response.data;
+    if (responseData && responseData.data) {
+      responseData = JSON.parse(responseData.data);
     }
+
     return {
-  status: response.status,
-  data: response.data
-};
+      status: response.status ?? 200,
+      data: responseData,
+    };
   } catch (error) {
     console.error("API Client Error:", error.message);
     throw error;

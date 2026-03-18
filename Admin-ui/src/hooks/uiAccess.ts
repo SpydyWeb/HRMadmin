@@ -17,7 +17,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   } = useQuery<UIAccessResponse>({
     queryKey: ['ui-access', roleId, section, type],
     queryFn: () => {
-      console.log('🔍 Calling UI Access API with:', { roleId, searchFor: 1, section, type });
+      // // console.log('🔍 Calling UI Access API with:', { roleId, searchFor: 1, section, type });
       return uiAccessService.getUIAccessPermissions(roleId, 1);
     },
     enabled: true, // Always enable - API accepts roleId: 0
@@ -27,9 +27,9 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
 
   // Log the response for debugging
   if (uiAccessData) {
-    console.log('📦 UI Access Data received:', uiAccessData);
-    console.log('🌳 Full UI Access Response Structure:', JSON.stringify(uiAccessData, null, 2));
-    console.log('🔎 Looking for section:', section, 'type:', type);
+    // // console.log('📦 UI Access Data received:', uiAccessData);
+    // console.log('🌳 Full UI Access Response Structure:', JSON.stringify(uiAccessData, null, 2));
+    // // console.log('🔎 Looking for section:', section, 'type:', type);
   }
 
   // Find the specific screen (menu item) for the given section and type
@@ -46,18 +46,18 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   const screen = findScreen(uiAccessData?.uiMenuResponse?.uiMenu || [], section, type);
   
   // Log found screen for debugging
-  if (screen) {
-    console.log('✅ Found screen:', screen);
-    console.log('📋 Available tabs:', screen.subSection?.map(tab => ({ section: tab.section, type: tab.type })));
-  } else {
-    console.log('⚠️ Screen not found for section:', section, 'type:', type);
-    console.log('📋 Available screens:', uiAccessData?.uiMenuResponse?.uiMenu?.map(item => ({ section: item.section, type: item.type })));
-  }
+  // if (screen) {
+  //   console.log('✅ Found screen:', screen);
+  //   console.log('📋 Available tabs:', screen.subSection?.map(tab => ({ section: tab.section, type: tab.type })));
+  // } else {
+  //   console.log('⚠️ Screen not found for section:', section, 'type:', type);
+  //   console.log('📋 Available screens:', uiAccessData?.uiMenuResponse?.uiMenu?.map(item => ({ section: item.section, type: item.type })));
+  // }
   
   // Check if a specific tab is visible
   const isTabVisible = (tabValue: string): boolean => {
     if (!screen || !screen.subSection) {
-      console.log(`🔍 Tab "${tabValue}": No screen or tabs, defaulting to visible`);
+      // console.log(`🔍 Tab "${tabValue}": No screen or tabs, defaulting to visible`);
       return true; // Default to visible if no restrictions
     }
     
@@ -69,7 +69,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     );
     
     const isVisible = !!tab;
-    console.log(`🔍 Tab "${tabValue}" (API: "${apiSectionName}"): ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, tab ? { section: tab.section, type: tab.type } : 'not found');
+    // console.log(`🔍 Tab "${tabValue}" (API: "${apiSectionName}"): ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, tab ? { section: tab.section, type: tab.type } : 'not found');
     return isVisible; // If tab is in the list, it's visible
   };
   
@@ -99,7 +99,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       }
     });
     
-    console.log(`📋 Fields found in tab "${tabValue}":`, allFields);
+    // console.log(`📋 Fields found in tab "${tabValue}":`, allFields);
     return allFields;
   };
   
@@ -118,7 +118,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     const fields = findFieldsInTab(tabValue);
     
     if (fields.length === 0) {
-      console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} in tab "${tabValue}": No field restrictions, defaulting to visible`);
+      // console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} in tab "${tabValue}": No field restrictions, defaulting to visible`);
       return true; // Default to visible if no field restrictions
     }
     
@@ -130,7 +130,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     
     // Debug: Log cntrlid matching attempt for accountType specifically
     if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
-      console.log(`   🔎 [accountType] Trying to match by cntrlid ${cntrlid}...`, field ? `✅ FOUND: ${field.cntrlName}` : `❌ NOT FOUND (cntrlid ${cntrlid} not in API)`);
+      // console.log(`   🔎 [accountType] Trying to match by cntrlid ${cntrlid}...`, field ? `✅ FOUND: ${field.cntrlName}` : `❌ NOT FOUND (cntrlid ${cntrlid} not in API)`);
     }
     
     // If not found by cntrlid, try matching by cntrlName, field name, or label
@@ -138,12 +138,12 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       const normalizedIdentifier = normalizeFieldName(fieldIdentifier);
       const normalizedLabel = fieldLabel ? normalizeFieldName(fieldLabel) : '';
       
-      // Debug for accountType
-      if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
-        console.log(`   🔎 [accountType] Trying name/label matching...`);
-        console.log(`      normalizedIdentifier: "${normalizedIdentifier}"`);
-        console.log(`      normalizedLabel: "${normalizedLabel}"`);
-      }
+      // // Debug for accountType
+      // if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
+      //   console.log(`   🔎 [accountType] Trying name/label matching...`);
+      //   console.log(`      normalizedIdentifier: "${normalizedIdentifier}"`);
+      //   console.log(`      normalizedLabel: "${normalizedLabel}"`);
+      // }
       
       field = fields.find(f => {
         const fieldName = getFieldName(f.cntrlid);
@@ -200,23 +200,23 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
         
         // Debug for accountType
         if ((fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) && matches) {
-          console.log(`   ⚠️ [accountType] FALSE MATCH detected with field:`, {
-            cntrlid: f.cntrlid,
-            cntrlName: f.cntrlName,
-            matchesByName,
-            matchesByLabel,
-            exactMatchByName,
-            partialMatchByName,
-            exactMatchByLabel,
-            partialMatchByLabel
-          });
+          // console.log(`   ⚠️ [accountType] FALSE MATCH detected with field:`, {
+          //   cntrlid: f.cntrlid,
+          //   cntrlName: f.cntrlName,
+          //   matchesByName,
+          //   matchesByLabel,
+          //   exactMatchByName,
+          //   partialMatchByName,
+          //   exactMatchByLabel,
+          //   partialMatchByLabel
+          // });
         }
         
         return matches;
       });
       
       if (fieldIdentifier === 'accountType' || fieldLabel?.includes('Bank Account Type')) {
-        console.log(`   🔎 [accountType] Name/label matching result:`, field ? `✅ FOUND: ${field.cntrlName}` : '❌ NOT FOUND');
+        // console.log(`   🔎 [accountType] Name/label matching result:`, field ? `✅ FOUND: ${field.cntrlName}` : '❌ NOT FOUND');
       }
     }
     
@@ -226,12 +226,12 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     
     // Enhanced logging
     if (!field && fields.length > 0) {
-      console.log(`❌ Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} NOT FOUND in API restrictions for tab "${tabValue}"`);
-      console.log(`   Available fields in API:`, fields.map(f => ({ cntrlid: f.cntrlid, cntrlName: f.cntrlName, render: f.render })));
-      console.log(`   Tried matching with: fieldIdentifier="${fieldIdentifier}", fieldLabel="${fieldLabel}", cntrlid=${cntrlid || 'N/A'}`);
+      // console.log(`❌ Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} NOT FOUND in API restrictions for tab "${tabValue}"`);
+      // console.log(`   Available fields in API:`, fields.map(f => ({ cntrlid: f.cntrlid, cntrlName: f.cntrlName, render: f.render })));
+      // console.log(`   Tried matching with: fieldIdentifier="${fieldIdentifier}", fieldLabel="${fieldLabel}", cntrlid=${cntrlid || 'N/A'}`);
     }
     
-    console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, render: field.render } : `not found (${fields.length} fields in restrictions)`);
+    // console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, render: field.render } : `not found (${fields.length} fields in restrictions)`);
     return isVisible;
   };
   
@@ -280,7 +280,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     }
     
     const isEditable = field ? field.allowedit : (fields.length === 0 ? true : false);
-    console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : `not found (${fields.length} fields in restrictions)`);
+    // console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : `not found (${fields.length} fields in restrictions)`);
     return isEditable;
   };
 
@@ -293,7 +293,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     
     // If no screen or tabs, default to visible (no restrictions)
     if (!screen || !screen.subSection) {
-      console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No screen or tabs, defaulting to visible`);
+      // console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No screen or tabs, defaulting to visible`);
       return true; // Default to visible if no restrictions
     }
     
@@ -304,7 +304,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     
     // If tab not found, default to visible (no tab-level restrictions)
     if (!tab || !tab.subSection) {
-      console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No tab or sections found, defaulting to visible`);
+      // console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": No tab or sections found, defaulting to visible`);
       return true; // Default to visible if no tab restrictions
     }
     
@@ -330,13 +330,13 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     // If section doesn't exist in API response, default to visible
     // (Only hide if explicitly marked as hidden or if all fields are hidden)
     if (!apiSection) {
-      console.log(`🔍 Section "${sectionName}" NOT FOUND in API response for tab "${tabValue}", defaulting to visible (no section-level restrictions)`);
+      // console.log(`🔍 Section "${sectionName}" NOT FOUND in API response for tab "${tabValue}", defaulting to visible (no section-level restrictions)`);
       return true; // Default to visible - let field-level filtering handle visibility
     }
     
     // If section exists but has no fields, check if we should show it
     if (!apiSection.fieldList || apiSection.fieldList.length === 0) {
-      console.log(`⚠️ Section "${sectionName}" exists in API but has no fields, defaulting to visible`);
+      // console.log(`⚠️ Section "${sectionName}" exists in API but has no fields, defaulting to visible`);
       return true; // Default to visible - section exists but no field restrictions
     }
     
@@ -355,7 +355,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
     });
     
     const isVisible = hasVisibleField;
-    console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'} (${fieldNames.length} fields checked, ${apiSection.fieldList.length} fields in API)`);
+    // console.log(`🔍 Section "${sectionName}" in tab "${tabValue}": ${isVisible ? '✅ VISIBLE' : '❌ HIDDEN'} (${fieldNames.length} fields checked, ${apiSection.fieldList.length} fields in API)`);
     return isVisible;
   };
 
