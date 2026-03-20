@@ -1325,6 +1325,22 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
                       <p className="text-orange-100 text-sm">
                         DESIGNATION  - {agent.designationCodeDesc ?? "N/A"}
                       </p>
+                      <p className="text-orange-100 text-sm flex items-center gap-2">
+                        STATUS -{' '}
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            !agent.agentStatusCode
+                              ? 'bg-gray-200 text-gray-600'
+                              : String(agent.agentStatusCode).toUpperCase() === 'ACTIVE'
+                                ? 'bg-emerald-400/90 text-white'
+                                : String(agent.agentStatusCode).toUpperCase() === 'TERMINATED'
+                                  ? 'bg-red-500/90 text-white'
+                                  : 'bg-gray-400 text-white'
+                          }`}
+                        >
+                          {agent.agentStatusCode ?? 'N/A'}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </div>

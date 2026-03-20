@@ -57,6 +57,9 @@ const APIRoutes = {
   AGENTSEARCHFORPARTNER: "/api/Agent",
   // Graph (external service)
   GETGRAPHDATA: "http://hmsapi.ezytekapis.com/GetGraphData",
+  FETCHALLBRANCHES: "/api/AppMasters/GetRegulatorBranches",
+  SAVEAGENTLINKEDBRANCH: "/api/Agent/RegulatorBranch/Save",
+  FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent"
 };
 
 module.exports = { APIRoutes };

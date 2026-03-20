@@ -66,7 +66,7 @@ const buildGeoHierarchyTree = (hierarchies: Array<IGeoHierarchy>): Array<TreeVie
 
 
 
-export const GeographicalHierarchy = ({ channelCode,branchCode,subChannelCode,getOptions,highlightBranch,locationCode,officeType }: GeoHierarchyProps) => {
+export const GeographicalHierarchy = ({ Agent, channelCode, branchCode, subChannelCode, getOptions, highlightBranch, locationCode, officeType }: GeoHierarchyProps) => {
   const { data: geoHierarchy, isLoading, isError } = useQuery({
     queryKey: ['geoHierarchy', channelCode,branchCode,subChannelCode],
     queryFn: () => agentService.fetchGeoHierarchy(channelCode, branchCode, subChannelCode),
@@ -91,5 +91,16 @@ export const GeographicalHierarchy = ({ channelCode,branchCode,subChannelCode,ge
   const rootBranch = geoHierarchy?.geoHierarchy?.find((item: IGeoHierarchy) => !item.parentLocation)
   const parentBranchId = rootBranch?.branchMasterId || 0
     
-  return <SplitTreeTableGeo getOptions={getOptions} treeData={treeData} channelCode={channelCode} parentBranchId={parentBranchId} highlightBranch={highlightBranch} officeType={officeType} locationCode={locationCode} />
+  return (
+    <SplitTreeTableGeo
+      getOptions={getOptions}
+      treeData={treeData}
+      channelCode={channelCode}
+      parentBranchId={parentBranchId}
+      highlightBranch={highlightBranch}
+      officeType={officeType}
+      locationCode={locationCode}
+      agentId={Agent?.agentId}
+    />
+  )
 }
