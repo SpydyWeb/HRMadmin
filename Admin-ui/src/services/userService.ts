@@ -12,6 +12,7 @@ import type {
 
 
 export const userManagementService = {
+
   UserDetails: async (data: any) => {
     try {
       console.log("📬 UserDetails service called with data:", JSON.stringify(data, null, 2));
@@ -32,6 +33,28 @@ export const userManagementService = {
       throw error;
     }
   },
+
+  
+  saveRegulatorBranchesForUser: async (payload: {
+      userId: number
+      branchIds: number[]
+    }) => {
+      const response = await callApi<ApiResponse<any>>(
+        APIRoutes.SAVE_BRANCH_LINKED_USER,
+        [payload],
+      )
+      console.log('RegulatorBranch/Save response:', response)
+      // Keep full envelope so UI can read responseHeader.errorCode/message reliably.
+      return response
+    },
+  
+    fetchRegulatorBranchesByUser: async (payload: { userId: number }) => {
+      const response = await callApi<ApiResponse<any>>(
+        APIRoutes.FETCH_BRANCH_BY_USER,
+        [payload],
+      )
+      return response.responseBody ?? response ?? null
+    },
 
   CreateUser: async (data: ICreateUserRequest) => {
     try {

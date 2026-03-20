@@ -555,6 +555,16 @@ const fetchBranchByAgent = (data = {}, headers = {}) => {
   return apiClient.post(`${APIRoutes.FETCHBRANCHBYAGENT}/${data.agentId}`, {}, { headers });
 };
 
+const saveBranchLinkedUser = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.SAVEUSERLINKEDBRANCH, data, { headers });
+};
+
+const fetchBranchByUser = (data = {}, headers = {}) => {
+  return apiClient.post(`${APIRoutes.FETCHBRANCHBYUSER}/${data.userId}`, {}, { headers });
+};
+
+
+
 module.exports = {
   login,
   search,
@@ -628,4 +638,6 @@ module.exports = {
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,
+  saveBranchLinkedUser,
+  fetchBranchByUser,
 };
