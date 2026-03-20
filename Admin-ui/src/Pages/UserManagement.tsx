@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { CommonConstants } from '@/services/constant'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import { userManagementService } from '@/services/userService'
+import { agentService } from '@/services/agentService'
 import type { IUserDetails, ICreateUserRequest, IUpdateUserRequest, IUpdatePasswordRequest } from '@/models/user'
 import DynamicFormBuilder from '@/components/form/DynamicFormBuilder'
 import AutoAccordionSection from '@/components/ui/autoAccordianSection'
@@ -29,6 +30,267 @@ export default function UserManagement() {
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
+
+  type BranchOption = { branchId: number; name: string; code: string }
+  const [branchCatalog, setBranchCatalog] = useState<BranchOption[]>([])
+  const [branchCatalogLoading, setBranchCatalogLoading] = useState(false)
+  const [branchTagError, setBranchTagError] = useState<string | null>(null)
+  const [branchTagSearchText, setBranchTagSearchText] = useState('')
+  const [showBranchSuggestions, setShowBranchSuggestions] = useState(false)
+  const [selectedBranchIds, setSelectedBranchIds] = useState<number[]>([])
+
+  const parseBranchCatalog = (raw: unknown): BranchOption[] => {
+    const unwrap = (r: any) => r?.responseBody ?? r
+    const body: any = unwrap(raw)
+
+    const list = Array.isArray(body?.branchList)
+      ? body.branchList
+      : Array.isArray(body?.BranchList)
+        ? body.BranchList
+        : Array.isArray(body)
+          ? body
+          : []
+
+    const out: BranchOption[] = []
+    const seen = new Set<number>()
+    for (const item of list) {
+      const idRaw =
+        item?.branchId ?? item?.BranchId ?? item?.branchMasterId ?? item?.id
+      const id = typeof idRaw === 'string' ? parseInt(idRaw, 10) : Number(idRaw)
+      if (!Number.isFinite(id) || seen.has(id)) continue
+      seen.add(id)
+      out.push({
+        branchId: id,
+        name: String(
+          item?.branchName ?? item?.BranchName ?? item?.name ?? `Branch ${id}`,
+        ),
+        code: String(item?.branchCode ?? item?.BranchCode ?? item?.code ?? ''),
+      })
+    }
+    return out
+  }
+
+  const clearBranchTagState = () => {
+    setBranchCatalog([])
+    setBranchCatalogLoading(false)
+    setBranchTagError(null)
+    setBranchTagSearchText('')
+    setShowBranchSuggestions(false)
+    setSelectedBranchIds([])
+  }
+
+  useEffect(() => {
+    const shouldLoadCatalog = isCreateModalOpen || Boolean(userDetails?.userId)
+    if (!shouldLoadCatalog) return
+    if (branchCatalog.length > 0) return
+
+    let cancelled = false
+    ;(async () => {
+      setBranchCatalogLoading(true)
+      setBranchTagError(null)
+      try {
+        const res = await agentService.fetchRegulatorBranches({ isActive: true })
+        if (cancelled) return
+        setBranchCatalog(parseBranchCatalog(res))
+      } catch (e: any) {
+        if (cancelled) return
+        setBranchTagError(
+          e instanceof Error ? e.message : 'Failed to load branches',
+        )
+        setBranchCatalog([])
+      } finally {
+        if (!cancelled) setBranchCatalogLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isCreateModalOpen, userDetails?.userId, branchCatalog.length])
+
+  const selectedBranchSet = useMemo(
+    () => new Set(selectedBranchIds),
+    [selectedBranchIds],
+  )
+
+  const initialSelectedBranchIdsRef = useRef<number[]>([])
+
+  const areBranchIdArraysEqual = (a: number[], b: number[]) => {
+    if (a.length !== b.length) return false
+    const sa = [...a].sort((x, y) => x - y)
+    const sb = [...b].sort((x, y) => x - y)
+    for (let i = 0; i < sa.length; i++) {
+      if (sa[i] !== sb[i]) return false
+    }
+    return true
+  }
+
+  const selectedBranchesForTags = useMemo(() => {
+    return selectedBranchIds.map((id) => {
+      const b = branchCatalog.find((x) => x.branchId === id)
+      return b ?? { branchId: id, name: `Branch ${id}`, code: '' }
+    })
+  }, [branchCatalog, selectedBranchIds])
+
+  const branchSuggestions = useMemo(() => {
+    const q = branchTagSearchText.trim().toLowerCase()
+    return branchCatalog
+      .filter((b) => !selectedBranchSet.has(b.branchId))
+      .filter((b) => {
+        if (!q) return true
+        return `${b.name} ${b.code}`.toLowerCase().includes(q)
+      })
+      .slice(0, 20)
+  }, [branchCatalog, branchTagSearchText, selectedBranchSet])
+
+  const addBranchTag = (id: number) => {
+    setSelectedBranchIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    setBranchTagSearchText('')
+    setShowBranchSuggestions(false)
+  }
+
+  const removeBranchTag = (id: number) => {
+    setSelectedBranchIds((prev) => prev.filter((x) => x !== id))
+  }
+
+  const commitBranchInput = () => {
+    const q = branchTagSearchText.trim().toLowerCase()
+    if (!q) return
+
+    const exact = branchSuggestions.find(
+      (b) => b.name.toLowerCase() === q || (b.code && b.code.toLowerCase() === q),
+    )
+
+    if (exact) {
+      addBranchTag(exact.branchId)
+      return
+    }
+
+    // If only one suggestion remains, allow Enter to select it.
+    if (branchSuggestions.length === 1) {
+      addBranchTag(branchSuggestions[0].branchId)
+    }
+  }
+
+  const normalizeLinkedBranchIdsByUser = (raw: unknown): number[] => {
+    const body = (raw as any)?.responseBody ?? raw
+    if (!body) return []
+
+    const toNumber = (v: any): number | null => {
+      const n = typeof v === 'string' ? parseInt(v, 10) : Number(v)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const extractId = (item: any): number | null => {
+      const idRaw =
+        item?.branchId ?? item?.BranchId ?? item?.branchMasterId ?? item?.id
+      return toNumber(idRaw)
+    }
+
+    if (Array.isArray(body?.branchIds)) {
+      return body.branchIds
+        .map(toNumber)
+        .filter((n: number | null): n is number => n !== null)
+    }
+    if (Array.isArray(body?.BranchIds)) {
+      return body.BranchIds
+        .map(toNumber)
+        .filter((n: number | null): n is number => n !== null)
+    }
+    if (Array.isArray(body?.branchList)) {
+      return body.branchList
+        .map(extractId)
+        .filter((n: number | null): n is number => n !== null)
+    }
+    if (Array.isArray(body?.BranchList)) {
+      return body.BranchList
+        .map(extractId)
+        .filter((n: number | null): n is number => n !== null)
+    }
+    if (Array.isArray(body?.branches)) {
+      return body.branches
+        .map(extractId)
+        .filter((n: number | null): n is number => n !== null)
+    }
+    if (Array.isArray(body)) {
+      return body
+        .map(extractId)
+        .filter((n: number | null): n is number => n !== null)
+    }
+
+    return []
+  }
+
+  // Prefill tagged branches for selected user (edit mode)
+  const [branchUpdateLoading, setBranchUpdateLoading] = useState(false)
+  useEffect(() => {
+    if (!userDetails?.userId) return
+    if (isCreateModalOpen) return // don't overwrite create-user selection
+
+    const userId: number = userDetails.userId as number
+    let cancelled = false
+    ;(async () => {
+      setBranchTagError(null)
+      try {
+        const res = await userManagementService.fetchRegulatorBranchesByUser({
+          userId,
+        })
+        if (cancelled) return
+        const ids = normalizeLinkedBranchIdsByUser(res)
+        setSelectedBranchIds(ids)
+        initialSelectedBranchIdsRef.current = ids
+      } catch (e: any) {
+        if (cancelled) return
+        setSelectedBranchIds([])
+        setBranchTagError(
+          e instanceof Error ? e.message : 'Failed to load user branches',
+        )
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [userDetails?.userId, isCreateModalOpen])
+
+  const handleUpdateUserBranches = async () => {
+    if (!userDetails?.userId) return
+    if (selectedBranchIds.length === 0) {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please select at least one branch')
+      return
+    }
+
+    setBranchUpdateLoading(true)
+    setBranchTagError(null)
+    try {
+      const saveRes = await userManagementService.saveRegulatorBranchesForUser({
+        userId: userDetails.userId,
+        branchIds: selectedBranchIds,
+      })
+
+      const code = saveRes?.responseHeader?.errorCode
+      const msg = saveRes?.responseHeader?.errorMessage
+
+      if (code === CommonConstants.SUCCESS) {
+        showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Branches updated successfully!')
+        // Refresh chips
+        const res = await userManagementService.fetchRegulatorBranchesByUser({
+          userId: userDetails.userId,
+        })
+        const ids = normalizeLinkedBranchIdsByUser(res)
+        setSelectedBranchIds(ids)
+      } else {
+        showToast(NOTIFICATION_CONSTANTS.ERROR, msg || 'Failed to update branches')
+      }
+    } catch (e: any) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        e?.message || 'Failed to update branches',
+      )
+    } finally {
+      setBranchUpdateLoading(false)
+    }
+  }
 
   console.log("merge check")
 
@@ -212,9 +474,18 @@ export default function UserManagement() {
         }
       })
 
-      // Don't send if only userId and username are present (no changes)
-      if (!hasAnyChanges && Object.keys(updatePayload).length === 2) {
-        showToast(NOTIFICATION_CONSTANTS.ERROR, 'No changes detected. Please modify at least one field.')
+      // Branch tagging changes should also trigger an update.
+      const branchIdsChanged = !areBranchIdArraysEqual(
+        initialSelectedBranchIdsRef.current,
+        selectedBranchIds,
+      )
+      ;(updatePayload as any).branchIds = selectedBranchIds
+
+      if (!hasAnyChanges && !branchIdsChanged) {
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          'No changes detected. Please modify at least one field.',
+        )
         return
       }
 
@@ -264,6 +535,7 @@ export default function UserManagement() {
         password: formData.password || '',
         mobileNumber: formData.mobileNumber || '',
         reportingMgrName: formData.reportingMgrName || '',
+        branchIds: selectedBranchIds,
       }
 
       console.log('📤 Sending create user payload:', { ...createPayload, password: '***' })
@@ -290,6 +562,7 @@ export default function UserManagement() {
         })
 
         setIsCreateModalOpen(false)
+        clearBranchTagState()
         // Clear search and user details to return to search page
         setSearchQuery('')
         setUserDetails(null)
@@ -559,7 +832,7 @@ export default function UserManagement() {
             <div className="mt-8">
               
               <Card className="w-full !px-6 mt-5 overflow-y-auto overflow-x-hidden bg-[#fff]">
-                <CardHeader>
+                {/* <CardHeader> */}
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl text-start font-semibold text-gray-900 font-poppins text-[20px]">User Details</CardTitle>
                     <div className="flex items-center gap-3">
@@ -574,8 +847,9 @@ export default function UserManagement() {
                      
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="!px-0 !py-0 w-[100%]">
+                {/* </CardHeader> */}
+                <CardContent className="!px-0 !py-0 w-[100%] flex flex-col">
+                  <div className="order-1">
                   <AutoAccordionSection id="user-details-sec">
                     <DynamicFormBuilder
                       key={`user-details-${userDetails?.userId}`}
@@ -584,6 +858,145 @@ export default function UserManagement() {
                       onFieldClick={handleFieldClick}
                     />
                   </AutoAccordionSection>
+                  </div>
+
+                  {/* Branch tagging for selected user */}
+                  <div className="mt-6 px-0 order-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">
+                          Linked regulator branches
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Type a branch name and click to tag it.
+                        </div>
+                      </div>
+                      <Button
+                        variant="blue"
+                        size="sm"
+                        type="button"
+                        disabled={
+                          branchUpdateLoading ||
+                          branchCatalogLoading ||
+                          !userDetails?.userId ||
+                          selectedBranchIds.length === 0
+                        }
+                        onClick={handleUpdateUserBranches}
+                      >
+                        {branchUpdateLoading ? 'Updating…' : 'Update branches'}
+                      </Button>
+                    </div>
+
+                    {branchTagError && (
+                      <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {branchTagError}
+                      </div>
+                    )}
+
+                    <div
+                      className="mt-3 w-full rounded-md border border-gray-300 px-2 py-2 text-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 bg-white"
+                      onClick={() => setShowBranchSuggestions(true)}
+                    >
+                      <div className="flex flex-wrap gap-2">
+                        {branchCatalogLoading && (
+                          <div className="text-xs text-gray-500">Loading…</div>
+                        )}
+
+                        {selectedBranchesForTags.map((b) => (
+                          <span
+                            key={b.branchId}
+                            className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs"
+                            title={b.code ? `${b.name} (${b.code})` : b.name}
+                          >
+                            <span className="max-w-[180px] truncate">{b.name}</span>
+                            <button
+                              type="button"
+                              className="text-blue-700/80 hover:text-blue-900"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeBranchTag(b.branchId)
+                              }}
+                              aria-label={`Remove ${b.name}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+
+                        <input
+                          type="text"
+                          value={branchTagSearchText}
+                          disabled={branchCatalogLoading}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setBranchTagSearchText(val)
+                            setShowBranchSuggestions(true)
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              commitBranchInput()
+                            }
+                            if (
+                              e.key === 'Backspace' &&
+                              branchTagSearchText.length === 0 &&
+                              selectedBranchIds.length > 0
+                            ) {
+                              removeBranchTag(
+                                selectedBranchIds[selectedBranchIds.length - 1],
+                              )
+                            }
+                          }}
+                          onBlur={() => {
+                            window.setTimeout(
+                              () => setShowBranchSuggestions(false),
+                              150,
+                            )
+                          }}
+                          onFocus={() => setShowBranchSuggestions(true)}
+                          placeholder="Type and press Enter to add…"
+                          className="flex-1 min-w-[140px] outline-none border-0 px-1 py-1 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {showBranchSuggestions && !branchCatalogLoading && (
+                      <div className="relative">
+                        <div className="absolute z-50 mt-2 w-full max-h-56 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                          {branchCatalog.length === 0 ? (
+                            <div className="p-3 text-sm text-gray-500">
+                              No branches loaded — check API / network
+                            </div>
+                          ) : branchSuggestions.length === 0 ? (
+                            <div className="p-3 text-sm text-gray-500">
+                              {branchTagSearchText.trim()
+                                ? 'No matching branches'
+                                : 'Showing all branches — type to filter'}
+                            </div>
+                          ) : (
+                            branchSuggestions.map((b) => (
+                              <button
+                                key={b.branchId}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => addBranchTag(b.branchId)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-50 transition"
+                              >
+                                <div className="text-sm font-medium text-gray-800">
+                                  {b.name}
+                                </div>
+                                {b.code && (
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {b.code}
+                                  </div>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -592,12 +1005,21 @@ export default function UserManagement() {
       </CardContent>
 
       {/* Create User Modal */}
-      <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+      <AlertDialog
+        open={isCreateModalOpen}
+        onOpenChange={(open) => {
+          setIsCreateModalOpen(open)
+          if (!open) clearBranchTagState()
+        }}
+      >
         <AlertDialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[95vh] overflow-y-auto p-8">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-semibold pr-8">Create New User</AlertDialogTitle>
             <button
-              onClick={() => setIsCreateModalOpen(false)}
+              onClick={() => {
+                setIsCreateModalOpen(false)
+                clearBranchTagState()
+              }}
               className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               aria-label="Close"
             >
@@ -618,7 +1040,8 @@ export default function UserManagement() {
               </svg>
             </button>
           </AlertDialogHeader>
-          <div className="mt-2">
+          <div className="flex flex-col">
+            <div className="mt-2 order-1">
             {createUserConfig ? (
               <DynamicFormBuilder
                 key={`create-user-form-${isCreateModalOpen}`}
@@ -627,6 +1050,7 @@ export default function UserManagement() {
                 onFieldClick={(fieldName: string) => {
                   if (fieldName === 'cancel') {
                     setIsCreateModalOpen(false)
+                    clearBranchTagState()
                   }
                 }}
               />
@@ -635,6 +1059,130 @@ export default function UserManagement() {
                 Error loading form. Please close and try again.
               </div>
             )}
+          </div>
+
+            <div className="mt-6 order-0">
+            <div className="flex flex-col gap-2">
+              <div>
+                <div className="text-sm font-semibold text-gray-800">
+                  Linked regulator branches
+                </div>
+                <div className="text-xs text-gray-500">
+                  Type a branch name (e.g. Head Office) and click to tag it.
+                </div>
+              </div>
+
+              {branchTagError && (
+                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {branchTagError}
+                </div>
+              )}
+
+              <div
+                className="w-full rounded-md border border-gray-300 px-2 py-2 text-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 bg-white"
+                onClick={() => setShowBranchSuggestions(true)}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {branchCatalogLoading && (
+                    <div className="text-xs text-gray-500">Loading…</div>
+                  )}
+
+                  {selectedBranchesForTags.map((b) => (
+                    <span
+                      key={b.branchId}
+                      className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs"
+                      title={b.code ? `${b.name} (${b.code})` : b.name}
+                    >
+                      <span className="max-w-[180px] truncate">{b.name}</span>
+                      <button
+                        type="button"
+                        className="text-blue-700/80 hover:text-blue-900"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeBranchTag(b.branchId)
+                        }}
+                        aria-label={`Remove ${b.name}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+
+                  <input
+                    type="text"
+                    value={branchTagSearchText}
+                    disabled={branchCatalogLoading}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setBranchTagSearchText(val)
+                      setShowBranchSuggestions(true)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        commitBranchInput()
+                      }
+                      if (
+                        e.key === 'Backspace' &&
+                        branchTagSearchText.length === 0 &&
+                        selectedBranchIds.length > 0
+                      ) {
+                        removeBranchTag(
+                          selectedBranchIds[selectedBranchIds.length - 1],
+                        )
+                      }
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(
+                        () => setShowBranchSuggestions(false),
+                        150,
+                      )
+                    }}
+                    onFocus={() => setShowBranchSuggestions(true)}
+                    placeholder="Type and press Enter to add…"
+                    className="flex-1 min-w-[140px] outline-none border-0 px-1 py-1 text-sm"
+                  />
+                </div>
+              </div>
+
+              {showBranchSuggestions && !branchCatalogLoading && (
+                <div className="relative">
+                  <div className="absolute z-50 mt-2 w-full max-h-56 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                    {branchCatalog.length === 0 ? (
+                      <div className="p-3 text-sm text-gray-500">
+                        No branches loaded — check API / network
+                      </div>
+                    ) : branchSuggestions.length === 0 ? (
+                      <div className="p-3 text-sm text-gray-500">
+                        {branchTagSearchText.trim()
+                          ? 'No matching branches'
+                          : 'Showing all branches — type to filter'}
+                      </div>
+                    ) : (
+                      branchSuggestions.map((b) => (
+                        <button
+                          key={b.branchId}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => addBranchTag(b.branchId)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 transition"
+                        >
+                          <div className="text-sm font-medium text-gray-800">
+                            {b.name}
+                          </div>
+                          {b.code && (
+                            <div className="text-xs text-gray-500 truncate">
+                              {b.code}
+                            </div>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            </div>
           </div>
         </AlertDialogContent>
       </AlertDialog>

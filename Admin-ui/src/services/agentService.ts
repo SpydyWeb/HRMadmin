@@ -6,7 +6,6 @@ import type { ApiResponse } from '@/models/api'
 import type {
   IAgentSearchByCodeRequest,
   IAgentSearchRequest,
-  IAgent,
   IEditAgentRequest,
   IEditAgentResponseBody,
 } from '@/models/agent'
@@ -151,4 +150,5 @@ export const agentService = {
     )
     return response.responseBody ?? response ?? null
   },
+  
 }

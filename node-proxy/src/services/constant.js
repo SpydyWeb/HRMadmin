@@ -59,7 +59,10 @@ const APIRoutes = {
   GETGRAPHDATA: "http://hmsapi.ezytekapis.com/GetGraphData",
   FETCHALLBRANCHES: "/api/AppMasters/GetRegulatorBranches",
   SAVEAGENTLINKEDBRANCH: "/api/Agent/RegulatorBranch/Save",
-  FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent"
+  FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent",
+  SAVEUSERLINKEDBRANCH: "/api/Users/RegulatorUserBranch/Save",
+  FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
+
 };
 
 module.exports = { APIRoutes };
