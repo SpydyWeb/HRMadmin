@@ -100,6 +100,8 @@ function RouteComponent() {
         id: number
         name: string
         code: string
+        isReportedToRegulator: boolean
+        regulatorCode: string
     } | null>(null)
     const [partnerTreeData, setPartnerTreeData] = useState<any[]>([])
     const [loadingPartner, setLoadingPartner] = useState(false)
@@ -432,6 +434,8 @@ function RouteComponent() {
                     id: item.id,
                     name: item.name,
                     code: item.code,
+                    isReportedToRegulator: item.isReportedToRegulator ?? false,
+                    regulatorCode: item.regulatorCode ?? "",
                     type: "branch",
                     children: item.reportingBranches?.length
                         ? formatTree(item.reportingBranches)
@@ -750,6 +754,10 @@ function RouteComponent() {
                 branchId: selectedBranch.id ?? 0,
                 branchCode: selectedBranch.code ?? "",
                 branchName: selectedBranch.name ?? "",
+                isReportedToRegulator: selectedBranch.isReportedToRegulator ?? false,
+                regulatorCode: selectedBranch.isReportedToRegulator
+                    ? (selectedBranch.regulatorCode ?? "")
+                    : "",
                 address: null,
                 state: 0,
                 phoneNumber: null,
@@ -2110,6 +2118,8 @@ function RouteComponent() {
                                                                     id: node.id,
                                                                     name: node.name,
                                                                     code: node.code,
+                                                                    isReportedToRegulator: node.isReportedToRegulator ?? false,
+                                                                    regulatorCode: node.regulatorCode ?? "",
                                                                 })
                                                                 setIsEditingBranch(false)   // reset edit mode
                                                             }
@@ -2301,6 +2311,60 @@ function RouteComponent() {
                                                                             </span>
                                                                         )}
                                                                     </div>
+
+                                                                    {/* IS REPORTED TO REGULATOR */}
+                                                                    <div className="flex justify-between items-center border-b pb-3">
+                                                                        <span className="text-sm font-medium text-gray-500">
+                                                                            Reported To Regulator
+                                                                        </span>
+
+                                                                        {isEditingBranch ? (
+                                                                            <Switch
+                                                                                checked={selectedBranch.isReportedToRegulator}
+                                                                                onCheckedChange={(checked) =>
+                                                                                    setSelectedBranch((prev) =>
+                                                                                        prev
+                                                                                            ? {
+                                                                                                ...prev,
+                                                                                                isReportedToRegulator: checked,
+                                                                                                regulatorCode: checked ? prev.regulatorCode : "",
+                                                                                            }
+                                                                                            : null
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-semibold text-gray-800">
+                                                                                {selectedBranch.isReportedToRegulator ? "Yes" : "No"}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {selectedBranch.isReportedToRegulator && (
+                                                                        <div className="flex justify-between items-center border-b pb-3">
+                                                                            <span className="text-sm font-medium text-gray-500">
+                                                                                Regulator Code
+                                                                            </span>
+
+                                                                            {isEditingBranch ? (
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={selectedBranch.regulatorCode}
+                                                                                    onChange={(e) =>
+                                                                                        setSelectedBranch((prev) =>
+                                                                                            prev ? { ...prev, regulatorCode: e.target.value } : null
+                                                                                        )
+                                                                                    }
+                                                                                    placeholder="Enter regulator code"
+                                                                                    className="border rounded-md px-3 py-1 text-sm w-52 focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            ) : (
+                                                                                <span className="text-sm font-semibold text-gray-800">
+                                                                                    {selectedBranch.regulatorCode || "-"}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </>

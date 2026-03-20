@@ -119,4 +119,36 @@ export const agentService = {
     console.log('UI Access response:', response)
     return response.responseBody || null
   },
+
+  fetchRegulatorBranches: async (
+    payload: { isActive: boolean } = { isActive: true },
+  ) => {
+    const response = await callApi<ApiResponse<any>>(
+      APIRoutes.FETCH_ALL_AGENTS,
+      [payload],
+    )
+    console.log('GetRegulatorBranches response:', response)
+    return response.responseBody ?? response ?? null
+  },
+
+  saveRegulatorBranchesForAgent: async (payload: {
+    agentId: number
+    branchIds: number[]
+  }) => {
+    const response = await callApi<ApiResponse<any>>(
+      APIRoutes.SAVE_BRANCH_LINK,
+      [payload],
+    )
+    console.log('RegulatorBranch/Save response:', response)
+    return response.responseBody ?? response ?? null
+  },
+
+
+  fetchRegulatorBranchesByAgent: async (payload: { agentId: number }) => {
+    const response = await callApi<ApiResponse<any>>(
+      APIRoutes.FETCH_BRANCHES_BY_AGENT,
+      [payload],
+    )
+    return response.responseBody ?? response ?? null
+  },
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   FiAlertCircle,
   FiChevronRight,
@@ -37,6 +37,112 @@ import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agentService';
 import { MASTER_DATA_KEYS } from '@/utils/constant';
 
+type BranchOption = { branchId: number; name: string; code: string };
+
+function parseRegulatorBranchCatalog(raw: unknown): BranchOption[] {
+  if (raw == null) return [];
+
+  // Unwrap: full envelope, nested responseBody, or service return value
+  let data: any = raw;
+  const branchListKey = (d: any): any[] | null => {
+    if (!d || typeof d !== 'object') return null;
+    if (Array.isArray(d.branchList)) return d.branchList;
+    if (Array.isArray(d.BranchList)) return d.BranchList;
+    return null;
+  };
+
+  for (let depth = 0; depth < 4 && data && typeof data === 'object'; depth++) {
+    if (Array.isArray(data)) break;
+    if (branchListKey(data)) break;
+    if (data.responseBody != null && typeof data.responseBody === 'object') {
+      data = data.responseBody;
+      continue;
+    }
+    break;
+  }
+
+  if (!data) return [];
+
+  let arr: any[] = [];
+  if (Array.isArray(data)) arr = data;
+  else {
+    const bl = branchListKey(data);
+    if (bl) arr = bl;
+    else if (Array.isArray(data.regulatorBranches)) arr = data.regulatorBranches;
+    else if (Array.isArray(data.branches)) arr = data.branches;
+    else if (Array.isArray(data.data)) arr = data.data;
+    else if (Array.isArray(data.items)) arr = data.items;
+  }
+
+  const out: BranchOption[] = [];
+  const seen = new Set<number>();
+  for (const item of arr) {
+    const idRaw = item?.branchId ?? item?.branchMasterId ?? item?.id;
+    const id =
+      typeof idRaw === 'string' ? parseInt(idRaw, 10) : Number(idRaw);
+    if (!Number.isFinite(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      branchId: id,
+      name: String(item?.branchName ?? item?.name ?? `Branch ${id}`),
+      code: String(item?.branchCode ?? item?.code ?? ''),
+    });
+  }
+  return out;
+}
+
+function normalizeLinkedBranchIds(raw: unknown): number[] {
+  const body = (raw as any)?.responseBody ?? raw;
+  if (!body) return [];
+
+  const toNumber = (v: any): number | null => {
+    const n = typeof v === 'string' ? parseInt(v, 10) : Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const extractId = (item: any): number | null => {
+    const idRaw =
+      item?.branchId ??
+      item?.BranchId ??
+      item?.branchMasterId ??
+      item?.BranchMasterId ??
+      item?.branchID ??
+      item?.BranchID ??
+      item?.id ??
+      item?.ID;
+    return toNumber(idRaw);
+  };
+
+  // Common shapes:
+  // 1) { branchIds: [25,85] }
+  if (Array.isArray((body as any).branchIds)) {
+    return (body as any).branchIds.map(toNumber).filter((n: any) => n !== null);
+  }
+  if (Array.isArray((body as any).BranchIds)) {
+    return (body as any).BranchIds.map(toNumber).filter((n: any) => n !== null);
+  }
+
+  // 2) { branchList: [ { branchId: 25, ...}, ... ] }
+  if (Array.isArray((body as any).branchList)) {
+    return (body as any).branchList.map(extractId).filter((n: any) => n !== null);
+  }
+  if (Array.isArray((body as any).BranchList)) {
+    return (body as any).BranchList.map(extractId).filter((n: any) => n !== null);
+  }
+
+  // 3) Direct array of objects or ids
+  if (Array.isArray(body)) {
+    return body.map((x: any) => (typeof x === 'number' || typeof x === 'string' ? toNumber(x) : extractId(x))).filter((n: any) => n !== null);
+  }
+
+  // 4) { branches: [...] }
+  if (Array.isArray((body as any).branches)) {
+    return (body as any).branches.map(extractId).filter((n: any) => n !== null);
+  }
+
+  return [];
+}
+
 interface SplitTreeTableGeoProps {
   treeData: Array<any>;
   onSearch?: (
@@ -51,7 +157,8 @@ interface SplitTreeTableGeoProps {
   highlightBranch?: number | null;
   officeType?: string | null;
   getOptions: (key: string) => any[];
-  parentBranchId:number
+  parentBranchId: number;
+  agentId?: number | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -65,7 +172,8 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   highlightBranch,
   getOptions,
   officeType,
-  parentBranchId
+  parentBranchId,
+  agentId,
 }) => {
   // Tree view states
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -82,6 +190,159 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   const [totalCount, setTotalCount] = useState(0);
   const [apiLoading, setApiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Regulator branches — Gmail-style tags (like RolesManagement add user)
+  const [branchCatalog, setBranchCatalog] = useState<BranchOption[]>([]);
+  const [branchCatalogLoading, setBranchCatalogLoading] = useState(false);
+  const [branchTagSearchText, setBranchTagSearchText] = useState('');
+  const [selectedBranchIds, setSelectedBranchIds] = useState<number[]>([]);
+  const [showBranchSuggestions, setShowBranchSuggestions] = useState(false);
+  const [branchSaveLoading, setBranchSaveLoading] = useState(false);
+  const [branchTagError, setBranchTagError] = useState<string | null>(null);
+  const [linkedBranchesLoading, setLinkedBranchesLoading] = useState(false);
+  const [isLinkingBranches, setIsLinkingBranches] = useState(true);
+
+  const selectedBranchSet = useMemo(
+    () => new Set(selectedBranchIds),
+    [selectedBranchIds],
+  );
+
+  const selectedBranchesForTags = useMemo(() => {
+    return selectedBranchIds.map((id) => {
+      const b = branchCatalog.find((x) => x.branchId === id);
+      return b ?? { branchId: id, name: `Branch ${id}`, code: '' };
+    });
+  }, [branchCatalog, selectedBranchIds]);
+
+  const branchSuggestions = useMemo(() => {
+    const q = branchTagSearchText.trim().toLowerCase();
+    return branchCatalog
+      .filter((b) => !selectedBranchSet.has(b.branchId))
+      .filter((b) => {
+        if (!q) return true;
+        return `${b.name} ${b.code}`.toLowerCase().includes(q);
+      })
+      .slice(0, 20);
+  }, [branchCatalog, branchTagSearchText, selectedBranchSet]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setBranchCatalogLoading(true);
+      setBranchTagError(null);
+      try {
+        const res = await agentService.fetchRegulatorBranches({ isActive: true });
+        if (!cancelled) setBranchCatalog(parseRegulatorBranchCatalog(res));
+      } catch (e) {
+        if (!cancelled) {
+          setBranchTagError(
+            e instanceof Error ? e.message : 'Failed to load branches',
+          );
+          setBranchCatalog([]);
+        }
+      } finally {
+        if (!cancelled) setBranchCatalogLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  //  Load already mapped branches for the agent (FetchByAgent/{agentId})
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!agentId) {
+        setSelectedBranchIds([]);
+        setIsLinkingBranches(true);
+        setShowBranchSuggestions(false);
+        return;
+      }
+
+      setLinkedBranchesLoading(true);
+      setBranchTagError(null);
+      setShowBranchSuggestions(false);
+
+      try {
+        const res = await agentService.fetchRegulatorBranchesByAgent({
+          agentId,
+        });
+        const ids = normalizeLinkedBranchIds(res);
+        if (cancelled) return;
+
+        setSelectedBranchIds(ids);
+        // Hide the picker if something is already mapped.
+        setIsLinkingBranches(ids.length === 0);
+      } catch (e) {
+        if (cancelled) return;
+        setBranchTagError(e instanceof Error ? e.message : 'Failed to fetch mapped branches');
+        setSelectedBranchIds([]);
+        setIsLinkingBranches(true);
+      } finally {
+        if (!cancelled) setLinkedBranchesLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId]);
+
+  const addBranchTag = (id: number) => {
+    setSelectedBranchIds((prev) =>
+      prev.includes(id) ? prev : [...prev, id],
+    );
+    setBranchTagSearchText('');
+    setShowBranchSuggestions(false);
+  };
+
+  const removeBranchTag = (id: number) => {
+    setSelectedBranchIds((prev) => prev.filter((x) => x !== id));
+  };
+
+  const commitBranchInput = () => {
+    const q = branchTagSearchText.trim().toLowerCase();
+    if (!q) return;
+    const exact = branchSuggestions.find(
+      (b) =>
+        b.name.toLowerCase() === q ||
+        (b.code && b.code.toLowerCase() === q),
+    );
+    if (exact && !selectedBranchSet.has(exact.branchId)) {
+      addBranchTag(exact.branchId);
+      return;
+    }
+    if (branchSuggestions.length === 1 && !selectedBranchSet.has(branchSuggestions[0].branchId)) {
+      addBranchTag(branchSuggestions[0].branchId);
+    }
+  };
+
+  const handleSaveRegulatorBranches = async () => {
+    if (!agentId || selectedBranchIds.length === 0) return;
+    setBranchSaveLoading(true);
+    setBranchTagError(null);
+    try {
+      await agentService.saveRegulatorBranchesForAgent({
+        agentId,
+        branchIds: selectedBranchIds,
+      });
+      const res = await agentService.fetchRegulatorBranchesByAgent({
+        agentId,
+      });
+      const ids = normalizeLinkedBranchIds(res);
+      setSelectedBranchIds(ids);
+      setIsLinkingBranches(ids.length === 0);
+      setShowBranchSuggestions(false);
+    } catch (e) {
+      setBranchTagError(
+        e instanceof Error ? e.message : 'Failed to save branches',
+      );
+      setIsLinkingBranches(true);
+    } finally {
+      setBranchSaveLoading(false);
+    }
+  };
 
   // Debounce search query
   useEffect(() => {
@@ -339,6 +600,174 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
       <Card className="col-span-12 lg:col-span-8 xl:col-span-8 overflow-hidden flex flex-col">
         <CardHeader className="pb-3 border-b">
           <div className="flex flex-col gap-3">
+            {/* Regulator branches — search & tag (same pattern as RolesManagement → Add User) */}
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-950/30">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Linked regulator branches
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Search (e.g. Head Office), pick from list or press Enter.
+                    Update assigns branches to this agent.
+                  </p>
+                </div>
+                {isLinkingBranches ? (
+                  <Button
+                    variant="blue"
+                    size="sm"
+                    type="button"
+                    disabled={
+                      branchSaveLoading ||
+                      linkedBranchesLoading ||
+                      !agentId ||
+                      selectedBranchIds.length === 0 ||
+                      branchCatalogLoading
+                    }
+                    onClick={handleSaveRegulatorBranches}
+                  >
+                    {branchSaveLoading ? 'Updating…' : 'Update branches'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="blue"
+                    size="sm"
+                    type="button"
+                    disabled={!agentId || linkedBranchesLoading}
+                    onClick={() => setIsLinkingBranches(true)}
+                  >
+                    {linkedBranchesLoading ? 'Loading…' : 'Link branches'}
+                  </Button>
+                )}
+              </div>
+
+              {branchTagError && (
+                <Alert variant="destructive" className="mt-2 py-2">
+                  <FiAlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    {branchTagError}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div
+                className={cn(
+                  'mt-2 w-full rounded-md border border-gray-300 bg-white px-2 py-2 text-sm',
+                  'focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--brand-blue)]',
+                )}
+                onClick={() => isLinkingBranches && setShowBranchSuggestions(true)}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  {branchCatalogLoading && (
+                    <FiLoader className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+                  )}
+                  {selectedBranchesForTags.map((b) => (
+                    <span
+                      key={b.branchId}
+                      className="inline-flex max-w-full items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200"
+                      title={b.code ? `${b.name} (${b.code})` : b.name}
+                    >
+                      <span className="max-w-[200px] truncate">{b.name}</span>
+                      {isLinkingBranches && (
+                        <button
+                          type="button"
+                          className="shrink-0 text-blue-700/80 hover:text-blue-900 dark:text-blue-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeBranchTag(b.branchId);
+                          }}
+                          aria-label={`Remove ${b.name}`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                  {isLinkingBranches && (
+                    <input
+                      type="text"
+                      value={branchTagSearchText}
+                      disabled={branchCatalogLoading}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setBranchTagSearchText(val);
+                        setShowBranchSuggestions(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          commitBranchInput();
+                        }
+                        if (
+                          e.key === 'Backspace' &&
+                          branchTagSearchText.length === 0 &&
+                          selectedBranchIds.length > 0
+                        ) {
+                          removeBranchTag(
+                            selectedBranchIds[selectedBranchIds.length - 1],
+                          );
+                        }
+                      }}
+                      onBlur={() => {
+                        window.setTimeout(
+                          () => setShowBranchSuggestions(false),
+                          150,
+                        );
+                      }}
+                      onFocus={() => setShowBranchSuggestions(true)}
+                      placeholder={
+                        branchCatalog.length === 0 && !branchCatalogLoading
+                          ? 'No branches loaded — check API / network'
+                          : !agentId
+                            ? 'Search branches (open an agent to save)'
+                            : selectedBranchIds.length
+                              ? 'Type to search more branches…'
+                              : 'Search branches (e.g. Head Office)…'
+                      }
+                      className="min-w-[160px] flex-1 border-0 bg-transparent px-1 py-1 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {isLinkingBranches &&
+                showBranchSuggestions &&
+                !branchCatalogLoading && (
+                <div className="z-30 mt-1 max-h-56 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-950">
+                  {branchCatalog.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground">
+                      No branches loaded — check API / network
+                    </div>
+                  ) : branchSuggestions.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground">
+                      {branchTagSearchText.trim()
+                        ? 'No matching branches'
+                        : 'Showing all branches — type to filter'}
+                    </div>
+                  ) : (
+                    branchSuggestions.map((b) => (
+                      <button
+                        key={b.branchId}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => addBranchTag(b.branchId)}
+                        className="w-full px-3 py-2 text-left text-sm transition hover:bg-muted"
+                      >
+                        <div className="font-medium text-foreground">
+                          {b.name}
+                        </div>
+                        {b.code ? (
+                          <div className="truncate text-xs text-muted-foreground">
+                            {b.code}
+                          </div>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
           <div className="flex  gap-2">
             <p>Select Office Type</p>
               <Select value={officeType || ''} disabled>
