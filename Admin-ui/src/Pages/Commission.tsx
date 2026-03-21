@@ -13,41 +13,6 @@ import { CommissionOverview } from '@/components/commission/CommissionOverview'
 import { CommissionCard } from '@/components/commission/CommissionCard'
 import Loader from '@/components/Loader'
 
-const metrics = [
-  {
-    title: 'Total Entities',
-    value: '1250',
-    change: '+120',
-    changeType: 'positive',
-    chartColor: '#10b981',
-    chartData: [15, 18, 16, 22, 25, 28, 32, 35, 40], // Clear upward trend for +120
-  },
-  {
-    title: 'Created This Month',
-    value: '152',
-    change: '-10',
-    changeType: 'negative',
-    chartColor: '#ef4444',
-    chartData: [35, 38, 42, 40, 38, 35, 32, 28, 25], // Downward trend for -10
-  },
-  {
-    title: 'Terminated This Month',
-    value: '250',
-    change: '+5',
-    changeType: 'positive',
-    chartColor: '#10b981',
-    chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25], // Slight upward trend for +5
-  },
-  {
-    title: 'Net Entity This Month',
-    value: '48',
-    change: '+5',
-    changeType: 'positive',
-    chartColor: '#10b981',
-    chartData: [20, 18, 19, 21, 20, 22, 23, 24, 25], // Slight upward trend for +5
-  },
-]
-
 type CommissionResponse = {
   responseBody?: {
     commissionMgmtDashboards: any[]

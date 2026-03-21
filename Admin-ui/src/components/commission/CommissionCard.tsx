@@ -310,14 +310,9 @@ const channelTables = [
         </div>
         <div className="">
 
-          <h2 className="text-2xl font-bold">
-
-            Commission Action
-
-          </h2>
-
-        </div>
-        <CardContent className="grid grid-cols-1 md:grid-cols-5 mb-6 gap-8">
+          <h2 className="text-2xl font-bold">Commission Action</h2>
+</div>
+        <CardContent className="grid grid-cols-1 !pl-0 md:grid-cols-5 mb-6 gap-8">
           {buttons.map((data, id) => (
             <Button key={id} onClick={() => navigate({ to: buildPath(data.path) })}>
               {data.title}

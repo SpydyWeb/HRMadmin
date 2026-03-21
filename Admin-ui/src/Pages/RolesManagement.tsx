@@ -1340,12 +1340,12 @@ const RolesManagement = () => {
                                     UI Elements
                                   </th>
 
-                                  <th
+                                  {/* <th
                                     rowSpan={2}
                                     className="border p-2 text-center w-[110px]"
                                   >
                                     Log Changes
-                                  </th>
+                                  </th> */}
 
                                 
                                 </tr>
@@ -1398,7 +1398,7 @@ const RolesManagement = () => {
                                       </td>
 
                                       {/* ✅ LOG CHANGES COLUMN */}
-                                      <td className="border p-3 align-top">
+                                      {/* <td className="border p-3 align-top">
                                         <div className="flex items-center justify-between">
                                           <span className="text-sm text-gray-600">Log</span>
                                           <Switch
@@ -1408,7 +1408,7 @@ const RolesManagement = () => {
                                             }
                                           />
                                         </div>
-                                      </td>
+                                      </td> */}
 
                                    
 

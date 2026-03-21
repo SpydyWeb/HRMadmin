@@ -6,6 +6,7 @@ import Loading from '@/components/ui/Loading'
 import Loader from '@/components/Loader'
 import { OrgConfigService } from '@/services/orgConfigService'
 import { HMSService } from '@/services/hmsService'
+import { Switch } from '@/components/ui/switch'
 
 
 const OrgConfiguration = () => {
@@ -21,7 +22,7 @@ const OrgConfiguration = () => {
     fieldName: string
     edit: boolean
     render: boolean
-    createLog: boolean
+    isLog: boolean
     approvalMode: 'USER' | 'CUSTOM' | 'NONE'
     approver1: number | ''
     approver2: number | ''
@@ -29,6 +30,7 @@ const OrgConfiguration = () => {
   }
 
   const [fieldAccess, setFieldAccess] = useState<SectionAccess[]>([])
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
   const [fieldLoading, setFieldLoading] = useState(false)
   const [treeData, setTreeData] = useState<any[]>([])
   const [globalLoading, setGlobalLoading] = useState(false)
@@ -107,6 +109,62 @@ const OrgConfiguration = () => {
     setFieldLoading(false)
   }, [orgConfig])
 
+  function findMenuNodeById(nodes: any[], id: string): any | null {
+    for (const n of nodes) {
+      if (n.id === id) return n
+      if (n.children?.length) {
+        const found = findMenuNodeById(n.children, id)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  function formatFieldsFromMenuNode(node: any): SectionAccess[] {
+    return (node.fieldList || []).map((field: any) => ({
+      componentId: Number(node.componentId || 0),
+      fieldId: field.cntrlid || 0,
+      fieldName: field.cntrlName || `Field ${field.cntrlid}`,
+      edit: field.allowedit || false,
+      render: field.render || false,
+      isLog: Boolean(field.isLog ?? field.createLog),
+      approvalMode: (field.useDefaultApprover
+        ? 'USER'
+        : field.approverOneRoleId || field.approverTwoRoleId || field.approverThreeRoleId
+          ? 'CUSTOM'
+          : 'NONE') as 'USER' | 'CUSTOM' | 'NONE',
+      approver1: field.approverOneRoleId || '',
+      approver2: field.approverTwoRoleId || '',
+      approver3: field.approverThreeRoleId || '',
+    }))
+  }
+
+  // Keep matrix in sync when tree reloads (e.g. after save refetch) while same section stays selected
+  useEffect(() => {
+    if (!selectedSectionId) {
+      setFieldAccess([])
+      return
+    }
+    const node = findMenuNodeById(treeData, selectedSectionId)
+    if (node?.type === 'menu' && node.fieldList?.length) {
+      setFieldAccess(formatFieldsFromMenuNode(node))
+    } else {
+      setFieldAccess([])
+    }
+  }, [treeData, selectedSectionId])
+
+  const refetchOrgConfig = async () => {
+    try {
+      const response = await OrgConfigService.fetchOrgConfig()
+      if (response?.responseHeader?.errorCode === 1101) {
+        const apiMenu = response?.responseBody?.uiMenuResponse?.uiMenu || []
+        setOrgConfig(apiMenu)
+      }
+    } catch (error) {
+      console.error('Failed to refetch org config:', error)
+    }
+  }
+
   const handleApiToast = (res: any) => {
     const message = res?.responseHeader?.errorMessage || 'Unexpected response'
     if (res?.responseHeader?.errorCode === 1101) {
@@ -170,14 +228,17 @@ const OrgConfiguration = () => {
       approverOneId: isCustomMode ? Number(updatedRow.approver1 || 0) : null,
       approverTwoId: isCustomMode ? Number(updatedRow.approver2 || 0) : null,
       approverThreeId: isCustomMode ? Number(updatedRow.approver3 || 0) : null,
+      isLog: Boolean(updatedRow.isLog),
       useDefaultApprover,
     }
 
-    console.log('orgConfig update payload', payload)
     try {
       setGlobalLoading(true)
       const res = await OrgConfigService.updateOrgConfig(payload)
       handleApiToast(res)
+      if (res?.responseHeader?.errorCode === 1101) {
+        await refetchOrgConfig()
+      }
     } catch (error: any) {
       showToast(
         NOTIFICATION_CONSTANTS.ERROR,
@@ -207,30 +268,10 @@ const OrgConfiguration = () => {
               <FieldTreeView
                 data={treeData}
                 onSelect={(node) => {
-                  console.log('Selected node:', node)
-
-                  // Load field access when a section is selected
-                  if (node.type === 'menu' && node.fieldList) {
-                    const formattedFields = node.fieldList.map((field: any) => ({
-                      componentId: Number((node as any).componentId || 0),
-                      fieldId: field.cntrlid || 0,
-                      fieldName: field.cntrlName || `Field ${field.cntrlid}`,
-                      edit: field.allowedit || false,
-                      render: field.render || false,
-                      createLog: false,
-                      approvalMode: (field.useDefaultApprover 
-                        ? 'USER' 
-                        : (field.approverOneRoleId || field.approverTwoRoleId || field.approverThreeRoleId 
-                          ? 'CUSTOM' 
-                          : 'NONE')) as 'USER' | 'CUSTOM' | 'NONE',
-                      approver1: field.approverOneRoleId || '',
-                      approver2: field.approverTwoRoleId || '',
-                      approver3: field.approverThreeRoleId || '',
-                    }))
-
-                    setFieldAccess(formattedFields)
+                  if (node.type === 'menu' && node.fieldList?.length) {
+                    setSelectedSectionId(node.id)
                   } else {
-                    setFieldAccess([])
+                    setSelectedSectionId(null)
                   }
                 }}
               />
@@ -337,6 +378,16 @@ const OrgConfiguration = () => {
                       </div>
                     </div>
                   )}
+
+                  <div className="flex items-center justify-between gap-3 border-t pt-4">
+                    <label className="text-sm text-gray-600 w-32">Log Changes</label>
+                    <Switch
+                      checked={field.isLog}
+                      onCheckedChange={(checked) =>
+                        updateFieldAccess(field.fieldId, 'isLog', checked)
+                      }
+                    />
+                  </div>
                 </div>
               ))}
             </div>

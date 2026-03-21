@@ -1,24 +1,29 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { format, parseISO } from "date-fns";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Card, CardContent, CardHeader } from "../ui/card";
-import Button from "../ui/button";
 import { Eye, Download, Upload } from "lucide-react";
 
-// Import types from your type file
-import { 
-  ICommissionMgmtDashboard,
-  IIndividualCommission,
-  ICycleCommission,
-  IAdhocCommission, 
-  IPerformanceSnapshot,
-  TCommissionStatus
-} from "@/models/commission"; // Adjust the import path as needed
+import { ICommissionMgmtDashboard } from "@/models/commission";
+import { useEncryption } from "@/store/encryptionStore";
+import encryptionService from "@/services/encryptionService";
+import { HMSService } from "@/services/hmsService";
 
 /** ---------- Types ---------- */
-// Removed DashboardResponse type as we're using ICommissionMgmtDashboard from the type file
 
 interface CommissionOverviewProps {
-  dashboardData: ICommissionMgmtDashboard; // Using the imported type
+  dashboardData: ICommissionMgmtDashboard;
 }
 
 /** ---------- Helpers ---------- */
@@ -40,6 +45,96 @@ function formatMoney(value?: number) {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(v);
+}
+
+function findFirstArray(obj: unknown): unknown[] | null {
+  if (!obj) return null;
+  if (Array.isArray(obj)) return obj;
+  if (typeof obj !== "object") return null;
+
+  const o = obj as Record<string, unknown>;
+  const candidates = [
+    o.responseBody,
+    (o.responseBody as Record<string, unknown> | undefined)?.graphData,
+    o.graphData,
+    o.data,
+    o.result,
+  ];
+  for (const c of candidates) {
+    if (Array.isArray(c)) return c;
+  }
+
+  for (const key of Object.keys(o)) {
+    const val = o[key];
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === "object") {
+      const nested = findFirstArray(val);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
+
+function normalizeNumber(v: unknown) {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = Number(v.replace(/,/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+function normalizeDateLabel(v: unknown) {
+  if (!v) return "";
+  if (typeof v === "string") {
+    try {
+      const d = parseISO(v);
+      if (!isNaN(d.getTime())) return format(d, "dd MMM");
+    } catch {
+      // ignore
+    }
+    return v;
+  }
+  if (v instanceof Date) return format(v, "dd MMM");
+  return String(v);
+}
+
+function toChartPoints(raw: unknown) {
+  const arr = findFirstArray(raw) || [];
+  return arr
+    .map((row: unknown) => {
+      const r = row as Record<string, unknown>;
+      const dateRaw =
+        r?.date ??
+        r?.Date ??
+        r?.day ??
+        r?.Day ??
+        r?.label ??
+        r?.Label ??
+        r?.xAxis ??
+        r?.X;
+      const revenueRaw =
+        r?.revenue ??
+        r?.Revenue ??
+        r?.revune ??
+        r?.Revune ??
+        r?.totalRevenue ??
+        r?.TotalRevenue;
+      const commissionRaw =
+        r?.commission ??
+        r?.Commission ??
+        r?.commision ??
+        r?.Commision ??
+        r?.totalCommission ??
+        r?.TotalCommission;
+
+      return {
+        date: normalizeDateLabel(dateRaw),
+        revenue: normalizeNumber(revenueRaw),
+        commission: normalizeNumber(commissionRaw),
+      };
+    })
+    .filter((p) => p.date);
 }
 
 type Field = { label: string; value: React.ReactNode };
@@ -180,6 +275,26 @@ function CommissionActionCard({
 const CommissionOverview: React.FC<CommissionOverviewProps> = ({
   dashboardData,
 }) => {
+  const encryptionEnabled = useEncryption();
+  const keyReady = !!encryptionService.getHrm_Key();
+  const canFetch = !encryptionEnabled || keyReady;
+
+  const { data: graphSeries, isLoading: graphLoading } = useQuery({
+    queryKey: ["hms-graph-data"],
+    enabled: canFetch,
+    queryFn: () =>
+      HMSService.getGraphData({
+        startDate: "2025-04-01T00:00:00.000Z",
+        endDate: "2026-03-31T23:59:59.000Z",
+        groupBy: 2,
+      }),
+    staleTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const chartPoints = useMemo(() => toChartPoints(graphSeries), [graphSeries]);
+
   const companyData = [
     {
       name: "Commissioned Budget",
@@ -213,29 +328,76 @@ const CommissionOverview: React.FC<CommissionOverviewProps> = ({
 
   return (
     <Card className="p-2 gap-2 mb-5 rounded-md border border-gray-100">
-      {/* Summary Cards */}
-      <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 p-2">
-        {companyData.map((data, index) => (
-          <div
-            key={index}
-            className="rounded-xl bg-gray-100 p-5 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <div className="text-xs font-medium text-gray-500">
-                {data.name}
-              </div>
-              <div className={`mt-2 text-2xl font-bold ${data.color}`}>
-                {data.value}
+      {/* 2×2 summary tiles (left) + Revenue vs Commission chart (right) on lg+ */}
+      <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-2 items-stretch">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 min-w-0">
+          {companyData.map((data, index) => (
+            <div
+              key={index}
+              className="rounded-xl bg-gray-100 p-4 sm:p-5 flex items-center justify-center min-h-[100px]"
+            >
+              <div className="text-center">
+                <div className="text-xs font-medium text-gray-500 leading-tight">
+                  {data.name}
+                </div>
+                <div className={`mt-2 text-xl sm:text-2xl font-bold ${data.color}`}>
+                  {data.value}
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        <Card className="rounded-md p-3 min-h-[220px] flex bg-gray-100 flex-col shadow-none border border-gray-100">
+          <div className="flex items-center justify-between mb-2 shrink-0">
+            <div className="text-md font-medium text-gray-700">
+              Revenue vs Commission
+            </div>
           </div>
-        ))}
+          <div className="flex-1 min-h-[200px] w-full">
+            {graphLoading ? (
+              <div className="h-full min-h-[200px] w-full flex items-center justify-center text-sm text-gray-500">
+                Loading graph...
+              </div>
+            ) : chartPoints.length === 0 ? (
+              <div className="h-full min-h-[200px] w-full flex items-center justify-center text-sm text-gray-500">
+                No graph data
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+                <LineChart data={chartPoints}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Revenue"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="commission"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Commission"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
       </CardContent>
 
       {/* 3 Commission Cards (match image layout) */}
-      <CardHeader className="px-4 pt-2 pb-0" />
+      <CardHeader className="px-4 pt-1 pb-0" />
 
-      <CardContent className="p-2">
+      <CardContent className="p-1">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Individual Commission */}
           <CommissionActionCard
