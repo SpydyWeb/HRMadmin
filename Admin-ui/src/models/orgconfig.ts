@@ -9,6 +9,9 @@ export interface IOrgConfigField {
   approverTwoRoleId: number | null
   approverThreeRoleId?: number | null
   useDefaultApprover: boolean
+  /** Audit / change log flag when returned from API */
+  isLog?: boolean
+  createLog?: boolean
 }
 
 // SubSection can be Tab or Section
@@ -51,4 +54,5 @@ export interface IOrgConfigRequest {
   approverTwoId: number | null
   approverThreeId: number | null
   useDefaultApprover: boolean
+  isLog?: boolean
 }
