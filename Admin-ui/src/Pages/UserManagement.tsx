@@ -28,8 +28,8 @@ export default function UserManagement() {
   const [userDetails, setUserDetails] = useState<IUserDetails | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false)
-  const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   type BranchOption = { branchId: number; name: string; code: string }
   const [branchCatalog, setBranchCatalog] = useState<BranchOption[]>([])
@@ -381,21 +381,21 @@ export default function UserManagement() {
         throw new Error('Username is missing. Cannot change password.')
       }
 
-      if (!oldPassword || !newPassword) {
+      if (!newPassword || !confirmPassword) {
         showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please enter both old and new password')
         return
       }
 
       const updatePasswordPayload: IUpdatePasswordRequest = {
         username: userDetails.username,
-        oldPassword: oldPassword,
         newPassword: newPassword,
+        confirmPassword: confirmPassword,
         isActive: userDetails.isActive ?? true,
         isLocked: userDetails.isLocked ?? false,
         reportingMgr: userDetails.reportingMgr ?? 0,
       }
 
-      console.log('📤 Sending password change payload:', { ...updatePasswordPayload, oldPassword: '***', newPassword: '***' })
+      console.log('📤 Sending password change payload:', { ...updatePasswordPayload, newPassword: '***', confirmPassword: '***' })
       const response = await userManagementService.UpdatePassword(updatePasswordPayload)
       
       if (!response) {
@@ -406,8 +406,8 @@ export default function UserManagement() {
       if (errorCode === CommonConstants.SUCCESS) {
         showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Password successfully changed')
         setIsResetPasswordModalOpen(false)
-        setOldPassword('')
         setNewPassword('')
+        setConfirmPassword('')
         // Refresh user details
         refetchUserDetails()
       } else {
@@ -1197,10 +1197,10 @@ export default function UserManagement() {
             <div>
               <Input
                 type="password"
-                label="Old Password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Enter old password"
+                label="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
                 variant="standard"
                 className="w-full"
               />
@@ -1208,10 +1208,10 @@ export default function UserManagement() {
             <div>
               <Input
                 type="password"
-                label="New Password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
+                label="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Enter confirm new password"
                 variant="standard"
                 className="w-full"
               />
@@ -1221,8 +1221,8 @@ export default function UserManagement() {
                 variant="outline"
                 onClick={() => {
                   setIsResetPasswordModalOpen(false)
-                  setOldPassword('')
                   setNewPassword('')
+                  setConfirmPassword('')
                 }}
                 size="md"
               >

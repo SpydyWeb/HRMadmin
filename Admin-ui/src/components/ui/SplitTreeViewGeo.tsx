@@ -201,6 +201,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
   const [branchTagError, setBranchTagError] = useState<string | null>(null);
   const [linkedBranchesLoading, setLinkedBranchesLoading] = useState(false);
   const [isLinkingBranches, setIsLinkingBranches] = useState(true);
+  const [editStartBranchIds, setEditStartBranchIds] = useState<number[]>([]);
 
   const selectedBranchSet = useMemo(
     () => new Set(selectedBranchIds),
@@ -272,6 +273,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
         if (cancelled) return;
 
         setSelectedBranchIds(ids);
+        setEditStartBranchIds(ids);
         // Hide the picker if something is already mapped.
         setIsLinkingBranches(ids.length === 0);
       } catch (e) {
@@ -332,7 +334,8 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
       });
       const ids = normalizeLinkedBranchIds(res);
       setSelectedBranchIds(ids);
-      setIsLinkingBranches(ids.length === 0);
+      setEditStartBranchIds(ids);
+      setIsLinkingBranches(false);
       setShowBranchSuggestions(false);
     } catch (e) {
       setBranchTagError(
@@ -342,6 +345,19 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
     } finally {
       setBranchSaveLoading(false);
     }
+  };
+
+  const handleStartEditRegulatorBranches = () => {
+    setEditStartBranchIds(selectedBranchIds);
+    setIsLinkingBranches(true);
+  };
+
+  const handleCancelRegulatorBranchEdit = () => {
+    setSelectedBranchIds(editStartBranchIds);
+    setBranchTagSearchText('');
+    setShowBranchSuggestions(false);
+    setBranchTagError(null);
+    setIsLinkingBranches(editStartBranchIds.length === 0);
   };
 
   // Debounce search query
@@ -601,11 +617,11 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
         <CardHeader className="pb-3 border-b">
           <div className="flex flex-col gap-3">
             {/* Regulator branches — search & tag (same pattern as RolesManagement → Add User) */}
-            <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-800 dark:bg-neutral-950/30">
+            <div className="border-b pb-3 dark:border-neutral-800 dark:bg-neutral-950/30">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">
-                    Linked regulator branches
+                  <p className="text-lg font-medium text-foreground">
+                    Update Regulator Branches
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Search (e.g. Head Office), pick from list or press Enter.
@@ -613,30 +629,41 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
                   </p>
                 </div>
                 {isLinkingBranches ? (
-                  <Button
-                    variant="blue"
-                    size="sm"
-                    type="button"
-                    disabled={
-                      branchSaveLoading ||
-                      linkedBranchesLoading ||
-                      !agentId ||
-                      selectedBranchIds.length === 0 ||
-                      branchCatalogLoading
-                    }
-                    onClick={handleSaveRegulatorBranches}
-                  >
-                    {branchSaveLoading ? 'Updating…' : 'Update branches'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      disabled={branchSaveLoading || linkedBranchesLoading}
+                      onClick={handleCancelRegulatorBranchEdit}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="blue"
+                      size="sm"
+                      type="button"
+                      disabled={
+                        branchSaveLoading ||
+                        linkedBranchesLoading ||
+                        !agentId ||
+                        selectedBranchIds.length === 0 ||
+                        branchCatalogLoading
+                      }
+                      onClick={handleSaveRegulatorBranches}
+                    >
+                      {branchSaveLoading ? 'Saving…' : 'Save'}
+                    </Button>
+                  </div>
                 ) : (
                   <Button
                     variant="blue"
                     size="sm"
                     type="button"
                     disabled={!agentId || linkedBranchesLoading}
-                    onClick={() => setIsLinkingBranches(true)}
+                    onClick={handleStartEditRegulatorBranches}
                   >
-                    {linkedBranchesLoading ? 'Loading…' : 'Link branches'}
+                    {linkedBranchesLoading ? 'Loading…' : 'Edit'}
                   </Button>
                 )}
               </div>
@@ -767,6 +794,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
                 </div>
               )}
             </div>
+          
 
           <div className="flex  gap-2">
             <p>Select Office Type</p>
@@ -801,7 +829,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
             <div className="flex  items-center justify-between">
              
              
-              <CardTitle className="text-lg">
+              <CardTitle className="text-lg mb-2">
                 {selectedNode ? 'Details & Children' : 'All Employees'}
               </CardTitle>
               {selectedNode && (
@@ -906,6 +934,7 @@ const SplitTreeTableGeo: React.FC<SplitTreeTableGeoProps> = ({
               )}
             </div>
           </div>
+          
         </CardHeader>
 
         {/* Error Alert */}
