@@ -22,6 +22,7 @@ export interface IAgent {
   agentName: string
   businessName: string | null
   maritalStatusCode: string
+  
 
   firstName: string | null
   middleName: string | null

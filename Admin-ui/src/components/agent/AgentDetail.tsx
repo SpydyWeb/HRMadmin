@@ -150,6 +150,7 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
       agentTypeCat: agent.agentTypeCat,
       agentClass: agent.agentClass,
       cmsAgentType: agent.cmsAgentType,
+      agentStatusCode:agent.agentStatusCode,
 
       title: agent.title,
       firstName: agent.firstName,
@@ -281,6 +282,8 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
       commissionClass: agent.commissionClass ?? 'N/A',
       designationCode: agent.designationCode,
       locationCode:agent.locationCode ?? "N/A",
+      agentStatusCodeId:agent.agentStatusCodeId ?? "N/A",
+
     },
 
 
@@ -290,9 +293,19 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
       commissionClass: z.any().optional(),
       locationCode: z.any().optional(),
       designationCode: z.any().optional(),
+      agentStatusCodeId: z.any().optional(),
     }),
 
     fields: filterFields([
+      {
+        name: 'agentStatusCodeId',
+        label: 'Status',
+        type: 'select',
+        colSpan: 1,
+        readOnly: !isEdit,
+        variant: 'custom',
+        options: getOptions(MASTER_DATA_KEYS.AGENT_STATUS_CODE),
+      },
       {
         name: 'channel',
         label: 'Channel Name',
@@ -1328,14 +1341,14 @@ const AgentDetail = ({ agent, getOptions, activeTab }: AgentDetailProps) => {
                       <p className="text-orange-100 text-sm flex items-center gap-2">
                         STATUS -{' '}
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs text-black font-medium ${
                             !agent.agentStatusCode
-                              ? 'bg-gray-200 text-gray-600'
+                              ? 'bg-gray-200'
                               : String(agent.agentStatusCode).toUpperCase() === 'ACTIVE'
-                                ? 'bg-emerald-400/90 text-white'
+                                ? 'bg-emerald-400/90'
                                 : String(agent.agentStatusCode).toUpperCase() === 'TERMINATED'
-                                  ? 'bg-red-500/90 text-white'
-                                  : 'bg-gray-400 text-white'
+                                  ? 'bg-red-500/90'
+                                  : 'bg-gray-400'
                           }`}
                         >
                           {agent.agentStatusCode ?? 'N/A'}

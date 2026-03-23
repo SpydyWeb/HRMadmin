@@ -62,4 +62,5 @@ export const MASTER_DATA_KEYS = {
   CHANNEL:"Channel",
   Office_Type:"Location",
   Office_Location:"Branch",
+  AGENT_STATUS_CODE:"AgentStatusCodes",
 }
