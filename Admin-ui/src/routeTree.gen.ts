@@ -19,6 +19,7 @@ import { Route as AuthSearchIndexRouteImport } from './routes/_auth/search/index
 import { Route as AuthSearchAgentIdRouteImport } from './routes/_auth/search/$agentId'
 import { Route as AuthInboxTaskIdRouteImport } from './routes/_auth/inbox/$taskId'
 import { Route as AuthDashboardTerminationRouteImport } from './routes/_auth/dashboard/termination'
+import { Route as AuthDashboardCreateIndividualRouteImport } from './routes/_auth/dashboard/create-individual'
 import { Route as AuthDashboardCreateBulkRouteImport } from './routes/_auth/dashboard/create-bulk'
 import { Route as AuthDashboardCertificationUpdateRouteImport } from './routes/_auth/dashboard/certification-update'
 import { Route as AuthDashboardNotFoundRouteImport } from './routes/_auth/dashboard/$not-found'
@@ -27,6 +28,7 @@ import { Route as AuthCommissionCreateBulkRouteImport } from './routes/_auth/com
 import { Route as AuthCommissionCertificationUpdateRouteImport } from './routes/_auth/commission/certification-update'
 import { Route as AuthCommissionNotFoundRouteImport } from './routes/_auth/commission/$not-found'
 import { Route as AuthSearchDashboardTerminationRouteImport } from './routes/_auth/search/dashboard/termination'
+import { Route as AuthSearchDashboardCreateIndividualRouteImport } from './routes/_auth/search/dashboard/create-individual'
 import { Route as AuthSearchDashboardCreateBulkRouteImport } from './routes/_auth/search/dashboard/create-bulk'
 import { Route as AuthSearchDashboardCertificationUpdateRouteImport } from './routes/_auth/search/dashboard/certification-update'
 import { Route as AuthDashboardCodeMovementBulkActionRouteImport } from './routes/_auth/dashboard/code-movement/bulk-action'
@@ -189,6 +191,12 @@ const AuthDashboardTerminationRoute =
     path: '/dashboard/termination',
     getParentRoute: () => AuthRoute,
   } as any)
+const AuthDashboardCreateIndividualRoute =
+  AuthDashboardCreateIndividualRouteImport.update({
+    id: '/dashboard/create-individual',
+    path: '/dashboard/create-individual',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthDashboardCreateBulkRoute = AuthDashboardCreateBulkRouteImport.update({
   id: '/dashboard/create-bulk',
   path: '/dashboard/create-bulk',
@@ -320,6 +328,12 @@ const AuthSearchDashboardTerminationRoute =
     path: '/search/dashboard/termination',
     getParentRoute: () => AuthRoute,
   } as any)
+const AuthSearchDashboardCreateIndividualRoute =
+  AuthSearchDashboardCreateIndividualRouteImport.update({
+    id: '/search/dashboard/create-individual',
+    path: '/search/dashboard/create-individual',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthSearchDashboardCreateBulkRoute =
   AuthSearchDashboardCreateBulkRouteImport.update({
     id: '/search/dashboard/create-bulk',
@@ -415,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
+  '/dashboard/create-individual': typeof AuthDashboardCreateIndividualRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
@@ -430,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
   '/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/search/dashboard/create-individual': typeof AuthSearchDashboardCreateIndividualRoute
   '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -459,6 +475,7 @@ export interface FileRoutesByTo {
   '/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
+  '/dashboard/create-individual': typeof AuthDashboardCreateIndividualRoute
   '/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/search/$agentId': typeof AuthSearchAgentIdRoute
@@ -474,6 +491,7 @@ export interface FileRoutesByTo {
   '/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
   '/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/search/dashboard/create-individual': typeof AuthSearchDashboardCreateIndividualRoute
   '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -505,6 +523,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/$not-found': typeof AuthDashboardNotFoundRoute
   '/_auth/dashboard/certification-update': typeof AuthDashboardCertificationUpdateRoute
   '/_auth/dashboard/create-bulk': typeof AuthDashboardCreateBulkRoute
+  '/_auth/dashboard/create-individual': typeof AuthDashboardCreateIndividualRoute
   '/_auth/dashboard/termination': typeof AuthDashboardTerminationRoute
   '/_auth/inbox/$taskId': typeof AuthInboxTaskIdRoute
   '/_auth/search/$agentId': typeof AuthSearchAgentIdRoute
@@ -520,6 +539,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/code-movement/bulk-action': typeof AuthDashboardCodeMovementBulkActionRoute
   '/_auth/search/dashboard/certification-update': typeof AuthSearchDashboardCertificationUpdateRoute
   '/_auth/search/dashboard/create-bulk': typeof AuthSearchDashboardCreateBulkRoute
+  '/_auth/search/dashboard/create-individual': typeof AuthSearchDashboardCreateIndividualRoute
   '/_auth/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/_auth/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -551,6 +571,7 @@ export interface FileRouteTypes {
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
+    | '/dashboard/create-individual'
     | '/dashboard/termination'
     | '/inbox/$taskId'
     | '/search/$agentId'
@@ -566,6 +587,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement/bulk-action'
     | '/search/dashboard/certification-update'
     | '/search/dashboard/create-bulk'
+    | '/search/dashboard/create-individual'
     | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
@@ -595,6 +617,7 @@ export interface FileRouteTypes {
     | '/dashboard/$not-found'
     | '/dashboard/certification-update'
     | '/dashboard/create-bulk'
+    | '/dashboard/create-individual'
     | '/dashboard/termination'
     | '/inbox/$taskId'
     | '/search/$agentId'
@@ -610,6 +633,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement/bulk-action'
     | '/search/dashboard/certification-update'
     | '/search/dashboard/create-bulk'
+    | '/search/dashboard/create-individual'
     | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
@@ -640,6 +664,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/$not-found'
     | '/_auth/dashboard/certification-update'
     | '/_auth/dashboard/create-bulk'
+    | '/_auth/dashboard/create-individual'
     | '/_auth/dashboard/termination'
     | '/_auth/inbox/$taskId'
     | '/_auth/search/$agentId'
@@ -655,6 +680,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/code-movement/bulk-action'
     | '/_auth/search/dashboard/certification-update'
     | '/_auth/search/dashboard/create-bulk'
+    | '/_auth/search/dashboard/create-individual'
     | '/_auth/search/dashboard/termination'
     | '/_auth/commission/configcommission-list/history'
     | '/_auth/commission/configcommission-list/new-commission-creation'
@@ -794,6 +820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardTerminationRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/create-individual': {
+      id: '/_auth/dashboard/create-individual'
+      path: '/dashboard/create-individual'
+      fullPath: '/dashboard/create-individual'
+      preLoaderRoute: typeof AuthDashboardCreateIndividualRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/dashboard/create-bulk': {
       id: '/_auth/dashboard/create-bulk'
       path: '/dashboard/create-bulk'
@@ -913,6 +946,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSearchDashboardTerminationRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/dashboard/create-individual': {
+      id: '/_auth/search/dashboard/create-individual'
+      path: '/search/dashboard/create-individual'
+      fullPath: '/search/dashboard/create-individual'
+      preLoaderRoute: typeof AuthSearchDashboardCreateIndividualRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/search/dashboard/create-bulk': {
       id: '/_auth/search/dashboard/create-bulk'
       path: '/search/dashboard/create-bulk'
@@ -995,6 +1035,7 @@ interface AuthRouteChildren {
   AuthDashboardNotFoundRoute: typeof AuthDashboardNotFoundRoute
   AuthDashboardCertificationUpdateRoute: typeof AuthDashboardCertificationUpdateRoute
   AuthDashboardCreateBulkRoute: typeof AuthDashboardCreateBulkRoute
+  AuthDashboardCreateIndividualRoute: typeof AuthDashboardCreateIndividualRoute
   AuthDashboardTerminationRoute: typeof AuthDashboardTerminationRoute
   AuthInboxTaskIdRoute: typeof AuthInboxTaskIdRoute
   AuthSearchAgentIdRoute: typeof AuthSearchAgentIdRoute
@@ -1010,6 +1051,7 @@ interface AuthRouteChildren {
   AuthDashboardCodeMovementBulkActionRoute: typeof AuthDashboardCodeMovementBulkActionRoute
   AuthSearchDashboardCertificationUpdateRoute: typeof AuthSearchDashboardCertificationUpdateRoute
   AuthSearchDashboardCreateBulkRoute: typeof AuthSearchDashboardCreateBulkRoute
+  AuthSearchDashboardCreateIndividualRoute: typeof AuthSearchDashboardCreateIndividualRoute
   AuthSearchDashboardTerminationRoute: typeof AuthSearchDashboardTerminationRoute
   AuthCommissionConfigcommissionListHistoryLazyRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -1038,6 +1080,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthDashboardNotFoundRoute: AuthDashboardNotFoundRoute,
   AuthDashboardCertificationUpdateRoute: AuthDashboardCertificationUpdateRoute,
   AuthDashboardCreateBulkRoute: AuthDashboardCreateBulkRoute,
+  AuthDashboardCreateIndividualRoute: AuthDashboardCreateIndividualRoute,
   AuthDashboardTerminationRoute: AuthDashboardTerminationRoute,
   AuthInboxTaskIdRoute: AuthInboxTaskIdRoute,
   AuthSearchAgentIdRoute: AuthSearchAgentIdRoute,
@@ -1056,6 +1099,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSearchDashboardCertificationUpdateRoute:
     AuthSearchDashboardCertificationUpdateRoute,
   AuthSearchDashboardCreateBulkRoute: AuthSearchDashboardCreateBulkRoute,
+  AuthSearchDashboardCreateIndividualRoute:
+    AuthSearchDashboardCreateIndividualRoute,
   AuthSearchDashboardTerminationRoute: AuthSearchDashboardTerminationRoute,
   AuthCommissionConfigcommissionListHistoryLazyRoute:
     AuthCommissionConfigcommissionListHistoryLazyRoute,

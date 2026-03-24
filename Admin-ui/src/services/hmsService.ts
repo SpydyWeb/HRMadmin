@@ -456,6 +456,24 @@ export const HMSService = {
   getRefreshToken: async () => {
     return callApi("getRefreshToken", [{refreshToken: JSON.parse(auth.getToken())?.refreshToken}])
   },
+
+  createIndividualAgent: async (payload: {
+    agentName: string
+    firstName: string
+    middleName: string | null
+    lastName: string
+    mobileNo: string
+    email: string
+    panNumber: string
+    channel: number
+    subChannel: number | null
+    branch: number
+    locationCode: number
+    designationCode: number
+    supervisorCode: string
+  }) => {
+    return callApi(APIRoutes.CREATE_INDIVIDUAL_AGENT, [payload])
+  },
 }
 
 
