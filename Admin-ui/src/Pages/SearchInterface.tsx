@@ -26,7 +26,7 @@ export default function SearchInterface() {
   const handleClick = (agentid: string) => {
     navigate({ to: '/search/$agentId', params: { agentId: agentid } })
   }
-  const handleModuleClick = (route: string) => {
+  const handleModuleClick = (route?: string) => {
   if (route) {
     navigate({ to: route })
   }
@@ -54,6 +54,7 @@ export default function SearchInterface() {
     icon: MdCardGiftcard, // Gift/reward icon
     color: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
     isActive: false,
+    route:'/search/incentive'
   },
   {
     id: 'pms',

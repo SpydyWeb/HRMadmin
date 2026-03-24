@@ -50,6 +50,9 @@ const AuthCommissionIndexLazyRouteImport =
 const AuthChannelManagementIndexLazyRouteImport = createFileRoute(
   '/_auth/channel-management/',
 )()
+const AuthSearchIncentiveIndexLazyRouteImport = createFileRoute(
+  '/_auth/search/incentive/',
+)()
 const AuthSearchDashboardIndexLazyRouteImport = createFileRoute(
   '/_auth/search/dashboard/',
 )()
@@ -225,6 +228,14 @@ const AuthCommissionNotFoundRoute = AuthCommissionNotFoundRouteImport.update({
   path: '/commission/$not-found',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthSearchIncentiveIndexLazyRoute =
+  AuthSearchIncentiveIndexLazyRouteImport.update({
+    id: '/search/incentive/',
+    path: '/search/incentive/',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/incentive/index.lazy').then((d) => d.Route),
+  )
 const AuthSearchDashboardIndexLazyRoute =
   AuthSearchDashboardIndexLazyRouteImport.update({
     id: '/search/dashboard/',
@@ -428,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
   '/search/commission': typeof AuthSearchCommissionIndexLazyRoute
   '/search/dashboard': typeof AuthSearchDashboardIndexLazyRoute
+  '/search/incentive': typeof AuthSearchIncentiveIndexLazyRoute
   '/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
   '/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
   '/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -471,6 +483,7 @@ export interface FileRoutesByTo {
   '/dashboard/code-movement': typeof AuthDashboardCodeMovementIndexLazyRoute
   '/search/commission': typeof AuthSearchCommissionIndexLazyRoute
   '/search/dashboard': typeof AuthSearchDashboardIndexLazyRoute
+  '/search/incentive': typeof AuthSearchIncentiveIndexLazyRoute
   '/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
   '/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
   '/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -516,6 +529,7 @@ export interface FileRoutesById {
   '/_auth/dashboard/code-movement/': typeof AuthDashboardCodeMovementIndexLazyRoute
   '/_auth/search/commission/': typeof AuthSearchCommissionIndexLazyRoute
   '/_auth/search/dashboard/': typeof AuthSearchDashboardIndexLazyRoute
+  '/_auth/search/incentive/': typeof AuthSearchIncentiveIndexLazyRoute
   '/_auth/search/dashboard/code-movement/bulk-action': typeof AuthSearchDashboardCodeMovementBulkActionRoute
   '/_auth/search/commission/configcommission-list/history': typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/search/commission/configcommission-list/new-commission-creation': typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -561,6 +575,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement'
     | '/search/commission'
     | '/search/dashboard'
+    | '/search/incentive'
     | '/search/dashboard/code-movement/bulk-action'
     | '/search/commission/configcommission-list/history'
     | '/search/commission/configcommission-list/new-commission-creation'
@@ -604,6 +619,7 @@ export interface FileRouteTypes {
     | '/dashboard/code-movement'
     | '/search/commission'
     | '/search/dashboard'
+    | '/search/incentive'
     | '/search/dashboard/code-movement/bulk-action'
     | '/search/commission/configcommission-list/history'
     | '/search/commission/configcommission-list/new-commission-creation'
@@ -648,6 +664,7 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/code-movement/'
     | '/_auth/search/commission/'
     | '/_auth/search/dashboard/'
+    | '/_auth/search/incentive/'
     | '/_auth/search/dashboard/code-movement/bulk-action'
     | '/_auth/search/commission/configcommission-list/history'
     | '/_auth/search/commission/configcommission-list/new-commission-creation'
@@ -826,6 +843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionNotFoundRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/incentive/': {
+      id: '/_auth/search/incentive/'
+      path: '/search/incentive'
+      fullPath: '/search/incentive'
+      preLoaderRoute: typeof AuthSearchIncentiveIndexLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/search/dashboard/': {
       id: '/_auth/search/dashboard/'
       path: '/search/dashboard'
@@ -995,6 +1019,7 @@ interface AuthRouteChildren {
   AuthDashboardCodeMovementIndexLazyRoute: typeof AuthDashboardCodeMovementIndexLazyRoute
   AuthSearchCommissionIndexLazyRoute: typeof AuthSearchCommissionIndexLazyRoute
   AuthSearchDashboardIndexLazyRoute: typeof AuthSearchDashboardIndexLazyRoute
+  AuthSearchIncentiveIndexLazyRoute: typeof AuthSearchIncentiveIndexLazyRoute
   AuthSearchDashboardCodeMovementBulkActionRoute: typeof AuthSearchDashboardCodeMovementBulkActionRoute
   AuthSearchCommissionConfigcommissionListHistoryLazyRoute: typeof AuthSearchCommissionConfigcommissionListHistoryLazyRoute
   AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthSearchCommissionConfigcommissionListNewCommissionCreationLazyRoute
@@ -1046,6 +1071,7 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthDashboardCodeMovementIndexLazyRoute,
   AuthSearchCommissionIndexLazyRoute: AuthSearchCommissionIndexLazyRoute,
   AuthSearchDashboardIndexLazyRoute: AuthSearchDashboardIndexLazyRoute,
+  AuthSearchIncentiveIndexLazyRoute: AuthSearchIncentiveIndexLazyRoute,
   AuthSearchDashboardCodeMovementBulkActionRoute:
     AuthSearchDashboardCodeMovementBulkActionRoute,
   AuthSearchCommissionConfigcommissionListHistoryLazyRoute:
