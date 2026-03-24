@@ -60,6 +60,7 @@ const APIRoutes = {
   FETCHALLBRANCHES: "/api/AppMasters/GetRegulatorBranches",
   SAVEAGENTLINKEDBRANCH: "/api/Agent/RegulatorBranch/Save",
   FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent",
+  CREATEINDIVIDUALAGENT: "/api/Agent/CreateIndividualAgent",
   SAVEUSERLINKEDBRANCH: "/api/Users/RegulatorUserBranch/Save",
   FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
 

@@ -25,7 +25,7 @@ const QuickActions = () => {
     icon: LuSquareUserRound,
     title: 'Create Individually',
     subtitle: 'Create a new entity',
-    onClick: () => alert('Create Individually clicked'),
+    onClick: () => navigate({ to: buildPath(RoutePaths.CREATE_INDIVIDUAL_AGENT) }),
   },
   {
     icon: RxUpload,
