@@ -63,6 +63,8 @@ const APIRoutes = {
   CREATEINDIVIDUALAGENT: "/api/Agent/CreateIndividualAgent",
   SAVEUSERLINKEDBRANCH: "/api/Users/RegulatorUserBranch/Save",
   FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
+  SAVEPRODUCT: "/api/AppMasters/SaveProduct",
+  GETPRODUCTS: "/api/AppMasters/GetProducts",
 
 };
 

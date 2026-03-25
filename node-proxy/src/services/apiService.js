@@ -543,6 +543,12 @@ const orgConfiguration = (data = {}, headers = {}) => {
 const orgConfigUpdate = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.ORGCONFIGUPDATE, data, { headers });
 }
+const SaveProduct = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.SAVEPRODUCT, data, { headers });
+}
+const GetProducts = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GETPRODUCTS, data, { headers });
+}
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -639,6 +645,8 @@ module.exports = {
   lockUnlockUser,
   orgConfiguration,
   orgConfigUpdate,
+  SaveProduct,
+  GetProducts,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,
