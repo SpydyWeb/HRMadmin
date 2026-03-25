@@ -9,9 +9,9 @@ import { MASTER_DATA_KEYS } from '@/utils/constant'
 import { useState } from 'react'
 
 const CreateIndividual = () => {
+  console.log("for testing live code")
   const [formRenderKey, setFormRenderKey] = useState(0)
 
-  // master data hook (instant if loader prefetched + hydrated)
   const { getOptions } = useMasterData(Object.values(MASTER_DATA_KEYS))
 
   const createIndividualConfig = {
@@ -194,7 +194,6 @@ const CreateIndividual = () => {
           NOTIFICATION_CONSTANTS.SUCCESS,
           errorMessage || 'Agent created successfully.',
         )
-        // Re-mount form to clear all entered values after successful create.
         setFormRenderKey((prev) => prev + 1)
         return
       }
