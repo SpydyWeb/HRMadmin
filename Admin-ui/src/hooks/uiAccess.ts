@@ -74,6 +74,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   };
   
   // Helper to find all fields in a tab (across all sections within the tab)
+  // Note: backend sometimes returns `allowedit` or `allowEdit` — normalize here.
   const findFieldsInTab = (tabValue: string): Array<{ cntrlid: number; cntrlName: string; render: boolean; allowedit: boolean }> => {
     if (!screen || !screen.subSection) return [];
     
@@ -93,7 +94,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
             cntrlid: field.cntrlid,
             cntrlName: field.cntrlName,
             render: field.render,
-            allowedit: field.allowedit
+            allowedit: Boolean((field as any).allowedit ?? (field as any).allowEdit)
           });
         });
       }
@@ -280,7 +281,10 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
       });
     }
     
-    const isEditable = field ? field.allowedit : (fields.length === 0 ? true : false);
+    // Field-driven behavior:
+    // - If a field is explicitly present in API, honor its `allowedit/allowEdit` flag.
+    // - If the API doesn't mention a field, default to editable (do not block editing due to matching issues).
+    const isEditable = field ? Boolean((field as any).allowedit ?? (field as any).allowEdit) : true;
     // console.log(`🔍 Field "${fieldIdentifier}"${fieldLabel ? ` (${fieldLabel})` : ''} (cntrlid: ${cntrlid || 'N/A'}) in tab "${tabValue}": ${isEditable ? '✅ EDITABLE' : '❌ READ-ONLY'}`, field ? { cntrlid: field.cntrlid, cntrlName: field.cntrlName, allowedit: field.allowedit } : `not found (${fields.length} fields in restrictions)`);
     return isEditable;
   };
@@ -289,7 +293,7 @@ export const useUIAccess = (section: string, type: string = 'Screen') => {
   // sectionName: the section name from the config (e.g., 'personal_details', 'contact_information')
   // This function should only hide sections if they're explicitly marked as hidden in the API
   // If the API doesn't have section-level restrictions, default to showing if fields are visible
-  const isSectionVisible = (tabValue: string, sectionName: string, fieldNames: string[]): boolean => {
+  const isSectionVisible = (tabValue: string, sectionName: string, _fieldNames: string[]): boolean => {
     if (isLoading) return true; // Show all sections while loading
     
     // If no screen or tabs, default to visible (no restrictions)

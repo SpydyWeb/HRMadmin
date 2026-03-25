@@ -58,6 +58,8 @@ export const APIRoutes = {
   SAVE_BRANCH_LINKED_USER:'saveBranchLinkedUser',
   FETCH_BRANCH_BY_USER: 'fetchBranchByUser',
   CREATE_INDIVIDUAL_AGENT: 'CreateIndividualAgent',
+  SAVE_PRODUCT: 'SaveProduct',
+  GET_PRODUCTS: 'GetProducts',
 }
 
 export const LoginConstants = {

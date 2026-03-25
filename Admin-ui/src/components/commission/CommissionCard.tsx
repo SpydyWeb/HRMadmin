@@ -337,37 +337,37 @@ const channelTables = [
       </div>
 
       <div className="max-w-[18rem] w-full space-y-3">
-        <Card className="rounded-md">
+        {/* <Card className="rounded-md">
   <CardContent className="flex flex-col gap-3 px-3">
     {forecastScenarios.map((item, index) => (
       <div
         key={index}
         className="rounded-md bg-gray-100 p-3 shadow-sm"
       >
-        {/* Scenario label */}
+      
         <div className="text-[10px] font-semibold text-gray-500 uppercase">
           {item.label} -{' '}
           <span className={item.color}>{item.type}</span>
         </div>
 
-        {/* Amount */}
+   
         <div className="text-xl font-bold text-gray-900 mt-1">
           {item.amount}
         </div>
 
-        {/* Description */}
+        
         <div className="text-xs text-gray-500">
           {item.description}
         </div>
       </div>
     ))}
 
-    {/* View Details Button */}
+   
     <button className="mt-2 flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
       <Eye size={16} /> View Forecast Details
     </button>
   </CardContent>
-</Card>
+</Card> */}
 
       <Card className="rounded-md mb-2">
   <CardContent className="flex flex-col gap-3 p-3">

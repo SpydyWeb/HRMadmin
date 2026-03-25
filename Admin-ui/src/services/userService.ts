@@ -2,7 +2,6 @@ import { callApi } from './apiService'
 import { APIRoutes } from './constant'
 import type { ApiResponse } from '@/models/api'
 import type {
-  IGetUserDetailsRequest,
   ICreateUserRequest,
   IUpdateUserRequest,
   IUpdatePasswordRequest,
@@ -49,11 +48,24 @@ export const userManagementService = {
     },
   
     fetchRegulatorBranchesByUser: async (payload: { userId: number }) => {
-      const response = await callApi<ApiResponse<any>>(
-        APIRoutes.FETCH_BRANCH_BY_USER,
-        [payload],
-      )
-      return response.responseBody ?? response ?? null
+      try {
+        const response = await callApi<ApiResponse<any>>(
+          APIRoutes.FETCH_BRANCH_BY_USER,
+          [payload],
+        )
+        return response.responseBody ?? response ?? null
+      } catch (error: any) {
+        const responseData = error?.response?.data
+        const message = responseData?.responseHeader?.errorMessage
+
+        // Only show API-provided message; never invent our own.
+        if (message) {
+          throw new Error(message)
+        }
+
+        // Fall back to original thrown error (axios/network/etc.)
+        throw error
+      }
     },
 
   CreateUser: async (data: ICreateUserRequest) => {

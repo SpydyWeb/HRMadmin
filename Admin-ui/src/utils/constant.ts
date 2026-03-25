@@ -64,4 +64,5 @@ export const MASTER_DATA_KEYS = {
   Office_Type:"Location",
   Office_Location:"Branch",
   AGENT_STATUS_CODE:"AgentStatusCodes",
+  PRODUCT_CATEGORY:"ProductCategory "
 }
