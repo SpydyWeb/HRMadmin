@@ -79,12 +79,6 @@ const AuthCommissionConfigcommissionListNewCommissionCreationLazyRouteImport =
   )()
 const AuthCommissionConfigcommissionListHistoryLazyRouteImport =
   createFileRoute('/_auth/commission/configcommission-list/history')()
-const AuthSearchIncentiveProgramConfigIndexLazyRouteImport = createFileRoute(
-  '/_auth/search/incentive/program-config/',
-)()
-const AuthSearchIncentiveProductWeightageIndexLazyRouteImport = createFileRoute(
-  '/_auth/search/incentive/product-weightage/',
-)()
 const AuthSearchDashboardCodeMovementIndexLazyRouteImport = createFileRoute(
   '/_auth/search/dashboard/code-movement/',
 )()
@@ -364,26 +358,6 @@ const AuthCommissionProcesscommissionBulkActionRoute =
     path: '/commission/processcommission/bulk-action',
     getParentRoute: () => AuthRoute,
   } as any)
-const AuthSearchIncentiveProgramConfigIndexLazyRoute =
-  AuthSearchIncentiveProgramConfigIndexLazyRouteImport.update({
-    id: '/search/incentive/program-config/',
-    path: '/search/incentive/program-config/',
-    getParentRoute: () => AuthRoute,
-  } as any).lazy(() =>
-    import('./routes/_auth/search/incentive/program-config/index.lazy').then(
-      (d) => d.Route,
-    ),
-  )
-const AuthSearchIncentiveProductWeightageIndexLazyRoute =
-  AuthSearchIncentiveProductWeightageIndexLazyRouteImport.update({
-    id: '/search/incentive/product-weightage/',
-    path: '/search/incentive/product-weightage/',
-    getParentRoute: () => AuthRoute,
-  } as any).lazy(() =>
-    import('./routes/_auth/search/incentive/product-weightage/index.lazy').then(
-      (d) => d.Route,
-    ),
-  )
 const AuthSearchDashboardCodeMovementIndexLazyRoute =
   AuthSearchDashboardCodeMovementIndexLazyRouteImport.update({
     id: '/search/dashboard/code-movement/',
@@ -488,8 +462,6 @@ export interface FileRoutesByFullPath {
   '/search/commission/configcommission-list': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
   '/search/commission/processcommission': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
   '/search/dashboard/code-movement': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
-  '/search/incentive/product-weightage': typeof AuthSearchIncentiveProductWeightageIndexLazyRoute
-  '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -536,8 +508,6 @@ export interface FileRoutesByTo {
   '/search/commission/configcommission-list': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
   '/search/commission/processcommission': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
   '/search/dashboard/code-movement': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
-  '/search/incentive/product-weightage': typeof AuthSearchIncentiveProductWeightageIndexLazyRoute
-  '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -586,8 +556,6 @@ export interface FileRoutesById {
   '/_auth/search/commission/configcommission-list/': typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
   '/_auth/search/commission/processcommission/': typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
   '/_auth/search/dashboard/code-movement/': typeof AuthSearchDashboardCodeMovementIndexLazyRoute
-  '/_auth/search/incentive/product-weightage/': typeof AuthSearchIncentiveProductWeightageIndexLazyRoute
-  '/_auth/search/incentive/program-config/': typeof AuthSearchIncentiveProgramConfigIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -636,8 +604,6 @@ export interface FileRouteTypes {
     | '/search/commission/configcommission-list'
     | '/search/commission/processcommission'
     | '/search/dashboard/code-movement'
-    | '/search/incentive/product-weightage'
-    | '/search/incentive/program-config'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -684,8 +650,6 @@ export interface FileRouteTypes {
     | '/search/commission/configcommission-list'
     | '/search/commission/processcommission'
     | '/search/dashboard/code-movement'
-    | '/search/incentive/product-weightage'
-    | '/search/incentive/program-config'
   id:
     | '__root__'
     | '/'
@@ -733,8 +697,6 @@ export interface FileRouteTypes {
     | '/_auth/search/commission/configcommission-list/'
     | '/_auth/search/commission/processcommission/'
     | '/_auth/search/dashboard/code-movement/'
-    | '/_auth/search/incentive/product-weightage/'
-    | '/_auth/search/incentive/program-config/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1019,20 +981,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionProcesscommissionBulkActionRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/search/incentive/program-config/': {
-      id: '/_auth/search/incentive/program-config/'
-      path: '/search/incentive/program-config'
-      fullPath: '/search/incentive/program-config'
-      preLoaderRoute: typeof AuthSearchIncentiveProgramConfigIndexLazyRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/search/incentive/product-weightage/': {
-      id: '/_auth/search/incentive/product-weightage/'
-      path: '/search/incentive/product-weightage'
-      fullPath: '/search/incentive/product-weightage'
-      preLoaderRoute: typeof AuthSearchIncentiveProductWeightageIndexLazyRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/search/dashboard/code-movement/': {
       id: '/_auth/search/dashboard/code-movement/'
       path: '/search/dashboard/code-movement'
@@ -1120,8 +1068,6 @@ interface AuthRouteChildren {
   AuthSearchCommissionConfigcommissionListIndexLazyRoute: typeof AuthSearchCommissionConfigcommissionListIndexLazyRoute
   AuthSearchCommissionProcesscommissionIndexLazyRoute: typeof AuthSearchCommissionProcesscommissionIndexLazyRoute
   AuthSearchDashboardCodeMovementIndexLazyRoute: typeof AuthSearchDashboardCodeMovementIndexLazyRoute
-  AuthSearchIncentiveProductWeightageIndexLazyRoute: typeof AuthSearchIncentiveProductWeightageIndexLazyRoute
-  AuthSearchIncentiveProgramConfigIndexLazyRoute: typeof AuthSearchIncentiveProgramConfigIndexLazyRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -1183,10 +1129,6 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthSearchCommissionProcesscommissionIndexLazyRoute,
   AuthSearchDashboardCodeMovementIndexLazyRoute:
     AuthSearchDashboardCodeMovementIndexLazyRoute,
-  AuthSearchIncentiveProductWeightageIndexLazyRoute:
-    AuthSearchIncentiveProductWeightageIndexLazyRoute,
-  AuthSearchIncentiveProgramConfigIndexLazyRoute:
-    AuthSearchIncentiveProgramConfigIndexLazyRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
