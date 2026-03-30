@@ -60,6 +60,16 @@ export const APIRoutes = {
   CREATE_INDIVIDUAL_AGENT: 'CreateIndividualAgent',
   SAVE_PRODUCT: 'SaveProduct',
   GET_PRODUCTS: 'GetProducts',
+  GET_CHANNELS: 'GetChannels',
+  GET_SUB_CHANNELS: 'GetSubChannels',
+  GET_BRANCHES_BY_FILTER: 'GetBranchesByFilter',
+  GET_DESIGNATIONS_BY_BRANCH: 'GetDesignationsByBranch',
+  GET_PAST_QUALIFIED_CYCLES: 'GetPastQualifiedCycles',
+  GET_SLAB_CONFIG: 'GetSlabConfig',
+  SAVE_SLAB_CONFIG: 'SaveSlabConfig',
+  GET_PRODUCT_WEIGHTAGE: 'GetProductWeightage',
+  SAVE_PRODUCT_WEIGHTAGE: 'SaveProductWeightage',
+  DELETE_PRODUCT_WEIGHTAGE: 'DeleteProductWeightage',
 }
 
 export const LoginConstants = {

@@ -25,7 +25,10 @@ export const RoutePaths = {
   CONFIG_COMMISSION_NEW: '/commission/configcommission-list/new-commission-creation',
   COMMISSION_HISTORY: '/commission/configcommission-list/history',
   INBOX: '/inbox',
-  CREATE_INDIVIDUAL_AGENT:"/dashboard/create-individual"
+  CREATE_INDIVIDUAL_AGENT: '/dashboard/create-individual',
+  INCENTIVE: '/search/incentive',
+  PROGRAM_CONFIG: '/search/incentive/program-config',
+  PRODUCT_WEIGHTAGE: '/search/incentive/product-weightage',
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {
