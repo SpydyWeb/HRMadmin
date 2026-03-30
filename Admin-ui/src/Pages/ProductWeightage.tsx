@@ -274,7 +274,7 @@ const ProductWeightage = () => {
           { label: 'Total Records', value: records.length, borderClass: 'border-blue-100', textClass: 'text-blue-600' },
           { label: 'Active', value: activeCount, borderClass: 'border-green-100', textClass: 'text-green-600' },
           { label: 'Inactive', value: records.length - activeCount, borderClass: 'border-gray-100', textClass: 'text-gray-600' },
-          { label: 'Recently Added', value: 1, borderClass: 'border-purple-100', textClass: 'text-purple-600' },
+          { label: 'Unique Products', value: new Set(records.map((r) => r.productCode)).size, borderClass: 'border-purple-100', textClass: 'text-purple-600' },
         ].map(({ label, value, borderClass, textClass }) => (
           <div key={label} className={`rounded-lg border bg-white px-4 py-3 shadow-sm ${borderClass}`}>
             <p className="text-xs text-gray-500 font-medium">{label}</p>

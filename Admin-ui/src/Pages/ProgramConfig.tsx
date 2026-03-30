@@ -183,7 +183,15 @@ const ProgramConfig = () => {
   const deleteSlab = (index: number) => {
     const updated = slabs.filter((_, i) => i !== index)
     setSlabs(updated)
-    setSelectedSlabIndex(Math.min(selectedSlabIndex, updated.length - 1))
+    if (updated.length === 0) {
+      setSelectedSlabIndex(0)
+    } else if (index < selectedSlabIndex) {
+      // Deleted a slab before the selected one → shift index down
+      setSelectedSlabIndex(selectedSlabIndex - 1)
+    } else {
+      // Deleted the selected slab or one after it → clamp to valid range
+      setSelectedSlabIndex(Math.min(selectedSlabIndex, updated.length - 1))
+    }
   }
 
   const handleChannelChange = (values: string[]) => {
@@ -202,6 +210,10 @@ const ProgramConfig = () => {
   const handleBranchChange = (values: string[]) => {
     setSelectedBranches(values)
     setSelectedDesignations([])
+  }
+
+  const handleDesignationChange = (values: string[]) => {
+    setSelectedDesignations(values)
   }
 
   return (
@@ -259,7 +271,7 @@ const ProgramConfig = () => {
                 label="Designations"
                 options={designationOptions}
                 selected={selectedDesignations}
-                onChange={setSelectedDesignations}
+                onChange={handleDesignationChange}
                 disabled={selectedBranches.length === 0}
               />
             </div>
