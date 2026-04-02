@@ -7,15 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMasterData } from '@/hooks/useMasterData'
 import { MASTER_DATA_KEYS } from '@/utils/constant'
 import { useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 
 const CreateIndividual = () => {
   console.log("for testing live code")
   const [formRenderKey, setFormRenderKey] = useState(0)
 
   const { getOptions } = useMasterData(Object.values(MASTER_DATA_KEYS))
+  const search = useSearch({ strict: false }) as any
+  const preselectedChannelId = search?.channelId != null ? Number(search.channelId) : undefined
 
   const createIndividualConfig = {
     gridCols: 3,
+    defaultValues: {
+      ...(preselectedChannelId ? { channel: preselectedChannelId } : {}),
+    },
     fields: [
       {
         name: 'agentName',

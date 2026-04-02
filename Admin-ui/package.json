@@ -89,6 +89,7 @@
   "devDependencies": {
     "@tanstack/devtools-event-client": "^0.2.1",
     "@tanstack/eslint-config": "^0.3.0",
+    "@tanstack/router-cli": "^1.166.25",
     "@tanstack/router-plugin": "1.131.7",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",

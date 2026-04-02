@@ -566,11 +566,25 @@ const CreateIndividualAgent = (data = {}, headers = {}) => {
 };
 
 const saveBranchLinkedUser = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.SAVEUSERLINKEDBRANCH, data, { headers });
+  return apiClient
+    .post(APIRoutes.SAVEUSERLINKEDBRANCH, data, { headers })
+    .catch((err) => {
+      if (err?.response?.status === 404 && APIRoutes.SAVEUSERLINKEDBRANCH_V2) {
+        return apiClient.post(APIRoutes.SAVEUSERLINKEDBRANCH_V2, data, { headers });
+      }
+      throw err;
+    });
 };
 
 const fetchBranchByUser = (data = {}, headers = {}) => {
-  return apiClient.post(`${APIRoutes.FETCHBRANCHBYUSER}/${data.userId}`, {}, { headers });
+  return apiClient
+    .post(`${APIRoutes.FETCHBRANCHBYUSER}/${data.userId}`, {}, { headers })
+    .catch((err) => {
+      if (err?.response?.status === 404 && APIRoutes.FETCHBRANCHBYUSER_V2) {
+        return apiClient.post(`${APIRoutes.FETCHBRANCHBYUSER_V2}/${data.userId}`, {}, { headers });
+      }
+      throw err;
+    });
 };
 
 

@@ -17,8 +17,10 @@ import FieldTreeView from '../components/ui/FieldTreeView'
 import { showToast } from "@/components/ui/sonner"
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import Loading from '@/components/ui/Loading'
+import { useNavigate } from '@tanstack/react-router'
 
 const RolesManagement = () => {
+  const navigate = useNavigate()
   type Role = {
     roleId: number
     roleName: string
@@ -67,6 +69,7 @@ const RolesManagement = () => {
   const [roles, setRoles] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [menuLoading, setMenuLoading] = useState(false)
+  const [menuBulkUpdating, setMenuBulkUpdating] = useState(false)
   const [openAddRole, setOpenAddRole] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
   const [addingRole, setAddingRole] = useState(false)
@@ -77,6 +80,7 @@ const RolesManagement = () => {
   const [userSuggestionsLoading, setUserSuggestionsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [addingUser, setAddingUser] = useState(false)
+  const [fieldBulkUpdating, setFieldBulkUpdating] = useState(false)
   const [fieldAccess, setFieldAccess] = useState<FieldAccess[]>([])
   const [fieldLoading, setFieldLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -349,7 +353,20 @@ const RolesManagement = () => {
   const userColumns = [
     {
       header: 'Login ID',
-      accessor: 'username',
+      accessor: (row: RoleUser) => (
+        <button
+          type="button"
+          className="text-blue-600 hover:underline"
+          onClick={() =>
+            navigate({
+              to: '/user-management',
+              search: { q: row.username },
+            })
+          }
+        >
+          {row.username}
+        </button>
+      ),
     },
     {
       header: 'Email',
@@ -885,6 +902,166 @@ const RolesManagement = () => {
     }
   }
 
+  const collectAllAgentFields = () => {
+    const out: Array<{ cntrlId: number; render: boolean; allowedit: boolean }> = []
+    const visit = (nodes: any[]) => {
+      for (const n of nodes) {
+        if (n?.type === 'menu' && Array.isArray(n.fieldList)) {
+          for (const f of n.fieldList) {
+            out.push({
+              cntrlId: Number(f.cntrlid),
+              render: Boolean(f.render),
+              allowedit: Boolean(f.allowedit),
+            })
+          }
+        }
+        if (Array.isArray(n?.children) && n.children.length) visit(n.children)
+      }
+    }
+    visit(treeData || [])
+    // de-dupe by cntrlId (keep last occurrence)
+    const map = new Map<number, { cntrlId: number; render: boolean; allowedit: boolean }>()
+    for (const item of out) map.set(item.cntrlId, item)
+    return Array.from(map.values())
+  }
+
+  const toggleAllAgentFieldAccess = async (key: 'edit' | 'render', nextValue: boolean) => {
+    if (!selectedRole) return
+    const all = collectAllAgentFields()
+    if (all.length === 0) return
+
+    setFieldBulkUpdating(true)
+    let failed = 0
+    let changed = 0
+
+    try {
+      for (const f of all) {
+        const current = key === 'edit' ? f.allowedit : f.render
+        if (current === nextValue) continue
+
+        const nextRender =
+          key === 'render'
+            ? Boolean(nextValue)
+            : nextValue
+              ? true // Edit ON => Render ON
+              : f.render
+
+        const nextAllowEdit =
+          key === 'edit'
+            ? Boolean(nextValue)
+            : nextValue
+              ? f.allowedit
+              : false // Render OFF => Edit OFF
+
+        try {
+          await HMSService.updateFieldAccess({
+            roleId: selectedRole.roleId,
+            cntrlId: f.cntrlId,
+            render: nextRender,
+            allowEdit: nextAllowEdit,
+            approverOneId: null,
+            approverTwoId: null,
+            approverThreeId: null,
+            useDefaultApprover: null,
+          })
+          changed += 1
+        } catch {
+          failed += 1
+        }
+      }
+
+      // Keep the currently open section table in sync (best-effort)
+      setFieldAccess((prev) =>
+        prev.map((row) => {
+          if (key === 'render') {
+            if (!nextValue) return { ...row, render: false, edit: false }
+            return { ...row, render: true }
+          }
+          // key === 'edit'
+          if (nextValue) return { ...row, edit: true, render: true }
+          return { ...row, edit: false }
+        }),
+      )
+
+      if (failed > 0) {
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          `Updated ${changed}/${changed + failed}. Some updates failed.`,
+        )
+      } else if (changed > 0) {
+        showToast(
+          NOTIFICATION_CONSTANTS.SUCCESS,
+          `Updated ${changed} field(s).`,
+        )
+      }
+    } finally {
+      setFieldBulkUpdating(false)
+    }
+  }
+
+  const handleToggleMenuAccessForCurrentPage = async (nextValue: boolean) => {
+    if (!selectedRole) return
+    if (paginatedMenu.length === 0) return
+
+    const roleId = selectedRole.roleId
+    const targets = paginatedMenu.filter((m) => m.hasAccess !== nextValue)
+    if (targets.length === 0) return
+
+    setMenuBulkUpdating(true)
+
+    // Optimistic update for the current page only
+    const targetIds = new Set(targets.map((t) => t.menuId))
+    setMenuAccess((prev) =>
+      prev.map((m) => (targetIds.has(m.menuId) ? { ...m, hasAccess: nextValue } : m)),
+    )
+
+    try {
+      const results = await Promise.allSettled(
+        targets.map(async (t) => {
+          const res = nextValue
+            ? await HMSService.grantMenuAccess({ roleId, menuId: t.menuId })
+            : await HMSService.revokeMenuAccess({ roleId, menuId: t.menuId })
+
+          const ok = res?.responseHeader?.errorCode === 1101
+          if (!ok) throw new Error(res?.responseHeader?.errorMessage || 'Failed')
+          return t.menuId
+        }),
+      )
+
+      const failedMenuIds = results
+        .map((r, idx) => (r.status === 'rejected' ? targets[idx].menuId : null))
+        .filter((x): x is number => x != null)
+
+      if (failedMenuIds.length) {
+        const failedSet = new Set(failedMenuIds)
+        setMenuAccess((prev) =>
+          prev.map((m) =>
+            failedSet.has(m.menuId) ? { ...m, hasAccess: !nextValue } : m,
+          ),
+        )
+        showToast(
+          NOTIFICATION_CONSTANTS.ERROR,
+          `Updated ${targets.length - failedMenuIds.length}/${targets.length}. Some updates failed.`,
+        )
+      } else {
+        showToast(
+          NOTIFICATION_CONSTANTS.SUCCESS,
+          `Updated access for ${targets.length} menu item(s).`,
+        )
+      }
+    } catch (error: any) {
+      setMenuAccess((prev) =>
+        prev.map((m) => (targetIds.has(m.menuId) ? { ...m, hasAccess: !nextValue } : m)),
+      )
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        error?.message || 'Failed to update menu access',
+      )
+    } finally {
+      setMenuBulkUpdating(false)
+    }
+  }
+
   const handleDeleteRole = async (roleId: number) => {
     const confirmDelete = window.confirm(
       'Are you sure you want to delete this role?'
@@ -1232,10 +1409,39 @@ const RolesManagement = () => {
                         <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         <span className="ml-2 text-sm text-gray-500">
                           Loading menu access...
+                        {/* can we add loader here from exisiting components */}
                         </span>
                       </div>
                     ) : (
                       <>
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="flex items-center gap-2 text-sm text-gray-700 select-none">
+                            <input
+                              type="checkbox"
+                              checked={
+                                paginatedMenu.length > 0 &&
+                                paginatedMenu.every((m) => m.hasAccess)
+                              }
+                              ref={(el) => {
+                                if (!el) return
+                                const all =
+                                  paginatedMenu.length > 0 &&
+                                  paginatedMenu.every((m) => m.hasAccess)
+                                const some = paginatedMenu.some((m) => m.hasAccess)
+                                el.indeterminate = !all && some
+                              }}
+                              disabled={menuBulkUpdating || paginatedMenu.length === 0}
+                              onChange={(e) =>
+                                handleToggleMenuAccessForCurrentPage(e.target.checked)
+                              }
+                            />
+                            <span>
+                              Select all (this page)
+                              {menuBulkUpdating ? ' — updating…' : ''}
+                            </span>
+                          </label>
+                        </div>
+
                         <DataTable columns={menuColumns} data={paginatedMenu} />
 
                         {totalPages > 1 && (
@@ -1291,6 +1497,31 @@ const RolesManagement = () => {
 
                         {/* LEFT → TREE (SMALLER) */}
                         <div className="col-span-4 h-full overflow-y-auto pr-2" >
+                          <div className="flex items-center justify-between gap-4 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">Render all</span>
+                              <Switch
+                                checked={collectAllAgentFields().every((f) => f.render)}
+                                onCheckedChange={(checked) =>
+                                  toggleAllAgentFieldAccess('render', checked)
+                                }
+                                disabled={fieldBulkUpdating}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">Edit all</span>
+                              <Switch
+                                checked={collectAllAgentFields().every((f) => f.allowedit)}
+                                onCheckedChange={(checked) =>
+                                  toggleAllAgentFieldAccess('edit', checked)
+                                }
+                                disabled={fieldBulkUpdating}
+                              />
+                            </div>
+                          </div>
+                          {fieldBulkUpdating ? (
+                            <div className="text-xs text-gray-500 mb-3">Updating…</div>
+                          ) : null}
                           <FieldTreeView
                             data={treeData}
                             onSelect={(node) => {
@@ -1380,6 +1611,7 @@ const RolesManagement = () => {
                                               onCheckedChange={(checked) =>
                                                 updateFieldAccess(row.fieldId, 'edit', checked)
                                               }
+                                              disabled={fieldBulkUpdating}
                                             />
                                           </div>
 
@@ -1391,6 +1623,7 @@ const RolesManagement = () => {
                                               onCheckedChange={(checked) =>
                                                 updateFieldAccess(row.fieldId, 'render', checked)
                                               }
+                                              disabled={fieldBulkUpdating}
                                             />
                                           </div>
 

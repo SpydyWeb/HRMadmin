@@ -1,18 +1,26 @@
 import { useCallback, useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { showToast } from '@/components/ui/sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { CommonConstants } from '@/services/constant'
-import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
+import { NOTIFICATION_CONSTANTS, RoutePaths } from '@/utils/constant'
 import { userManagementService } from '@/services/userService'
 import { agentService } from '@/services/agentService'
 import type { IUserDetails, ICreateUserRequest, IUpdateUserRequest, IUpdatePasswordRequest } from '@/models/user'
 import DynamicFormBuilder from '@/components/form/DynamicFormBuilder'
 import AutoAccordionSection from '@/components/ui/autoAccordianSection'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -24,6 +32,7 @@ import z from 'zod'
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as any
   const { user } = useAuth()
   const [userDetails, setUserDetails] = useState<IUserDetails | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -351,6 +360,25 @@ export default function UserManagement() {
     refetchUserDetails()
   }
 
+  // If navigated here with a username (or any query), prefill and auto-search once.
+  useEffect(() => {
+    const q = (search?.q ?? '').toString().trim()
+    if (!q) return
+    setSearchQuery(q)
+    // Run search on next tick so state is applied before refetch uses it.
+    window.setTimeout(() => {
+      try {
+        // This reads latest `searchQuery` via state update timing,
+        // but refetch uses queryKey tied to searchQuery anyway.
+        setUserDetails(null)
+        refetchUserDetails()
+      } catch {
+        // noop
+      }
+    }, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search?.q])
+
   const { data: userData, error, isFetching, refetch: refetchUserDetails } = useQuery({
     queryKey: ['userDetails', searchQuery],
     queryFn: fetchUserDetails,
@@ -604,6 +632,7 @@ export default function UserManagement() {
         colSpan: 1,
         readOnly: true,
         variant: 'standard',
+        className: 'cursor-pointer',
       },
       {
         name: 'emailId',
@@ -767,6 +796,23 @@ export default function UserManagement() {
     <Card>
       <CardContent>
         <div className="max-w-6xl mx-auto space-y-4">
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={RoutePaths.DASHBOARD} className="text-gray-400 hover:text-gray-600">
+                    Dashboard
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="font-semibold text-gray-900">
+                  User Management
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           {/* Header Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">

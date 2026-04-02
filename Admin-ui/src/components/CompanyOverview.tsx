@@ -11,47 +11,12 @@ import { useMemo, useState } from 'react'
 import { IChannelStatsApiResponse, IChannel, IChannelStatsResponseBody } from '@/models/hmsdashboard'
 import { Pagination } from '@/components/table/Pagination'
 import Loader from '@/components/Loader'
-
-const columns = [
-  {
-    header: 'Channel Name',
-    accessor: (row: IChannel) => (
-      <span className="capitalize">{row.channelName}</span>
-    ),
-  },
-  { header: 'Total Entities', accessor: 'totalEntities' },
-  {
-    header: 'Created',
-    accessor: (row: IChannel) => (
-      <span className="px-3 py-1 rounded-md bg-green-200 text-green-800 font-medium">
-        {row.createdEntities}
-      </span>
-    ),
-  },
-  {
-    header: 'Terminated',
-    accessor: (row: IChannel) => (
-      <span className="px-3 py-1 rounded-md bg-red-100 text-red-600 font-medium">
-        {row.terminatedEntities}
-      </span>
-    ),
-  },
-  {
-    header: 'Actions',
-    accessor: () => (
-      <div className="flex items-center gap-3">
-        <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
-        <Button variant='green'>
-          Add New
-        </Button>
-      </div>
-    ),
-  },  
-]
+import { useNavigate } from '@tanstack/react-router'
 
 type CompanyOverviewResponse = ApiResponse<IChannelStatsApiResponse>
 
 const CompanyOverview = () => {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1) 
   const [pageSize] = useState(10)
   const encryptionEnabled = useEncryption()
@@ -93,6 +58,17 @@ const CompanyOverview = () => {
     setPage(bounded)
   }
 
+  const handleAddNew = (row: IChannel) => {
+    navigate({
+      to: '/search/dashboard/create-individual',
+      search: {
+        channelId: row.channelId,
+        channelName: row.channelName,
+        channelCode: row.channelCode,
+      },
+    })
+  }
+
   if (companyOverviewLoading) {
     return <Loader />
   }
@@ -107,11 +83,48 @@ const CompanyOverview = () => {
     )
   }
 
+  const columns = [
+    {
+      header: 'Channel Name',
+      accessor: (row: IChannel) => (
+        <span className="capitalize">{row.channelName}</span>
+      ),
+    },
+    { header: 'Total Entities', accessor: 'totalEntities' },
+    {
+      header: 'Created',
+      accessor: (row: IChannel) => (
+        <span className="px-3 py-1 rounded-md bg-green-200 text-green-800 font-medium">
+          {row.createdEntities}
+        </span>
+      ),
+    },
+    {
+      header: 'Terminated',
+      accessor: (row: IChannel) => (
+        <span className="px-3 py-1 rounded-md bg-red-100 text-red-600 font-medium">
+          {row.terminatedEntities}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      accessor: (row: IChannel) => (
+        <div className="flex items-center gap-3">
+          <FiEye className="h-5 w-5 text-gray-700 cursor-pointer" />
+          <Button variant='green' onClick={() => handleAddNew(row)}>
+            Add New
+          </Button>
+        </div>
+      ),
+    },  
+  ]
+
   return (
     <Card className="shadow-md rounded-md">
        <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle className="text-xl font-semibold">
-           Title Here
+         Channel Overview
           </CardTitle>
         </CardHeader>
       <CardContent>

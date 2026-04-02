@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { FiDownload, FiExternalLink, FiPlus, FiSearch, FiUpload, FiUserPlus } from 'react-icons/fi'
+import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -87,13 +88,15 @@ const resourceItems = [
 ]
 
 const goToItems = [
-  { title: 'Payout Config', link: '#' },
-  { title: 'Incentive Cycles', link: '#' },
-  { title: 'Approval Queue', link: '#' },
+  { title: 'Program Config', to: '/search/incentive/program-config' },
+  { title: 'Payout Config', to: '#' },
+  { title: 'Incentive Cycles', to: '#' },
+  { title: 'Approval Queue', to: '#' },
 ]
 
 const IncentiveDashboard = () => {
   const [resourceSearch, setResourceSearch] = useState('')
+  const navigate = useNavigate()
 
   const filteredResources = useMemo(
     () =>
@@ -284,6 +287,11 @@ const IncentiveDashboard = () => {
                     key={item.title}
                     type="button"
                     className="flex w-full items-center justify-between rounded-lg bg-gray-100 p-3 text-left transition hover:bg-gray-200"
+                    onClick={() => {
+                      if (item.to && item.to !== '#') {
+                        navigate({ to: item.to as any })
+                      }
+                    }}
                   >
                     <span className="text-sm font-medium text-gray-700">{item.title}</span>
                     <FiExternalLink className="text-gray-500" />

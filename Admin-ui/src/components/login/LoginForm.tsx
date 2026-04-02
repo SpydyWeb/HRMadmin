@@ -161,8 +161,7 @@ const LoginForm: any = ({ onForgotPassword }:any) => {
           config={loginformConfig}
           onSubmit={handleSubmit}
           onFieldClick={handleFieldClick}
-
-         
+          submitOnEnter
         />
       </CardContent>
     </Card>
