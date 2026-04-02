@@ -73,6 +73,9 @@ const AuthCommissionConfigcommissionListIndexLazyRouteImport = createFileRoute(
 const AuthCommissionConfigcomissionIndexLazyRouteImport = createFileRoute(
   '/_auth/commission/configcomission/',
 )()
+const AuthSearchIncentiveProgramConfigLazyRouteImport = createFileRoute(
+  '/_auth/search/incentive/program-config',
+)()
 const AuthCommissionConfigcommissionListNewCommissionCreationLazyRouteImport =
   createFileRoute(
     '/_auth/commission/configcommission-list/new-commission-creation',
@@ -300,6 +303,16 @@ const AuthCommissionConfigcomissionIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+const AuthSearchIncentiveProgramConfigLazyRoute =
+  AuthSearchIncentiveProgramConfigLazyRouteImport.update({
+    id: '/search/incentive/program-config',
+    path: '/search/incentive/program-config',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/incentive/program-config.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute =
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRouteImport.update(
     {
@@ -449,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -495,6 +509,7 @@ export interface FileRoutesByTo {
   '/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -543,6 +558,7 @@ export interface FileRoutesById {
   '/_auth/search/dashboard/termination': typeof AuthSearchDashboardTerminationRoute
   '/_auth/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  '/_auth/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
   '/_auth/commission/configcomission/': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/_auth/commission/configcommission-list/': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/_auth/commission/processcommission/': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -591,6 +607,7 @@ export interface FileRouteTypes {
     | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
+    | '/search/incentive/program-config'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -637,6 +654,7 @@ export interface FileRouteTypes {
     | '/search/dashboard/termination'
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
+    | '/search/incentive/program-config'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -684,6 +702,7 @@ export interface FileRouteTypes {
     | '/_auth/search/dashboard/termination'
     | '/_auth/commission/configcommission-list/history'
     | '/_auth/commission/configcommission-list/new-commission-creation'
+    | '/_auth/search/incentive/program-config'
     | '/_auth/commission/configcomission/'
     | '/_auth/commission/configcommission-list/'
     | '/_auth/commission/processcommission/'
@@ -925,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionConfigcomissionIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/incentive/program-config': {
+      id: '/_auth/search/incentive/program-config'
+      path: '/search/incentive/program-config'
+      fullPath: '/search/incentive/program-config'
+      preLoaderRoute: typeof AuthSearchIncentiveProgramConfigLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/commission/configcommission-list/new-commission-creation': {
       id: '/_auth/commission/configcommission-list/new-commission-creation'
       path: '/commission/configcommission-list/new-commission-creation'
@@ -1055,6 +1081,7 @@ interface AuthRouteChildren {
   AuthSearchDashboardTerminationRoute: typeof AuthSearchDashboardTerminationRoute
   AuthCommissionConfigcommissionListHistoryLazyRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
+  AuthSearchIncentiveProgramConfigLazyRoute: typeof AuthSearchIncentiveProgramConfigLazyRoute
   AuthCommissionConfigcomissionIndexLazyRoute: typeof AuthCommissionConfigcomissionIndexLazyRoute
   AuthCommissionConfigcommissionListIndexLazyRoute: typeof AuthCommissionConfigcommissionListIndexLazyRoute
   AuthCommissionProcesscommissionIndexLazyRoute: typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -1106,6 +1133,8 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthCommissionConfigcommissionListHistoryLazyRoute,
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute:
     AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute,
+  AuthSearchIncentiveProgramConfigLazyRoute:
+    AuthSearchIncentiveProgramConfigLazyRoute,
   AuthCommissionConfigcomissionIndexLazyRoute:
     AuthCommissionConfigcomissionIndexLazyRoute,
   AuthCommissionConfigcommissionListIndexLazyRoute:

@@ -63,6 +63,9 @@ const APIRoutes = {
   CREATEINDIVIDUALAGENT: "/api/Agent/CreateIndividualAgent",
   SAVEUSERLINKEDBRANCH: "/api/Users/RegulatorUserBranch/Save",
   FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
+  // Fallback routes (some environments expose these paths instead)
+  SAVEUSERLINKEDBRANCH_V2: "/api/Users/RegulatorBranch/Save",
+  FETCHBRANCHBYUSER_V2: "/api/Users/RegulatorBranch/FetchByUser",
   SAVEPRODUCT: "/api/AppMasters/SaveProduct",
   GETPRODUCTS: "/api/AppMasters/GetProducts",
 

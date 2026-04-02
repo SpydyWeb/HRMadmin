@@ -154,6 +154,8 @@ export default function FieldTreeView({ data, onSelect }: Props) {
                 <CardTitle className="text-base">
                     Hierarchy Navigator
                 </CardTitle>
+
+                {/* can we have a switch here  for switiching on all the feilds at once for user convientce */}
             </CardHeader>
 
             <CardContent className="p-2 flex-1 overflow-y-auto">

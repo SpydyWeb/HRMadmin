@@ -26,11 +26,13 @@ interface DynamicFormBuilderProps {
   onSubmit: (data: Record<string, any>) => void
   onFieldClick?: (fieldName: string, data?: Array<any>) => void
   defaultValues?: Record<string, any>
+  submitOnEnter?: boolean
 }
 const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   config,
   onSubmit,
   onFieldClick = () => {},
+  submitOnEnter = false,
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -313,8 +315,26 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
     }
   }
 
+  const handleEnterSubmit = async (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (!submitOnEnter || event.key !== 'Enter' || event.shiftKey) {
+      return
+    }
+
+    const target = event.target as HTMLElement
+    const tagName = target.tagName
+
+    if (tagName === 'TEXTAREA' || target.getAttribute('role') === 'button') {
+      return
+    }
+
+    event.preventDefault()
+    await form.handleSubmit()
+  }
+
   return (
-    <>
+    <div onKeyDown={handleEnterSubmit}>
       <div
         className="grid gap-6 w-[100%]"
         style={{
@@ -372,7 +392,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
           </span>
         </div>
       )}
-    </>
+    </div>
   )
 }
 
