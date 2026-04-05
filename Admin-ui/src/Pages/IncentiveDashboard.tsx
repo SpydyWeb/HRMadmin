@@ -89,6 +89,7 @@ const resourceItems = [
 
 const goToItems = [
   { title: 'Program Config', to: '/search/incentive/program-config' },
+  { title: 'Product Weightage', to: '/search/incentive/product-weightage' },
   { title: 'Payout Config', to: '#' },
   { title: 'Incentive Cycles', to: '#' },
   { title: 'Approval Queue', to: '#' },
