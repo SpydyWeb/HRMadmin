@@ -489,6 +489,16 @@ const getGraphData = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETGRAPHDATA, data, { headers });
 }
 
+const upsertWeightageMaster = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_WEIGHTAGE, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+};
+
 const getChannelStats = (data = {}, headers = {}) => {
   console.log("Fetching channel stats with data:", data);
   console.log("Fetching channel stats with headers:", headers);
@@ -644,6 +654,7 @@ module.exports = {
   GeoHierarchyTable,
   hmsDashboard,
   getGraphData,
+  upsertWeightageMaster,
   getChannelStats,
   uploadFileList,
   downloadReport,

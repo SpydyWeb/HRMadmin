@@ -42,8 +42,8 @@ const INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES_URL =
 const INCENTIVE_FILTERS_CASCADE_URL =
   'http://hmsapi.ezytekapis.com/api/incentive/filters/cascade'
 
-const INCENTIVE_UPSERT_WEIGHTAGE_MASTER_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightageMaster'
+const INCENTIVE_UPSERT_WEIGHTAGE_URL =
+  'http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightage'
 
 export type FilterCascadeRequest = {
   channelId?: number | null
@@ -62,7 +62,7 @@ export const incentiveService = {
   },
 
   upsertWeightageMaster: async (data: UpsertWeightageMasterRequest) => {
-    return apiClient.post<any>(INCENTIVE_UPSERT_WEIGHTAGE_MASTER_URL, data, {
+    return apiClient.post<any>(INCENTIVE_UPSERT_WEIGHTAGE_URL, data, {
       headers: {
         accept: '*/*',
         'Content-Type': 'application/json',

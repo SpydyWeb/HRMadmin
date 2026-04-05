@@ -8,6 +8,10 @@ const api = axios.create({
   validateStatus: () => true, // so 400/401 don't throw
 });
 
+function isAbsoluteHttpUrl(url) {
+  return typeof url === "string" && /^https?:\/\//i.test(url);
+}
+
 //  Generic request wrapper with encryption/decryption
 const request = async (method, url, data, config = {}) => {
   try {
@@ -45,7 +49,13 @@ const request = async (method, url, data, config = {}) => {
       }
     });
     console.log("🌐 API Request:", method.toUpperCase(), url);
-    const response = await api.request(requestConfig);
+    // Absolute URLs (e.g. hmsapi.ezytekapis.com) must not be joined with dotnetApiUrl — avoids bad URLs / 404s.
+    const http = isAbsoluteHttpUrl(url) ? axios : api;
+    const response = await http.request({
+      ...requestConfig,
+      validateStatus: () => true,
+      ...(isAbsoluteHttpUrl(url) ? { baseURL: undefined } : {}),
+    });
     console.log(
       "📥 API Response Status:",
       response.status || response.statusCode,
