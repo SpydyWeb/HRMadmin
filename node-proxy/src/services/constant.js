@@ -57,6 +57,9 @@ const APIRoutes = {
   AGENTSEARCHFORPARTNER: "/api/Agent",
   // Graph (external service)
   GETGRAPHDATA: "http://hmsapi.ezytekapis.com/GetGraphData",
+  // Incentive (external HMS API) — matches Postman: /api/incentive/UpsertWeightage
+  INCENTIVE_UPSERT_WEIGHTAGE:
+    "http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightage",
   FETCHALLBRANCHES: "/api/AppMasters/GetRegulatorBranches",
   SAVEAGENTLINKEDBRANCH: "/api/Agent/RegulatorBranch/Save",
   FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent",

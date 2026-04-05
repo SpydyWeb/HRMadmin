@@ -22,6 +22,12 @@ export type UpsertProgramWeightagesRequest = {
   weightageIds: number[]
 }
 
+export type UpsertWeightageMasterRequest = {
+  weightageName: string
+  startDate: string
+  endDate: string
+}
+
 // Backend endpoint (direct HMS API).
 // Using absolute URL keeps this working even if VITE_API_URL points to a proxy.
 const INCENTIVE_UPSERT_PROGRAM_URL =
@@ -36,6 +42,9 @@ const INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES_URL =
 const INCENTIVE_FILTERS_CASCADE_URL =
   'http://hmsapi.ezytekapis.com/api/incentive/filters/cascade'
 
+const INCENTIVE_UPSERT_WEIGHTAGE_URL =
+  'http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightage'
+
 export type FilterCascadeRequest = {
   channelId?: number | null
   subChannelId?: number | null
@@ -45,6 +54,15 @@ export type FilterCascadeRequest = {
 export const incentiveService = {
   upsertProgram: async (data: UpsertProgramRequest) => {
     return apiClient.post<any>(INCENTIVE_UPSERT_PROGRAM_URL, data, {
+      headers: {
+        accept: '*/*',
+        'Content-Type': 'application/json',
+      },
+    })
+  },
+
+  upsertWeightageMaster: async (data: UpsertWeightageMasterRequest) => {
+    return apiClient.post<any>(INCENTIVE_UPSERT_WEIGHTAGE_URL, data, {
       headers: {
         accept: '*/*',
         'Content-Type': 'application/json',

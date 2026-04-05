@@ -5,8 +5,20 @@ import { HMSService } from './hmsService'
 import { authStore } from '@/store/authStore'
 import { auth } from '@/auth'
 
+/** Prefer VITE_API_URL; in dev, empty base uses Vite proxy → node-proxy (see vite.config.ts). */
+function resolveAxiosBaseURL(): string {
+  const raw = import.meta.env.VITE_API_URL as string | undefined
+  if (raw != null && String(raw).trim() !== '') {
+    return String(raw).trim().replace(/\/+$/, '')
+  }
+  if (import.meta.env.DEV) {
+    return ''
+  }
+  return ''
+}
+
 const api = axios.create({
-  baseURL: APIRoutes.BASEURL,
+  baseURL: resolveAxiosBaseURL(),
 })
 
 let isRefreshing = false
