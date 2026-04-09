@@ -572,6 +572,12 @@ const getKpisList = (data = {}, headers = {}) => {
 const upsertProgramWeightages = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
 };
+const getFiltersCascade = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GET_FILTERS_CASCADE, data, { headers });
+};
+const upsertProgramFilters = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
+};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -689,6 +695,8 @@ module.exports = {
   upsertProgram,
   getKpisList,
   upsertProgramWeightages,
+  getFiltersCascade,
+  upsertProgramFilters,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,
