@@ -9,6 +9,7 @@ interface IncentivesProbs {
   initialData?: any;
   isEditMode?: boolean;
   onSaveSuccess: () => void;
+  onCronChange?: (cron: string) => void; // ✅ NEW
 }
 
 // Parse Quartz.NET cron expression to extract schedule details
@@ -55,7 +56,8 @@ const IncentiveConfig: React.FC<IncentivesProbs> = ({
   commissionConfigId = 0,
   initialData,
   isEditMode = false,
-  onSaveSuccess
+  onSaveSuccess,
+  onCronChange,
 }) => {
   // Parse initial data to extract values
   const parsedCron = initialData?.cronExpression ? parseCronExpression(initialData.cronExpression) : null;
@@ -138,11 +140,15 @@ const IncentiveConfig: React.FC<IncentivesProbs> = ({
     }
   }, [isEditMode, initialData]);
 
-  useEffect(() => {
-    const cron = generateCron();
-    setCronExpression(cron);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frequency, hours, minutes, seconds, daysOfWeek, dayOfMonth]);
+useEffect(() => {
+  const cron = generateCron();
+  setCronExpression(cron);
+
+  // ✅ send to parent
+  onCronChange?.(cron);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [frequency, hours, minutes, seconds, daysOfWeek, dayOfMonth]);
 
   const handleSave = async () => {
     if (!jobType.trim()) {

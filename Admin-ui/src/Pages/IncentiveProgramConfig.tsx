@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import SelectionExpressionBuilder from '@/components/SelectionExpressionBuilder'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
 import { AddUserDialog, AddUserInline } from '@/components/incentives/AddUserDialog'
+import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
 
 type WeightageOption = { key: string; id: number | null; label: string }
 
@@ -528,6 +529,8 @@ const KPI_LIBRARY_PLACEHOLDER: KPIEntry[] = []
 export default function IncentiveProgramConfig() {
   const navigate = useNavigate()
   // const [programId, setProgramId] = useState<number | null>(null)
+  const [cronValue, setCronValue] = useState("")
+  const [programmeId, setProgrammeId] = useState()
   const [open, setOpen] = useState(true)
   const [programName, setProgramName] = useState('')
   const [description, setDescription] = useState('')
@@ -691,27 +694,45 @@ export default function IncentiveProgramConfig() {
   // Fetch KPIs list from GetKpisList API on mount
   useEffect(() => {
     let cancelled = false
-    setKpisListLoading(true)
-    incentiveService.getKpisList()
-      .then((res) => {
+
+    const fetchKpis = async () => {
+      try {
+        setKpisListLoading(true)
+
+        const res = await incentiveService.getKpisList()
+
         if (cancelled) return
+
         const body = (res as any)?.responseBody
-        const list: Array<{ kpiId: number; kpiName: string }> =
+        console.log("API BODY:", body)
+
+        const rawList =
+          body?.kpiLibrary ??   // ✅ THIS IS YOUR ACTUAL DATA
           body?.kpis ??
           body?.kpiList ??
           body?.items ??
-          (Array.isArray(body) ? body : null) ??
-          (res as any)?.kpis ??
+          body?.weightages ??
+          (Array.isArray(body) ? body : []) ??
           []
-        setKpisListOptions(list)
-      })
-      .catch((err: unknown) => {
+
+        console.log("RAW LIST:", rawList)
+
+        const mapped = rawList.map((item: any) => ({
+          id: item.kpiId ?? item.weightageId,
+          label: item.kpiName ?? item.weightageName,
+        }))
+
+        setKpisListOptions(mapped)
+      } catch (err) {
         if (cancelled) return
-        console.error('Failed to load KPIs list:', err)
-      })
-      .finally(() => {
+        console.error("Failed to load KPIs list:", err)
+      } finally {
         if (!cancelled) setKpisListLoading(false)
-      })
+      }
+    }
+
+    fetchKpis()
+
     return () => {
       cancelled = true
     }
@@ -949,11 +970,15 @@ export default function IncentiveProgramConfig() {
         description: description.trim(),
         effectiveFrom,
         effectiveTo,
-        executionFrequency,
-        selectionExpression: selectionExpression.trim(),
+        executionFrequency: cronValue,
+        selectionExpression: '',
         cappingAmount: cappingAmountNum,
         kpiIds: selectedKpiIds,
       })
+
+      const programmeID = res?.responseBody?.incentiveProgram?.programId
+      setProgrammeId(programmeID)
+
       const id = extractProgramId(res)
       if (id) setProgramId(id)
       if (id) {
@@ -1144,11 +1169,6 @@ export default function IncentiveProgramConfig() {
               and calculation formulas.
             </p>
           </div>
-          <div className="shrink-0">
-            <Button variant="blue" disabled className="min-w-[140px]">
-              Save All Slabs
-            </Button>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -1205,85 +1225,36 @@ export default function IncentiveProgramConfig() {
                   />
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Capping Amount
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    placeholder="e.g., 50000"
-                    value={cappingAmount}
-                    onChange={(e) => setCappingAmount(e.target.value)}
-                  />
-                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-700">
+                      Capping Amount
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      placeholder="e.g., 50000"
+                      value={cappingAmount}
+                      onChange={(e) => setCappingAmount(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-700">
+                      Choose The KPI's
+                    </label>
+                    <MultiSelectInline
+                      options={kpisListOptions}
+                      placeholder="Search KPIs..."
+                      onChange={(ids) => {
+                        setSelectedKpiIds(ids) // 👉 [1,4,2,5]
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Execution Frequency
-                  </label>
-                  <select
-                    className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    value={executionFrequency}
-                    onChange={(e) => setExecutionFrequency(e.target.value)}
-                  >
-                    <option value="MONTHLY">Monthly</option>
-                    <option value="WEEKLY">Weekly</option>
-                    <option value="DAILY">Daily</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Selection Expression
-                  </label>
-                  <textarea
-                    className="w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    rows={3}
-                    placeholder="e.g., total_premium > 100000"
-                    value={selectionExpression}
-                    onChange={(e) => setSelectionExpression(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Select KPIs for Calculation
-                  </label>
-                  <p className="mb-2 text-xs text-neutral-500">
-                    Choose pre-defined KPIs to use in the incentive calculation formula.
-                  </p>
-                  {kpisListLoading ? (
-                    <p className="text-xs text-neutral-400">Loading KPIs…</p>
-                  ) : kpisListOptions.length === 0 ? (
-                    <p className="text-xs text-neutral-400">No KPIs available.</p>
-                  ) : (
-                    <div className="rounded-md border border-neutral-200 bg-white p-3 space-y-2 max-h-48 overflow-y-auto">
-                      {kpisListOptions.map((kpi) => (
-                        <label
-                          key={kpi.kpiId}
-                          className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
-                        >
-                          <Checkbox
-                            checked={selectedKpiIds.includes(kpi.kpiId)}
-                            onCheckedChange={(checked) =>
-                              setSelectedKpiIds((prev) =>
-                                checked
-                                  ? [...prev, kpi.kpiId]
-                                  : prev.filter((id) => id !== kpi.kpiId)
-                              )
-                            }
-                          />
-                          {kpi.kpiName}
-                        </label>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
-
               <Card className="rounded-md border border-neutral-200 mt-10">
                 <CardHeader className="px-4">
                   <CardTitle className="text-base font-semibold">
@@ -1299,8 +1270,12 @@ export default function IncentiveProgramConfig() {
                     commissionConfigId={0}
                     initialData={null}
                     isEditMode={false}
+                    onCronChange={(cron) => {
+                      setCronValue(cron)
+                      console.log("Cron from child:", cron)
+                    }}
                     onSaveSuccess={() => {
-                      console.log('Schedule saved successfully')
+                      console.log("Schedule saved successfully")
                     }}
                   />
                 </CardContent>
@@ -1338,7 +1313,10 @@ export default function IncentiveProgramConfig() {
             </CardHeader>
             <CardContent className="px-4 pb-4">
               <AddUserInline
-                onSuccess={(users) => console.log(users)}
+                programId={programmeId ?? 0} // ✅ IMPORTANT
+                onSuccess={(users) => {
+                  console.log("Saved users:", users)
+                }}
               />
             </CardContent>
           </Card>

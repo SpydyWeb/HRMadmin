@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { incentiveService } from "@/services/incentiveService"
 import { HMSService } from "@/services/hmsService"
+import { showToast } from "../ui/sonner"
+import { NOTIFICATION_CONSTANTS } from "@/utils/constant"
 
 type User = {
     userId: number
@@ -12,8 +14,10 @@ type User = {
 
 export function AddUserInline({
     onSuccess,
+    programId, // ✅ NEW
 }: {
     onSuccess?: (users: User[]) => void
+    programId: number
 }) {
     const [input, setInput] = useState("")
     const [users, setUsers] = useState<User[]>([])
@@ -26,7 +30,7 @@ export function AddUserInline({
         const fetchWeightages = async () => {
             try {
                 const res = await incentiveService.getWeightages()
-                console.log("res",res);
+                console.log("res", res);
 
                 const weightages = res?.responseBody?.weightages || []
 
@@ -102,14 +106,14 @@ export function AddUserInline({
 
     return (
         <div className="relative flex border rounded-md p-4 bg-white w-full max-w-lg space-x-3">
-            
+
             {/* LEFT SIDE */}
             <div className="flex-1 space-y-3">
                 <h3 className="text-sm font-semibold">Select Weightages</h3>
 
                 {/* Input + Chips */}
                 <div className="border rounded-md px-2 py-1 flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-blue-500">
-                    
+
                     {selectedUsers.map((user) => (
                         <Badge
                             key={user.userId}
@@ -145,9 +149,33 @@ export function AddUserInline({
                     <Button
                         variant="blue"
                         disabled={selectedUsers.length === 0}
-                        onClick={() => {
-                            console.log("Selected:", selectedUsers)
-                            onSuccess?.(selectedUsers)
+                        onClick={async () => {
+                            try {
+                                const weightageIds = selectedUsers.map((u) => u.userId)
+
+                                const payload = {
+                                    programId,
+                                    weightageIds,
+                                }
+
+                                const res = await incentiveService.upsertProgramWeightages(payload)
+
+                                console.log("Weightages saved successfully")
+                                if (res?.responseHeader?.errorCode === 1101) {
+                                    console.log("✅ Weightages saved successfully")
+
+                                    showToast(
+                                        NOTIFICATION_CONSTANTS.SUCCESS,
+                                        res?.responseHeader?.errorMessage || "Saved successfully"
+                                    )
+                                } else {
+                                    throw new Error(res?.responseHeader?.errorMessage || "Failed")
+                                }
+                                onSuccess?.(selectedUsers)
+
+                            } catch (error) {
+                                showToast(error)
+                            }
                         }}
                     >
                         Save Weightage
