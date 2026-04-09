@@ -173,3 +173,34 @@ export interface ISaveWeightageDimensionRequest {
   rangeFrom: string
   rangeTo: string
 }
+
+// ─── Incentive Program Upsert ─────────────────────────────────────────────────
+
+export interface IUpsertProgramRequest {
+  programName: string
+  description: string
+  effectiveFrom: string
+  effectiveTo: string
+  executionFrequency: string
+  selectionExpression: string
+  cappingAmount: number
+  kpiIds: number[]
+}
+
+// ─── KPIs List ────────────────────────────────────────────────────────────────
+
+export interface IKpisListItem {
+  kpiId: number
+  kpiName: string
+}
+
+export interface IKpisListResponse {
+  kpis: IKpisListItem[]
+}
+
+// ─── Program Weightages Upsert ────────────────────────────────────────────────
+
+export interface IUpsertProgramWeightagesRequest {
+  programId: number
+  weightageIds: number[]
+}

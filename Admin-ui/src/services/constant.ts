@@ -62,6 +62,9 @@ export const APIRoutes = {
   CREATE_INDIVIDUAL_AGENT: 'CreateIndividualAgent',
   SAVE_PRODUCT: 'SaveProduct',
   GET_PRODUCTS: 'GetProducts',
+  INCENTIVE_UPSERT_PROGRAM: 'upsertProgram',
+  INCENTIVE_GET_KPIS_LIST: 'getKpisList',
+  INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: 'upsertProgramWeightages',
 }
 
 export const LoginConstants = {

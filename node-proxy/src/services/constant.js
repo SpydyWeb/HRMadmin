@@ -72,6 +72,9 @@ const APIRoutes = {
   FETCHBRANCHBYUSER_V2: "/api/Users/RegulatorBranch/FetchByUser",
   SAVEPRODUCT: "/api/AppMasters/SaveProduct",
   GETPRODUCTS: "/api/AppMasters/GetProducts",
+  INCENTIVE_UPSERT_PROGRAM: "/api/incentive/UpsertProgram",
+  INCENTIVE_GET_KPIS_LIST: "/api/incentive/GetKpisList",
+  INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: "/api/incentive/UpsertProgramWeightages",
 
 };
 
