@@ -693,18 +693,19 @@ export default function IncentiveProgramConfig() {
     let cancelled = false
     setKpisListLoading(true)
     incentiveService.getKpisList()
-      .then((res: any) => {
+      .then((res) => {
         if (cancelled) return
+        const body = (res as any)?.responseBody
         const list: Array<{ kpiId: number; kpiName: string }> =
-          res?.responseBody?.kpis ??
-          res?.responseBody?.kpiList ??
-          res?.responseBody?.items ??
-          (Array.isArray(res?.responseBody) ? res.responseBody : null) ??
-          res?.kpis ??
+          body?.kpis ??
+          body?.kpiList ??
+          body?.items ??
+          (Array.isArray(body) ? body : null) ??
+          (res as any)?.kpis ??
           []
         setKpisListOptions(list)
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (cancelled) return
         console.error('Failed to load KPIs list:', err)
       })
