@@ -563,6 +563,15 @@ const SaveProduct = (data = {}, headers = {}) => {
 const GetProducts = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETPRODUCTS, data, { headers });
 }
+const upsertProgram = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM, data, { headers });
+};
+const getKpisList = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_KPIS_LIST, data, { headers });
+};
+const upsertProgramWeightages = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
+};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -677,6 +686,9 @@ module.exports = {
   orgConfigUpdate,
   SaveProduct,
   GetProducts,
+  upsertProgram,
+  getKpisList,
+  upsertProgramWeightages,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,

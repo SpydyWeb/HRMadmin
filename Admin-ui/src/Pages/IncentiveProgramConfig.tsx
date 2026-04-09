@@ -536,6 +536,9 @@ export default function IncentiveProgramConfig() {
   const [isSaving, setIsSaving] = useState(false)
   const [programId, setProgramId] = useState<number | null>(null)
   const [isSavingWeightages, setIsSavingWeightages] = useState(false)
+  const [cappingAmount, setCappingAmount] = useState<string>('')
+  const [executionFrequency, setExecutionFrequency] = useState<string>('MONTHLY')
+  const [selectionExpression, setSelectionExpression] = useState<string>('')
 
   const [weightageOptions, setWeightageOptions] = useState<WeightageOption[]>(
     [],
@@ -577,6 +580,9 @@ export default function IncentiveProgramConfig() {
 
   // ─── API state ───────────────────────────────────────────────────────────────
   const [kpiLibrary, setKpiLibrary] = useState<KPIEntry[]>(KPI_LIBRARY_PLACEHOLDER)
+  const [kpisListOptions, setKpisListOptions] = useState<Array<{ kpiId: number; kpiName: string }>>([])
+  const [kpisListLoading, setKpisListLoading] = useState(false)
+  const [selectedKpiIds, setSelectedKpiIds] = useState<number[]>([])
   const [pastPrograms, setPastPrograms] = useState<IIncentiveProgram[]>([])
   const [apiDesignations, setApiDesignations] = useState<Record<string, string[]>>({})
   const [designationsLoading, setDesignationsLoading] = useState(false)
@@ -677,6 +683,34 @@ export default function IncentiveProgramConfig() {
         .filter(Boolean) as WeightageOption[]
     }
 
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Fetch KPIs list from GetKpisList API on mount
+  useEffect(() => {
+    let cancelled = false
+    setKpisListLoading(true)
+    incentiveService.getKpisList()
+      .then((res: any) => {
+        if (cancelled) return
+        const list: Array<{ kpiId: number; kpiName: string }> =
+          res?.responseBody?.kpis ??
+          res?.responseBody?.kpiList ??
+          res?.responseBody?.items ??
+          (Array.isArray(res?.responseBody) ? res.responseBody : null) ??
+          res?.kpis ??
+          []
+        setKpisListOptions(list)
+      })
+      .catch((err: any) => {
+        if (cancelled) return
+        console.error('Failed to load KPIs list:', err)
+      })
+      .finally(() => {
+        if (!cancelled) setKpisListLoading(false)
+      })
     return () => {
       cancelled = true
     }
@@ -905,6 +939,8 @@ export default function IncentiveProgramConfig() {
       return
     }
 
+    const cappingAmountNum = parseFloat(cappingAmount) || 0
+
     setIsSaving(true)
     try {
       const res = await incentiveService.upsertProgram({
@@ -912,6 +948,10 @@ export default function IncentiveProgramConfig() {
         description: description.trim(),
         effectiveFrom,
         effectiveTo,
+        executionFrequency,
+        selectionExpression: selectionExpression.trim(),
+        cappingAmount: cappingAmountNum,
+        kpiIds: selectedKpiIds,
       })
       const id = extractProgramId(res)
       if (id) setProgramId(id)
@@ -1164,15 +1204,82 @@ export default function IncentiveProgramConfig() {
                   />
                 </div>
 
-                <div className="mt-4">
-                  <Input
-                    label="Select KPIs for Calculation"
-                    value={programName}
-                    description="Choose pre-defined KPIs to use in the incentive calculation formula."
-                    onChange={(e) => setProgramName(e.target.value)}
-                    placeholder="Search KPIs..."
-                    variant="standardone"
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-700">
+                    Capping Amount
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    placeholder="e.g., 50000"
+                    value={cappingAmount}
+                    onChange={(e) => setCappingAmount(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-700">
+                    Execution Frequency
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    value={executionFrequency}
+                    onChange={(e) => setExecutionFrequency(e.target.value)}
+                  >
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="DAILY">Daily</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-700">
+                    Selection Expression
+                  </label>
+                  <textarea
+                    className="w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    rows={3}
+                    placeholder="e.g., total_premium > 100000"
+                    value={selectionExpression}
+                    onChange={(e) => setSelectionExpression(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-700">
+                    Select KPIs for Calculation
+                  </label>
+                  <p className="mb-2 text-xs text-neutral-500">
+                    Choose pre-defined KPIs to use in the incentive calculation formula.
+                  </p>
+                  {kpisListLoading ? (
+                    <p className="text-xs text-neutral-400">Loading KPIs…</p>
+                  ) : kpisListOptions.length === 0 ? (
+                    <p className="text-xs text-neutral-400">No KPIs available.</p>
+                  ) : (
+                    <div className="rounded-md border border-neutral-200 bg-white p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {kpisListOptions.map((kpi) => (
+                        <label
+                          key={kpi.kpiId}
+                          className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                        >
+                          <Checkbox
+                            checked={selectedKpiIds.includes(kpi.kpiId)}
+                            onCheckedChange={(checked) =>
+                              setSelectedKpiIds((prev) =>
+                                checked
+                                  ? [...prev, kpi.kpiId]
+                                  : prev.filter((id) => id !== kpi.kpiId)
+                              )
+                            }
+                          />
+                          {kpi.kpiName}
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1188,8 +1295,8 @@ export default function IncentiveProgramConfig() {
 
                 <CardContent className="px-4 pb-4">
                   <IncentiveConfig
-                    commissionConfigId={0}   // 👈 reuse same prop
-                    initialData={null}                    // or API data if edit mode
+                    commissionConfigId={0}
+                    initialData={null}
                     isEditMode={false}
                     onSaveSuccess={() => {
                       console.log('Schedule saved successfully')

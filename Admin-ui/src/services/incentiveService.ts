@@ -21,6 +21,9 @@ import type {
   ICreateWeightageDetailsResponse,
   IDeleteWeightageDetailsRequest,
   ISaveWeightageDimensionRequest,
+  IUpsertProgramRequest,
+  IKpisListResponse,
+  IUpsertProgramWeightagesRequest,
 } from '@/models/incentive'
 
 export const incentiveService = {
@@ -272,6 +275,54 @@ export const incentiveService = {
       return response
     } catch (error) {
       console.error('incentiveService.saveWeightageDimension error:', error)
+      throw error
+    }
+  },
+
+  // ─── Program Upsert ───────────────────────────────────────────────────────
+
+  /** POST /api/incentive/UpsertProgram — create or update an incentive program */
+  upsertProgram: async (data: IUpsertProgramRequest) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_UPSERT_PROGRAM,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.upsertProgram error:', error)
+      throw error
+    }
+  },
+
+  // ─── KPIs List ────────────────────────────────────────────────────────────
+
+  /** POST /api/incentive/GetKpisList — retrieve available KPIs */
+  getKpisList: async (params: Record<string, unknown> = {}) => {
+    try {
+      const response = await callApi<IKpisListResponse>(
+        APIRoutes.INCENTIVE_GET_KPIS_LIST,
+        [params],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpisList error:', error)
+      throw error
+    }
+  },
+
+  // ─── Program Weightages Upsert ────────────────────────────────────────────
+
+  /** POST /api/incentive/UpsertProgramWeightages — save weightages for a program */
+  upsertProgramWeightages: async (data: IUpsertProgramWeightagesRequest) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.upsertProgramWeightages error:', error)
       throw error
     }
   },
