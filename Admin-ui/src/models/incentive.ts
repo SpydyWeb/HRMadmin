@@ -204,3 +204,21 @@ export interface IUpsertProgramWeightagesRequest {
   programId: number
   weightageIds: number[]
 }
+
+// ─── Cascade Filters ──────────────────────────────────────────────────────────
+
+export interface IFiltersCascadeParams {
+  channelId?: number
+  subChannelId?: number
+  branchId?: number
+}
+
+// ─── Upsert Program Filters ───────────────────────────────────────────────────
+
+export interface IUpsertProgramFiltersRequest {
+  programId: number
+  channelId: number
+  subChannelId?: number
+  branchIds: number[]
+  designationId?: number
+}

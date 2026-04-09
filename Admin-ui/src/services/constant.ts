@@ -65,6 +65,8 @@ export const APIRoutes = {
   INCENTIVE_UPSERT_PROGRAM: 'upsertProgram',
   INCENTIVE_GET_KPIS_LIST: 'getKpisList',
   INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: 'upsertProgramWeightages',
+  GET_FILTERS_CASCADE: 'getFiltersCascade',
+  UPSERT_PROGRAM_FILTERS: 'upsertProgramFilters',
 }
 
 export const LoginConstants = {

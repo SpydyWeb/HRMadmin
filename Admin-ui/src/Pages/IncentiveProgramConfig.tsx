@@ -539,6 +539,7 @@ export default function IncentiveProgramConfig() {
   const [isSaving, setIsSaving] = useState(false)
   const [programId, setProgramId] = useState<number | null>(null)
   const [isSavingWeightages, setIsSavingWeightages] = useState(false)
+  const [isSavingFilters, setIsSavingFilters] = useState(false)
   const [cappingAmount, setCappingAmount] = useState<string>('')
   const [executionFrequency, setExecutionFrequency] = useState<string>('MONTHLY')
   const [selectionExpression, setSelectionExpression] = useState<string>('')
@@ -763,7 +764,7 @@ export default function IncentiveProgramConfig() {
     setSubChannelsLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.postFilterCascade({
+          const res = await incentiveService.getFiltersCascade({
             channelId: primaryCascadeChannelId,
           })
           const rows = extractCascadeRows(res?.responseBody, [
@@ -817,7 +818,7 @@ export default function IncentiveProgramConfig() {
     setBranchesLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.postFilterCascade({
+          const res = await incentiveService.getFiltersCascade({
             channelId: primaryCascadeChannelId,
             subChannelId: subChannelIdNum,
           })
@@ -873,7 +874,7 @@ export default function IncentiveProgramConfig() {
     setDesignationsLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.postFilterCascade({
+          const res = await incentiveService.getFiltersCascade({
             channelId: primaryCascadeChannelId,
             subChannelId: subChannelIdNum,
             branchId: branchIdNum,
@@ -1047,6 +1048,44 @@ export default function IncentiveProgramConfig() {
       showToast(NOTIFICATION_CONSTANTS.ERROR, message)
     } finally {
       setIsSavingWeightages(false)
+    }
+  }
+
+  const handleSaveFilters = async () => {
+    if (!programId) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        'Please save Program Details first so we have programId',
+      )
+      return
+    }
+
+    if (!primaryCascadeChannelId) {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please select a channel')
+      return
+    }
+
+    const branchIds = selectedBranchId ? [Number(selectedBranchId)] : []
+
+    setIsSavingFilters(true)
+    try {
+      await incentiveService.upsertProgramFilters({
+        programId,
+        channelId: primaryCascadeChannelId,
+        subChannelId: selectedSubChannelId ? Number(selectedSubChannelId) : undefined,
+        branchIds,
+        designationId: selectedDesignationId ? Number(selectedDesignationId) : undefined,
+      })
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Filters saved successfully')
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.errorMessage ||
+        err?.message ||
+        'Failed to save filters'
+      showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+    } finally {
+      setIsSavingFilters(false)
     }
   }
 
@@ -1492,6 +1531,17 @@ export default function IncentiveProgramConfig() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="mt-4 flex items-center justify-end">
+                <Button
+                  variant="blue"
+                  onClick={handleSaveFilters}
+                  isLoading={isSavingFilters}
+                  disabled={isSavingFilters}
+                  loadingText="Saving..."
+                >
+                  Save Filters
+                </Button>
               </div>
             </CardContent>
           </Card>

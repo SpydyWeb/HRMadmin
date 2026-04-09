@@ -75,6 +75,8 @@ const APIRoutes = {
   INCENTIVE_UPSERT_PROGRAM: "/api/incentive/UpsertProgram",
   INCENTIVE_GET_KPIS_LIST: "/api/incentive/GetKpisList",
   INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: "/api/incentive/UpsertProgramWeightages",
+  GET_FILTERS_CASCADE: "/api/incentive/filters/cascade",
+  UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
 
 };
 

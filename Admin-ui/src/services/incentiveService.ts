@@ -24,6 +24,8 @@ import type {
   IUpsertProgramRequest,
   IKpisListResponse,
   IUpsertProgramWeightagesRequest,
+  IFiltersCascadeParams,
+  IUpsertProgramFiltersRequest,
 } from '@/models/incentive'
 
 export const incentiveService = {
@@ -323,6 +325,38 @@ export const incentiveService = {
       return response
     } catch (error) {
       console.error('incentiveService.upsertProgramWeightages error:', error)
+      throw error
+    }
+  },
+
+  // ─── Cascading Filters ────────────────────────────────────────────────────────
+
+  /** POST /api/incentive/filters/cascade — cascading filter: Channel → SubChannel → Branch → Designations */
+  getFiltersCascade: async (params: IFiltersCascadeParams = {}) => {
+    try {
+      const response = await callApi(
+        APIRoutes.GET_FILTERS_CASCADE,
+        [params],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getFiltersCascade error:', error)
+      throw error
+    }
+  },
+
+  // ─── Upsert Program Filters ───────────────────────────────────────────────────
+
+  /** POST /api/incentive/UpsertProgramFilters — save agent filter selections for a program */
+  upsertProgramFilters: async (data: IUpsertProgramFiltersRequest) => {
+    try {
+      const response = await callApi(
+        APIRoutes.UPSERT_PROGRAM_FILTERS,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.upsertProgramFilters error:', error)
       throw error
     }
   },
