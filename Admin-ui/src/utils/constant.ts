@@ -15,8 +15,9 @@ export const RoutePaths = {
   TERMINATION: '/dashboard/termination',
   BULKACTION: '/dashboard/code-movement/bulk-action',
   CREATEBULK: '/dashboard/create-bulk',
+  GET_INCENTIVE_KPI_LIBRARY: 'getIncentiveKpiLibrary',
   COMMISSION: '/commission',
-   PROCESS_COMMISSION: '/commission/processcommission',
+  PROCESS_COMMISSION: '/commission/processcommission',
   HOLD_COMMISSION: '/commission/processcommission',
   ADJUST_COMMISSION: '/commission/processcommission',
   APPROVE_COMMISSION: '/commission/processcommission',
@@ -25,7 +26,7 @@ export const RoutePaths = {
   CONFIG_COMMISSION_NEW: '/commission/configcommission-list/new-commission-creation',
   COMMISSION_HISTORY: '/commission/configcommission-list/history',
   INBOX: '/inbox',
-  CREATE_INDIVIDUAL_AGENT:"/dashboard/create-individual"
+  CREATE_INDIVIDUAL_AGENT: "/dashboard/create-individual"
 }
 export const STORAGE_KEY = 'ENCRYPTION_ENABLED'
 export const NOTIFICATION_CONSTANTS = {
@@ -51,18 +52,18 @@ export const MASTER_DATA_KEYS = {
   SALUTATION: 'Salutation',
   CANDIDATE_TYPE: 'CandidateType',
   AGENT_TYPE: 'AgentType',
-  COMMISSION_CLASS:"CommissionClass",
-  ADDRESS_TYPE:"AddressType",
-  LICENSE_TYPE:"LicenseType",
-  LICENCE_STATUS:"LicenseStatus",
-  VERTICAL:"Vertical",
-  TRAINING_GROUP_TYPE:"TrainingGroupType",
-  PAYMENT_MODE:"PaymentMode",
-  SUB_CHANNELS:"SubChannel",
-  DESIGNATION:"Designation",
-  CHANNEL:"Channel",
-  Office_Type:"Location",
-  Office_Location:"Branch",
-  AGENT_STATUS_CODE:"AgentStatusCodes",
-  PRODUCT_CATEGORY:"ProductCategory "
+  COMMISSION_CLASS: "CommissionClass",
+  ADDRESS_TYPE: "AddressType",
+  LICENSE_TYPE: "LicenseType",
+  LICENCE_STATUS: "LicenseStatus",
+  VERTICAL: "Vertical",
+  TRAINING_GROUP_TYPE: "TrainingGroupType",
+  PAYMENT_MODE: "PaymentMode",
+  SUB_CHANNELS: "SubChannel",
+  DESIGNATION: "Designation",
+  CHANNEL: "Channel",
+  Office_Type: "Location",
+  Office_Location: "Branch",
+  AGENT_STATUS_CODE: "AgentStatusCodes",
+  PRODUCT_CATEGORY: "ProductCategory "
 }

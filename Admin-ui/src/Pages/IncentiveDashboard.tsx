@@ -58,7 +58,7 @@ const topPerformers = [
 
 const quickActions = [
   {
-    title: 'Create Incentive Plan',
+    title: 'Add New Programe',
     subtitle: 'Configure a new payout plan',
     icon: FiPlus,
   },
@@ -228,9 +228,16 @@ const IncentiveDashboard = () => {
               <CardContent className="space-y-3 px-4">
                 {quickActions.map((item) => {
                   const Icon = item.icon
+
+                  const handleClick = () => {
+                    if (item.title === 'Add New Programe') {
+                      navigate({ to: '/search/incentive/program-config' })
+                    }
+                  }
                   return (
                     <button
                       key={item.title}
+                      onClick={handleClick}
                       type="button"
                       className="flex w-full items-center gap-3 rounded-md border border-gray-100 bg-gray-100 p-3 text-left transition hover:bg-white hover:shadow-sm"
                     >
@@ -290,6 +297,7 @@ const IncentiveDashboard = () => {
                     className="flex w-full items-center justify-between rounded-lg bg-gray-100 p-3 text-left transition hover:bg-gray-200"
                     onClick={() => {
                       if (item.to && item.to !== '#') {
+                        console.log('Navigating to:', item.to);
                         navigate({ to: item.to as any })
                       }
                     }}

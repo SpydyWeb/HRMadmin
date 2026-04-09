@@ -4,6 +4,7 @@ const APIRoutes = {
   AGENTBYCODE: "/api/Agent/AgentByCode",
   AGENTBYID: "/api/Agent/AgentByid",
   GETMASTERS: "/api/AppMasters/get",
+  GETWEIGHTAGES: "/api/incentive/GetWeightages",
   GETCOMMISSION: "/api/CommissionMgmt/Dashboard",
   PROCESSCOMMISSION: "/api/CommissionMgmt/ProcessCommissions",
   HOLDCOMMISSION: "/api/CommissionMgmt/HoldCommission",

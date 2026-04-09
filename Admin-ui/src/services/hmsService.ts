@@ -111,6 +111,8 @@ export const HMSService = {
     }
   },
 
+ 
+
   deleteRoles: async (roleId: number | string) => {
     try {
       const response = await callApi(
@@ -454,7 +456,7 @@ export const HMSService = {
   },
 
   getRefreshToken: async () => {
-    return callApi("getRefreshToken", [{refreshToken: JSON.parse(auth.getToken())?.refreshToken}])
+    return callApi("getRefreshToken", [{ refreshToken: JSON.parse(auth.getToken())?.refreshToken }])
   },
 
   createIndividualAgent: async (payload: {

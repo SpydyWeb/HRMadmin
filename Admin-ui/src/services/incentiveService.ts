@@ -1,103 +1,278 @@
-import { apiClient } from '@/services/apiClient'
-
-export type UpsertProgramRequest = {
-  programName: string
-  description: string
-  effectiveFrom: string
-  effectiveTo: string
-}
-
-export type WeightageDto = {
-  id?: number | string
-  weightageId?: number | string
-  code?: string
-  name?: string
-  label?: string
-  description?: string
-  isActive?: boolean
-}
-
-export type UpsertProgramWeightagesRequest = {
-  programId: number
-  weightageIds: number[]
-}
-
-export type UpsertWeightageMasterRequest = {
-  weightageName: string
-  startDate: string
-  endDate: string
-}
-
-// Backend endpoint (direct HMS API).
-// Using absolute URL keeps this working even if VITE_API_URL points to a proxy.
-const INCENTIVE_UPSERT_PROGRAM_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/UpsertProgram'
-
-const INCENTIVE_GET_WEIGHTAGES_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/GetWeightages'
-
-const INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/UpsertProgramWeightages'
-
-const INCENTIVE_FILTERS_CASCADE_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/filters/cascade'
-
-const INCENTIVE_UPSERT_WEIGHTAGE_URL =
-  'http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightage'
-
-export type FilterCascadeRequest = {
-  channelId?: number | null
-  subChannelId?: number | null
-  branchId?: number | null
-}
+import { callApi } from './apiService'
+import { APIRoutes } from './constant'
+import type {
+  IKpiListParams,
+  IKpiListResponse,
+  IKpi,
+  ICreateKpiRequest,
+  IUpdateKpiRequest,
+  IIncentiveFiltersParams,
+  IBranchDesignations,
+  IProgramListParams,
+  IProgramListResponse,
+  IIncentiveProgram,
+  ICreateProgramRequest,
+  IUpdateProgramRequest,
+  IProductWeightageResponse,
+  ISaveProductWeightageRequest,
+  ICreateWeightageMasterRequest,
+  ICreateWeightageMasterResponse,
+  ICreateWeightageDetailsRequest,
+  ICreateWeightageDetailsResponse,
+  IDeleteWeightageDetailsRequest,
+  ISaveWeightageDimensionRequest,
+} from '@/models/incentive'
 
 export const incentiveService = {
-  upsertProgram: async (data: UpsertProgramRequest) => {
-    return apiClient.post<any>(INCENTIVE_UPSERT_PROGRAM_URL, data, {
-      headers: {
-        accept: '*/*',
-        'Content-Type': 'application/json',
-      },
-    })
-  },
+  // ─── KPI Library ─────────────────────────────────────────────────────────────
 
-  upsertWeightageMaster: async (data: UpsertWeightageMasterRequest) => {
-    return apiClient.post<any>(INCENTIVE_UPSERT_WEIGHTAGE_URL, data, {
-      headers: {
-        accept: '*/*',
-        'Content-Type': 'application/json',
-      },
-    })
+  /** GET /api/incentive/kpi-library — paged KPI list with optional search */
+  getKpiLibrary: async (params: IKpiListParams = {}) => {
+    try {
+      const response = await callApi<IKpiListResponse>(
+        APIRoutes.GET_INCENTIVE_KPI_LIBRARY,
+        [params],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiLibrary error:', error)
+      throw error
+    }
   },
 
   getWeightages: async () => {
-    // Match curl: --data-urlencode '%7D='  →  form body `}=` (key "}", empty value)
-    const form = new URLSearchParams([['}', '']])
-    return apiClient.post<any>(INCENTIVE_GET_WEIGHTAGES_URL, form, {
-      headers: {
-        accept: '*/*',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    })
+    try {
+      const response = await callApi(
+        APIRoutes.GET_WEIGHTAGES,
+        [{}]
+      )
+      return response
+    } catch (error) {
+      console.error('downloadRecord service error:', error)
+      throw error
+    }
   },
 
-  upsertProgramWeightages: async (data: UpsertProgramWeightagesRequest) => {
-    return apiClient.post<any>(INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES_URL, data, {
-      headers: {
-        accept: '*/*',
-        'Content-Type': 'application/json',
-      },
-    })
+  /** GET /api/incentive/kpi-library/{id} — single KPI */
+  getKpiById: async (id: string) => {
+    try {
+      const response = await callApi<IKpi>(
+        APIRoutes.GET_INCENTIVE_KPI_BY_ID,
+        [{ id }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiById error:', error)
+      throw error
+    }
   },
 
-  /** Cascade filter: pass channelId for child level; omit or use 0 for root channels (API-dependent). */
-  postFilterCascade: async (body: FilterCascadeRequest = {}) => {
-    return apiClient.post<any>(INCENTIVE_FILTERS_CASCADE_URL, body, {
-      headers: {
-        accept: '*/*',
-        'Content-Type': 'application/json',
-      },
-    })
+  /** POST /api/incentive/kpi-library — create KPI */
+  createKpi: async (data: ICreateKpiRequest) => {
+    try {
+      const response = await callApi<IKpi>(
+        APIRoutes.CREATE_INCENTIVE_KPI,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.createKpi error:', error)
+      throw error
+    }
+  },
+
+  getUser: async () => {
+    return callApi(
+      "getUser",
+      [{}]
+    )
+  },
+
+  /** PUT /api/incentive/kpi-library/{id} — update KPI */
+  updateKpi: async (data: IUpdateKpiRequest) => {
+    try {
+      const response = await callApi<IKpi>(
+        APIRoutes.UPDATE_INCENTIVE_KPI,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.updateKpi error:', error)
+      throw error
+    }
+  },
+
+  /** DELETE /api/incentive/kpi-library/{id} — soft-delete KPI */
+  deleteKpi: async (id: string) => {
+    try {
+      const response = await callApi<void>(
+        APIRoutes.DELETE_INCENTIVE_KPI,
+        [{ id }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.deleteKpi error:', error)
+      throw error
+    }
+  },
+
+  // ─── Filters ─────────────────────────────────────────────────────────────────
+
+  /** GET /api/incentive/filters — cascading filter: multi-branchId → Designations */
+  getFilters: async (params: IIncentiveFiltersParams = {}) => {
+    try {
+      const response = await callApi<IBranchDesignations[]>(
+        APIRoutes.GET_INCENTIVE_FILTERS,
+        [params],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getFilters error:', error)
+      throw error
+    }
+  },
+
+  // ─── Programs ─────────────────────────────────────────────────────────────────
+
+  /** GET /api/incentive/programs — paged program list */
+  getPrograms: async (params: IProgramListParams = {}) => {
+    try {
+      const response = await callApi<IProgramListResponse>(
+        APIRoutes.GET_INCENTIVE_PROGRAMS,
+        [params],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getPrograms error:', error)
+      throw error
+    }
+  },
+
+  /** GET /api/incentive/programs/{id} — program with all child mappings */
+  getProgramById: async (id: string) => {
+    try {
+      const response = await callApi<IIncentiveProgram>(
+        APIRoutes.GET_INCENTIVE_PROGRAM_BY_ID,
+        [{ id }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getProgramById error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/programs — atomic create (program + KPIs + weightages + filters) */
+  createProgram: async (data: ICreateProgramRequest) => {
+    try {
+      const response = await callApi<IIncentiveProgram>(
+        APIRoutes.CREATE_INCENTIVE_PROGRAM,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.createProgram error:', error)
+      throw error
+    }
+  },
+
+  /** PUT /api/incentive/programs/{id} — update program header */
+  updateProgram: async (data: IUpdateProgramRequest) => {
+    try {
+      const response = await callApi<IIncentiveProgram>(
+        APIRoutes.UPDATE_INCENTIVE_PROGRAM,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.updateProgram error:', error)
+      throw error
+    }
+  },
+
+  /** GET /api/incentive/programs/{id}/product-weightage — get product weightages */
+  getProductWeightage: async (programId: string) => {
+    try {
+      const response = await callApi<IProductWeightageResponse>(
+        APIRoutes.GET_INCENTIVE_PROGRAM_PRODUCT_WEIGHTAGE,
+        [{ id: programId }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getProductWeightage error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/programs/{id}/product-weightage — save/replace product weightages (validates sum = 100%) */
+  saveProductWeightage: async (data: ISaveProductWeightageRequest) => {
+    try {
+      const response = await callApi<IProductWeightageResponse>(
+        APIRoutes.SAVE_INCENTIVE_PROGRAM_PRODUCT_WEIGHTAGE,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.saveProductWeightage error:', error)
+      throw error
+    }
+  },
+
+  // ─── Weightage Master / Details / Dimension ───────────────────────────────
+
+  /** POST — create Weightage Master entry, returns weightageId */
+  createWeightageMaster: async (data: ICreateWeightageMasterRequest) => {
+    try {
+      const response = await callApi<ICreateWeightageMasterResponse>(
+        APIRoutes.CREATE_WEIGHTAGE_MASTER,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.createWeightageMaster error:', error)
+      throw error
+    }
+  },
+
+  /** POST — add a new Weightage Details row, returns weightageDetailsId */
+  createWeightageDetails: async (data: ICreateWeightageDetailsRequest) => {
+    try {
+      const response = await callApi<ICreateWeightageDetailsResponse>(
+        APIRoutes.CREATE_WEIGHTAGE_DETAILS,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.createWeightageDetails error:', error)
+      throw error
+    }
+  },
+
+  /** DELETE — remove a Weightage Details row */
+  deleteWeightageDetails: async (data: IDeleteWeightageDetailsRequest) => {
+    try {
+      const response = await callApi<void>(
+        APIRoutes.DELETE_WEIGHTAGE_DETAILS,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.deleteWeightageDetails error:', error)
+      throw error
+    }
+  },
+
+  /** POST — save dimension data for a specific dimension column */
+  saveWeightageDimension: async (data: ISaveWeightageDimensionRequest) => {
+    try {
+      const response = await callApi<void>(
+        APIRoutes.SAVE_WEIGHTAGE_DIMENSION,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.saveWeightageDimension error:', error)
+      throw error
+    }
   },
 }
-

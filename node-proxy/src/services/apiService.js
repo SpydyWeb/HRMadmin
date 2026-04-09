@@ -37,6 +37,10 @@ const AgentByCode = (data, headers = {}) => {
 const GetMasters = (data, headers = {}) => {
   return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
 };
+const getWeightages = (data, headers = {}) => {
+  return apiClient.post(APIRoutes.GETWEIGHTAGES, data, { headers });
+};
+
 
 const file = (data, headers = {}) => {
   console.log('====================================');
@@ -349,9 +353,9 @@ const searchForPartner = (data, headers = {}) => {
 };
 
 const getRefreshToken = (data, headers = {}) => {
-  console.log("getting refreshToken",data);
+  console.log("getting refreshToken", data);
 
-  return apiClient.post(APIRoutes.REFRESHTOKEN,data, {  });
+  return apiClient.post(APIRoutes.REFRESHTOKEN, data, {});
 };
 
 const GetMastersBulk = async (keys, headers = {}) => {
@@ -609,6 +613,7 @@ module.exports = {
   Agentbyid,
   AgentByCode,
   GetMasters,
+  getWeightages,
   file,
   userList,
   getRefreshToken,
