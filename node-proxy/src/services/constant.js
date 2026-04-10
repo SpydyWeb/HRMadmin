@@ -74,9 +74,15 @@ const APIRoutes = {
   GETPRODUCTS: "/api/AppMasters/GetProducts",
   INCENTIVE_UPSERT_PROGRAM: "/api/incentive/UpsertProgram",
   INCENTIVE_GET_KPIS_LIST: "/api/incentive/GetKpisList",
+  INCENTIVE_GET_SELECTED_PROGRAM_KPIS: "/api/incentive/GetSelectedProgramKpis",
   INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: "/api/incentive/UpsertProgramWeightages",
+  INCENTIVE_GET_PROGRAMS_LIST: "/api/incentive/GetProgramsList",
+  INCENTIVE_GET_PAST_QUALIFICATIONS: "/api/incentive/GetPastQualifications",
   GET_FILTERS_CASCADE: "/api/incentive/filters/cascade",
   UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
+  INCENTIVE_GET_KPI_OBJECTS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiObjects",
+  INCENTIVE_GET_KPI_FIELDS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiFields",
+  INCENTIVE_UPSERT_KPI: "http://hmsapi.ezytekapis.com/api/incentive/UpsertKpi",
 
 };
 

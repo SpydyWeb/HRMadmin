@@ -105,10 +105,10 @@ export function AddUserInline({
     }
 
     return (
-        <div className="relative flex border rounded-md p-4 bg-white w-full max-w-lg space-x-3">
+        <div className="relative min-w-0 w-full border rounded-md bg-white p-4">
 
-            {/* LEFT SIDE */}
-            <div className="flex-1 space-y-3">
+            {/* Main column — min-w-0 allows flex/grid parents to shrink without overlapping siblings */}
+            <div className="min-w-0 space-y-3">
                 <h3 className="text-sm font-semibold">Select Weightages</h3>
 
                 {/* Input + Chips */}
@@ -183,9 +183,9 @@ export function AddUserInline({
                 </div>
             </div>
 
-            {/* RIGHT SIDE DROPDOWN */}
+            {/* Suggestion list: below input on narrow panels, to the side when there is room */}
             {isFocused && (
-                <div className="absolute top-0 left-full ml-3 w-84 z-50">
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 min-w-[12rem] sm:left-auto sm:right-auto sm:top-0 sm:mt-0 sm:ml-3 sm:w-72 sm:left-full">
                     <ScrollArea className="h-45 border rounded-md bg-white shadow-md">
                         {filteredUsers.length > 0 ? (
                             filteredUsers.map((user) => (

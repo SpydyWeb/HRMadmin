@@ -220,15 +220,15 @@ useEffect(() => {
   };
 
   return (
-    <CardContent className="!px-6">
-      <div className="bg-white rounded-md space-y-6">
+    <div className="">
+      <div className="bg-white space-y-6">
 
         {/* Simple/Advanced Mode Toggle */}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setUseSimpleMode(true)}
-            className={`px-4 py-2 rounded-md transition-colors ${useSimpleMode
+            className={`px-2 py-2 rounded-md transition-colors ${useSimpleMode
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
@@ -238,7 +238,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={() => setUseSimpleMode(false)}
-            className={`px-4 py-2 rounded-md transition-colors ${!useSimpleMode
+            className={`px-2 py-2 rounded-md transition-colors ${!useSimpleMode
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
@@ -250,38 +250,37 @@ useEffect(() => {
         {useSimpleMode ? (
           /* Simple Mode */
           <div className="space-y-4">
-            {/* Frequency */}
-            <div>
-              <label className="block mb-2 font-medium">Frequency Pattern</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={frequency}
-                onChange={(e) => {
-                  setFrequency(e.target.value);
-                  if (e.target.value !== 'WEEKLY') {
-                    setDaysOfWeek([]);
-                  }
-                }}
-              >
-                <option value="DAILY">Every day</option>
-                <option value="WEEKLY">Weekly</option>
-                <option value="MONTHLY">Monthly</option>
-              </select>
-            </div>
-
-            {/* Time */}
-            <div>
-              <label className="block mb-2 font-medium">Time</label>
-              <input
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={simpleTime}
-                onChange={(e) => {
-                  setSimpleTime(e.target.value);
-                  parseTimeInput(e.target.value);
-                  setSeconds(0); // Reset seconds in simple mode
-                }}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div>
+                <label className="block mb-2 font-medium">Frequency Pattern</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={frequency}
+                  onChange={(e) => {
+                    setFrequency(e.target.value as 'DAILY' | 'WEEKLY' | 'MONTHLY');
+                    if (e.target.value !== 'WEEKLY') {
+                      setDaysOfWeek([]);
+                    }
+                  }}
+                >
+                  <option value="DAILY">Every day</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="MONTHLY">Monthly</option>
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2 font-medium">Time</label>
+                <input
+                  type="time"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={simpleTime}
+                  onChange={(e) => {
+                    setSimpleTime(e.target.value);
+                    parseTimeInput(e.target.value);
+                    setSeconds(0); // Reset seconds in simple mode
+                  }}
+                />
+              </div>
             </div>
 
             {/* Weekly - Days of Week */}
@@ -380,7 +379,7 @@ useEffect(() => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={frequency}
                 onChange={(e) => {
-                  setFrequency(e.target.value);
+                  setFrequency(e.target.value as 'DAILY' | 'WEEKLY' | 'MONTHLY');
                   if (e.target.value !== 'WEEKLY') {
                     setDaysOfWeek([]);
                   }
@@ -457,7 +456,7 @@ useEffect(() => {
           </div>
         )}
       </div>
-    </CardContent>
+    </div>
   );
 };
 

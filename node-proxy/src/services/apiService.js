@@ -572,11 +572,55 @@ const getKpisList = (data = {}, headers = {}) => {
 const upsertProgramWeightages = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
 };
+const getProgramsList = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
+};
+const getPastQualifications = (data = {}, headers = {}) => {
+  const programId = data?.programId;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  return apiClient.post(`${APIRoutes.INCENTIVE_GET_PAST_QUALIFICATIONS}/${programId}`, {}, { headers });
+};
+const getSelectedProgramKpis = (data = {}, headers = {}) => {
+  const programId = data?.programId;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_SELECTED_PROGRAM_KPIS}/${programId}`,
+    {},
+    { headers }
+  );
+};
 const getFiltersCascade = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GET_FILTERS_CASCADE, data, { headers });
 };
 const upsertProgramFilters = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
+};
+
+const GetKpiObjects = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_KPI_OBJECTS, data, { headers });
+};
+
+const GetKpiFields = (data = {}, headers = {}) => {
+  const objectName = data?.objectName;
+  if (!objectName) {
+    throw new Error("objectName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_KPI_FIELDS}?objectName=${encodeURIComponent(objectName)}`;
+  return apiClient.post(url, {}, { headers });
+};
+
+const UpsertKpi = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
 };
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
@@ -695,8 +739,14 @@ module.exports = {
   upsertProgram,
   getKpisList,
   upsertProgramWeightages,
+  getProgramsList,
+  getPastQualifications,
+  getSelectedProgramKpis,
   getFiltersCascade,
   upsertProgramFilters,
+  GetKpiObjects,
+  GetKpiFields,
+  UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,

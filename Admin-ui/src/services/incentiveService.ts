@@ -26,7 +26,9 @@ import type {
   IUpsertProgramWeightagesRequest,
   IFiltersCascadeParams,
   IUpsertProgramFiltersRequest,
+  ISelectedProgramKpisResponse,
 } from '@/models/incentive'
+
 
 export const incentiveService = {
   // ─── KPI Library ─────────────────────────────────────────────────────────────
@@ -143,12 +145,26 @@ export const incentiveService = {
   getPrograms: async (params: IProgramListParams = {}) => {
     try {
       const response = await callApi<IProgramListResponse>(
-        APIRoutes.GET_INCENTIVE_PROGRAMS,
+        APIRoutes.INCENTIVE_GET_PROGRAMS_LIST,
         [params],
       )
       return response
     } catch (error) {
       console.error('incentiveService.getPrograms error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetPastQualifications/{programId} */
+  getPastQualifications: async (programId: number) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_PAST_QUALIFICATIONS,
+        [{ programId }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getPastQualifications error:', error)
       throw error
     }
   },
@@ -309,6 +325,64 @@ export const incentiveService = {
       return response
     } catch (error) {
       console.error('incentiveService.getKpisList error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetSelectedProgramKpis/{programId} — KPIs mapped to a program */
+  getSelectedProgramKpis: async (programId: number) => {
+    try {
+      const response = await callApi<ISelectedProgramKpisResponse>(
+        APIRoutes.INCENTIVE_GET_SELECTED_PROGRAM_KPIS,
+        [{ programId }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getSelectedProgramKpis error:', error)
+      throw error
+    }
+  },
+
+  // ─── KPI Builder ─────────────────────────────────────────────────────────────
+
+  /** POST /api/incentive/GetKpiObjects — list KPI object options */
+  getKpiObjects: async () => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_KPI_OBJECTS,
+        [{}],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiObjects error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetKpiFields?objectName=... — list KPI field options */
+  getKpiFields: async (objectName: string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_KPI_FIELDS,
+        [{ objectName }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiFields error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/UpsertKpi — create/update KPI from builder */
+  upsertKpi: async (data: Record<string, unknown>) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_UPSERT_KPI,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.upsertKpi error:', error)
       throw error
     }
   },

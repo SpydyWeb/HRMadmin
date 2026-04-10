@@ -14,6 +14,7 @@ import type {
 } from '@/models/hmsdashboard'
 import { apiClient } from './apiClient'
 import { auth } from '@/auth'
+import { parseStoredAuth } from '@/utils/parseStoredAuth'
 
 export const HMSService = {
   hmsDashboard: async (data: IHmsDashboardResponseBody) => {
@@ -456,7 +457,8 @@ export const HMSService = {
   },
 
   getRefreshToken: async () => {
-    return callApi("getRefreshToken", [{ refreshToken: JSON.parse(auth.getToken())?.refreshToken }])
+    const refreshToken = parseStoredAuth(auth.getToken())?.refreshToken
+    return callApi('getRefreshToken', [{ refreshToken }])
   },
 
   createIndividualAgent: async (payload: {

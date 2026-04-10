@@ -29,30 +29,27 @@ import SelectionExpressionBuilder from '@/components/SelectionExpressionBuilder'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
 import { AddUserDialog, AddUserInline } from '@/components/incentives/AddUserDialog'
 import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
+import DataTable from '@/components/table/DataTable'
 
 type WeightageOption = { key: string; id: number | null; label: string }
 
-type ChannelKey = 'Bancassurance' | 'Agency' | 'Direct' | 'Broker'
-
-/**
- * Static UI labels; `cascadeChannelId` is sent as `channelId` to filters/cascade.
- * Ids match API `cascadingFilters.channels` (e.g. Agency=1, Bancassurance=2, Broker=5).
- */
-
-
-
-const CHANNELS: Array<{
-  key: ChannelKey
-  label: string
-  cascadeChannelId: number
-}> = [
-    { key: 'Bancassurance', label: 'Bancassurance', cascadeChannelId: 2 },
-    { key: 'Agency', label: 'Agency', cascadeChannelId: 1 },
-    { key: 'Direct', label: 'Direct', cascadeChannelId: 3 },
-    { key: 'Broker', label: 'Broker', cascadeChannelId: 5 },
-  ]
-
 type CascadeOption = { id: number; label: string }
+
+type PastQualificationRow = Record<string, unknown>
+
+function toVarName(input: string): string {
+  const base = (input ?? '')
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+  if (!base) return 'kpi'
+  // identifiers used in expression builder should start with a letter/underscore
+  if (/^[a-z_]/.test(base)) return base
+  return `kpi_${base}`
+}
 
 function extractCascadeRows(responseBody: any, preferredKeys: string[]): any[] {
   if (!responseBody || typeof responseBody !== 'object') return []
@@ -120,6 +117,27 @@ function mapCascadeOptions(
       return { id, label }
     })
     .filter(Boolean) as CascadeOption[]
+}
+
+function extractFirstObjectArray(payload: any): any[] {
+  if (!payload) return []
+
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.responseBody)) return payload.responseBody
+
+  const rb = payload?.responseBody
+  if (Array.isArray(rb)) return rb
+
+  const maybeObj = rb && typeof rb === 'object' ? rb : payload
+  if (!maybeObj || typeof maybeObj !== 'object') return []
+
+  for (const v of Object.values(maybeObj)) {
+    if (Array.isArray(v) && v.length && typeof (v as any)[0] === 'object') {
+      return v as any[]
+    }
+  }
+
+  return []
 }
 
 
@@ -270,6 +288,66 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
       </div>
 
       <div className="space-y-4 p-4">
+        {/* ── KPI Library — pick KPIs for this slab ── */}
+        <Card className="rounded-lg border border-neutral-200">
+          <CardHeader className="px-4 pb-2 pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base">KPI Library</CardTitle>
+              <div className="w-56">
+                <Input
+                  label=""
+                  variant="outlined"
+                  placeholder="Search KPI..."
+                  value={kpiSearch}
+                  onChange={(e) => setKpiSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Select KPIs for this slab. These KPIs become available in expressions.
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {kpiLibrary.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
+                <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
+                <p className="text-xs text-neutral-500">
+                  No KPIs loaded yet. Save the program first (so we have a programId), then the KPI list will load here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="max-h-56 overflow-auto rounded-md border border-neutral-200">
+                  {filteredLibrary.length === 0 ? (
+                    <div className="p-3 text-xs text-neutral-500">No KPIs match your search.</div>
+                  ) : (
+                    filteredLibrary.map((kpi) => (
+                      <label
+                        key={kpi.id}
+                        className="flex cursor-pointer items-start gap-2 border-b border-neutral-100 p-3 last:border-b-0 hover:bg-neutral-50"
+                      >
+                        <Checkbox
+                          className="mt-0.5"
+                          checked={isKPISelected(kpi.id)}
+                          onCheckedChange={() => toggleKPI(kpi.id)}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-neutral-800">{kpi.name}</p>
+                          <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{kpi.description}</p>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+
+                <p className="text-xs text-neutral-400">
+                  Selected: <span className="font-medium text-neutral-600">{slab.selectedKPIs.length}</span>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* ── 1. Program Details — moved to top of page ── */}
         {/* <Card className="rounded-lg border border-neutral-200">
           <CardHeader className="px-4 pb-2 pt-4">
@@ -550,27 +628,28 @@ export default function IncentiveProgramConfig() {
   const [weightage, setWeightage] = useState<Record<string, boolean>>({})
   const [weightagesLoading, setWeightagesLoading] = useState(true)
 
-  const [channels, setChannels] = useState<Record<ChannelKey, boolean>>({
-    Bancassurance: false,
-    Agency: false,
-    Direct: false,
-    Broker: false,
-  })
+  const [channelOptions, setChannelOptions] = useState<CascadeOption[]>([])
+  const [selectedChannelIds, setSelectedChannelIds] = useState<number[]>([])
+  const [channelsLoading, setChannelsLoading] = useState(false)
 
   const [subChannelOptions, setSubChannelOptions] = useState<CascadeOption[]>([])
   const [branchOptions, setBranchOptions] = useState<CascadeOption[]>([])
   const [designationOptions, setDesignationOptions] = useState<CascadeOption[]>(
     [],
   )
-  const [selectedSubChannelId, setSelectedSubChannelId] = useState('')
-  const [selectedBranchId, setSelectedBranchId] = useState('')
-  const [selectedDesignationId, setSelectedDesignationId] = useState('')
+  const [selectedSubChannelIds, setSelectedSubChannelIds] = useState<number[]>(
+    [],
+  )
+  const [selectedBranchIds, setSelectedBranchIds] = useState<number[]>([])
+  const [selectedDesignationIds, setSelectedDesignationIds] = useState<number[]>(
+    [],
+  )
   const [subChannelsLoading, setSubChannelsLoading] = useState(false)
   const [branchesLoading, setBranchesLoading] = useState(false)
 
   const anyChannelSelected = useMemo(
-    () => Object.values(channels).some(Boolean),
-    [channels],
+    () => selectedChannelIds.length > 0,
+    [selectedChannelIds],
   )
 
   const [slabs, setSlabs] = useState<Array<SlabState>>(() => [createSlab()])
@@ -584,6 +663,7 @@ export default function IncentiveProgramConfig() {
 
   // ─── API state ───────────────────────────────────────────────────────────────
   const [kpiLibrary, setKpiLibrary] = useState<KPIEntry[]>(KPI_LIBRARY_PLACEHOLDER)
+  const [kpiLibraryLoading, setKpiLibraryLoading] = useState(false)
   const [kpisListOptions, setKpisListOptions] = useState<Array<{ kpiId: number; kpiName: string }>>([])
   const [kpisListLoading, setKpisListLoading] = useState(false)
   const [selectedKpiIds, setSelectedKpiIds] = useState<number[]>([])
@@ -596,14 +676,22 @@ export default function IncentiveProgramConfig() {
   const [selectedWeightages, setSelectedWeightages] = useState<string[]>([])
   const [pastCycleProgram, setPastCycleProgram] = useState<string>('')
 
+  const [pastProgramOptions, setPastProgramOptions] = useState<CascadeOption[]>(
+    [],
+  )
+  const [selectedPastProgramId, setSelectedPastProgramId] = useState('')
+  const [pastQualifications, setPastQualifications] = useState<
+    PastQualificationRow[]
+  >([])
+  const [pastQualificationsLoading, setPastQualificationsLoading] =
+    useState(false)
 
-  /** First checked channel in fixed order — used for cascade API `channelId`. */
-  const primaryCascadeChannelId = useMemo(() => {
-    for (const c of CHANNELS) {
-      if (channels[c.key]) return c.cascadeChannelId
-    }
-    return null
-  }, [channels])
+
+  /** Convenience single values for downstream selects (UI is single-select there). */
+  const primaryCascadeChannelId = useMemo(
+    () => (selectedChannelIds.length ? selectedChannelIds[0] : null),
+    [selectedChannelIds],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -739,24 +827,234 @@ export default function IncentiveProgramConfig() {
     }
   }, [])
 
+  // Fetch KPI library for this program (Selected KPI tab)
   useEffect(() => {
-    setSelectedSubChannelId('')
-    setSelectedBranchId('')
-    setSelectedDesignationId('')
-  }, [primaryCascadeChannelId])
+    let cancelled = false
+
+    const normalizeKpiLibrary = (payload: any): KPIEntry[] => {
+      const body = payload?.responseBody ?? payload
+      const list =
+        body?.programKpis ??
+        body?.kpiLibrary ??
+        body?.kpis ??
+        body?.items ??
+        (Array.isArray(body) ? body : []) ??
+        []
+
+      if (!Array.isArray(list)) return []
+
+      return list
+        .map((item: any): KPIEntry | null => {
+          const rawId = item?.id ?? item?.kpiId ?? item?.kpiID ?? item?.KpiId
+          const idNum = Number(rawId)
+          const id = Number.isFinite(idNum) && idNum > 0 ? String(idNum) : (rawId != null ? String(rawId) : '')
+          if (!id) return null
+
+          const name = String(item?.name ?? item?.kpiName ?? item?.kpi_name ?? `KPI ${id}`)
+          const description = String(
+            item?.description ??
+              item?.kpiDescription ??
+              item?.kpi_description ??
+              item?.kpiCode ??
+              '',
+          )
+
+          const dataSources = Array.isArray(item?.dataSources)
+            ? item.dataSources
+            : Array.isArray(item?.dataSource)
+              ? item.dataSource
+              : []
+
+          const groupBy = Array.isArray(item?.groupBy)
+            ? item.groupBy
+            : Array.isArray(item?.group_by)
+              ? item.group_by
+              : []
+
+          const timeWindow = String(item?.timeWindow ?? item?.time_window ?? item?.timePeriod ?? 'PROGRAM_DURATION')
+
+          return {
+            id,
+            name,
+            description,
+            dataSources,
+            groupBy,
+            timeWindow,
+            createdAt: String(item?.createdAt ?? ''),
+            createdBy: String(item?.createdBy ?? ''),
+          }
+        })
+        .filter(Boolean) as KPIEntry[]
+    }
+
+    const fetchLibrary = async () => {
+      if (!programId) {
+        setKpiLibrary([])
+        return
+      }
+
+      try {
+        setKpiLibraryLoading(true)
+        const res = await incentiveService.getSelectedProgramKpis(programId)
+        if (cancelled) return
+        setKpiLibrary(normalizeKpiLibrary(res))
+      } catch (err: any) {
+        if (cancelled) return
+        setKpiLibrary([])
+        const message =
+          err?.response?.data?.message ||
+          err?.response?.data?.errorMessage ||
+          err?.message ||
+          'Failed to load KPIs for this program'
+        showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+      } finally {
+        if (!cancelled) setKpiLibraryLoading(false)
+      }
+    }
+
+    fetchLibrary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [programId])
+
+  // Fetch channels from cascade API on mount (no payload)
+  useEffect(() => {
+    let cancelled = false
+    setChannelsLoading(true)
+      ;(async () => {
+        try {
+          const res = await incentiveService.getFiltersCascade({})
+          const rows = extractCascadeRows(res?.responseBody, [
+            'channels',
+            'channelList',
+            'channel',
+          ])
+          const opts = mapCascadeOptions(rows, ['id', 'channelId'], [
+            'name',
+            'channelName',
+            'label',
+            'channelCode',
+            'code',
+          ])
+          if (!cancelled) setChannelOptions(opts)
+        } catch (err: any) {
+          if (!cancelled) {
+            setChannelOptions([])
+            const message =
+              err?.response?.data?.message ||
+              err?.response?.data?.errorMessage ||
+              err?.message ||
+              'Failed to load channels'
+            showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+          }
+        } finally {
+          if (!cancelled) setChannelsLoading(false)
+        }
+      })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Load programs list for Past Qualified Cycles dropdown
+  useEffect(() => {
+    let cancelled = false
+      ;(async () => {
+        try {
+          const res: any = await incentiveService.getPrograms({
+            pageNumber: 1,
+            pageSize: 200,
+          })
+
+          if (cancelled) return
+
+          const body = res?.responseBody ?? res
+          const list =
+            body?.items ??
+            body?.programs ??
+            body?.programList ??
+            body?.programsList ??
+            (Array.isArray(body) ? body : [])
+
+          const rows = Array.isArray(list) ? list : extractFirstObjectArray(res)
+
+          const opts = mapCascadeOptions(rows, ['programId', 'id'], [
+            'programName',
+            'name',
+            'title',
+            'label',
+          ])
+          setPastProgramOptions(opts)
+        } catch (err) {
+          if (!cancelled) setPastProgramOptions([])
+        }
+      })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Load past qualifications when a program is selected
+  useEffect(() => {
+    let cancelled = false
+    const idNum = selectedPastProgramId ? Number(selectedPastProgramId) : NaN
+    if (!Number.isFinite(idNum) || idNum <= 0) {
+      setPastQualifications([])
+      setPastQualificationsLoading(false)
+      return
+    }
+
+    setPastQualificationsLoading(true)
+      ;(async () => {
+        try {
+          const res: any = await incentiveService.getPastQualifications(idNum)
+          const body = res?.responseBody ?? res
+
+          // Try common keys first, then fall back to first object-array found
+          const rows =
+            body?.qualifications ??
+            body?.pastQualifications ??
+            body?.items ??
+            (Array.isArray(body) ? body : null) ??
+            extractFirstObjectArray(body)
+
+          const normalized = (Array.isArray(rows) ? rows : []).map((r) =>
+            r && typeof r === 'object' ? r : { value: r },
+          ) as PastQualificationRow[]
+
+          if (!cancelled) setPastQualifications(normalized)
+        } catch (err) {
+          if (!cancelled) setPastQualifications([])
+        } finally {
+          if (!cancelled) setPastQualificationsLoading(false)
+        }
+      })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPastProgramId])
 
   useEffect(() => {
-    setSelectedBranchId('')
-    setSelectedDesignationId('')
-  }, [selectedSubChannelId])
+    setSelectedSubChannelIds([])
+    setSelectedBranchIds([])
+    setSelectedDesignationIds([])
+  }, [selectedChannelIds])
 
   useEffect(() => {
-    setSelectedDesignationId('')
-  }, [selectedBranchId])
+    setSelectedBranchIds([])
+    setSelectedDesignationIds([])
+  }, [selectedSubChannelIds])
+
+  useEffect(() => {
+    setSelectedDesignationIds([])
+  }, [selectedBranchIds])
 
   useEffect(() => {
     let cancelled = false
-    if (primaryCascadeChannelId == null) {
+    if (!selectedChannelIds.length) {
       setSubChannelOptions([])
       setSubChannelsLoading(false)
       return
@@ -765,7 +1063,7 @@ export default function IncentiveProgramConfig() {
       ; (async () => {
         try {
           const res = await incentiveService.getFiltersCascade({
-            channelId: primaryCascadeChannelId,
+            channelIds: selectedChannelIds,
           })
           const rows = extractCascadeRows(res?.responseBody, [
             'subChannels',
@@ -798,18 +1096,13 @@ export default function IncentiveProgramConfig() {
     return () => {
       cancelled = true
     }
-  }, [primaryCascadeChannelId])
-
-  const subChannelIdNum = selectedSubChannelId
-    ? Number(selectedSubChannelId)
-    : NaN
+  }, [selectedChannelIds])
 
   useEffect(() => {
     let cancelled = false
     if (
-      primaryCascadeChannelId == null ||
-      !Number.isFinite(subChannelIdNum) ||
-      subChannelIdNum <= 0
+      !selectedChannelIds.length ||
+      !selectedSubChannelIds.length
     ) {
       setBranchOptions([])
       setBranchesLoading(false)
@@ -819,8 +1112,8 @@ export default function IncentiveProgramConfig() {
       ; (async () => {
         try {
           const res = await incentiveService.getFiltersCascade({
-            channelId: primaryCascadeChannelId,
-            subChannelId: subChannelIdNum,
+            channelIds: selectedChannelIds,
+            subChannelIds: selectedSubChannelIds,
           })
           const rows = extractCascadeRows(res?.responseBody, [
             'branches',
@@ -854,18 +1147,14 @@ export default function IncentiveProgramConfig() {
     return () => {
       cancelled = true
     }
-  }, [primaryCascadeChannelId, selectedSubChannelId])
-
-  const branchIdNum = selectedBranchId ? Number(selectedBranchId) : NaN
+  }, [selectedChannelIds, selectedSubChannelIds])
 
   useEffect(() => {
     let cancelled = false
     if (
-      primaryCascadeChannelId == null ||
-      !Number.isFinite(subChannelIdNum) ||
-      subChannelIdNum <= 0 ||
-      !Number.isFinite(branchIdNum) ||
-      branchIdNum <= 0
+      !selectedChannelIds.length ||
+      !selectedSubChannelIds.length ||
+      !selectedBranchIds.length
     ) {
       setDesignationOptions([])
       setDesignationsLoading(false)
@@ -875,9 +1164,9 @@ export default function IncentiveProgramConfig() {
       ; (async () => {
         try {
           const res = await incentiveService.getFiltersCascade({
-            channelId: primaryCascadeChannelId,
-            subChannelId: subChannelIdNum,
-            branchId: branchIdNum,
+            channelIds: selectedChannelIds,
+            subChannelIds: selectedSubChannelIds,
+            branchIds: selectedBranchIds,
           })
           const rows = extractCascadeRows(res?.responseBody, [
             'designations',
@@ -908,7 +1197,7 @@ export default function IncentiveProgramConfig() {
     return () => {
       cancelled = true
     }
-  }, [primaryCascadeChannelId, selectedSubChannelId, selectedBranchId])
+  }, [selectedChannelIds, selectedSubChannelIds, selectedBranchIds])
 
   const toIso = (value: string | null) => {
     if (!value) return null
@@ -1060,21 +1349,26 @@ export default function IncentiveProgramConfig() {
       return
     }
 
-    if (!primaryCascadeChannelId) {
+    if (!selectedChannelIds.length || !primaryCascadeChannelId) {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please select a channel')
       return
     }
-
-    const branchIds = selectedBranchId ? [Number(selectedBranchId)] : []
 
     setIsSavingFilters(true)
     try {
       await incentiveService.upsertProgramFilters({
         programId,
-        channelId: primaryCascadeChannelId,
-        subChannelId: selectedSubChannelId ? Number(selectedSubChannelId) : undefined,
-        branchIds,
-        designationId: selectedDesignationId ? Number(selectedDesignationId) : undefined,
+        filters: [
+          {
+            filterId: 0,
+            programId,
+            channelIds: selectedChannelIds,
+            subChannelIds: selectedSubChannelIds,
+            branchIds: selectedBranchIds,
+            designationIds: selectedDesignationIds,
+            isActive: true,
+          },
+        ],
       })
       showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Filters saved successfully')
     } catch (err: any) {
@@ -1214,7 +1508,7 @@ export default function IncentiveProgramConfig() {
           <Card className="rounded-md border border-neutral-200">
             <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 py-3">
               <div>
-                <CardTitle className="text-base font-semibold">
+                <CardTitle className="text-lg font-semibold">
                   Program Details
                 </CardTitle>
                 <p className="mt-1 text-xs text-neutral-500">
@@ -1249,7 +1543,7 @@ export default function IncentiveProgramConfig() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <DatePicker
                     label="Start Date *"
                     value={startDate}
@@ -1262,10 +1556,7 @@ export default function IncentiveProgramConfig() {
                     onChange={setEndDate}
                     placeholder="dd-mm-yyyy"
                   />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
+                   <div>
                     <label className="mb-1 block text-sm font-medium text-neutral-700">
                       Capping Amount
                     </label>
@@ -1279,6 +1570,10 @@ export default function IncentiveProgramConfig() {
                       onChange={(e) => setCappingAmount(e.target.value)}
                     />
                   </div>
+                </div>
+
+              
+                 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-neutral-700">
                       Choose The KPI's
@@ -1292,19 +1587,19 @@ export default function IncentiveProgramConfig() {
                     />
                   </div>
 
-                </div>
+               
               </div>
-              <Card className="rounded-md border border-neutral-200 mt-10">
-                <CardHeader className="px-4">
-                  <CardTitle className="text-base font-semibold">
+              <div className="mt-10">
+                <div className="">
+                  <CardTitle className="text-lg mb-2 font-semibold">
                     Execution Frequency
                   </CardTitle>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="my-2  text-xs text-neutral-500">
                     Configure when this incentive program should run.
                   </p>
-                </CardHeader>
+                </div>
 
-                <CardContent className="px-4 pb-4">
+                <CardContent className="px-0 pb-4">
                   <IncentiveConfig
                     commissionConfigId={0}
                     initialData={null}
@@ -1318,7 +1613,7 @@ export default function IncentiveProgramConfig() {
                     }}
                   />
                 </CardContent>
-              </Card>
+              </div>
 
               <div className="mt-4 flex items-center justify-end">
                 <Button
@@ -1335,29 +1630,32 @@ export default function IncentiveProgramConfig() {
           </Card>
 
           <Card className="rounded-md border border-neutral-200">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-base font-semibold">
-                Weightage
-              </CardTitle>
-              <p className="mt-1 text-xs text-neutral-500">
-                Select the applicable weightage options for this incentive
-                program.
-              </p>
-              <p className="mt-1 text-xs text-neutral-600">
-                Program id for save:{' '}
-                <span className="font-medium text-neutral-800">
-                  {programId != null ? programId : '— save Program Details first'}
-                </span>
-              </p>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <AddUserInline
-                programId={programmeId ?? 0} // ✅ IMPORTANT
-                onSuccess={(users) => {
-                  console.log("Saved users:", users)
-                }}
-              />
-            </CardContent>
+            {/* minmax(0,1fr) lets the weightage panel shrink so it cannot overlap the header */}
+            <div className="grid grid-cols-1 border-neutral-200 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)] md:divide-x">
+              <CardHeader className="min-w-0 border-b border-neutral-200 px-4 py-3 md:border-b-0">
+                <CardTitle className="text-base font-semibold">
+                  Weightage
+                </CardTitle>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Select the applicable weightage options for this incentive
+                  program.
+                </p>
+                <p className="mt-1 text-xs text-neutral-600">
+                  Program id for save:{' '}
+                  <span className="font-medium text-neutral-800">
+                    {programId != null ? programId : '— save Program Details first'}
+                  </span>
+                </p>
+              </CardHeader>
+              <CardContent className="min-w-0 overflow-x-auto px-4 py-4">
+                <AddUserInline
+                  programId={programmeId ?? 0} // ✅ IMPORTANT
+                  onSuccess={(users) => {
+                    console.log("Saved users:", users)
+                  }}
+                />
+              </CardContent>
+            </div>
           </Card>
 
           <Card className="rounded-md border border-neutral-200">
@@ -1381,24 +1679,35 @@ export default function IncentiveProgramConfig() {
                     Channel <span className="text-red-600">*</span>
                   </label>
                   <div className="rounded-md border border-neutral-200 bg-white p-3">
-                    <div className="space-y-2">
-                      {CHANNELS.map((c) => (
+                    <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                      {channelsLoading ? (
+                        <p className="text-xs text-neutral-500">Loading…</p>
+                      ) : channelOptions.length === 0 ? (
+                        <p className="text-xs text-neutral-500">
+                          No channels found
+                        </p>
+                      ) : (
+                        channelOptions.map((c) => (
                         <label
-                          key={c.key}
+                          key={c.id}
                           className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
                         >
                           <Checkbox
-                            checked={channels[c.key]}
-                            onCheckedChange={(checked) =>
-                              setChannels((prev) => ({
-                                ...prev,
-                                [c.key]: Boolean(checked),
-                              }))
-                            }
+                            checked={selectedChannelIds.includes(c.id)}
+                            onCheckedChange={(checked) => {
+                              const isChecked = Boolean(checked)
+                              setSelectedChannelIds((prev) => {
+                                if (isChecked) {
+                                  return prev.includes(c.id) ? prev : [...prev, c.id]
+                                }
+                                return prev.filter((id) => id !== c.id)
+                              })
+                            }}
                           />
                           {c.label}
                         </label>
-                      ))}
+                      ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1407,129 +1716,130 @@ export default function IncentiveProgramConfig() {
                   <label className="mb-2 block text-sm font-medium text-neutral-700">
                     Sub Channel <span className="text-red-600">*</span>
                   </label>
-                  <Select
-                    value={selectedSubChannelId || CASCADE_NONE}
-                    onValueChange={(v) =>
-                      setSelectedSubChannelId(v === CASCADE_NONE ? '' : v)
-                    }
-                    disabled={!anyChannelSelected || subChannelsLoading}
-                  >
-                    <SelectTrigger className="input-text !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
-                      <SelectValue
-                        placeholder={
-                          subChannelsLoading
-                            ? 'Loading…'
-                            : !anyChannelSelected
-                              ? 'Select Channel first'
-                              : subChannelOptions.length === 0
-                                ? 'No sub-channels'
-                                : 'Select Sub Channel'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={CASCADE_NONE}>
-                        {subChannelsLoading
-                          ? 'Loading…'
-                          : !anyChannelSelected
-                            ? 'Select Channel first'
-                            : subChannelOptions.length === 0
-                              ? 'No sub-channels'
-                              : 'Select Sub Channel'}
-                      </SelectItem>
-                      {subChannelOptions.map((o) => (
-                        <SelectItem key={o.id} value={String(o.id)}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="rounded-md border border-neutral-200 bg-white p-3">
+                    {!anyChannelSelected ? (
+                      <p className="text-xs text-neutral-500">
+                        Select Channel first
+                      </p>
+                    ) : subChannelsLoading ? (
+                      <p className="text-xs text-neutral-500">Loading…</p>
+                    ) : subChannelOptions.length === 0 ? (
+                      <p className="text-xs text-neutral-500">
+                        No sub-channels
+                      </p>
+                    ) : (
+                      <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                        {subChannelOptions.map((o) => (
+                          <label
+                            key={o.id}
+                            className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                          >
+                            <Checkbox
+                              checked={selectedSubChannelIds.includes(o.id)}
+                              onCheckedChange={(checked) => {
+                                const isChecked = Boolean(checked)
+                                setSelectedSubChannelIds((prev) => {
+                                  if (isChecked) {
+                                    return prev.includes(o.id)
+                                      ? prev
+                                      : [...prev, o.id]
+                                  }
+                                  return prev.filter((id) => id !== o.id)
+                                })
+                              }}
+                            />
+                            {o.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="md:col-span-1">
                   <label className="mb-2 block text-sm font-medium text-neutral-700">
                     Branches
                   </label>
-                  <Select
-                    value={selectedBranchId || CASCADE_NONE}
-                    onValueChange={(v) =>
-                      setSelectedBranchId(v === CASCADE_NONE ? '' : v)
-                    }
-                    disabled={!selectedSubChannelId || branchesLoading}
-                  >
-                    <SelectTrigger className="input-text !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
-                      <SelectValue
-                        placeholder={
-                          branchesLoading
-                            ? 'Loading…'
-                            : !selectedSubChannelId
-                              ? 'Select Sub Channel first'
-                              : branchOptions.length === 0
-                                ? 'No branches'
-                                : 'Select Branch'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={CASCADE_NONE}>
-                        {branchesLoading
-                          ? 'Loading…'
-                          : !selectedSubChannelId
-                            ? 'Select Sub Channel first'
-                            : branchOptions.length === 0
-                              ? 'No branches'
-                              : 'Select Branch'}
-                      </SelectItem>
-                      {branchOptions.map((o) => (
-                        <SelectItem key={o.id} value={String(o.id)}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="rounded-md border border-neutral-200 bg-white p-3">
+                    {!selectedSubChannelIds.length ? (
+                      <p className="text-xs text-neutral-500">
+                        Select Sub Channel first
+                      </p>
+                    ) : branchesLoading ? (
+                      <p className="text-xs text-neutral-500">Loading…</p>
+                    ) : branchOptions.length === 0 ? (
+                      <p className="text-xs text-neutral-500">No branches</p>
+                    ) : (
+                      <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                        {branchOptions.map((o) => (
+                          <label
+                            key={o.id}
+                            className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                          >
+                            <Checkbox
+                              checked={selectedBranchIds.includes(o.id)}
+                              onCheckedChange={(checked) => {
+                                const isChecked = Boolean(checked)
+                                setSelectedBranchIds((prev) => {
+                                  if (isChecked) {
+                                    return prev.includes(o.id)
+                                      ? prev
+                                      : [...prev, o.id]
+                                  }
+                                  return prev.filter((id) => id !== o.id)
+                                })
+                              }}
+                            />
+                            {o.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="md:col-span-1">
                   <label className="mb-2 block text-sm font-medium text-neutral-700">
                     Designations
                   </label>
-                  <Select
-                    value={selectedDesignationId || CASCADE_NONE}
-                    onValueChange={(v) =>
-                      setSelectedDesignationId(v === CASCADE_NONE ? '' : v)
-                    }
-                    disabled={!selectedBranchId || designationsLoading}
-                  >
-                    <SelectTrigger className="input-text !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
-                      <SelectValue
-                        placeholder={
-                          designationsLoading
-                            ? 'Loading…'
-                            : !selectedBranchId
-                              ? 'Select Branch first'
-                              : designationOptions.length === 0
-                                ? 'No designations'
-                                : 'Select Designation'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={CASCADE_NONE}>
-                        {designationsLoading
-                          ? 'Loading…'
-                          : !selectedBranchId
-                            ? 'Select Branch first'
-                            : designationOptions.length === 0
-                              ? 'No designations'
-                              : 'Select Designation'}
-                      </SelectItem>
-                      {designationOptions.map((o) => (
-                        <SelectItem key={o.id} value={String(o.id)}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="rounded-md border border-neutral-200 bg-white p-3">
+                    {!selectedBranchIds.length ? (
+                      <p className="text-xs text-neutral-500">
+                        Select Branch first
+                      </p>
+                    ) : designationsLoading ? (
+                      <p className="text-xs text-neutral-500">Loading…</p>
+                    ) : designationOptions.length === 0 ? (
+                      <p className="text-xs text-neutral-500">
+                        No designations
+                      </p>
+                    ) : (
+                      <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                        {designationOptions.map((o) => (
+                          <label
+                            key={o.id}
+                            className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                          >
+                            <Checkbox
+                              checked={selectedDesignationIds.includes(o.id)}
+                              onCheckedChange={(checked) => {
+                                const isChecked = Boolean(checked)
+                                setSelectedDesignationIds((prev) => {
+                                  if (isChecked) {
+                                    return prev.includes(o.id)
+                                      ? prev
+                                      : [...prev, o.id]
+                                  }
+                                  return prev.filter((id) => id !== o.id)
+                                })
+                              }}
+                            />
+                            {o.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="mt-4 flex items-center justify-end">
@@ -1557,8 +1867,79 @@ export default function IncentiveProgramConfig() {
               </p>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <div className="rounded-md border border-dashed border-neutral-300 bg-white p-4 text-sm text-neutral-500">
-                No cycles selected yet.
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-neutral-700">
+                      Select Program
+                    </label>
+                    <Select
+                      value={selectedPastProgramId || CASCADE_NONE}
+                      onValueChange={(v) =>
+                        setSelectedPastProgramId(v === CASCADE_NONE ? '' : v)
+                      }
+                    >
+                      <SelectTrigger className="input-text !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
+                        <SelectValue
+                          placeholder={
+                            pastProgramOptions.length
+                              ? 'Select a past cycle program'
+                              : 'No programs found'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={CASCADE_NONE}>
+                          Select a program
+                        </SelectItem>
+                        {pastProgramOptions.map((o) => (
+                          <SelectItem key={o.id} value={String(o.id)}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    {selectedPastProgramId
+                      ? `Showing qualifications for programId: ${selectedPastProgramId}`
+                      : 'Pick a program to view past qualifications.'}
+                  </div>
+                </div>
+
+                <DataTable
+                  columns={(() => {
+                    const first = pastQualifications[0] as any
+                    const keys =
+                      first && typeof first === 'object'
+                        ? Object.keys(first).slice(0, 8)
+                        : []
+                    if (!keys.length) {
+                      return [
+                        {
+                          header: 'Result',
+                          accessor: (row: any) => JSON.stringify(row),
+                        },
+                      ]
+                    }
+                    return keys.map((k) => ({
+                      header: k,
+                      accessor: (row: any) => {
+                        const v = row?.[k]
+                        if (v == null) return '—'
+                        if (typeof v === 'object') return JSON.stringify(v)
+                        return String(v)
+                      },
+                    }))
+                  })()}
+                  data={pastQualifications as any[]}
+                  loading={pastQualificationsLoading}
+                  noDataMessage={
+                    selectedPastProgramId
+                      ? 'No qualifications found for this program.'
+                      : 'Select a program to load qualifications.'
+                  }
+                />
               </div>
             </CardContent>
           </Card>
