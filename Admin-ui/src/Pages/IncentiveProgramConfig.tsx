@@ -23,11 +23,19 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import type { IKpi, IIncentiveProgram } from '@/models/incentive'
-import { Badge } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import SelectionExpressionBuilder from '@/components/SelectionExpressionBuilder'
+import {
+  QueryBuilder,
+  buildFieldsFromKpi,
+  buildFieldsFromSelectedKpis,
+  createEmptyGroup,
+  queryGroupToSql,
+  toVarName,
+  type QueryGroupNode,
+} from '@/components/query-builder'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
-import { AddUserDialog, AddUserInline } from '@/components/incentives/AddUserDialog'
+import { AddUserInline } from '@/components/incentives/AddUserDialog'
 import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
 import DataTable from '@/components/table/DataTable'
 
@@ -36,20 +44,6 @@ type WeightageOption = { key: string; id: number | null; label: string }
 type CascadeOption = { id: number; label: string }
 
 type PastQualificationRow = Record<string, unknown>
-
-function toVarName(input: string): string {
-  const base = (input ?? '')
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-
-  if (!base) return 'kpi'
-  // identifiers used in expression builder should start with a letter/underscore
-  if (/^[a-z_]/.test(base)) return base
-  return `kpi_${base}`
-}
 
 function extractCascadeRows(responseBody: any, preferredKeys: string[]): any[] {
   if (!responseBody || typeof responseBody !== 'object') return []
@@ -157,7 +151,11 @@ interface SlabState {
   endDate: string
   selectedKPIs: Array<SelectedKPI>
   criteriaTab: 'selected-kpi' | 'expression'
+  /** JSON query tree for Selection Expression tab (slab-wide) */
+  selectionQuery: QueryGroupNode
   selectionExpression: string
+  /** Per–selected-KPI filter query (JSON) */
+  kpiCriteriaQueries: Record<string, QueryGroupNode>
   incentiveExpression: string
 }
 
@@ -210,6 +208,22 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
   const expressionRef = useRef<HTMLTextAreaElement>(null)
   const [kpiSearch, setKpiSearch] = useState('')
 
+  useEffect(() => {
+    let next = slab.kpiCriteriaQueries
+    let changed = false
+    for (const sel of slab.selectedKPIs) {
+      if (next[sel.kpiId]) continue
+      const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
+      if (!kpi) continue
+      changed = true
+      next = {
+        ...next,
+        [sel.kpiId]: createEmptyGroup(buildFieldsFromKpi(kpi)),
+      }
+    }
+    if (changed) onChange({ kpiCriteriaQueries: next })
+  }, [slab.selectedKPIs, slab.kpiCriteriaQueries, kpiLibrary, onChange])
+
   const filteredLibrary = useMemo(
     () =>
       kpiLibrary.filter(
@@ -240,12 +254,34 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
   const isKPISelected = (id: string) => slab.selectedKPIs.some((s) => s.kpiId === id)
 
   const toggleKPI = (id: string) => {
+    if (slab.selectedKPIs.some((s) => s.kpiId === id)) {
+      const { [id]: _removed, ...restQueries } = slab.kpiCriteriaQueries
+      onChange({
+        selectedKPIs: slab.selectedKPIs.filter((s) => s.kpiId !== id),
+        kpiCriteriaQueries: restQueries,
+      })
+      return
+    }
+
+    const kpi = kpiLibrary.find((k) => k.id === id)
+    const fields = kpi ? buildFieldsFromKpi(kpi) : []
     onChange({
-      selectedKPIs: slab.selectedKPIs.some((s) => s.kpiId === id)
-        ? slab.selectedKPIs.filter((s) => s.kpiId !== id)
-        : [...slab.selectedKPIs, { kpiId: id, weight: 1 }],
+      selectedKPIs: [...slab.selectedKPIs, { kpiId: id, weight: 1 }],
+      kpiCriteriaQueries: {
+        ...slab.kpiCriteriaQueries,
+        [id]: createEmptyGroup(fields),
+      },
     })
   }
+
+  const selectionExpressionFields = useMemo(
+    () =>
+      buildFieldsFromSelectedKpis(
+        slab.selectedKPIs.map((s) => s.kpiId),
+        kpiLibrary,
+      ),
+    [slab.selectedKPIs, kpiLibrary],
+  )
 
   const updateSelectedKPI = (id: string, updates: Partial<Omit<SelectedKPI, 'kpiId'>>) => {
     onChange({
@@ -307,7 +343,8 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
               Select KPIs for this slab. These KPIs become available in expressions.
             </p>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
+          <CardContent className="px-4 pb-4">Filter Criteria
+
             {kpiLibrary.length === 0 ? (
               <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
                 <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
@@ -444,6 +481,8 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                     {slab.selectedKPIs.map((sel, idx) => {
                       const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
                       if (!kpi) return null
+                      const fields = buildFieldsFromKpi(kpi)
+                      const query = slab.kpiCriteriaQueries[sel.kpiId] ?? createEmptyGroup(fields)
                       return (
                         <div key={sel.kpiId} className="space-y-2">
                           {idx > 0 && <Separator />}
@@ -483,6 +522,21 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                               (relative weight in incentive formula)
                             </span>
                           </div>
+
+                          <div className="pt-1">
+                            <QueryBuilder
+                              fields={fields}
+                              value={query}
+                              onChange={(next) =>
+                                onChange({
+                                  kpiCriteriaQueries: { ...slab.kpiCriteriaQueries, [sel.kpiId]: next },
+                                })
+                              }
+                              title="KPI filter (optional)"
+                              description="This filter applies only to this KPI when it is selected."
+                              className="mt-2"
+                            />
+                          </div>
                         </div>
                       )
                     })}
@@ -492,10 +546,17 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
 
               {/* Tab: Selection Expression */}
               <TabsContent value="expression">
-                <SelectionExpressionBuilder
-                  expression={slab.selectionExpression}
-                  onChange={(expr) => onChange({ selectionExpression: expr })}
-                  availableFields={kpiFields}
+                <QueryBuilder
+                  fields={selectionExpressionFields}
+                  value={slab.selectionQuery}
+                  onChange={(next) =>
+                    onChange({
+                      selectionQuery: next,
+                      selectionExpression: queryGroupToSql(next, selectionExpressionFields),
+                    })
+                  }
+                  title="Selection Expression"
+                  description="Build eligibility criteria with AND/OR and nested groups. This generates an SQL WHERE fragment."
                 />
               </TabsContent>
             </Tabs>
@@ -595,7 +656,9 @@ const createSlab = (): SlabState => ({
   endDate: '',
   selectedKPIs: [],
   criteriaTab: 'selected-kpi',
+  selectionQuery: createEmptyGroup([]),
   selectionExpression: '',
+  kpiCriteriaQueries: {},
   incentiveExpression: '',
 })
 
