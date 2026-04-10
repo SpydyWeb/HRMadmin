@@ -25,7 +25,9 @@ import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import type { IKpi, IIncentiveProgram } from '@/models/incentive'
 import { Badge } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import SelectionExpressionBuilder from '@/components/SelectionExpressionBuilder'
+import { QueryBuilder } from '@/components/QueryBuilder'
+import type { QueryGroupType } from '@/components/QueryBuilder'
+import { createGroup } from '@/components/QueryBuilder'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
 import { AddUserDialog, AddUserInline } from '@/components/incentives/AddUserDialog'
 import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
@@ -140,6 +142,7 @@ interface SlabState {
   selectedKPIs: Array<SelectedKPI>
   criteriaTab: 'selected-kpi' | 'expression'
   selectionExpression: string
+  filterQuery: QueryGroupType
   incentiveExpression: string
 }
 
@@ -330,8 +333,9 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
             <CardTitle className="text-base">Filter Criteria</CardTitle>
             <p className="mt-0.5 text-xs text-neutral-500">
               Define which sales personnel qualify for this slab. Use the{' '}
-              <strong>Selected KPI</strong> tab to configure KPI weights, or switch to{' '}
-              <strong>Selection Expression</strong> for advanced SQL-based filtering.
+              <strong>Selected KPI</strong> tab to configure KPI-based criteria, or switch to{' '}
+              <strong>Filter Expression</strong> to build a visual query with AND/OR rules and
+              nested groups.
             </p>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -348,7 +352,7 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                 </TabsTrigger>
                 <TabsTrigger value="expression" className="gap-1.5">
                   <FiFilter className="h-3.5 w-3.5" />
-                  Selection Expression
+                  Filter Expression
                 </TabsTrigger>
               </TabsList>
 
@@ -412,12 +416,12 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                 )}
               </TabsContent>
 
-              {/* Tab: Selection Expression */}
+              {/* Tab: Selection Expression → Query Builder */}
               <TabsContent value="expression">
-                <SelectionExpressionBuilder
-                  expression={slab.selectionExpression}
-                  onChange={(expr) => onChange({ selectionExpression: expr })}
-                  availableFields={kpiFields}
+                <QueryBuilder
+                  query={slab.filterQuery}
+                  onChange={(q) => onChange({ filterQuery: q })}
+                  extraFields={kpiFields}
                 />
               </TabsContent>
             </Tabs>
@@ -518,6 +522,7 @@ const createSlab = (): SlabState => ({
   selectedKPIs: [],
   criteriaTab: 'selected-kpi',
   selectionExpression: '',
+  filterQuery: createGroup('AND'),
   incentiveExpression: '',
 })
 
