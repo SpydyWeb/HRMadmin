@@ -4,6 +4,7 @@ import { storage } from '@/utils/storage'
 import { HMSService } from './hmsService'
 import { authStore } from '@/store/authStore'
 import { auth } from '@/auth'
+import { parseStoredAuth } from '@/utils/parseStoredAuth'
 
 /** Prefer VITE_API_URL; in dev, empty base uses Vite proxy → node-proxy (see vite.config.ts). */
 function resolveAxiosBaseURL(): string {
@@ -68,15 +69,10 @@ api.interceptors.request.use((config) => {
   const stored = storage.get(TOKEN_KEY)
 
   if (stored) {
-    try {
-      const jwt = typeof stored === 'string' ? JSON.parse(stored) : stored
-
-      if (jwt?.token) {
-        config.headers = config.headers ?? {}
-        config.headers.Authorization = `Bearer ${jwt.token}`
-      }
-    } catch {
-      console.warn('Invalid token in storage')
+    const session = parseStoredAuth(stored)
+    if (session?.token) {
+      config.headers = config.headers ?? {}
+      config.headers.Authorization = `Bearer ${session.token}`
     }
   }
 

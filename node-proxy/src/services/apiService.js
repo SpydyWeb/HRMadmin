@@ -572,6 +572,27 @@ const getKpisList = (data = {}, headers = {}) => {
 const upsertProgramWeightages = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
 };
+const getProgramsList = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
+};
+const getPastQualifications = (data = {}, headers = {}) => {
+  const programId = data?.programId;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  return apiClient.post(`${APIRoutes.INCENTIVE_GET_PAST_QUALIFICATIONS}/${programId}`, {}, { headers });
+};
+const getSelectedProgramKpis = (data = {}, headers = {}) => {
+  const programId = data?.programId;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_SELECTED_PROGRAM_KPIS}/${programId}`,
+    {},
+    { headers }
+  );
+};
 const getFiltersCascade = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GET_FILTERS_CASCADE, data, { headers });
 };
@@ -695,6 +716,9 @@ module.exports = {
   upsertProgram,
   getKpisList,
   upsertProgramWeightages,
+  getProgramsList,
+  getPastQualifications,
+  getSelectedProgramKpis,
   getFiltersCascade,
   upsertProgramFilters,
   fetchAllBranches,

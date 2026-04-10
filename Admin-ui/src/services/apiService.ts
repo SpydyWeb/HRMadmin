@@ -5,6 +5,7 @@ import type { IHRMChunks } from '@/models/authentication'
 import type { IEncryptAPIResponse } from '@/models/api'
 import { auth } from '@/auth'
 import { useEncryption } from '@/store/encryptionStore'
+import { parseStoredAuth } from '@/utils/parseStoredAuth'
 
 //  Helper: Wait until HRM_Key is available
 async function ensureEncryptionKeyReady(
@@ -65,11 +66,14 @@ export async function callApi<T>(
   args: Array<unknown> = [],
   headers: Record<string, string> = {},
 ): Promise<T> {
+  const session = parseStoredAuth(auth.getToken())
+  const bearer = session?.token ? `Bearer ${session.token}` : ''
+
   return encryptedPost(APIRoutes.PROXY, {
     fn,
     args,
     headers: {
-      Authorization: `Bearer ${JSON.parse(auth.getToken())?.token}`,
+      ...(bearer ? { Authorization: bearer } : {}),
       ...headers,
     },
   }) as Promise<T>

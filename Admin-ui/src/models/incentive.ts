@@ -198,6 +198,24 @@ export interface IKpisListResponse {
   kpis: IKpisListItem[]
 }
 
+// ─── Selected Program KPIs ─────────────────────────────────────────────────────
+
+export interface ISelectedProgramKpi {
+  kpiId: number
+  kpiName: string
+  kpiDescription?: string
+  dataSources?: IKpiDataSource[]
+  groupBy?: string[]
+  timeWindow?: string
+}
+
+export interface ISelectedProgramKpisResponse {
+  programKpis?: ISelectedProgramKpi[]
+  kpis?: ISelectedProgramKpi[]
+  kpiLibrary?: ISelectedProgramKpi[]
+  items?: ISelectedProgramKpi[]
+}
+
 // ─── Program Weightages Upsert ────────────────────────────────────────────────
 
 export interface IUpsertProgramWeightagesRequest {
@@ -208,6 +226,12 @@ export interface IUpsertProgramWeightagesRequest {
 // ─── Cascade Filters ──────────────────────────────────────────────────────────
 
 export interface IFiltersCascadeParams {
+  // API supports multi-select payload (preferred)
+  channelIds?: number[]
+  subChannelIds?: number[]
+  branchIds?: number[]
+
+  // Backward-compatible single-select payload (older callers)
   channelId?: number
   subChannelId?: number
   branchId?: number
@@ -217,8 +241,13 @@ export interface IFiltersCascadeParams {
 
 export interface IUpsertProgramFiltersRequest {
   programId: number
-  channelId: number
-  subChannelId?: number
-  branchIds: number[]
-  designationId?: number
+  filters: Array<{
+    filterId: number
+    programId: number
+    channelIds: number[]
+    subChannelIds: number[]
+    branchIds: number[]
+    designationIds: number[]
+    isActive: boolean
+  }>
 }
