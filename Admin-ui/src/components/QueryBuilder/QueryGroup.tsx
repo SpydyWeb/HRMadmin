@@ -98,7 +98,7 @@ const QueryGroup: React.FC<QueryGroupProps> = ({
           Add Rule
         </button>
 
-        {/* Add nested group (only up to depth 3 to avoid infinite nesting) */}
+        {/* Add nested group (max depth 3 to keep the UI manageable and avoid runaway nesting) */}
         {depth < 3 && (
           <button
             type="button"
