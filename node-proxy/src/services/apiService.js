@@ -599,6 +599,29 @@ const getFiltersCascade = (data = {}, headers = {}) => {
 const upsertProgramFilters = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
 };
+
+const GetKpiObjects = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_KPI_OBJECTS, data, { headers });
+};
+
+const GetKpiFields = (data = {}, headers = {}) => {
+  const objectName = data?.objectName;
+  if (!objectName) {
+    throw new Error("objectName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_KPI_FIELDS}?objectName=${encodeURIComponent(objectName)}`;
+  return apiClient.post(url, {}, { headers });
+};
+
+const UpsertKpi = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -721,6 +744,9 @@ module.exports = {
   getSelectedProgramKpis,
   getFiltersCascade,
   upsertProgramFilters,
+  GetKpiObjects,
+  GetKpiFields,
+  UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,

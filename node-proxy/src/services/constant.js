@@ -80,6 +80,9 @@ const APIRoutes = {
   INCENTIVE_GET_PAST_QUALIFICATIONS: "/api/incentive/GetPastQualifications",
   GET_FILTERS_CASCADE: "/api/incentive/filters/cascade",
   UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
+  INCENTIVE_GET_KPI_OBJECTS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiObjects",
+  INCENTIVE_GET_KPI_FIELDS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiFields",
+  INCENTIVE_UPSERT_KPI: "http://hmsapi.ezytekapis.com/api/incentive/UpsertKpi",
 
 };
 

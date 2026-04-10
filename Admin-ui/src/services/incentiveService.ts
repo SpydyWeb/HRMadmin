@@ -343,6 +343,50 @@ export const incentiveService = {
     }
   },
 
+  // ─── KPI Builder ─────────────────────────────────────────────────────────────
+
+  /** POST /api/incentive/GetKpiObjects — list KPI object options */
+  getKpiObjects: async () => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_KPI_OBJECTS,
+        [{}],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiObjects error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetKpiFields?objectName=... — list KPI field options */
+  getKpiFields: async (objectName: string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_KPI_FIELDS,
+        [{ objectName }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiFields error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/UpsertKpi — create/update KPI from builder */
+  upsertKpi: async (data: Record<string, unknown>) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_UPSERT_KPI,
+        [data],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.upsertKpi error:', error)
+      throw error
+    }
+  },
+
   // ─── Program Weightages Upsert ────────────────────────────────────────────
 
   /** POST /api/incentive/UpsertProgramWeightages — save weightages for a program */
