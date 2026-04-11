@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { MdOutlineInfo } from 'react-icons/md'
-import { FiChevronRight, FiCode, FiFilter, FiInfo, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
+import { FiChevronRight, FiCode, FiDatabase, FiFilter, FiInfo, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 import { useNavigate } from '@tanstack/react-router'
 import { parse } from 'date-fns'
 
@@ -34,6 +34,7 @@ import {
   toVarName,
   type QueryGroupNode,
 } from '@/components/query-builder'
+import { useTableSchema } from '@/hooks/useTableSchema'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
 import { AddUserInline } from '@/components/incentives/AddUserDialog'
 import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
@@ -150,13 +151,17 @@ interface SlabState {
   startDate: string
   endDate: string
   selectedKPIs: Array<SelectedKPI>
-  criteriaTab: 'selected-kpi' | 'expression'
+  criteriaTab: 'selected-kpi' | 'expression' | 'table-filter'
   /** JSON query tree for Selection Expression tab (slab-wide) */
   selectionQuery: QueryGroupNode
   selectionExpression: string
   /** Per–selected-KPI filter query (JSON) */
   kpiCriteriaQueries: Record<string, QueryGroupNode>
   incentiveExpression: string
+  /** Table name selected in the Table Filter tab */
+  selectedFilterTable: string
+  /** JSON query tree for the Table Filter tab */
+  tableFilterQuery: QueryGroupNode
 }
 
 // ─── Agent Filter Types ───────────────────────────────────────────────────────
@@ -202,6 +207,123 @@ interface SlabSectionProps {
   onChange: (updates: Partial<SlabState>) => void
   onRemove: () => void
   kpiLibrary: KPIEntry[]
+}
+
+/** Predefined list of tables users can filter on */
+const AVAILABLE_TABLES = [
+  { value: 'channel_master', label: 'Channel Master' },
+  { value: 'agent_master', label: 'Agent Master' },
+  { value: 'policy_master', label: 'Policy Master' },
+  { value: 'product_master', label: 'Product Master' },
+  { value: 'branch_master', label: 'Branch Master' },
+  { value: 'designation_master', label: 'Designation Master' },
+  { value: 'sales_activity', label: 'Sales Activity' },
+  { value: 'commission_master', label: 'Commission Master' },
+]
+
+/** Inner component that owns the table schema fetch for the active slab */
+function TableFilterTab({
+  slab,
+  onChange,
+}: {
+  slab: SlabState
+  onChange: (updates: Partial<SlabState>) => void
+}) {
+  const { fields, loading, error } = useTableSchema(slab.selectedFilterTable)
+
+  // When fields load (or table changes) and the existing query has no rules, seed it
+  useEffect(() => {
+    if (!slab.selectedFilterTable || fields.length === 0) return
+    const q = slab.tableFilterQuery
+    if (!q || q.children.length === 0) {
+      onChange({ tableFilterQuery: createEmptyGroup(fields) })
+    }
+  }, [fields, slab.selectedFilterTable]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleTableChange = (tableName: string) => {
+    onChange({
+      selectedFilterTable: tableName,
+      tableFilterQuery: createEmptyGroup([]),
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Table selector */}
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold text-neutral-600">
+          Select Table
+        </label>
+        <Select value={slab.selectedFilterTable || '__none__'} onValueChange={handleTableChange}>
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue placeholder="Choose a table to filter on…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__" disabled>
+              — Choose a table —
+            </SelectItem>
+            {AVAILABLE_TABLES.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                <span className="flex items-center gap-2">
+                  <FiDatabase className="h-3.5 w-3.5 text-neutral-400" />
+                  {t.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="mt-1 text-[11px] text-neutral-400">
+          Pick a database table to dynamically load its columns as filter fields.
+        </p>
+      </div>
+
+      {/* Schema loading / error states */}
+      {slab.selectedFilterTable && loading && (
+        <div className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-500">
+          <svg className="h-4 w-4 animate-spin text-teal-500" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Loading schema for <strong>{slab.selectedFilterTable}</strong>…
+        </div>
+      )}
+
+      {slab.selectedFilterTable && !loading && error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+          <p className="font-semibold">Failed to load schema</p>
+          <p className="mt-0.5">{error}</p>
+        </div>
+      )}
+
+      {slab.selectedFilterTable && !loading && !error && fields.length === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+          No columns returned for <strong>{slab.selectedFilterTable}</strong>. The table may not
+          exist or the API returned an empty schema.
+        </div>
+      )}
+
+      {/* Query builder — shown when fields are available */}
+      {fields.length > 0 && (
+        <QueryBuilder
+          fields={fields}
+          value={slab.tableFilterQuery ?? createEmptyGroup(fields)}
+          onChange={(next) => onChange({ tableFilterQuery: next })}
+          title={`Filter on ${AVAILABLE_TABLES.find((t) => t.value === slab.selectedFilterTable)?.label ?? slab.selectedFilterTable}`}
+          description="Build row-level filter conditions using table columns. Conditions are combined with AND/OR logic."
+        />
+      )}
+
+      {/* Empty state — no table selected yet */}
+      {!slab.selectedFilterTable && (
+        <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
+          <FiDatabase className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
+          <p className="text-xs text-neutral-500">
+            Select a table above to load its columns and start building filter conditions.
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibrary }: SlabSectionProps) => {
@@ -465,6 +587,10 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                   <FiFilter className="h-3.5 w-3.5" />
                   Selection Expression
                 </TabsTrigger>
+                <TabsTrigger value="table-filter" className="gap-1.5">
+                  <FiDatabase className="h-3.5 w-3.5" />
+                  Table Filter
+                </TabsTrigger>
               </TabsList>
 
               {/* Tab: Selected KPI */}
@@ -558,6 +684,11 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                   title="Selection Expression"
                   description="Build eligibility criteria with AND/OR and nested groups. This generates an SQL WHERE fragment."
                 />
+              </TabsContent>
+
+              {/* Tab: Table Filter */}
+              <TabsContent value="table-filter">
+                <TableFilterTab slab={slab} onChange={onChange} />
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -660,6 +791,8 @@ const createSlab = (): SlabState => ({
   selectionExpression: '',
   kpiCriteriaQueries: {},
   incentiveExpression: '',
+  selectedFilterTable: '',
+  tableFilterQuery: createEmptyGroup([]),
 })
 
 

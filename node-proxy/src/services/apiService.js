@@ -622,6 +622,15 @@ const UpsertKpi = (data = {}, headers = {}) => {
     },
   });
 };
+
+const GetTableSchema = (data = {}, headers = {}) => {
+  const tableName = data?.tableName;
+  if (!tableName) {
+    throw new Error("tableName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
+  return apiClient.post(url, {}, { headers });
+};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -747,6 +756,7 @@ module.exports = {
   GetKpiObjects,
   GetKpiFields,
   UpsertKpi,
+  GetTableSchema,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,

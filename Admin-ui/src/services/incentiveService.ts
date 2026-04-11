@@ -345,6 +345,20 @@ export const incentiveService = {
 
   // ─── KPI Builder ─────────────────────────────────────────────────────────────
 
+  /** POST /api/incentive/GetTableSchema?tableName=... — retrieve column schema for a table */
+  getTableSchema: async (tableName: string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_TABLE_SCHEMA,
+        [{ tableName }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getTableSchema error:', error)
+      throw error
+    }
+  },
+
   /** POST /api/incentive/GetKpiObjects — list KPI object options */
   getKpiObjects: async () => {
     try {

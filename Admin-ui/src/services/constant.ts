@@ -87,6 +87,7 @@ export const APIRoutes = {
   INCENTIVE_GET_KPI_OBJECTS: 'GetKpiObjects',
   INCENTIVE_GET_KPI_FIELDS: 'GetKpiFields',
   INCENTIVE_UPSERT_KPI: 'UpsertKpi',
+  INCENTIVE_GET_TABLE_SCHEMA: 'GetTableSchema',
 }
 
 export const LoginConstants = {
