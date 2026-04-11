@@ -40,7 +40,7 @@ function mapDataType(raw: string | undefined): FieldType {
     t.includes('real') ||
     t.includes('money') ||
     t.includes('number') ||
-    t === 'bit'
+    t === 'bit' // SQL bit (0/1) treated as number since QueryBuilder has no boolean type
   ) {
     return 'number'
   }
@@ -99,6 +99,12 @@ interface TableSchemaState {
   fields: QueryFieldConfig[]
   loading: boolean
   error: string | null
+}
+
+/** Reusable shape for errors returned by API call rejections */
+interface ApiError {
+  response?: { data?: { message?: string; errorMessage?: string } }
+  message?: string
 }
 
 /** Maximum number of table schemas to keep in the module-level cache */
@@ -173,13 +179,12 @@ export function useTableSchema(tableName: string): TableSchemaState {
         schemaCache.set(tableName, fields)
         setState({ fields, loading: false, error: null })
       })
-      .catch((err: unknown) => {
+      .catch((err: ApiError) => {
         if (cancelled || latestTableName.current !== tableName) return
-        const e = err as { response?: { data?: { message?: string; errorMessage?: string } }; message?: string }
         const message =
-          e?.response?.data?.message ??
-          e?.response?.data?.errorMessage ??
-          e?.message ??
+          err?.response?.data?.message ??
+          err?.response?.data?.errorMessage ??
+          err?.message ??
           'Failed to load table schema'
         setState({ fields: [], loading: false, error: message })
       })

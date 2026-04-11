@@ -631,6 +631,7 @@ const GetTableSchema = (data = {}, headers = {}) => {
   if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
     throw new Error("tableName must contain only alphanumeric characters and underscores");
   }
+  // The external API requires POST even for read-only schema requests
   const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
   return apiClient.post(url, {}, { headers });
 };

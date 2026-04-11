@@ -221,6 +221,9 @@ const AVAILABLE_TABLES = [
   { value: 'commission_master', label: 'Commission Master' },
 ]
 
+/** Lookup map for O(1) table label resolution */
+const AVAILABLE_TABLES_MAP = new Map(AVAILABLE_TABLES.map((t) => [t.value, t.label]))
+
 /** Placeholder value used by Radix Select when no table is selected */
 const TABLE_SELECT_NONE = '__table_none__'
 
@@ -246,6 +249,7 @@ function TableFilterTab({
   }, [fields, slab.selectedFilterTable, slab.tableFilterQuery])
 
   const handleTableChange = (tableName: string) => {
+    if (tableName === TABLE_SELECT_NONE) return
     onChange({
       selectedFilterTable: tableName,
       tableFilterQuery: createEmptyGroup([]),
@@ -313,7 +317,7 @@ function TableFilterTab({
           fields={fields}
           value={slab.tableFilterQuery ?? createEmptyGroup(fields)}
           onChange={(next) => onChange({ tableFilterQuery: next })}
-          title={`Filter on ${AVAILABLE_TABLES.find((t) => t.value === slab.selectedFilterTable)?.label ?? slab.selectedFilterTable}`}
+          title={`Filter on ${AVAILABLE_TABLES_MAP.get(slab.selectedFilterTable) ?? slab.selectedFilterTable}`}
           description="Build row-level filter conditions using table columns. Conditions are combined with AND/OR logic."
         />
       )}
