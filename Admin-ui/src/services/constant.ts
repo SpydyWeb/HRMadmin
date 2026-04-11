@@ -86,6 +86,7 @@ export const APIRoutes = {
   UPSERT_PROGRAM_FILTERS: 'upsertProgramFilters',
   INCENTIVE_GET_KPI_OBJECTS: 'GetKpiObjects',
   INCENTIVE_GET_KPI_FIELDS: 'GetKpiFields',
+  INCENTIVE_GET_TABLE_SCHEMA: 'GetTableSchema',
   INCENTIVE_UPSERT_KPI: 'UpsertKpi',
 }
 

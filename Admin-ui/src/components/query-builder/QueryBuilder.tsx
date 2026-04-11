@@ -16,6 +16,11 @@ interface QueryBuilderProps {
   title?: string
   description?: string
   className?: string
+  /**
+   * `simple` — slab “Selected KPI” filters: flat rules only (AND/OR), common comparisons,
+   * no nested groups, no SQL preview panel.
+   */
+  variant?: 'default' | 'simple'
 }
 
 export function QueryBuilder({
@@ -26,7 +31,9 @@ export function QueryBuilder({
   title = 'Query builder',
   description,
   className = '',
+  variant = 'default',
 }: QueryBuilderProps) {
+  const simple = variant === 'simple'
   const sql = useMemo(() => queryGroupToSql(value, fields), [value, fields])
 
   const emit = (next: QueryGroupNode) => {
@@ -79,6 +86,8 @@ export function QueryBuilder({
         fields={fields}
         depth={0}
         isRoot
+        allowNestedGroups={!simple}
+        operatorSet={simple ? 'simple' : 'default'}
         onPatch={handleGroupPatch}
         onRulePatch={handleRulePatch}
         onRemoveNode={handleRemove}
@@ -86,15 +95,17 @@ export function QueryBuilder({
         onAddGroup={handleAddGroup}
       />
 
-      <div className="rounded-lg border border-slate-200 bg-slate-950/95 p-3 text-slate-100 shadow-inner">
-        <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-300">
-          <FiCode className="h-3.5 w-3.5" />
-          Generated SQL (preview)
+      {!simple && (
+        <div className="rounded-lg border border-slate-200 bg-slate-950/95 p-3 text-slate-100 shadow-inner">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <FiCode className="h-3.5 w-3.5" />
+            Generated SQL (preview)
+          </div>
+          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all font-mono text-[11px] leading-relaxed text-emerald-300/95">
+            {sql.trim() ? sql : '— add rules to see SQL —'}
+          </pre>
         </div>
-        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all font-mono text-[11px] leading-relaxed text-emerald-300/95">
-          {sql.trim() ? sql : '— add rules to see SQL —'}
-        </pre>
-      </div>
+      )}
     </div>
   )
 }

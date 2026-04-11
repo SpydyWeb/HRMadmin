@@ -82,6 +82,7 @@ const APIRoutes = {
   UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
   INCENTIVE_GET_KPI_OBJECTS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiObjects",
   INCENTIVE_GET_KPI_FIELDS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiFields",
+  INCENTIVE_GET_TABLE_SCHEMA: "http://hmsapi.ezytekapis.com/api/incentive/GetTableSchema",
   INCENTIVE_UPSERT_KPI: "http://hmsapi.ezytekapis.com/api/incentive/UpsertKpi",
 
 };

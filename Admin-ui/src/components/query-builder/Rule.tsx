@@ -10,13 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Button from '@/components/ui/button'
 import type { QueryFieldConfig, QueryRuleNode } from './types'
-import { operatorsForField } from './defaults'
+import { operatorsForField, simpleOperatorsForField } from './defaults'
 
 const NULLISH_OPS = new Set(['IS NULL', 'IS NOT NULL'])
 
 interface RuleProps {
   rule: QueryRuleNode
   fields: QueryFieldConfig[]
+  operatorSet?: 'default' | 'simple'
   onChange: (patch: Partial<QueryRuleNode>) => void
   onRemove: () => void
   canRemove: boolean
@@ -26,9 +27,17 @@ function fieldByName(fields: QueryFieldConfig[], name: string): QueryFieldConfig
   return fields.find((f) => f.name === name)
 }
 
-export function Rule({ rule, fields, onChange, onRemove, canRemove }: RuleProps) {
+export function Rule({
+  rule,
+  fields,
+  operatorSet = 'default',
+  onChange,
+  onRemove,
+  canRemove,
+}: RuleProps) {
   const cfg = fieldByName(fields, rule.field)
-  const ops = operatorsForField(cfg)
+  const ops =
+    operatorSet === 'simple' ? simpleOperatorsForField(cfg) : operatorsForField(cfg)
   const hideValues = NULLISH_OPS.has(rule.operator)
   const isBetween = rule.operator.toUpperCase() === 'BETWEEN'
   const isInFamily = rule.operator.toUpperCase() === 'IN' || rule.operator.toUpperCase() === 'NOT IN'
@@ -37,7 +46,8 @@ export function Rule({ rule, fields, onChange, onRemove, canRemove }: RuleProps)
 
   const handleFieldChange = (name: string) => {
     const next = fieldByName(fields, name)
-    const nextOps = operatorsForField(next)
+    const nextOps =
+      operatorSet === 'simple' ? simpleOperatorsForField(next) : operatorsForField(next)
     onChange({
       field: name,
       operator: nextOps[0] ?? '=',

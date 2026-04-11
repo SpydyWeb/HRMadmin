@@ -18,6 +18,10 @@ interface GroupProps {
   fields: QueryFieldConfig[]
   depth: number
   isRoot: boolean
+  /** When false, hide nested groups (simple slab KPI filters). Default true. */
+  allowNestedGroups?: boolean
+  /** Use narrowed operator list on each rule. */
+  operatorSet?: 'default' | 'simple'
   onPatch: (id: string, patch: Partial<QueryGroupNode>) => void
   onRulePatch: (id: string, patch: import('./types').QueryRuleNode | Partial<import('./types').QueryRuleNode>) => void
   onRemoveNode: (id: string) => void
@@ -30,6 +34,8 @@ export function Group({
   fields,
   depth,
   isRoot,
+  allowNestedGroups = true,
+  operatorSet = 'default',
   onPatch,
   onRulePatch,
   onRemoveNode,
@@ -72,16 +78,18 @@ export function Group({
             <FiPlus className="h-3.5 w-3.5" />
             Rule
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 text-xs"
-            onClick={() => onAddGroup(node.id)}
-          >
-            <FiPlus className="h-3.5 w-3.5" />
-            Group
-          </Button>
+          {allowNestedGroups && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 text-xs"
+              onClick={() => onAddGroup(node.id)}
+            >
+              <FiPlus className="h-3.5 w-3.5" />
+              Group
+            </Button>
+          )}
           {!isRoot && (
             <Button
               type="button"
@@ -106,6 +114,7 @@ export function Group({
               <Rule
                 rule={child}
                 fields={fields}
+                operatorSet={operatorSet}
                 onChange={(patch) => onRulePatch(child.id, patch)}
                 onRemove={() => onRemoveNode(child.id)}
                 canRemove={!(isRoot && node.children.length <= 1)}
@@ -116,6 +125,8 @@ export function Group({
                 fields={fields}
                 depth={depth + 1}
                 isRoot={false}
+                allowNestedGroups={allowNestedGroups}
+                operatorSet={operatorSet}
                 onPatch={onPatch}
                 onRulePatch={onRulePatch}
                 onRemoveNode={onRemoveNode}
