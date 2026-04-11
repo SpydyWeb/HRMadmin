@@ -221,6 +221,9 @@ const AVAILABLE_TABLES = [
   { value: 'commission_master', label: 'Commission Master' },
 ]
 
+/** Placeholder value used by Radix Select when no table is selected */
+const TABLE_SELECT_NONE = '__table_none__'
+
 /** Inner component that owns the table schema fetch for the active slab */
 function TableFilterTab({
   slab,
@@ -230,15 +233,17 @@ function TableFilterTab({
   onChange: (updates: Partial<SlabState>) => void
 }) {
   const { fields, loading, error } = useTableSchema(slab.selectedFilterTable)
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
   // When fields load (or table changes) and the existing query has no rules, seed it
   useEffect(() => {
     if (!slab.selectedFilterTable || fields.length === 0) return
     const q = slab.tableFilterQuery
     if (!q || q.children.length === 0) {
-      onChange({ tableFilterQuery: createEmptyGroup(fields) })
+      onChangeRef.current({ tableFilterQuery: createEmptyGroup(fields) })
     }
-  }, [fields, slab.selectedFilterTable]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fields, slab.selectedFilterTable, slab.tableFilterQuery])
 
   const handleTableChange = (tableName: string) => {
     onChange({
@@ -254,12 +259,12 @@ function TableFilterTab({
         <label className="mb-1.5 block text-xs font-semibold text-neutral-600">
           Select Table
         </label>
-        <Select value={slab.selectedFilterTable || '__none__'} onValueChange={handleTableChange}>
+        <Select value={slab.selectedFilterTable || TABLE_SELECT_NONE} onValueChange={handleTableChange}>
           <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="Choose a table to filter on…" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__none__" disabled>
+            <SelectItem value={TABLE_SELECT_NONE} disabled>
               — Choose a table —
             </SelectItem>
             {AVAILABLE_TABLES.map((t) => (

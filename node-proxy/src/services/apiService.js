@@ -628,6 +628,9 @@ const GetTableSchema = (data = {}, headers = {}) => {
   if (!tableName) {
     throw new Error("tableName is required");
   }
+  if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
+    throw new Error("tableName must contain only alphanumeric characters and underscores");
+  }
   const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
   return apiClient.post(url, {}, { headers });
 };

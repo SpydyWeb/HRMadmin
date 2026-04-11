@@ -15,6 +15,19 @@ interface RawColumn {
   is_nullable?: boolean
 }
 
+/** Expected shape of the GetTableSchema API response body */
+interface TableSchemaResponseBody {
+  columns?: RawColumn[]
+  schema?: RawColumn[]
+  fields?: RawColumn[]
+  columnSchema?: RawColumn[]
+}
+
+/** Top-level API response wrapper */
+interface TableSchemaApiResponse {
+  responseBody?: TableSchemaResponseBody | RawColumn[]
+}
+
 /** Converts raw DB data type string to a QueryFieldConfig FieldType */
 function mapDataType(raw: string | undefined): FieldType {
   if (!raw) return 'string'
@@ -54,14 +67,16 @@ function toFriendlyLabel(name: string): string {
 export function normalizeTableSchema(response: unknown): QueryFieldConfig[] {
   if (!response || typeof response !== 'object') return []
 
-  const body = (response as any)?.responseBody ?? response
+  const typed = response as TableSchemaApiResponse
+  const body = typed.responseBody ?? (response as TableSchemaResponseBody | RawColumn[])
 
-  const columns: RawColumn[] =
-    body?.columns ??
-    body?.schema ??
-    body?.fields ??
-    body?.columnSchema ??
-    (Array.isArray(body) ? body : [])
+  let columns: RawColumn[]
+  if (Array.isArray(body)) {
+    columns = body
+  } else {
+    const b = body as TableSchemaResponseBody
+    columns = b.columns ?? b.schema ?? b.fields ?? b.columnSchema ?? []
+  }
 
   if (!Array.isArray(columns) || columns.length === 0) return []
 
@@ -86,8 +101,39 @@ interface TableSchemaState {
   error: string | null
 }
 
-/** Module-level cache: tableName → QueryFieldConfig[] */
-const schemaCache = new Map<string, QueryFieldConfig[]>()
+/** Maximum number of table schemas to keep in the module-level cache */
+const CACHE_MAX_SIZE = 50
+
+/** Module-level LRU cache: tableName → QueryFieldConfig[] */
+class LruCache {
+  private map = new Map<string, QueryFieldConfig[]>()
+  private maxSize: number
+
+  constructor(maxSize: number) {
+    this.maxSize = maxSize
+  }
+
+  get(key: string): QueryFieldConfig[] | undefined {
+    if (!this.map.has(key)) return undefined
+    // Move to end (most recently used)
+    const value = this.map.get(key)!
+    this.map.delete(key)
+    this.map.set(key, value)
+    return value
+  }
+
+  set(key: string, value: QueryFieldConfig[]): void {
+    if (this.map.has(key)) this.map.delete(key)
+    else if (this.map.size >= this.maxSize) {
+      // Evict the least recently used entry (first in map)
+      const firstKey = this.map.keys().next().value
+      if (firstKey !== undefined) this.map.delete(firstKey)
+    }
+    this.map.set(key, value)
+  }
+}
+
+const schemaCache = new LruCache(CACHE_MAX_SIZE)
 
 /**
  * Fetches and caches the column schema for a given table name.
@@ -127,12 +173,13 @@ export function useTableSchema(tableName: string): TableSchemaState {
         schemaCache.set(tableName, fields)
         setState({ fields, loading: false, error: null })
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (cancelled || latestTableName.current !== tableName) return
+        const e = err as { response?: { data?: { message?: string; errorMessage?: string } }; message?: string }
         const message =
-          err?.response?.data?.message ??
-          err?.response?.data?.errorMessage ??
-          err?.message ??
+          e?.response?.data?.message ??
+          e?.response?.data?.errorMessage ??
+          e?.message ??
           'Failed to load table schema'
         setState({ fields: [], loading: false, error: message })
       })
