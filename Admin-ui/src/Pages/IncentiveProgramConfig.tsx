@@ -202,11 +202,21 @@ interface SlabSectionProps {
   onChange: (updates: Partial<SlabState>) => void
   onRemove: () => void
   kpiLibrary: KPIEntry[]
+  programId: number | null
+  programmeId: number | undefined
 }
 
-const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibrary }: SlabSectionProps) => {
+const SlabSection = ({
+  slab,
+  slabNumber,
+  canRemove,
+  onChange,
+  onRemove,
+  kpiLibrary,
+  programId,
+  programmeId,
+}: SlabSectionProps) => {
   const expressionRef = useRef<HTMLTextAreaElement>(null)
-  const [kpiSearch, setKpiSearch] = useState('')
 
   useEffect(() => {
     let next = slab.kpiCriteriaQueries
@@ -224,17 +234,6 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
     if (changed) onChange({ kpiCriteriaQueries: next })
   }, [slab.selectedKPIs, slab.kpiCriteriaQueries, kpiLibrary, onChange])
 
-  const filteredLibrary = useMemo(
-    () =>
-      kpiLibrary.filter(
-        (k) =>
-          !kpiSearch ||
-          k.name.toLowerCase().includes(kpiSearch.toLowerCase()) ||
-          k.description.toLowerCase().includes(kpiSearch.toLowerCase()),
-      ),
-    [kpiSearch, kpiLibrary],
-  )
-
   const incentivePlaceholder = useMemo(() => {
     if (slab.selectedKPIs.length === 0) return 'e.g., total_premium_by_sales_personnel * 0.05'
     const firstName = kpiLibrary.find((k) => k.id === slab.selectedKPIs[0].kpiId)?.name ?? ''
@@ -250,29 +249,6 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
       })),
     [kpiLibrary],
   )
-
-  const isKPISelected = (id: string) => slab.selectedKPIs.some((s) => s.kpiId === id)
-
-  const toggleKPI = (id: string) => {
-    if (slab.selectedKPIs.some((s) => s.kpiId === id)) {
-      const { [id]: _removed, ...restQueries } = slab.kpiCriteriaQueries
-      onChange({
-        selectedKPIs: slab.selectedKPIs.filter((s) => s.kpiId !== id),
-        kpiCriteriaQueries: restQueries,
-      })
-      return
-    }
-
-    const kpi = kpiLibrary.find((k) => k.id === id)
-    const fields = kpi ? buildFieldsFromKpi(kpi) : []
-    onChange({
-      selectedKPIs: [...slab.selectedKPIs, { kpiId: id, weight: 1 }],
-      kpiCriteriaQueries: {
-        ...slab.kpiCriteriaQueries,
-        [id]: createEmptyGroup(fields),
-      },
-    })
-  }
 
   const selectionExpressionFields = useMemo(
     () =>
@@ -324,65 +300,29 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
       </div>
 
       <div className="space-y-4 p-4">
-        {/* ── KPI Library — pick KPIs for this slab ── */}
-        <Card className="rounded-lg border border-neutral-200">
-          <CardHeader className="px-4 pb-2 pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base">KPI Library</CardTitle>
-              <div className="w-56">
-                <Input
-                  label=""
-                  variant="outlined"
-                  placeholder="Search KPI..."
-                  value={kpiSearch}
-                  onChange={(e) => setKpiSearch(e.target.value)}
-                />
-              </div>
-            </div>
-            <p className="mt-0.5 text-xs text-neutral-500">
-              Select KPIs for this slab. These KPIs become available in expressions.
-            </p>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">Filter Criteria
-
-            {kpiLibrary.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
-                <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
-                <p className="text-xs text-neutral-500">
-                  No KPIs loaded yet. Save the program first (so we have a programId), then the KPI list will load here.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="max-h-56 overflow-auto rounded-md border border-neutral-200">
-                  {filteredLibrary.length === 0 ? (
-                    <div className="p-3 text-xs text-neutral-500">No KPIs match your search.</div>
-                  ) : (
-                    filteredLibrary.map((kpi) => (
-                      <label
-                        key={kpi.id}
-                        className="flex cursor-pointer items-start gap-2 border-b border-neutral-100 p-3 last:border-b-0 hover:bg-neutral-50"
-                      >
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={isKPISelected(kpi.id)}
-                          onCheckedChange={() => toggleKPI(kpi.id)}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-neutral-800">{kpi.name}</p>
-                          <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{kpi.description}</p>
-                        </div>
-                      </label>
-                    ))
-                  )}
-                </div>
-
-                <p className="text-xs text-neutral-400">
-                  Selected: <span className="font-medium text-neutral-600">{slab.selectedKPIs.length}</span>
-                </p>
-              </div>
-            )}
-          </CardContent>
+        <Card className="rounded-md border border-neutral-200">
+          <div className="grid grid-cols-1 border-neutral-200 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)] md:divide-x">
+            <CardHeader className="min-w-0 border-b border-neutral-200 px-4 py-3 md:border-b-0">
+              <CardTitle className="text-base font-semibold">Weightage</CardTitle>
+              <p className="mt-1 text-xs text-neutral-500">
+                Select the applicable weightage options for this incentive program.
+              </p>
+              <p className="mt-1 text-xs text-neutral-600">
+                Program id for save:{' '}
+                <span className="font-medium text-neutral-800">
+                  {programId != null ? programId : '— save Program Details first'}
+                </span>
+              </p>
+            </CardHeader>
+            <CardContent className="min-w-0 overflow-x-auto px-4 py-4">
+              <AddUserInline
+                programId={programmeId ?? 0}
+                onSuccess={(users) => {
+                  console.log('Saved users:', users)
+                }}
+              />
+            </CardContent>
+          </div>
         </Card>
 
         {/* ── 1. Program Details — moved to top of page ── */}
@@ -473,7 +413,7 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
                   <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
                     <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
                     <p className="text-xs text-neutral-400">
-                      No KPIs selected yet. Choose from the library above.
+                      No KPIs selected yet for this slab.
                     </p>
                   </div>
                 ) : (
@@ -584,7 +524,7 @@ const SlabSection = ({ slab, slabNumber, canRemove, onChange, onRemove, kpiLibra
               </Label>
               {slab.selectedKPIs.length === 0 ? (
                 <p className="text-xs text-neutral-400">
-                  Select KPIs above to make variables available here.
+                  Select KPIs for this slab to make variables available here.
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
@@ -1693,35 +1633,6 @@ export default function IncentiveProgramConfig() {
           </Card>
 
           <Card className="rounded-md border border-neutral-200">
-            {/* minmax(0,1fr) lets the weightage panel shrink so it cannot overlap the header */}
-            <div className="grid grid-cols-1 border-neutral-200 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)] md:divide-x">
-              <CardHeader className="min-w-0 border-b border-neutral-200 px-4 py-3 md:border-b-0">
-                <CardTitle className="text-base font-semibold">
-                  Weightage
-                </CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">
-                  Select the applicable weightage options for this incentive
-                  program.
-                </p>
-                <p className="mt-1 text-xs text-neutral-600">
-                  Program id for save:{' '}
-                  <span className="font-medium text-neutral-800">
-                    {programId != null ? programId : '— save Program Details first'}
-                  </span>
-                </p>
-              </CardHeader>
-              <CardContent className="min-w-0 overflow-x-auto px-4 py-4">
-                <AddUserInline
-                  programId={programmeId ?? 0} // ✅ IMPORTANT
-                  onSuccess={(users) => {
-                    console.log("Saved users:", users)
-                  }}
-                />
-              </CardContent>
-            </div>
-          </Card>
-
-          <Card className="rounded-md border border-neutral-200">
             <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 py-3">
               <div>
                 <CardTitle className="text-base font-semibold">
@@ -2069,6 +1980,8 @@ export default function IncentiveProgramConfig() {
                     onChange={(updates) => updateSlab(activeSlab.id, updates)}
                     onRemove={() => removeSlab(activeSlab.id)}
                     kpiLibrary={kpiLibrary}
+                    programId={programId}
+                    programmeId={programmeId}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center p-10 text-center">
