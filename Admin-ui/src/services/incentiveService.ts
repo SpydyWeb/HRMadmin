@@ -373,6 +373,20 @@ export const incentiveService = {
     }
   },
 
+  /** POST /api/incentive/GetTableSchema?tableName=... — column metadata for query builder */
+  getTableSchema: async (tableName: string) => {
+    try {
+      const response = await callApi(
+        APIRoutes.INCENTIVE_GET_TABLE_SCHEMA,
+        [{ tableName }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getTableSchema error:', error)
+      throw error
+    }
+  },
+
   /** POST /api/incentive/UpsertKpi — create/update KPI from builder */
   upsertKpi: async (data: Record<string, unknown>) => {
     try {

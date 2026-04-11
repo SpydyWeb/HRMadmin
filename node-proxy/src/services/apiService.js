@@ -613,6 +613,15 @@ const GetKpiFields = (data = {}, headers = {}) => {
   return apiClient.post(url, {}, { headers });
 };
 
+const GetTableSchema = (data = {}, headers = {}) => {
+  const tableName = data?.tableName;
+  if (!tableName) {
+    throw new Error("tableName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
+  return apiClient.post(url, {}, { headers });
+};
+
 const UpsertKpi = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
     headers: {
@@ -746,6 +755,7 @@ module.exports = {
   upsertProgramFilters,
   GetKpiObjects,
   GetKpiFields,
+  GetTableSchema,
   UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,

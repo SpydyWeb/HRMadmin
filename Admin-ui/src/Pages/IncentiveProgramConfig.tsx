@@ -27,11 +27,13 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   QueryBuilder,
-  buildFieldsFromKpi,
   buildFieldsFromSelectedKpis,
   createEmptyGroup,
+  queryFieldsFromTableSchemaResponse,
   queryGroupToSql,
+  tableNameForKpi,
   toVarName,
+  type QueryFieldConfig,
   type QueryGroupNode,
 } from '@/components/query-builder'
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
@@ -134,7 +136,61 @@ function extractFirstObjectArray(payload: any): any[] {
   return []
 }
 
+function normalizeKpiLibraryFromResponse(payload: any): IKpi[] {
+  const body = payload?.responseBody ?? payload
+  const list =
+    body?.programKpis ??
+    body?.kpiLibrary ??
+    body?.kpis ??
+    body?.items ??
+    (Array.isArray(body) ? body : []) ??
+    []
 
+  if (!Array.isArray(list)) return []
+
+  return list
+    .map((item: any): IKpi | null => {
+      const rawId = item?.id ?? item?.kpiId ?? item?.kpiID ?? item?.KpiId
+      const idNum = Number(rawId)
+      const id = Number.isFinite(idNum) && idNum > 0 ? String(idNum) : (rawId != null ? String(rawId) : '')
+      if (!id) return null
+
+      const name = String(item?.name ?? item?.kpiName ?? item?.kpi_name ?? `KPI ${id}`)
+      const description = String(
+        item?.description ??
+          item?.kpiDescription ??
+          item?.kpi_description ??
+          item?.kpiCode ??
+          '',
+      )
+
+      const dataSources = Array.isArray(item?.dataSources)
+        ? item.dataSources
+        : Array.isArray(item?.dataSource)
+          ? item.dataSource
+          : []
+
+      const groupBy = Array.isArray(item?.groupBy)
+        ? item.groupBy
+        : Array.isArray(item?.group_by)
+          ? item.group_by
+          : []
+
+      const timeWindow = String(item?.timeWindow ?? item?.time_window ?? item?.timePeriod ?? 'PROGRAM_DURATION')
+
+      return {
+        id,
+        name,
+        description,
+        dataSources,
+        groupBy,
+        timeWindow,
+        createdAt: String(item?.createdAt ?? ''),
+        createdBy: String(item?.createdBy ?? ''),
+      }
+    })
+    .filter(Boolean) as IKpi[]
+}
 
 type KPIEntry = IKpi
 
@@ -202,6 +258,8 @@ interface SlabSectionProps {
   onChange: (updates: Partial<SlabState>) => void
   onRemove: () => void
   kpiLibrary: KPIEntry[]
+  kpiLibraryLoading: boolean
+  onRefreshProgramKpis: () => void | Promise<void>
   programId: number | null
   programmeId: number | undefined
 }
@@ -213,26 +271,127 @@ const SlabSection = ({
   onChange,
   onRemove,
   kpiLibrary,
+  kpiLibraryLoading,
+  onRefreshProgramKpis,
   programId,
   programmeId,
 }: SlabSectionProps) => {
   const expressionRef = useRef<HTMLTextAreaElement>(null)
+  const prevCriteriaTab = useRef(slab.criteriaTab)
+  /** Dedupe GetTableSchema fetches per KPI when `tableName` matches last successful attempt. */
+  const tableSchemaFetchedRef = useRef<Record<string, string>>({})
+  const [kpiSchemaFields, setKpiSchemaFields] = useState<Record<string, QueryFieldConfig[]>>({})
+  const [kpiSchemaLoading, setKpiSchemaLoading] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    const switchedToKpi =
+      slab.criteriaTab === 'selected-kpi' &&
+      prevCriteriaTab.current !== 'selected-kpi' &&
+      programId != null
+    prevCriteriaTab.current = slab.criteriaTab
+    if (switchedToKpi) void onRefreshProgramKpis()
+  }, [slab.criteriaTab, programId, onRefreshProgramKpis])
+
+  const isKPISelected = (id: string) => slab.selectedKPIs.some((s) => s.kpiId === id)
+
+  const toggleKPI = (id: string) => {
+    if (slab.selectedKPIs.some((s) => s.kpiId === id)) {
+      const { [id]: _removed, ...restQueries } = slab.kpiCriteriaQueries
+      delete tableSchemaFetchedRef.current[id]
+      setKpiSchemaFields((prev) => {
+        const n = { ...prev }
+        delete n[id]
+        return n
+      })
+      setKpiSchemaLoading((prev) => {
+        const n = { ...prev }
+        delete n[id]
+        return n
+      })
+      onChange({
+        selectedKPIs: slab.selectedKPIs.filter((s) => s.kpiId !== id),
+        kpiCriteriaQueries: restQueries,
+      })
+      return
+    }
+
+    onChange({
+      selectedKPIs: [...slab.selectedKPIs, { kpiId: id, weight: 1 }],
+      kpiCriteriaQueries: {
+        ...slab.kpiCriteriaQueries,
+        [id]: createEmptyGroup([]),
+      },
+    })
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    const run = async () => {
+      for (const sel of slab.selectedKPIs) {
+        const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
+        if (!kpi) continue
+        const tableName = tableNameForKpi(kpi)
+        if (tableSchemaFetchedRef.current[sel.kpiId] === tableName) continue
+
+        setKpiSchemaLoading((p) => ({ ...p, [sel.kpiId]: true }))
+        try {
+          const res = await incentiveService.getTableSchema(tableName)
+          if (cancelled) return
+          const fields = queryFieldsFromTableSchemaResponse(res)
+          tableSchemaFetchedRef.current[sel.kpiId] = tableName
+          setKpiSchemaFields((p) => ({ ...p, [sel.kpiId]: fields }))
+        } catch (e) {
+          if (cancelled) return
+          tableSchemaFetchedRef.current[sel.kpiId] = tableName
+          setKpiSchemaFields((p) => ({ ...p, [sel.kpiId]: [] }))
+          showToast(
+            NOTIFICATION_CONSTANTS.ERROR,
+            e instanceof Error ? e.message : `Could not load columns for ${tableName}`,
+          )
+        } finally {
+          if (!cancelled) {
+            setKpiSchemaLoading((p) => ({ ...p, [sel.kpiId]: false }))
+          }
+        }
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [slab.selectedKPIs, kpiLibrary])
 
   useEffect(() => {
     let next = slab.kpiCriteriaQueries
     let changed = false
     for (const sel of slab.selectedKPIs) {
       if (next[sel.kpiId]) continue
-      const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
-      if (!kpi) continue
       changed = true
       next = {
         ...next,
-        [sel.kpiId]: createEmptyGroup(buildFieldsFromKpi(kpi)),
+        [sel.kpiId]: createEmptyGroup([]),
       }
     }
     if (changed) onChange({ kpiCriteriaQueries: next })
-  }, [slab.selectedKPIs, slab.kpiCriteriaQueries, kpiLibrary, onChange])
+  }, [slab.selectedKPIs, slab.kpiCriteriaQueries, onChange])
+
+  /** When schema arrives, seed an empty slab query with one rule if needed. */
+  useEffect(() => {
+    let next = slab.kpiCriteriaQueries
+    let changed = false
+    for (const sel of slab.selectedKPIs) {
+      const fields = kpiSchemaFields[sel.kpiId]
+      if (!fields?.length) continue
+      const q = next[sel.kpiId]
+      if (q && q.children.length === 0) {
+        changed = true
+        next = { ...next, [sel.kpiId]: createEmptyGroup(fields) }
+      }
+    }
+    if (changed) onChange({ kpiCriteriaQueries: next })
+  }, [kpiSchemaFields, slab.selectedKPIs, slab.kpiCriteriaQueries, onChange])
 
   const incentivePlaceholder = useMemo(() => {
     if (slab.selectedKPIs.length === 0) return 'e.g., total_premium_by_sales_personnel * 0.05'
@@ -325,68 +484,15 @@ const SlabSection = ({
           </div>
         </Card>
 
-        {/* ── 1. Program Details — moved to top of page ── */}
-        {/* <Card className="rounded-lg border border-neutral-200">
-          <CardHeader className="px-4 pb-2 pt-4">
-            <CardTitle className="text-base">Program Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 px-4 pb-4">
-            <div>
-              <Label className="text-xs font-semibold text-neutral-600">Program Name *</Label>
-              <Input
-                label=""
-                variant="outlined"
-                className="mt-1"
-                placeholder="e.g., Q1 2025 Sales Excellence Program"
-                value={slab.programName}
-                onChange={(e) => onChange({ programName: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold text-neutral-600">Description</Label>
-              <textarea
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                rows={3}
-                placeholder="Describe the objectives and scope of this incentive program…"
-                value={slab.programDescription}
-                onChange={(e) => onChange({ programDescription: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-semibold text-neutral-600">Start Date *</Label>
-                <Input
-                  label=""
-                  variant="outlined"
-                  type="date"
-                  className="mt-1"
-                  value={slab.startDate}
-                  onChange={(e) => onChange({ startDate: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-neutral-600">End Date *</Label>
-                <Input
-                  label=""
-                  variant="outlined"
-                  type="date"
-                  className="mt-1"
-                  value={slab.endDate}
-                  onChange={(e) => onChange({ endDate: e.target.value })}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card> */}
-
         {/* ── 3. Filter Criteria — tabbed: Selected KPI | Selection Expression ── */}
         <Card className="rounded-lg border border-neutral-200">
           <CardHeader className="px-4 pb-2 pt-4">
             <CardTitle className="text-base">Filter Criteria</CardTitle>
             <p className="mt-0.5 text-xs text-neutral-500">
-              Define which sales personnel qualify for this slab. Use the{' '}
-              <strong>Selected KPI</strong> tab to configure KPI weights, or switch to{' '}
-              <strong>Selection Expression</strong> for advanced SQL-based filtering.
+              KPIs for this slab come from{' '}
+              <strong className="text-neutral-700">GetSelectedProgramKpis</strong> using your saved program id.
+              Use <strong>Selected KPI</strong> for simple comparisons (AND/OR, &gt;, &lt;, between). Use{' '}
+              <strong>Selection Expression</strong> for richer SQL against the database.
             </p>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -407,84 +513,160 @@ const SlabSection = ({
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tab: Selected KPI */}
+              {/* Tab: Selected KPI — POST GetSelectedProgramKpis/{programId}, simple rule builder */}
               <TabsContent value="selected-kpi">
-                {slab.selectedKPIs.length === 0 ? (
+                {programId == null ? (
+                  <div className="rounded-lg border border-dashed border-amber-200 bg-amber-50/50 p-4 text-center">
+                    <p className="text-xs text-amber-900">
+                      Save <strong>Program Details</strong> first so a program id exists. Then KPIs from the
+                      program mapping will load here.
+                    </p>
+                  </div>
+                ) : kpiLibraryLoading ? (
+                  <div className="rounded-lg border border-neutral-200 p-6 text-center">
+                    <p className="text-xs text-neutral-500">Loading program KPIs…</p>
+                  </div>
+                ) : kpiLibrary.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
                     <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
-                    <p className="text-xs text-neutral-400">
-                      No KPIs selected yet for this slab.
+                    <p className="text-xs text-neutral-500">
+                      No KPIs returned for this program. Map KPIs to the program in your admin flow, then use
+                      Refresh or revisit this tab.
                     </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => void onRefreshProgramKpis()}
+                    >
+                      Refresh KPIs
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {slab.selectedKPIs.map((sel, idx) => {
-                      const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
-                      if (!kpi) return null
-                      const fields = buildFieldsFromKpi(kpi)
-                      const query = slab.kpiCriteriaQueries[sel.kpiId] ?? createEmptyGroup(fields)
-                      return (
-                        <div key={sel.kpiId} className="space-y-2">
-                          {idx > 0 && <Separator />}
-                          <div>
-                            <p className="text-sm font-semibold text-neutral-800">{kpi.name}</p>
-                            <div className="mt-1.5 flex flex-wrap gap-1">
-                              {kpi.dataSources.map((ds, i) => (
-                                <Badge
-                                  key={i}
-                                  className={`text-xs ${OBJECT_COLORS[ds.object] ?? ''}`}
-                                >
-                                  {ds.object}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="whitespace-nowrap text-xs font-semibold text-neutral-600">
-                              Weight
-                            </Label>
-                            <Input
-                              label=""
-                              variant="outlined"
-                              type="number"
-                              className="w-20 text-sm"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={sel.weight}
-                              onChange={(e) =>
-                                updateSelectedKPI(sel.kpiId, {
-                                  weight: parseFloat(e.target.value) || 0,
-                                })
-                              }
-                            />
-                            <span className="text-xs text-neutral-500">
-                              (relative weight in incentive formula)
-                            </span>
-                          </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs text-neutral-500">
+                        Program id <span className="font-mono text-neutral-700">{programId}</span> — select KPIs
+                        for this slab.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void onRefreshProgramKpis()}
+                        disabled={kpiLibraryLoading}
+                      >
+                        Refresh KPIs
+                      </Button>
+                    </div>
 
-                          <div className="pt-1">
-                            <QueryBuilder
-                              fields={fields}
-                              value={query}
-                              onChange={(next) =>
-                                onChange({
-                                  kpiCriteriaQueries: { ...slab.kpiCriteriaQueries, [sel.kpiId]: next },
-                                })
-                              }
-                              title="KPI filter (optional)"
-                              description="This filter applies only to this KPI when it is selected."
-                              className="mt-2"
-                            />
+                    <div className="max-h-48 overflow-auto rounded-md border border-neutral-200">
+                      {kpiLibrary.map((kpi) => (
+                        <label
+                          key={kpi.id}
+                          className="flex cursor-pointer items-start gap-2 border-b border-neutral-100 p-3 last:border-b-0 hover:bg-neutral-50"
+                        >
+                          <Checkbox
+                            className="mt-0.5"
+                            checked={isKPISelected(kpi.id)}
+                            onCheckedChange={() => toggleKPI(kpi.id)}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-neutral-800">{kpi.name}</p>
+                            <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{kpi.description}</p>
                           </div>
-                        </div>
-                      )
-                    })}
+                        </label>
+                      ))}
+                    </div>
+
+                    {slab.selectedKPIs.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
+                        <FiInfo className="mx-auto mb-2 h-5 w-5 text-neutral-400" />
+                        <p className="text-xs text-neutral-400">
+                          Select at least one KPI above to set weights and simple filters.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {slab.selectedKPIs.map((sel, idx) => {
+                          const kpi = kpiLibrary.find((k) => k.id === sel.kpiId)
+                          if (!kpi) return null
+                          const tableForSchema = tableNameForKpi(kpi)
+                          const fields = kpiSchemaFields[sel.kpiId] ?? []
+                          const schemaLoading = !!kpiSchemaLoading[sel.kpiId]
+                          const query =
+                            slab.kpiCriteriaQueries[sel.kpiId] ?? createEmptyGroup(fields)
+                          return (
+                            <div key={sel.kpiId} className="space-y-2">
+                              {idx > 0 && <Separator />}
+                              <div>
+                                <p className="text-sm font-semibold text-neutral-800">{kpi.name}</p>
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {kpi.dataSources.map((ds, i) => (
+                                    <Badge
+                                      key={i}
+                                      className={`text-xs ${OBJECT_COLORS[ds.object] ?? ''}`}
+                                    >
+                                      {ds.object}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                <p className="mt-1 text-[10px] text-neutral-400">
+                                  Filter columns from{' '}
+                                  <span className="font-mono text-neutral-600">{tableForSchema}</span>
+                                  {schemaLoading ? ' — loading schema…' : null}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Label className="whitespace-nowrap text-xs font-semibold text-neutral-600">
+                                  Weight
+                                </Label>
+                                <Input
+                                  label=""
+                                  variant="outlined"
+                                  type="number"
+                                  className="w-20 text-sm"
+                                  min={0}
+                                  max={100}
+                                  step={0.1}
+                                  value={sel.weight}
+                                  onChange={(e) =>
+                                    updateSelectedKPI(sel.kpiId, {
+                                      weight: parseFloat(e.target.value) || 0,
+                                    })
+                                  }
+                                />
+                                <span className="text-xs text-neutral-500">
+                                  (relative weight in incentive formula)
+                                </span>
+                              </div>
+
+                              <div className="pt-1">
+                                <QueryBuilder
+                                  variant="simple"
+                                  fields={fields}
+                                  value={query}
+                                  onChange={(next) =>
+                                    onChange({
+                                      kpiCriteriaQueries: { ...slab.kpiCriteriaQueries, [sel.kpiId]: next },
+                                    })
+                                  }
+                                  title="Simple filter"
+                                  description="Columns from GetTableSchema for this KPI’s primary object. Combine rules with AND/OR."
+                                  className="mt-2"
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>
 
-              {/* Tab: Selection Expression */}
+              {/* Tab: Selection Expression — full query builder + SQL */}
               <TabsContent value="expression">
                 <QueryBuilder
                   fields={selectionExpressionFields}
@@ -496,7 +678,7 @@ const SlabSection = ({
                     })
                   }
                   title="Selection Expression"
-                  description="Build eligibility criteria with AND/OR and nested groups. This generates an SQL WHERE fragment."
+                  description="Full builder with nested groups and SQL preview. Use when you need complex criteria against the database."
                 />
               </TabsContent>
             </Tabs>
@@ -830,65 +1012,9 @@ export default function IncentiveProgramConfig() {
     }
   }, [])
 
-  // Fetch KPI library for this program (Selected KPI tab)
+  // Fetch KPI library for this program (POST GetSelectedProgramKpis/{programId})
   useEffect(() => {
     let cancelled = false
-
-    const normalizeKpiLibrary = (payload: any): KPIEntry[] => {
-      const body = payload?.responseBody ?? payload
-      const list =
-        body?.programKpis ??
-        body?.kpiLibrary ??
-        body?.kpis ??
-        body?.items ??
-        (Array.isArray(body) ? body : []) ??
-        []
-
-      if (!Array.isArray(list)) return []
-
-      return list
-        .map((item: any): KPIEntry | null => {
-          const rawId = item?.id ?? item?.kpiId ?? item?.kpiID ?? item?.KpiId
-          const idNum = Number(rawId)
-          const id = Number.isFinite(idNum) && idNum > 0 ? String(idNum) : (rawId != null ? String(rawId) : '')
-          if (!id) return null
-
-          const name = String(item?.name ?? item?.kpiName ?? item?.kpi_name ?? `KPI ${id}`)
-          const description = String(
-            item?.description ??
-              item?.kpiDescription ??
-              item?.kpi_description ??
-              item?.kpiCode ??
-              '',
-          )
-
-          const dataSources = Array.isArray(item?.dataSources)
-            ? item.dataSources
-            : Array.isArray(item?.dataSource)
-              ? item.dataSource
-              : []
-
-          const groupBy = Array.isArray(item?.groupBy)
-            ? item.groupBy
-            : Array.isArray(item?.group_by)
-              ? item.group_by
-              : []
-
-          const timeWindow = String(item?.timeWindow ?? item?.time_window ?? item?.timePeriod ?? 'PROGRAM_DURATION')
-
-          return {
-            id,
-            name,
-            description,
-            dataSources,
-            groupBy,
-            timeWindow,
-            createdAt: String(item?.createdAt ?? ''),
-            createdBy: String(item?.createdBy ?? ''),
-          }
-        })
-        .filter(Boolean) as KPIEntry[]
-    }
 
     const fetchLibrary = async () => {
       if (!programId) {
@@ -900,7 +1026,7 @@ export default function IncentiveProgramConfig() {
         setKpiLibraryLoading(true)
         const res = await incentiveService.getSelectedProgramKpis(programId)
         if (cancelled) return
-        setKpiLibrary(normalizeKpiLibrary(res))
+        setKpiLibrary(normalizeKpiLibraryFromResponse(res))
       } catch (err: any) {
         if (cancelled) return
         setKpiLibrary([])
@@ -919,6 +1045,28 @@ export default function IncentiveProgramConfig() {
 
     return () => {
       cancelled = true
+    }
+  }, [programId])
+
+  const refreshProgramKpis = useCallback(async () => {
+    if (!programId) {
+      setKpiLibrary([])
+      return
+    }
+    try {
+      setKpiLibraryLoading(true)
+      const res = await incentiveService.getSelectedProgramKpis(programId)
+      setKpiLibrary(normalizeKpiLibraryFromResponse(res))
+    } catch (err: any) {
+      setKpiLibrary([])
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.errorMessage ||
+        err?.message ||
+        'Failed to load KPIs for this program'
+      showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+    } finally {
+      setKpiLibraryLoading(false)
     }
   }, [programId])
 
@@ -1980,6 +2128,8 @@ export default function IncentiveProgramConfig() {
                     onChange={(updates) => updateSlab(activeSlab.id, updates)}
                     onRemove={() => removeSlab(activeSlab.id)}
                     kpiLibrary={kpiLibrary}
+                    kpiLibraryLoading={kpiLibraryLoading}
+                    onRefreshProgramKpis={refreshProgramKpis}
                     programId={programId}
                     programmeId={programmeId}
                   />
