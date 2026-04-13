@@ -1,463 +1,351 @@
-import React, { useEffect, useState } from 'react'
-import { commissionService } from '@/services/commissionService'
-import { showToast } from '@/components/ui/sonner'
-import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
-import { Card, CardContent } from '@/components/ui/card'
+import React, { useEffect, useMemo, useState } from 'react'
+import { FiPlus, FiTrash2 } from 'react-icons/fi'
+import Button from '@/components/ui/button'
 
 interface IncentivesProbs {
-  commissionConfigId?: number;
-  initialData?: any;
-  isEditMode?: boolean;
-  onSaveSuccess: () => void;
-  onCronChange?: (cron: string) => void; // ✅ NEW
+  commissionConfigId?: number
+  initialData?: any
+  isEditMode?: boolean
+  /** Optional; legacy hook when saving cron via commission API from this screen. */
+  onSaveSuccess?: () => void
+  /** Emitted whenever the schedule string changes (Quartz.NET, multiple joined with ` | `, or `@instant`). */
+  onCronChange?: (cron: string) => void
 }
 
-// Parse Quartz.NET cron expression to extract schedule details
-// Format: Seconds Minutes Hours Day-of-month Month Day-of-week
+/** Parent-facing token when no cron schedule applies. */
+export const EXECUTION_INSTANT = '@instant'
+
+export type ExecutionScheduleMode = 'INSTANT' | 'DAILY' | 'WEEKLY_MULTI' | 'MONTHLY'
+
+const SCHEDULE_MODES: ReadonlyArray<{
+  id: ExecutionScheduleMode
+  label: string
+  description: string
+}> = [
+  {
+    id: 'INSTANT',
+    label: 'Instant',
+    description: 'No fixed schedule (on-demand / immediate execution path).',
+  },
+  {
+    id: 'DAILY',
+    label: 'Daily',
+    description: 'Runs every day at each selected time.',
+  },
+  {
+    id: 'WEEKLY_MULTI',
+    label: 'Weekly — multiple times in a day',
+    description: 'Selected weekdays; on each day the job runs at every listed time.',
+  },
+  {
+    id: 'MONTHLY',
+    label: 'Day of month (1–31)',
+    description:
+      'Runs on the chosen calendar day each month. If that day does not exist in a month, behavior follows your scheduler (typically the last day of that month, i.e. min of N and month length).',
+  },
+]
+
+// Parse Quartz.NET cron expression (first segment if ` | `-joined)
 const parseCronExpression = (cron: string) => {
-  if (!cron || !cron.trim()) {
-    return null;
-  }
+  if (!cron || !cron.trim()) return null
+  const first = cron.trim().split(/\s*\|\s*/)[0]?.trim()
+  if (!first || first === EXECUTION_INSTANT) return null
 
-  const parts = cron.trim().split(/\s+/);
-  if (parts.length < 6) {
-    return null;
-  }
+  const parts = first.split(/\s+/)
+  if (parts.length < 6) return null
 
-  const [sec, min, hr, dayOfMonth, , dayOfWeek] = parts;
+  const [sec, min, hr, dayOfMonth, , dayOfWeek] = parts
 
   const parsed = {
-    seconds: parseInt(sec) || 0,
-    minutes: parseInt(min) || 0,
-    hours: parseInt(hr) || 0,
+    seconds: parseInt(sec, 10) || 0,
+    minutes: parseInt(min, 10) || 0,
+    hours: parseInt(hr, 10) || 0,
     frequency: 'DAILY' as 'DAILY' | 'WEEKLY' | 'MONTHLY',
     daysOfWeek: [] as string[],
-    dayOfMonth: 1
-  };
-
-  // Determine frequency based on pattern
-  if (dayOfMonth === '?' && dayOfWeek !== '?') {
-    // WEEKLY: dayOfMonth is ?, dayOfWeek has values
-    parsed.frequency = 'WEEKLY';
-    parsed.daysOfWeek = dayOfWeek.split(',').filter(d => d);
-  } else if (dayOfMonth !== '*' && dayOfMonth !== '?' && dayOfWeek === '?') {
-    // MONTHLY: dayOfMonth has specific value, dayOfWeek is ?
-    parsed.frequency = 'MONTHLY';
-    parsed.dayOfMonth = parseInt(dayOfMonth) || 1;
-  } else {
-    // DAILY: dayOfMonth is *, dayOfWeek is ?
-    parsed.frequency = 'DAILY';
+    dayOfMonth: 1,
   }
 
-  return parsed;
-};
+  if (dayOfMonth === '?' && dayOfWeek !== '?') {
+    parsed.frequency = 'WEEKLY'
+    parsed.daysOfWeek = dayOfWeek.split(',').filter(Boolean)
+  } else if (dayOfMonth !== '*' && dayOfMonth !== '?' && dayOfWeek === '?') {
+    parsed.frequency = 'MONTHLY'
+    parsed.dayOfMonth = parseInt(dayOfMonth, 10) || 1
+  } else {
+    parsed.frequency = 'DAILY'
+  }
+
+  return parsed
+}
+
+function parseTimeSlot(timeString: string): { h: number; m: number; sec: number } {
+  const [hs, ms] = timeString.split(':')
+  const h = parseInt(hs ?? '0', 10)
+  const m = parseInt(ms ?? '0', 10)
+  return {
+    h: Number.isFinite(h) ? Math.min(23, Math.max(0, h)) : 0,
+    m: Number.isFinite(m) ? Math.min(59, Math.max(0, m)) : 0,
+    sec: 0,
+  }
+}
+
+function quartzDaily(sec: number, min: number, hr: number) {
+  return `${sec} ${min} ${hr} * * ?`
+}
+
+function quartzWeekly(sec: number, min: number, hr: number, days: string[]) {
+  if (!days.length) return ''
+  return `${sec} ${min} ${hr} ? * ${days.join(',')}`
+}
+
+function quartzMonthly(sec: number, min: number, hr: number, dayOfMonth: number) {
+  const dom = Math.max(1, Math.min(31, dayOfMonth))
+  return `${sec} ${min} ${hr} ${dom} * ?`
+}
+
+function generateScheduleCron(
+  mode: ExecutionScheduleMode,
+  timeSlots: string[],
+  daysOfWeek: string[],
+  dayOfMonth: number,
+): string {
+  if (mode === 'INSTANT') return EXECUTION_INSTANT
+
+  const slots = timeSlots.length ? timeSlots : ['09:00']
+  const crons: string[] = []
+
+  for (const slot of slots) {
+    const { h, m, sec } = parseTimeSlot(slot)
+    if (mode === 'DAILY') {
+      crons.push(quartzDaily(sec, m, h))
+    } else if (mode === 'WEEKLY_MULTI') {
+      const c = quartzWeekly(sec, m, h, daysOfWeek)
+      if (c) crons.push(c)
+    } else if (mode === 'MONTHLY') {
+      crons.push(quartzMonthly(sec, m, h, dayOfMonth))
+    }
+  }
+
+  return crons.filter(Boolean).join(' | ')
+}
 
 const IncentiveConfig: React.FC<IncentivesProbs> = ({
-  commissionConfigId = 0,
   initialData,
   isEditMode = false,
-  onSaveSuccess,
   onCronChange,
 }) => {
-  // Parse initial data to extract values
-  const parsedCron = initialData?.cronExpression ? parseCronExpression(initialData.cronExpression) : null;
+  const parsedCron = initialData?.cronExpression ? parseCronExpression(initialData.cronExpression) : null
 
-  const initialJobType = initialData?.jobType || '';
-  const initialHours = parsedCron?.hours || 0;
-  const initialMinutes = parsedCron?.minutes || 0;
-  const initialSeconds = parsedCron?.seconds || 0;
-  const initialFrequency = parsedCron?.frequency || 'DAILY';
-  const initialDaysOfWeek = parsedCron?.daysOfWeek || [];
-  const initialDayOfMonth = parsedCron?.dayOfMonth || 1;
-  const initialSimpleTime = initialHours || initialMinutes
-    ? `${String(initialHours).padStart(2, '0')}:${String(initialMinutes).padStart(2, '0')}`
-    : '12:00';
+  const initialMode: ExecutionScheduleMode =
+    initialData?.cronExpression === EXECUTION_INSTANT
+      ? 'INSTANT'
+      : parsedCron?.frequency === 'WEEKLY'
+        ? 'WEEKLY_MULTI'
+        : parsedCron?.frequency === 'MONTHLY'
+          ? 'MONTHLY'
+          : 'DAILY'
 
-  const [jobType, setJobType] = useState(initialJobType);
-  const [hours, setHours] = useState<number>(initialHours);
-  const [minutes, setMinutes] = useState<number>(initialMinutes);
-  const [seconds, setSeconds] = useState<number>(initialSeconds);
-  const [frequency, setFrequency] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>(initialFrequency);
-  const [daysOfWeek, setDaysOfWeek] = useState<string[]>(initialDaysOfWeek);
-  const [dayOfMonth, setDayOfMonth] = useState<number>(initialDayOfMonth);
-  const [cronExpression, setCronExpression] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [useSimpleMode, setUseSimpleMode] = useState(true);
-  const [simpleTime, setSimpleTime] = useState(initialSimpleTime);
+  const initialTime =
+    parsedCron != null
+      ? `${String(parsedCron.hours).padStart(2, '0')}:${String(parsedCron.minutes).padStart(2, '0')}`
+      : '09:00'
 
-  const parseTimeInput = (timeString: string) => {
-    const [h, m] = timeString.split(':');
-    setHours(parseInt(h) || 0);
-    setMinutes(parseInt(m) || 0);
-  };
+  const [scheduleMode, setScheduleMode] = useState<ExecutionScheduleMode>(initialMode)
+  const [timeSlots, setTimeSlots] = useState<string[]>([initialTime])
+  const [daysOfWeek, setDaysOfWeek] = useState<string[]>(parsedCron?.daysOfWeek?.length ? parsedCron.daysOfWeek : ['MON'])
+  const [dayOfMonth, setDayOfMonth] = useState<number>(parsedCron?.dayOfMonth ?? 1)
 
-  const generateCron = () => {
-    // Quartz.NET format: Seconds Minutes Hours Day-of-month Month Day-of-week Year(optional)
-    const sec = seconds.toString();
-    const min = minutes.toString();
-    const hr = hours.toString();
+  const generatedCron = useMemo(
+    () => generateScheduleCron(scheduleMode, timeSlots, daysOfWeek, dayOfMonth),
+    [scheduleMode, timeSlots, daysOfWeek, dayOfMonth],
+  )
 
-    switch (frequency) {
-      case 'DAILY':
-        return `${sec} ${min} ${hr} * * ?`;
+  useEffect(() => {
+    onCronChange?.(generatedCron)
+  }, [generatedCron, onCronChange])
 
-      case 'WEEKLY':
-        if (daysOfWeek.length === 0) {
-          return '';
-        }
-        const quartzDays = daysOfWeek.join(',');
-        return `${sec} ${min} ${hr} ? * ${quartzDays}`;
-
-      case 'MONTHLY':
-        return `${sec} ${min} ${hr} ${dayOfMonth} * ?`;
-
-      default:
-        return '';
-    }
-  };
-
-  // Update state when initialData changes (for edit mode)
   useEffect(() => {
     if (isEditMode && initialData) {
-      const parsed = initialData.cronExpression ? parseCronExpression(initialData.cronExpression) : null;
-
-      if (initialData.jobType) {
-        setJobType(initialData.jobType);
+      const parsed = initialData.cronExpression ? parseCronExpression(initialData.cronExpression) : null
+      if (initialData.cronExpression === EXECUTION_INSTANT) {
+        setScheduleMode('INSTANT')
+      } else if (parsed) {
+        const mode: ExecutionScheduleMode =
+          parsed.frequency === 'WEEKLY'
+            ? 'WEEKLY_MULTI'
+            : parsed.frequency === 'MONTHLY'
+              ? 'MONTHLY'
+              : 'DAILY'
+        setScheduleMode(mode)
+        const t = `${String(parsed.hours).padStart(2, '0')}:${String(parsed.minutes).padStart(2, '0')}`
+        setTimeSlots([t])
+        setDaysOfWeek(parsed.daysOfWeek?.length ? parsed.daysOfWeek : ['MON'])
+        setDayOfMonth(parsed.dayOfMonth)
       }
-
-      if (parsed) {
-        setHours(parsed.hours);
-        setMinutes(parsed.minutes);
-        setSeconds(parsed.seconds);
-        setFrequency(parsed.frequency);
-        setDaysOfWeek(parsed.daysOfWeek);
-        setDayOfMonth(parsed.dayOfMonth);
-
-        const timeStr = `${String(parsed.hours).padStart(2, '0')}:${String(parsed.minutes).padStart(2, '0')}`;
-        setSimpleTime(timeStr);
-      }
     }
-  }, [isEditMode, initialData]);
+  }, [isEditMode, initialData])
 
-useEffect(() => {
-  const cron = generateCron();
-  setCronExpression(cron);
+  const addTimeSlot = () => {
+    setTimeSlots((prev) => [...prev, '12:00'])
+  }
 
-  // ✅ send to parent
-  onCronChange?.(cron);
+  const removeTimeSlot = (index: number) => {
+    setTimeSlots((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)))
+  }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [frequency, hours, minutes, seconds, daysOfWeek, dayOfMonth]);
-
-  const handleSave = async () => {
-    if (!jobType.trim()) {
-      setError('Job Name is required');
-      return;
-    }
-
-    if (!commissionConfigId || commissionConfigId === 0) {
-      setError('Commission Config ID is required');
-      return;
-    }
-
-    if (!cronExpression) {
-      setError('Invalid cron expression. Please check your schedule settings.');
-      return;
-    }
-
-    if (frequency === 'WEEKLY' && daysOfWeek.length === 0) {
-      setError('Please select at least one day for weekly schedule');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const payload = {
-        commissionConfigId,
-        jobType: jobType.trim(),
-        triggerType: 'CRON',
-        cronExpression
-      };
-
-      console.log('Submitting payload:', payload);
-
-      await commissionService.updateCron(payload);
-
-      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Step 3 saved successfully!', {
-        description: 'Schedule configuration has been saved.'
-      });
-      onSaveSuccess();
-    } catch (err: any) {
-      console.error('Error saving cron schedule:', err);
-      const errorMessage = err?.message || 'Failed to save schedule. Please try again.';
-      setError(errorMessage);
-      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to save schedule', {
-        description: errorMessage
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const updateTimeSlot = (index: number, value: string) => {
+    setTimeSlots((prev) => prev.map((t, i) => (i === index ? value : t)))
+  }
 
   const getReadableSchedule = () => {
-    if (!cronExpression) return 'No schedule configured';
+    if (scheduleMode === 'INSTANT') return 'Instant — no recurring cron.'
+    if (!generatedCron || generatedCron === EXECUTION_INSTANT) return 'No recurring schedule'
 
-    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-    switch (frequency) {
+    const timesLabel = timeSlots.join(', ')
+    switch (scheduleMode) {
       case 'DAILY':
-        return `Runs daily at ${timeStr}`;
-      case 'WEEKLY':
-        return `Runs ${daysOfWeek.join(', ')} at ${timeStr}`;
+        return `Daily at ${timesLabel}`
+      case 'WEEKLY_MULTI':
+        return `Weekly on ${daysOfWeek.join(', ')} at ${timesLabel} (each day runs all times)`
       case 'MONTHLY':
-        return `Runs on day ${dayOfMonth} of each month at ${timeStr}`;
+        return `Monthly on day ${dayOfMonth} at ${timesLabel}`
       default:
-        return 'Custom schedule';
+        return 'Custom schedule'
     }
-  };
+  }
 
   return (
-    <div className="">
-      <div className="bg-white space-y-6">
-
-        {/* Simple/Advanced Mode Toggle */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setUseSimpleMode(true)}
-            className={`px-2 py-2 rounded-md transition-colors ${useSimpleMode
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    <div className="space-y-6 bg-white">
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-neutral-800">Execution pattern</label>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {SCHEDULE_MODES.map((m) => (
+            <label
+              key={m.id}
+              className={`flex cursor-pointer flex-col rounded-lg border p-3 transition-colors ${
+                scheduleMode === m.id
+                  ? 'border-teal-500 bg-teal-50/80 ring-1 ring-teal-500'
+                  : 'border-neutral-200 hover:bg-neutral-50'
               }`}
-          >
-            Simple Mode
-          </button>
-          <button
-            type="button"
-            onClick={() => setUseSimpleMode(false)}
-            className={`px-2 py-2 rounded-md transition-colors ${!useSimpleMode
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-          >
-            Advanced Mode
-          </button>
-        </div>
-
-        {useSimpleMode ? (
-          /* Simple Mode */
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-              <div>
-                <label className="block mb-2 font-medium">Frequency Pattern</label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={frequency}
-                  onChange={(e) => {
-                    setFrequency(e.target.value as 'DAILY' | 'WEEKLY' | 'MONTHLY');
-                    if (e.target.value !== 'WEEKLY') {
-                      setDaysOfWeek([]);
-                    }
-                  }}
-                >
-                  <option value="DAILY">Every day</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="MONTHLY">Monthly</option>
-                </select>
+            >
+              <div className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="exec-schedule-mode"
+                  checked={scheduleMode === m.id}
+                  onChange={() => setScheduleMode(m.id)}
+                  className="mt-1 h-4 w-4 border-neutral-300 text-teal-600"
+                />
+                <div>
+                  <span className="text-sm font-medium text-neutral-900">{m.label}</span>
+                  <p className="mt-0.5 text-xs text-neutral-500">{m.description}</p>
+                </div>
               </div>
-              <div>
-                <label className="block mb-2 font-medium">Time</label>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {scheduleMode !== 'INSTANT' ? (
+        <div className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-50/50 p-4">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <label className="block text-sm font-medium text-neutral-800">Run times</label>
+              <p className="text-xs text-neutral-500">
+                Add multiple clocks for the same pattern (e.g. several runs per day or per month).
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addTimeSlot}>
+              <FiPlus className="h-4 w-4" />
+              Add time
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {timeSlots.map((slot, index) => (
+              <div key={index} className="flex items-center gap-2">
                 <input
                   type="time"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={simpleTime}
-                  onChange={(e) => {
-                    setSimpleTime(e.target.value);
-                    parseTimeInput(e.target.value);
-                    setSeconds(0); // Reset seconds in simple mode
-                  }}
+                  className="min-w-[8rem] flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  value={slot}
+                  onChange={(e) => updateTimeSlot(index, e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 text-neutral-400 hover:text-red-600"
+                  disabled={timeSlots.length <= 1}
+                  onClick={() => removeTimeSlot(index)}
+                  aria-label="Remove time"
+                >
+                  <FiTrash2 className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-
-            {/* Weekly - Days of Week */}
-            {frequency === 'WEEKLY' && (
-              <div>
-                <label className="block mb-2 font-medium">Days of Week</label>
-                <div className="flex flex-wrap gap-3">
-                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                    <label key={day} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={daysOfWeek.includes(day)}
-                        onChange={() =>
-                          setDaysOfWeek(prev =>
-                            prev.includes(day)
-                              ? prev.filter(d => d !== day)
-                              : [...prev, day]
-                          )
-                        }
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span>{day}</span>
-                    </label>
-                  ))}
-                </div>
-                {daysOfWeek.length === 0 && (
-                  <p className="mt-1 text-sm text-red-500">Please select at least one day</p>
-                )}
-              </div>
-            )}
-
-            {/* Monthly - Day of Month */}
-            {frequency === 'MONTHLY' && (
-              <div>
-                <label className="block mb-2 font-medium">Day of Month (1-31)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={31}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={dayOfMonth}
-                  onChange={(e) => setDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
-                />
-              </div>
-            )}
+            ))}
           </div>
-        ) : (
-          /* Advanced Mode */
-          <div className="space-y-4">
-            {/* Time Fields */}
-            <div className="grid grid-cols-3 gap-4">
-              {/* Hours */}
-              <div>
-                <label className="block mb-2 font-medium">Hours (0-23)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={23}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={hours}
-                  onChange={(e) => setHours(Math.max(0, Math.min(23, Number(e.target.value) || 0)))}
-                />
-              </div>
 
-              {/* Minutes */}
-              <div>
-                <label className="block mb-2 font-medium">Minutes (0-59)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={59}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={minutes}
-                  onChange={(e) => setMinutes(Math.max(0, Math.min(59, Number(e.target.value) || 0)))}
-                />
-              </div>
-
-              {/* Seconds */}
-              <div>
-                <label className="block mb-2 font-medium">Seconds (0-59)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={59}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={seconds}
-                  onChange={(e) => setSeconds(Math.max(0, Math.min(59, Number(e.target.value) || 0)))}
-                />
-              </div>
-            </div>
-
-            {/* Frequency */}
+          {scheduleMode === 'WEEKLY_MULTI' ? (
             <div>
-              <label className="block mb-2 font-medium">Frequency Pattern</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={frequency}
-                onChange={(e) => {
-                  setFrequency(e.target.value as 'DAILY' | 'WEEKLY' | 'MONTHLY');
-                  if (e.target.value !== 'WEEKLY') {
-                    setDaysOfWeek([]);
-                  }
-                }}
-              >
-                <option value="DAILY">Every day</option>
-                <option value="WEEKLY">Weekly</option>
-                <option value="MONTHLY">Monthly</option>
-              </select>
+              <label className="mb-2 block text-sm font-medium text-neutral-800">Weekdays</label>
+              <div className="flex flex-wrap gap-3">
+                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
+                  <label key={day} className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={daysOfWeek.includes(day)}
+                      onChange={() =>
+                        setDaysOfWeek((prev) =>
+                          prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+                        )
+                      }
+                      className="h-4 w-4 rounded border-neutral-300 text-teal-600"
+                    />
+                    {day}
+                  </label>
+                ))}
+              </div>
+              {daysOfWeek.length === 0 ? (
+                <p className="mt-1 text-xs text-red-600">Select at least one day.</p>
+              ) : null}
             </div>
+          ) : null}
 
-            {/* Weekly - Days of Week */}
-            {frequency === 'WEEKLY' && (
-              <div>
-                <label className="block mb-2 font-medium">Days of Week</label>
-                <div className="flex flex-wrap gap-3">
-                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                    <label key={day} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={daysOfWeek.includes(day)}
-                        onChange={() =>
-                          setDaysOfWeek(prev =>
-                            prev.includes(day)
-                              ? prev.filter(d => d !== day)
-                              : [...prev, day]
-                          )
-                        }
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span>{day}</span>
-                    </label>
-                  ))}
-                </div>
-                {daysOfWeek.length === 0 && (
-                  <p className="mt-1 text-sm text-red-500">Please select at least one day</p>
-                )}
-              </div>
-            )}
-
-            {/* Monthly - Day of Month */}
-            {frequency === 'MONTHLY' && (
-              <div>
-                <label className="block mb-2 font-medium">Day of Month (1-31)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={31}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={dayOfMonth}
-                  onChange={(e) => setDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Cron Expression Display */}
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-gray-700">Generated Cron Expression</h3>
-            <span className="text-xs text-gray-500">Quartz.NET Format</span>
-          </div>
-          <div className="bg-gray-900 text-green-400 font-mono text-sm p-3 rounded-md mb-2">
-            {cronExpression || 'Configure schedule to generate expression'}
-          </div>
-          <p className="text-sm text-gray-600">{getReadableSchedule()}</p>
+          {scheduleMode === 'MONTHLY' ? (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-800">
+                Day of month (1–31)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={31}
+                className="w-full max-w-[12rem] rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                value={dayOfMonth}
+                onChange={(e) =>
+                  setDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value) || 1)))
+                }
+              />
+              <p className="mt-1 text-xs text-neutral-500">
+                For months with fewer days, schedulers typically use the last day of the month when N exceeds it.
+              </p>
+            </div>
+          ) : null}
         </div>
+      ) : null}
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-            {error}
-          </div>
-        )}
+      <div className="rounded-md border border-neutral-200 bg-neutral-50 p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-medium text-neutral-800">Generated schedule value</h3>
+          <span className="text-xs text-neutral-500">Quartz.NET · multiple joined with &quot; | &quot;</span>
+        </div>
+        <div className="mb-2 rounded-md bg-neutral-900 p-3 font-mono text-sm text-green-400">
+          {generatedCron || '—'}
+        </div>
+        <p className="text-sm text-neutral-600">{getReadableSchedule()}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export { IncentiveConfig };
+export { IncentiveConfig }

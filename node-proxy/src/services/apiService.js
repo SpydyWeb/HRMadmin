@@ -575,12 +575,14 @@ const upsertProgramWeightages = (data = {}, headers = {}) => {
 const getProgramsList = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
 };
-const getPastQualifications = (data = {}, headers = {}) => {
-  const programId = data?.programId;
-  if (!programId) {
-    throw new Error("programId is required");
-  }
-  return apiClient.post(`${APIRoutes.INCENTIVE_GET_PAST_QUALIFICATIONS}/${programId}`, {}, { headers });
+const getAgentClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_AGENT_CLUBS, data, { headers });
+};
+const getProgramClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAM_CLUBS, data, { headers });
+};
+const upsertProgramClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_CLUBS, data, { headers });
 };
 const getSelectedProgramKpis = (data = {}, headers = {}) => {
   const programId = data?.programId;
@@ -749,7 +751,9 @@ module.exports = {
   getKpisList,
   upsertProgramWeightages,
   getProgramsList,
-  getPastQualifications,
+  getAgentClubs,
+  getProgramClubs,
+  upsertProgramClubs,
   getSelectedProgramKpis,
   getFiltersCascade,
   upsertProgramFilters,

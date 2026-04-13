@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { MdOutlineInfo } from 'react-icons/md'
-import { FiChevronRight, FiCode, FiFilter, FiInfo, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
+import { FiChevronRight, FiCode, FiFilter, FiInfo, FiPlus, FiSearch, FiTrash2, FiUsers } from 'react-icons/fi'
 import { useNavigate } from '@tanstack/react-router'
 import { parse } from 'date-fns'
 
@@ -22,7 +22,13 @@ import { showToast } from '@/components/ui/sonner'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
-import type { IKpi, IIncentiveProgram } from '@/models/incentive'
+import type {
+  ClawbackBasis,
+  IKpi,
+  IncentiveFrequency,
+  ProgramDetailCategory,
+  ProgramScheduleType,
+} from '@/models/incentive'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -39,13 +45,10 @@ import {
 import { IncentiveConfig } from '@/components/incentives/IncentiveConfig'
 import { AddUserInline } from '@/components/incentives/AddUserDialog'
 import { MultiSelectInline } from '@/components/incentives/MultiSelectInline'
-import DataTable from '@/components/table/DataTable'
 
 type WeightageOption = { key: string; id: number | null; label: string }
 
 type CascadeOption = { id: number; label: string }
-
-type PastQualificationRow = Record<string, unknown>
 
 function extractCascadeRows(responseBody: any, preferredKeys: string[]): any[] {
   if (!responseBody || typeof responseBody !== 'object') return []
@@ -78,9 +81,6 @@ function extractCascadeRows(responseBody: any, preferredKeys: string[]): any[] {
   }
   return []
 }
-
-/** Radix Select requires a non-empty value for “no selection”. */
-const CASCADE_NONE = '__cascade_none__'
 
 function mapCascadeOptions(
   rows: any[],
@@ -134,6 +134,55 @@ function extractFirstObjectArray(payload: any): any[] {
   }
 
   return []
+}
+
+function extractClubRows(payload: any): any[] {
+  const body = payload?.responseBody ?? payload
+  if (!body || typeof body !== 'object') return []
+  for (const k of ['clubs', 'clubList', 'agentClubs', 'items']) {
+    const a = (body as Record<string, unknown>)[k]
+    if (Array.isArray(a) && a.length) return a as any[]
+  }
+  return extractFirstObjectArray(body)
+}
+
+function parseProgramClubIds(payload: any): number[] {
+  const body = payload?.responseBody ?? payload
+  const raw =
+    body?.clubIds ??
+    body?.selectedClubIds ??
+    body?.clubs ??
+    body?.items
+  if (!Array.isArray(raw)) return []
+  const ids: number[] = []
+  for (const item of raw) {
+    if (item == null) continue
+    if (typeof item === 'number' || typeof item === 'string') {
+      const n = Number(item)
+      if (Number.isFinite(n) && n > 0) ids.push(n)
+      continue
+    }
+    if (typeof item === 'object') {
+      const obj = item as {
+        clubId?: unknown
+        id?: unknown
+        isSelected?: unknown
+        selected?: unknown
+        isActive?: unknown
+      }
+      const isSelected =
+        obj.isSelected === true ||
+        obj.selected === true ||
+        obj.isActive === true
+
+      // If API returns an array of club objects with selection flags, respect them.
+      if (isSelected) {
+        const n = Number(obj.clubId ?? obj.id)
+        if (Number.isFinite(n) && n > 0) ids.push(n)
+      }
+    }
+  }
+  return ids
 }
 
 function normalizeKpiLibraryFromResponse(payload: any): IKpi[] {
@@ -224,12 +273,6 @@ interface AgentFilterState {
   designations: string[]
 }
 
-interface PastCycle {
-  date: string
-  name: string
-  executionDate: string
-}
-
 const OBJECT_COLORS: Record<string, string> = {
   Policy: 'bg-teal-100 text-teal-800',
   Training: 'bg-purple-100 text-purple-800',
@@ -250,6 +293,28 @@ const WEIGHTAGE_OPTIONS = ['Weightage A', 'Weightage B', 'Weightage C']
 
 const PAST_CYCLE_PROGRAMS = ['Program 1', 'Program 2', 'Program 3']
 
+const PROGRAM_DETAIL_TABS: ReadonlyArray<{ id: ProgramDetailCategory; label: string }> = [
+  { id: 'standard', label: 'Standard Programs' },
+  { id: 'fresher', label: 'Fresher Programs' },
+  { id: 'multi_layered', label: 'Multi Layered Program' },
+  { id: 'career_progression', label: 'Career Progression' },
+  { id: 'commission', label: 'Commission' },
+]
+
+const FRESHER_MONTH_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
+  { value: 1, label: 'Jan' },
+  { value: 2, label: 'Feb' },
+  { value: 3, label: 'Mar' },
+  { value: 4, label: 'Apr' },
+  { value: 5, label: 'May' },
+  { value: 6, label: 'Jun' },
+  { value: 7, label: 'Jul' },
+  { value: 8, label: 'Aug' },
+  { value: 9, label: 'Sep' },
+  { value: 10, label: 'Oct' },
+  { value: 11, label: 'Nov' },
+  { value: 12, label: 'Dec' },
+]
 
 interface SlabSectionProps {
   slab: SlabState
@@ -807,6 +872,18 @@ export default function IncentiveProgramConfig() {
   const [executionFrequency, setExecutionFrequency] = useState<string>('MONTHLY')
   const [selectionExpression, setSelectionExpression] = useState<string>('')
 
+  const [programDetailTab, setProgramDetailTab] = useState<ProgramDetailCategory>('standard')
+  const [programType, setProgramType] = useState<ProgramScheduleType>('one_time')
+  const [incentiveFrequency, setIncentiveFrequency] = useState<IncentiveFrequency>('monthly')
+  const [conversionPeriodDays, setConversionPeriodDays] = useState<string>('')
+  const [cancellationPeriodDays, setCancellationPeriodDays] = useState<string>('')
+  const [clawbackConsidered, setClawbackConsidered] = useState(false)
+  const [clawbackBasis, setClawbackBasis] = useState<ClawbackBasis>('cytd')
+
+  const [fresherMonths, setFresherMonths] = useState<number[]>(() => FRESHER_MONTH_OPTIONS.map((m) => m.value))
+  const [fresherCatchUpPrevious, setFresherCatchUpPrevious] = useState(false)
+  const [fresherEarlyBonus, setFresherEarlyBonus] = useState(false)
+
   const [weightageOptions, setWeightageOptions] = useState<WeightageOption[]>(
     [],
   )
@@ -849,28 +926,20 @@ export default function IncentiveProgramConfig() {
   // ─── API state ───────────────────────────────────────────────────────────────
   const [kpiLibrary, setKpiLibrary] = useState<KPIEntry[]>(KPI_LIBRARY_PLACEHOLDER)
   const [kpiLibraryLoading, setKpiLibraryLoading] = useState(false)
-  const [kpisListOptions, setKpisListOptions] = useState<Array<{ kpiId: number; kpiName: string }>>([])
+  const [kpisListOptions, setKpisListOptions] = useState<Array<{ id: number; label: string }>>([])
   const [kpisListLoading, setKpisListLoading] = useState(false)
   const [selectedKpiIds, setSelectedKpiIds] = useState<number[]>([])
-  const [pastPrograms, setPastPrograms] = useState<IIncentiveProgram[]>([])
   const [apiDesignations, setApiDesignations] = useState<Record<string, string[]>>({})
   const [designationsLoading, setDesignationsLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [selectedWeightages, setSelectedWeightages] = useState<string[]>([])
-  const [pastCycleProgram, setPastCycleProgram] = useState<string>('')
 
-  const [pastProgramOptions, setPastProgramOptions] = useState<CascadeOption[]>(
-    [],
-  )
-  const [selectedPastProgramId, setSelectedPastProgramId] = useState('')
-  const [pastQualifications, setPastQualifications] = useState<
-    PastQualificationRow[]
-  >([])
-  const [pastQualificationsLoading, setPastQualificationsLoading] =
-    useState(false)
-
+  const [clubOptions, setClubOptions] = useState<CascadeOption[]>([])
+  const [selectedClubIds, setSelectedClubIds] = useState<number[]>([])
+  const [clubsLoading, setClubsLoading] = useState(false)
+  const [isSavingClubs, setIsSavingClubs] = useState(false)
 
   /** Convenience single values for downstream selects (UI is single-select there). */
   const primaryCascadeChannelId = useMemo(
@@ -1109,37 +1178,27 @@ export default function IncentiveProgramConfig() {
     }
   }, [])
 
-  // Load programs list for Past Qualified Cycles dropdown
+  // Agent clubs for eligibility multi-select
   useEffect(() => {
     let cancelled = false
+    setClubsLoading(true)
       ;(async () => {
         try {
-          const res: any = await incentiveService.getPrograms({
-            pageNumber: 1,
-            pageSize: 200,
-          })
-
+          // As requested: load the *club list* from GetProgramClubs (POST with empty body)
+          const res: any = await incentiveService.getProgramClubs({})
           if (cancelled) return
-
-          const body = res?.responseBody ?? res
-          const list =
-            body?.items ??
-            body?.programs ??
-            body?.programList ??
-            body?.programsList ??
-            (Array.isArray(body) ? body : [])
-
-          const rows = Array.isArray(list) ? list : extractFirstObjectArray(res)
-
-          const opts = mapCascadeOptions(rows, ['programId', 'id'], [
-            'programName',
+          const rows = extractClubRows(res?.responseBody ?? res)
+          const opts = mapCascadeOptions(rows, ['clubId', 'id'], [
+            'clubName',
             'name',
-            'title',
             'label',
+            'title',
           ])
-          setPastProgramOptions(opts)
-        } catch (err) {
-          if (!cancelled) setPastProgramOptions([])
+          if (!cancelled) setClubOptions(opts)
+        } catch {
+          if (!cancelled) setClubOptions([])
+        } finally {
+          if (!cancelled) setClubsLoading(false)
         }
       })()
     return () => {
@@ -1147,46 +1206,25 @@ export default function IncentiveProgramConfig() {
     }
   }, [])
 
-  // Load past qualifications when a program is selected
+  // Load saved club selection when programId is available
   useEffect(() => {
     let cancelled = false
-    const idNum = selectedPastProgramId ? Number(selectedPastProgramId) : NaN
-    if (!Number.isFinite(idNum) || idNum <= 0) {
-      setPastQualifications([])
-      setPastQualificationsLoading(false)
+    if (!programId) {
+      setSelectedClubIds([])
       return
     }
-
-    setPastQualificationsLoading(true)
       ;(async () => {
         try {
-          const res: any = await incentiveService.getPastQualifications(idNum)
-          const body = res?.responseBody ?? res
-
-          // Try common keys first, then fall back to first object-array found
-          const rows =
-            body?.qualifications ??
-            body?.pastQualifications ??
-            body?.items ??
-            (Array.isArray(body) ? body : null) ??
-            extractFirstObjectArray(body)
-
-          const normalized = (Array.isArray(rows) ? rows : []).map((r) =>
-            r && typeof r === 'object' ? r : { value: r },
-          ) as PastQualificationRow[]
-
-          if (!cancelled) setPastQualifications(normalized)
-        } catch (err) {
-          if (!cancelled) setPastQualifications([])
-        } finally {
-          if (!cancelled) setPastQualificationsLoading(false)
+          const res = await incentiveService.getProgramClubs({ programId })
+          if (!cancelled) setSelectedClubIds(parseProgramClubIds(res))
+        } catch {
+          if (!cancelled) setSelectedClubIds([])
         }
       })()
-
     return () => {
       cancelled = true
     }
-  }, [selectedPastProgramId])
+  }, [programId])
 
   useEffect(() => {
     setSelectedSubChannelIds([])
@@ -1390,6 +1428,9 @@ export default function IncentiveProgramConfig() {
       return
     }
 
+    const programCategoryLabel =
+      PROGRAM_DETAIL_TABS.find((t) => t.id === programDetailTab)?.label ?? programDetailTab
+
     const effectiveFrom = toIso(startDate)
     const effectiveTo = toIso(endDate)
 
@@ -1397,24 +1438,78 @@ export default function IncentiveProgramConfig() {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'Start Date is required')
       return
     }
-    if (!effectiveTo) {
-      showToast(NOTIFICATION_CONSTANTS.ERROR, 'End Date is required')
+    if (programType === 'one_time' && !effectiveTo) {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'End Date is required for a one-time program')
+      return
+    }
+    if (programDetailTab === 'fresher' && fresherMonths.length === 0) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        'Fresher program: select at least one month (month-wise selection).',
+      )
       return
     }
 
+    const conv = parseInt(conversionPeriodDays, 10)
+    const canc = parseInt(cancellationPeriodDays, 10)
     const cappingAmountNum = parseFloat(cappingAmount) || 0
+    const normalizeFrequencyLabel = (value: string) => {
+      const v = String(value ?? '').trim()
+      if (!v) return ''
+      const upper = v.toUpperCase()
+      // Common values used in UI/DB; API examples show Title Case.
+      if (upper === 'MONTHLY') return 'Monthly'
+      if (upper === 'WEEKLY') return 'Weekly'
+      if (upper === 'QUARTERLY') return 'Quarterly'
+      if (upper === 'HALF_YEARLY' || upper === 'HALFYEARLY') return 'Half Yearly'
+      return v
+    }
 
     setIsSaving(true)
     try {
       const res = await incentiveService.upsertProgram({
         programName: name,
         description: description.trim(),
+        // Tab-driven payload fields (same API, payload varies by tab)
+        programCategory: programCategoryLabel,
+        tabName: programCategoryLabel,
         effectiveFrom,
-        effectiveTo,
-        executionFrequency: cronValue,
-        selectionExpression: '',
+        effectiveTo:
+          programType === 'perpetual' ? (effectiveTo ?? null) : (effectiveTo as string),
+        // API example uses "Monthly" etc; we still allow cronValue if your UI sets it.
+        executionFrequency: normalizeFrequencyLabel(cronValue || executionFrequency),
+        selectionExpression: selectionExpression.trim() ? selectionExpression.trim() : null,
         cappingAmount: cappingAmountNum,
         kpiIds: selectedKpiIds,
+        programDetailCategory: programDetailTab,
+        // Some backends expect Title Case values ("One Time", "Perpetual")
+        programType: programType === 'one_time' ? 'One Time' : 'Perpetual',
+        incentiveFrequency: programType === 'perpetual' ? incentiveFrequency : undefined,
+        conversionPeriodDays: Number.isFinite(conv) && conv >= 0 ? conv : undefined,
+        cancellationPeriodDays: Number.isFinite(canc) && canc >= 0 ? canc : undefined,
+        clawbackRecoveries: clawbackConsidered,
+        clawbackBasis: clawbackConsidered ? clawbackBasis : undefined,
+        // Alternate key names (requested payload shape)
+        considerClawback: clawbackConsidered,
+        clawbackPeriod: clawbackConsidered ? clawbackBasis : undefined,
+        conversionPeriod: Number.isFinite(conv) && conv >= 0 ? conv : undefined,
+        cancellationPeriod: Number.isFinite(canc) && canc >= 0 ? canc : undefined,
+        ...(programDetailTab === 'fresher'
+          ? {
+              fresherEligibleMonths: [...fresherMonths].sort((a, b) => a - b),
+              fresherCatchUpPreviousQualification: fresherCatchUpPrevious,
+              fresherEarlyBonus: fresherEarlyBonus,
+              // API example keys for fresher tab
+              monthWiseSelection: [...fresherMonths]
+                .sort((a, b) => a - b)
+                .map((m) =>
+                  FRESHER_MONTH_OPTIONS.find((o) => o.value === m)?.label ?? String(m),
+                )
+                .join(','),
+              catchUpPreviousQualification: fresherCatchUpPrevious,
+              earlyBonus: fresherEarlyBonus,
+            }
+          : {}),
       })
 
       const programmeID = res?.responseBody?.incentiveProgram?.programId
@@ -1534,6 +1629,34 @@ export default function IncentiveProgramConfig() {
     }
   }
 
+  const handleSaveClubs = async () => {
+    if (!programId) {
+      showToast(
+        NOTIFICATION_CONSTANTS.ERROR,
+        'Please save Program Details first so we have programId',
+      )
+      return
+    }
+
+    setIsSavingClubs(true)
+    try {
+      await incentiveService.upsertProgramClubs({
+        programId,
+        clubIds: selectedClubIds,
+      })
+      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Club eligibility saved successfully')
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.errorMessage ||
+        err?.message ||
+        'Failed to save club eligibility'
+      showToast(NOTIFICATION_CONSTANTS.ERROR, message)
+    } finally {
+      setIsSavingClubs(false)
+    }
+  }
+
   // Fetch designations from API when branches change
   const fetchDesignations = useCallback(async (branches: string[]) => {
     if (branches.length === 0) return
@@ -1561,19 +1684,6 @@ export default function IncentiveProgramConfig() {
       fetchDesignations(agentFilter.branches)
     }
   }, [agentFilter.branches, fetchDesignations])
-
-  // Derive past cycles list from loaded programs
-  const pastCycles: PastCycle[] = useMemo(
-    () =>
-      pastPrograms
-        .filter((p) => p.status?.toLowerCase() === 'completed' || new Date(p.endDate) < new Date())
-        .map((p) => ({
-          date: p.endDate,
-          name: p.name,
-          executionDate: p.createdAt ?? p.endDate,
-        })),
-    [pastPrograms],
-  )
 
   const updateSlab = (id: string, updates: Partial<SlabState>) => {
     setSlabs((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)))
@@ -1626,10 +1736,6 @@ export default function IncentiveProgramConfig() {
         })
       }
       setSaveSuccess(true)
-      // Reload programs list
-      incentiveService.getPrograms({ pageNumber: 1, pageSize: 100 })
-        .then((result) => setPastPrograms(result?.items ?? []))
-        .catch(() => { })
     } catch (err) {
       console.error('Failed to save program:', err)
       setSaveError('Failed to save. Please check your inputs and try again.')
@@ -1663,90 +1769,369 @@ export default function IncentiveProgramConfig() {
                   Program Details
                 </CardTitle>
                 <p className="mt-1 text-xs text-neutral-500">
-                  Configure the name, description, and duration for the active
-                  incentive program.
+                  Pick a program category (same fields on each tab for now), then set schedule,
+                  periods, and clawback rules.
                 </p>
               </div>
               <MdOutlineInfo className="mt-1 h-4 w-4 text-neutral-400" />
             </CardHeader>
 
             <CardContent className="px-4 pb-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Input
-                    label="Program Name *"
-                    value={programName}
-                    onChange={(e) => setProgramName(e.target.value)}
-                    placeholder="e.g., Q1 2025 Sales Excellence Program"
-                    variant="standardone"
-                  />
-                </div>
+              <Tabs
+                value={programDetailTab}
+                onValueChange={(v) => setProgramDetailTab(v as ProgramDetailCategory)}
+                className="w-full"
+              >
+                <TabsList className="mb-4 grid h-auto w-full grid-cols-2 gap-1 rounded-lg bg-neutral-100 p-1 sm:grid-cols-3 lg:grid-cols-5">
+                  {PROGRAM_DETAIL_TABS.map((t) => (
+                    <TabsTrigger
+                      key={t.id}
+                      value={t.id}
+                      className="whitespace-normal px-2 py-2 text-center text-[11px] leading-tight sm:text-xs"
+                    >
+                      {t.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Description
-                  </label>
-                  <Textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the objectives and scope of this incentive program..."
-                    className="min-h-[96px] bg-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <DatePicker
-                    label="Start Date *"
-                    value={startDate}
-                    onChange={setStartDate}
-                    placeholder="dd-mm-yyyy"
-                  />
-                  <DatePicker
-                    label="End Date *"
-                    value={endDate}
-                    onChange={setEndDate}
-                    placeholder="dd-mm-yyyy"
-                  />
-                   <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                      Capping Amount
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      placeholder="e.g., 50000"
-                      value={cappingAmount}
-                      onChange={(e) => setCappingAmount(e.target.value)}
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Input
+                      label="Program Name *"
+                      value={programName}
+                      onChange={(e) => setProgramName(e.target.value)}
+                      placeholder="e.g., Q1 2025 Sales Excellence Program"
+                      variant="standardone"
                     />
                   </div>
-                </div>
 
-              
-                 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-neutral-700">
-                      Choose The KPI's
+                      Description
+                    </label>
+                    <Textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe the objectives and scope of this incentive program..."
+                      className="min-h-[96px] bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                        Program Type *
+                      </Label>
+                      <Select
+                        value={programType}
+                        onValueChange={(v) => setProgramType(v as ProgramScheduleType)}
+                      >
+                        <SelectTrigger className="h-10 w-full bg-white">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="perpetual">Perpetual</SelectItem>
+                          <SelectItem value="one_time">One Time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {programType === 'perpetual' ? (
+                      <div>
+                        <Label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                          Frequency *
+                        </Label>
+                        <Select
+                          value={incentiveFrequency}
+                          onValueChange={(v) => setIncentiveFrequency(v as IncentiveFrequency)}
+                        >
+                          <SelectTrigger className="h-10 w-full bg-white">
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="half_yearly">Half yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="hidden md:block" aria-hidden />
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <DatePicker
+                      label="Start Date *"
+                      value={startDate}
+                      onChange={setStartDate}
+                      placeholder="dd-mm-yyyy"
+                    />
+                    <DatePicker
+                      label={programType === 'perpetual' ? 'End Date (optional)' : 'End Date *'}
+                      value={endDate}
+                      onChange={setEndDate}
+                      placeholder="dd-mm-yyyy"
+                    />
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-neutral-700">
+                        Capping Amount
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        placeholder="e.g., 50000"
+                        value={cappingAmount}
+                        onChange={(e) => setCappingAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-neutral-700">
+                        Conversion Period
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          placeholder="e.g., 5"
+                          value={conversionPeriodDays}
+                          onChange={(e) => setConversionPeriodDays(e.target.value)}
+                        />
+                        <span className="shrink-0 text-xs text-neutral-500">days after end date</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-neutral-700">
+                        Cancellation Period
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          placeholder="e.g., 5"
+                          value={cancellationPeriodDays}
+                          onChange={(e) => setCancellationPeriodDays(e.target.value)}
+                        />
+                        <span className="shrink-0 text-xs text-neutral-500">days after conversion</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50/80 p-3">
+                    <p className="mb-2 text-sm font-medium text-neutral-800">
+                      Should clawback / recoveries be considered?
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="clawback-yn"
+                          checked={!clawbackConsidered}
+                          onChange={() => setClawbackConsidered(false)}
+                          className="h-4 w-4 border-neutral-300 text-teal-600"
+                        />
+                        No
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="clawback-yn"
+                          checked={clawbackConsidered}
+                          onChange={() => setClawbackConsidered(true)}
+                          className="h-4 w-4 border-neutral-300 text-teal-600"
+                        />
+                        Yes
+                      </label>
+                    </div>
+
+                    {clawbackConsidered ? (
+                      <div className="mt-3 border-t border-neutral-200 pt-3">
+                        <p className="mb-2 text-xs font-medium text-neutral-600">Clowback From</p>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                          {(
+                            [
+                              ['itd', 'ITD'],
+                              ['fytd', 'FYTD'],
+                              ['cytd', 'CYTD'],
+                            ] as const
+                          ).map(([value, label]) => (
+                            <label
+                              key={value}
+                              className="flex cursor-pointer items-center gap-2 text-sm text-neutral-800"
+                            >
+                              <input
+                                type="radio"
+                                name="clawback-basis"
+                                checked={clawbackBasis === value}
+                                onChange={() => setClawbackBasis(value)}
+                                className="h-4 w-4 border-neutral-300 text-teal-600"
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {programDetailTab === 'fresher' ? (
+                    <div className="space-y-4 rounded-lg border border-violet-200 bg-violet-50/40 p-4">
+                      <p className="text-sm font-semibold text-violet-900">Fresher program options</p>
+
+                      <div>
+                        <Label className="mb-2 block text-sm font-medium text-neutral-800">
+                          Month-wise selection
+                        </Label>
+                        <p className="mb-2 text-xs text-neutral-500">
+                          Choose which calendar months this fresher program applies to.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {FRESHER_MONTH_OPTIONS.map(({ value, label }) => {
+                            const checked = fresherMonths.includes(value)
+                            return (
+                              <label
+                                key={value}
+                                className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                                  checked
+                                    ? 'border-violet-500 bg-white text-violet-900 shadow-sm'
+                                    : 'border-neutral-200 bg-white/80 text-neutral-600 hover:bg-white'
+                                }`}
+                              >
+                                <Checkbox
+                                  checked={checked}
+                                  onCheckedChange={(c) => {
+                                    const on = Boolean(c)
+                                    setFresherMonths((prev) =>
+                                      on
+                                        ? prev.includes(value)
+                                          ? prev
+                                          : [...prev, value]
+                                        : prev.filter((m) => m !== value),
+                                    )
+                                  }}
+                                  className="h-3.5 w-3.5"
+                                />
+                                {label}
+                              </label>
+                            )
+                          })}
+                        </div>
+                        {fresherMonths.length === 0 ? (
+                          <p className="mt-1.5 text-xs text-amber-700">
+                            Select at least one month, or use &quot;Select all&quot; below.
+                          </p>
+                        ) : null}
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() =>
+                              setFresherMonths(FRESHER_MONTH_OPTIONS.map((m) => m.value))
+                            }
+                          >
+                            Select all months
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => setFresherMonths([])}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-violet-200 pt-3">
+                        <p className="mb-2 text-sm font-medium text-neutral-800">
+                          Catch up of previous qualification
+                        </p>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="fresher-catchup"
+                              checked={!fresherCatchUpPrevious}
+                              onChange={() => setFresherCatchUpPrevious(false)}
+                              className="h-4 w-4 border-neutral-300 text-violet-600"
+                            />
+                            No
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="fresher-catchup"
+                              checked={fresherCatchUpPrevious}
+                              onChange={() => setFresherCatchUpPrevious(true)}
+                              className="h-4 w-4 border-neutral-300 text-violet-600"
+                            />
+                            Yes
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-violet-200 pt-3">
+                        <p className="mb-2 text-sm font-medium text-neutral-800">Early bonus</p>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="fresher-early-bonus"
+                              checked={!fresherEarlyBonus}
+                              onChange={() => setFresherEarlyBonus(false)}
+                              className="h-4 w-4 border-neutral-300 text-violet-600"
+                            />
+                            No
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="fresher-early-bonus"
+                              checked={fresherEarlyBonus}
+                              onChange={() => setFresherEarlyBonus(true)}
+                              className="h-4 w-4 border-neutral-300 text-violet-600"
+                            />
+                            Yes
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-neutral-700">
+                      Choose The KPI&apos;s
                     </label>
                     <MultiSelectInline
                       options={kpisListOptions}
                       placeholder="Search KPIs..."
                       onChange={(ids) => {
-                        setSelectedKpiIds(ids) // 👉 [1,4,2,5]
+                        setSelectedKpiIds(ids)
                       }}
                     />
                   </div>
-
-               
-              </div>
+                </div>
+              </Tabs>
               <div className="mt-10">
                 <div className="">
                   <CardTitle className="text-lg mb-2 font-semibold">
                     Execution Frequency
                   </CardTitle>
-                  <p className="my-2  text-xs text-neutral-500">
-                    Configure when this incentive program should run.
+                  <p className="my-2 text-xs text-neutral-500">
+                    Choose Instant, Daily, Weekly (multiple times per day on selected weekdays), or
+                    monthly day-of-month. Add several run times; each generates a Quartz expression,
+                    combined with &quot; | &quot;.
                   </p>
                 </div>
 
@@ -1757,10 +2142,6 @@ export default function IncentiveProgramConfig() {
                     isEditMode={false}
                     onCronChange={(cron) => {
                       setCronValue(cron)
-                      console.log("Cron from child:", cron)
-                    }}
-                    onSaveSuccess={() => {
-                      console.log("Schedule saved successfully")
                     }}
                   />
                 </CardContent>
@@ -1979,93 +2360,70 @@ export default function IncentiveProgramConfig() {
           </Card>
 
           <Card className="rounded-md border border-neutral-200">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-base font-semibold">
-                Past Qualified Cycles
-              </CardTitle>
-              <p className="mt-1 text-xs text-neutral-500">
-                Reference a list of previously qualified incentive program
-                cycles.
-              </p>
+            <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 py-3">
+              <div>
+                <CardTitle className="text-base font-semibold">
+                  Clubs
+                </CardTitle>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Select one or more clubs. Agents who belong to any selected club
+                  are eligible for this incentive program (in addition to other
+                  eligibility rules).
+                </p>
+              </div>
+              <FiUsers className="mt-1 h-4 w-4 text-neutral-400" />
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-neutral-700">
-                      Select Program
-                    </label>
-                    <Select
-                      value={selectedPastProgramId || CASCADE_NONE}
-                      onValueChange={(v) =>
-                        setSelectedPastProgramId(v === CASCADE_NONE ? '' : v)
-                      }
-                    >
-                      <SelectTrigger className="input-text !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
-                        <SelectValue
-                          placeholder={
-                            pastProgramOptions.length
-                              ? 'Select a past cycle program'
-                              : 'No programs found'
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={CASCADE_NONE}>
-                          Select a program
-                        </SelectItem>
-                        {pastProgramOptions.map((o) => (
-                          <SelectItem key={o.id} value={String(o.id)}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {selectedPastProgramId
-                      ? `Showing qualifications for programId: ${selectedPastProgramId}`
-                      : 'Pick a program to view past qualifications.'}
-                  </div>
+              <div className="max-w-xl">
+                <label className="mb-2 block text-sm font-medium text-neutral-700">
+                  Eligible clubs
+                </label>
+                <div className="rounded-md border border-neutral-200 bg-white p-3">
+                  {clubsLoading ? (
+                    <p className="text-xs text-neutral-500">Loading…</p>
+                  ) : clubOptions.length === 0 ? (
+                    <p className="text-xs text-neutral-500">
+                      No clubs are available right now.
+                    </p>
+                  ) : (
+                    <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                      {clubOptions.map((c) => (
+                        <label
+                          key={c.id}
+                          className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                        >
+                          <Checkbox
+                            checked={selectedClubIds.includes(c.id)}
+                            onCheckedChange={(checked) => {
+                              const isChecked = Boolean(checked)
+                              setSelectedClubIds((prev) => {
+                                if (isChecked) {
+                                  return prev.includes(c.id) ? prev : [...prev, c.id]
+                                }
+                                return prev.filter((id) => id !== c.id)
+                              })
+                            }}
+                          />
+                          {c.label}
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                <DataTable
-                  columns={(() => {
-                    const first = pastQualifications[0] as any
-                    const keys =
-                      first && typeof first === 'object'
-                        ? Object.keys(first).slice(0, 8)
-                        : []
-                    if (!keys.length) {
-                      return [
-                        {
-                          header: 'Result',
-                          accessor: (row: any) => JSON.stringify(row),
-                        },
-                      ]
-                    }
-                    return keys.map((k) => ({
-                      header: k,
-                      accessor: (row: any) => {
-                        const v = row?.[k]
-                        if (v == null) return '—'
-                        if (typeof v === 'object') return JSON.stringify(v)
-                        return String(v)
-                      },
-                    }))
-                  })()}
-                  data={pastQualifications as any[]}
-                  loading={pastQualificationsLoading}
-                  noDataMessage={
-                    selectedPastProgramId
-                      ? 'No qualifications found for this program.'
-                      : 'Select a program to load qualifications.'
-                  }
-                />
+              </div>
+              <div className="mt-4 flex items-center justify-end">
+                <Button
+                  variant="blue"
+                  onClick={handleSaveClubs}
+                  isLoading={isSavingClubs}
+                  disabled={isSavingClubs}
+                  loadingText="Saving..."
+                >
+                  Save clubs
+                </Button>
               </div>
             </CardContent>
           </Card>
-
 
           <Card className="rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
             <CardHeader className="px-5 pb-2 pt-5 border-b border-neutral-200">

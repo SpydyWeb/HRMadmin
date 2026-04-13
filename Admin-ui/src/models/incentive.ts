@@ -176,15 +176,44 @@ export interface ISaveWeightageDimensionRequest {
 
 // ─── Incentive Program Upsert ─────────────────────────────────────────────────
 
+export type ProgramDetailCategory =
+  | 'standard'
+  | 'fresher'
+  | 'multi_layered'
+  | 'career_progression'
+  | 'commission'
+
+export type ProgramScheduleType = 'perpetual' | 'one_time'
+
+export type IncentiveFrequency = 'weekly' | 'monthly' | 'quarterly' | 'half_yearly'
+
+export type ClawbackBasis = 'itd' | 'fytd' | 'cytd'
+
 export interface IUpsertProgramRequest {
   programName: string
   description: string
   effectiveFrom: string
-  effectiveTo: string
+  /** Omitted or null when program is perpetual with no fixed end. */
+  effectiveTo?: string | null
   executionFrequency: string
   selectionExpression: string
   cappingAmount: number
   kpiIds: number[]
+  /** Active Program Details tab (Standard, Fresher, …). */
+  programDetailCategory?: ProgramDetailCategory
+  programType?: ProgramScheduleType
+  /** When `programType` is perpetual. */
+  incentiveFrequency?: IncentiveFrequency
+  /** Days after program end date. */
+  conversionPeriodDays?: number
+  /** Days after conversion period. */
+  cancellationPeriodDays?: number
+  clawbackRecoveries?: boolean
+  clawbackBasis?: ClawbackBasis
+  /** Fresher program — calendar months (1–12) that apply. */
+  fresherEligibleMonths?: number[]
+  fresherCatchUpPreviousQualification?: boolean
+  fresherEarlyBonus?: boolean
 }
 
 // ─── KPIs List ────────────────────────────────────────────────────────────────
@@ -250,4 +279,11 @@ export interface IUpsertProgramFiltersRequest {
     designationIds: number[]
     isActive: boolean
   }>
+}
+
+// ─── Program clubs (agent eligibility) ───────────────────────────────────────
+
+export interface IUpsertProgramClubsRequest {
+  programId: number
+  clubIds: number[]
 }

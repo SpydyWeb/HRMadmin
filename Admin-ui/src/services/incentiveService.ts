@@ -26,6 +26,7 @@ import type {
   IUpsertProgramWeightagesRequest,
   IFiltersCascadeParams,
   IUpsertProgramFiltersRequest,
+  IUpsertProgramClubsRequest,
   ISelectedProgramKpisResponse,
 } from '@/models/incentive'
 
@@ -155,16 +156,42 @@ export const incentiveService = {
     }
   },
 
-  /** POST /api/incentive/GetPastQualifications/{programId} */
-  getPastQualifications: async (programId: number) => {
+  /** POST /api/incentive/GetAgentClubs — list agent clubs for multi-select */
+  getAgentClubs: async (params: Record<string, unknown> = {}) => {
+    try {
+      const response = await callApi(APIRoutes.INCENTIVE_GET_AGENT_CLUBS, [
+        params,
+      ])
+      return response
+    } catch (error) {
+      console.error('incentiveService.getAgentClubs error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetProgramClubs — clubs linked to a program */
+  getProgramClubs: async (payload: { programId: number } | Record<string, never> = {}) => {
+    try {
+      const response = await callApi(APIRoutes.INCENTIVE_GET_PROGRAM_CLUBS, [
+        payload,
+      ])
+      return response
+    } catch (error) {
+      console.error('incentiveService.getProgramClubs error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/UpsertProgramClubs — save club eligibility for a program */
+  upsertProgramClubs: async (data: IUpsertProgramClubsRequest) => {
     try {
       const response = await callApi(
-        APIRoutes.INCENTIVE_GET_PAST_QUALIFICATIONS,
-        [{ programId }],
+        APIRoutes.INCENTIVE_UPSERT_PROGRAM_CLUBS,
+        [data],
       )
       return response
     } catch (error) {
-      console.error('incentiveService.getPastQualifications error:', error)
+      console.error('incentiveService.upsertProgramClubs error:', error)
       throw error
     }
   },
