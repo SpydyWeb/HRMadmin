@@ -81,13 +81,16 @@ export const APIRoutes = {
   INCENTIVE_GET_SELECTED_PROGRAM_KPIS: 'getSelectedProgramKpis',
   INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: 'upsertProgramWeightages',
   INCENTIVE_GET_PROGRAMS_LIST: 'getProgramsList',
-  INCENTIVE_GET_PAST_QUALIFICATIONS: 'getPastQualifications',
+  INCENTIVE_GET_AGENT_CLUBS: 'getAgentClubs',
+  INCENTIVE_GET_PROGRAM_CLUBS: 'getProgramClubs',
+  INCENTIVE_UPSERT_PROGRAM_CLUBS: 'upsertProgramClubs',
   GET_FILTERS_CASCADE: 'getFiltersCascade',
   UPSERT_PROGRAM_FILTERS: 'upsertProgramFilters',
   INCENTIVE_GET_KPI_OBJECTS: 'GetKpiObjects',
   INCENTIVE_GET_KPI_FIELDS: 'GetKpiFields',
   INCENTIVE_GET_TABLE_SCHEMA: 'GetTableSchema',
   INCENTIVE_UPSERT_KPI: 'UpsertKpi',
+  
 }
 
 export const LoginConstants = {
