@@ -73,11 +73,17 @@ const AuthCommissionConfigcommissionListIndexLazyRouteImport = createFileRoute(
 const AuthCommissionConfigcomissionIndexLazyRouteImport = createFileRoute(
   '/_auth/commission/configcomission/',
 )()
+const AuthSearchIncentiveProgramsLazyRouteImport = createFileRoute(
+  '/_auth/search/incentive/programs',
+)()
 const AuthSearchIncentiveProgramConfigLazyRouteImport = createFileRoute(
   '/_auth/search/incentive/program-config',
 )()
 const AuthSearchIncentiveProductWeightageLazyRouteImport = createFileRoute(
   '/_auth/search/incentive/product-weightage',
+)()
+const AuthSearchIncentiveKpisLazyRouteImport = createFileRoute(
+  '/_auth/search/incentive/kpis',
 )()
 const AuthSearchIncentiveKpiBuilderLazyRouteImport = createFileRoute(
   '/_auth/search/incentive/kpi-builder',
@@ -309,6 +315,16 @@ const AuthCommissionConfigcomissionIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+const AuthSearchIncentiveProgramsLazyRoute =
+  AuthSearchIncentiveProgramsLazyRouteImport.update({
+    id: '/search/incentive/programs',
+    path: '/search/incentive/programs',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/incentive/programs.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const AuthSearchIncentiveProgramConfigLazyRoute =
   AuthSearchIncentiveProgramConfigLazyRouteImport.update({
     id: '/search/incentive/program-config',
@@ -328,6 +344,14 @@ const AuthSearchIncentiveProductWeightageLazyRoute =
     import('./routes/_auth/search/incentive/product-weightage.lazy').then(
       (d) => d.Route,
     ),
+  )
+const AuthSearchIncentiveKpisLazyRoute =
+  AuthSearchIncentiveKpisLazyRouteImport.update({
+    id: '/search/incentive/kpis',
+    path: '/search/incentive/kpis',
+    getParentRoute: () => AuthRoute,
+  } as any).lazy(() =>
+    import('./routes/_auth/search/incentive/kpis.lazy').then((d) => d.Route),
   )
 const AuthSearchIncentiveKpiBuilderLazyRoute =
   AuthSearchIncentiveKpiBuilderLazyRouteImport.update({
@@ -489,8 +513,10 @@ export interface FileRoutesByFullPath {
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/search/incentive/kpi-builder': typeof AuthSearchIncentiveKpiBuilderLazyRoute
+  '/search/incentive/kpis': typeof AuthSearchIncentiveKpisLazyRoute
   '/search/incentive/product-weightage': typeof AuthSearchIncentiveProductWeightageLazyRoute
   '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
+  '/search/incentive/programs': typeof AuthSearchIncentiveProgramsLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -538,8 +564,10 @@ export interface FileRoutesByTo {
   '/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/search/incentive/kpi-builder': typeof AuthSearchIncentiveKpiBuilderLazyRoute
+  '/search/incentive/kpis': typeof AuthSearchIncentiveKpisLazyRoute
   '/search/incentive/product-weightage': typeof AuthSearchIncentiveProductWeightageLazyRoute
   '/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
+  '/search/incentive/programs': typeof AuthSearchIncentiveProgramsLazyRoute
   '/commission/configcomission': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/commission/configcommission-list': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/commission/processcommission': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -589,8 +617,10 @@ export interface FileRoutesById {
   '/_auth/commission/configcommission-list/history': typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   '/_auth/commission/configcommission-list/new-commission-creation': typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   '/_auth/search/incentive/kpi-builder': typeof AuthSearchIncentiveKpiBuilderLazyRoute
+  '/_auth/search/incentive/kpis': typeof AuthSearchIncentiveKpisLazyRoute
   '/_auth/search/incentive/product-weightage': typeof AuthSearchIncentiveProductWeightageLazyRoute
   '/_auth/search/incentive/program-config': typeof AuthSearchIncentiveProgramConfigLazyRoute
+  '/_auth/search/incentive/programs': typeof AuthSearchIncentiveProgramsLazyRoute
   '/_auth/commission/configcomission/': typeof AuthCommissionConfigcomissionIndexLazyRoute
   '/_auth/commission/configcommission-list/': typeof AuthCommissionConfigcommissionListIndexLazyRoute
   '/_auth/commission/processcommission/': typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -640,8 +670,10 @@ export interface FileRouteTypes {
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
     | '/search/incentive/kpi-builder'
+    | '/search/incentive/kpis'
     | '/search/incentive/product-weightage'
     | '/search/incentive/program-config'
+    | '/search/incentive/programs'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -689,8 +721,10 @@ export interface FileRouteTypes {
     | '/commission/configcommission-list/history'
     | '/commission/configcommission-list/new-commission-creation'
     | '/search/incentive/kpi-builder'
+    | '/search/incentive/kpis'
     | '/search/incentive/product-weightage'
     | '/search/incentive/program-config'
+    | '/search/incentive/programs'
     | '/commission/configcomission'
     | '/commission/configcommission-list'
     | '/commission/processcommission'
@@ -739,8 +773,10 @@ export interface FileRouteTypes {
     | '/_auth/commission/configcommission-list/history'
     | '/_auth/commission/configcommission-list/new-commission-creation'
     | '/_auth/search/incentive/kpi-builder'
+    | '/_auth/search/incentive/kpis'
     | '/_auth/search/incentive/product-weightage'
     | '/_auth/search/incentive/program-config'
+    | '/_auth/search/incentive/programs'
     | '/_auth/commission/configcomission/'
     | '/_auth/commission/configcommission-list/'
     | '/_auth/commission/processcommission/'
@@ -982,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCommissionConfigcomissionIndexLazyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/search/incentive/programs': {
+      id: '/_auth/search/incentive/programs'
+      path: '/search/incentive/programs'
+      fullPath: '/search/incentive/programs'
+      preLoaderRoute: typeof AuthSearchIncentiveProgramsLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/search/incentive/program-config': {
       id: '/_auth/search/incentive/program-config'
       path: '/search/incentive/program-config'
@@ -994,6 +1037,13 @@ declare module '@tanstack/react-router' {
       path: '/search/incentive/product-weightage'
       fullPath: '/search/incentive/product-weightage'
       preLoaderRoute: typeof AuthSearchIncentiveProductWeightageLazyRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/search/incentive/kpis': {
+      id: '/_auth/search/incentive/kpis'
+      path: '/search/incentive/kpis'
+      fullPath: '/search/incentive/kpis'
+      preLoaderRoute: typeof AuthSearchIncentiveKpisLazyRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/search/incentive/kpi-builder': {
@@ -1134,8 +1184,10 @@ interface AuthRouteChildren {
   AuthCommissionConfigcommissionListHistoryLazyRoute: typeof AuthCommissionConfigcommissionListHistoryLazyRoute
   AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute: typeof AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute
   AuthSearchIncentiveKpiBuilderLazyRoute: typeof AuthSearchIncentiveKpiBuilderLazyRoute
+  AuthSearchIncentiveKpisLazyRoute: typeof AuthSearchIncentiveKpisLazyRoute
   AuthSearchIncentiveProductWeightageLazyRoute: typeof AuthSearchIncentiveProductWeightageLazyRoute
   AuthSearchIncentiveProgramConfigLazyRoute: typeof AuthSearchIncentiveProgramConfigLazyRoute
+  AuthSearchIncentiveProgramsLazyRoute: typeof AuthSearchIncentiveProgramsLazyRoute
   AuthCommissionConfigcomissionIndexLazyRoute: typeof AuthCommissionConfigcomissionIndexLazyRoute
   AuthCommissionConfigcommissionListIndexLazyRoute: typeof AuthCommissionConfigcommissionListIndexLazyRoute
   AuthCommissionProcesscommissionIndexLazyRoute: typeof AuthCommissionProcesscommissionIndexLazyRoute
@@ -1189,10 +1241,12 @@ const AuthRouteChildren: AuthRouteChildren = {
     AuthCommissionConfigcommissionListNewCommissionCreationLazyRoute,
   AuthSearchIncentiveKpiBuilderLazyRoute:
     AuthSearchIncentiveKpiBuilderLazyRoute,
+  AuthSearchIncentiveKpisLazyRoute: AuthSearchIncentiveKpisLazyRoute,
   AuthSearchIncentiveProductWeightageLazyRoute:
     AuthSearchIncentiveProductWeightageLazyRoute,
   AuthSearchIncentiveProgramConfigLazyRoute:
     AuthSearchIncentiveProgramConfigLazyRoute,
+  AuthSearchIncentiveProgramsLazyRoute: AuthSearchIncentiveProgramsLazyRoute,
   AuthCommissionConfigcomissionIndexLazyRoute:
     AuthCommissionConfigcomissionIndexLazyRoute,
   AuthCommissionConfigcommissionListIndexLazyRoute:

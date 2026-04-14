@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { MdOutlineInfo } from 'react-icons/md'
-import { FiChevronRight, FiCode, FiFilter, FiInfo, FiPlus, FiSearch, FiTrash2, FiUsers } from 'react-icons/fi'
-import { useNavigate } from '@tanstack/react-router'
-import { parse } from 'date-fns'
+import { FiChevronRight, FiCode, FiFilter, FiInfo, FiMenu, FiPlus, FiSearch, FiTrash2, FiUsers } from 'react-icons/fi'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { format, parse } from 'date-fns'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -302,19 +302,51 @@ const PROGRAM_DETAIL_TABS: ReadonlyArray<{ id: ProgramDetailCategory; label: str
 ]
 
 const FRESHER_MONTH_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
-  { value: 1, label: 'Jan' },
-  { value: 2, label: 'Feb' },
-  { value: 3, label: 'Mar' },
-  { value: 4, label: 'Apr' },
-  { value: 5, label: 'May' },
-  { value: 6, label: 'Jun' },
-  { value: 7, label: 'Jul' },
-  { value: 8, label: 'Aug' },
-  { value: 9, label: 'Sep' },
-  { value: 10, label: 'Oct' },
-  { value: 11, label: 'Nov' },
-  { value: 12, label: 'Dec' },
+  { value: 1, label: 'M1' },
+  { value: 2, label: 'M2' },
+  { value: 3, label: 'M3' },
+  { value: 4, label: 'M4' },
+  { value: 5, label: 'M5' },
+  { value: 6, label: 'M6' },
 ]
+
+function mapIncentiveFrequencyForApi(freq: IncentiveFrequency): string {
+  const m: Record<IncentiveFrequency, string> = {
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    half_yearly: 'Half Yearly',
+  }
+  return m[freq]
+}
+
+function clawbackPeriodForApi(basis: ClawbackBasis): string {
+  return basis === 'itd' ? 'ITD' : basis === 'fytd' ? 'FYTD' : 'CYTD'
+}
+
+function toUiDate(value: unknown): string | null {
+  if (value == null || value === '') return null
+  const d = new Date(String(value))
+  if (Number.isNaN(d.getTime())) return null
+  return format(d, 'dd LLL yyyy')
+}
+
+function monthsBetweenInclusive(fromIso: unknown, toIso: unknown): number[] {
+  const from = new Date(String(fromIso))
+  const to = new Date(String(toIso))
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return []
+  const start = new Date(from.getFullYear(), from.getMonth(), 1)
+  const end = new Date(to.getFullYear(), to.getMonth(), 1)
+  const out: number[] = []
+  const cursor = new Date(start)
+  // Cap at 24 months to avoid accidental infinite loops from bad input.
+  for (let guard = 0; guard < 24; guard++) {
+    out.push(cursor.getMonth() + 1)
+    if (cursor.getFullYear() === end.getFullYear() && cursor.getMonth() === end.getMonth()) break
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+  return out
+}
 
 interface SlabSectionProps {
   slab: SlabState
@@ -856,6 +888,13 @@ const KPI_LIBRARY_PLACEHOLDER: KPIEntry[] = []
 
 export default function IncentiveProgramConfig() {
   const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { programId?: string | number }
+  const editingProgramIdFromUrl = useMemo(() => {
+    const raw = search?.programId
+    if (raw === undefined || raw === null || raw === '') return null
+    const n = typeof raw === 'string' ? parseInt(raw, 10) : Number(raw)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }, [search?.programId])
   // const [programId, setProgramId] = useState<number | null>(null)
   const [cronValue, setCronValue] = useState("")
   const [programmeId, setProgrammeId] = useState()
@@ -867,6 +906,13 @@ export default function IncentiveProgramConfig() {
   const [isSaving, setIsSaving] = useState(false)
   const [programId, setProgramId] = useState<number | null>(null)
   const [isSavingWeightages, setIsSavingWeightages] = useState(false)
+  const [loadingProgram, setLoadingProgram] = useState(false)
+
+  useEffect(() => {
+    if (editingProgramIdFromUrl != null) setProgramId(editingProgramIdFromUrl)
+  }, [editingProgramIdFromUrl])
+
+  const isEditMode = editingProgramIdFromUrl != null
   const [isSavingFilters, setIsSavingFilters] = useState(false)
   const [cappingAmount, setCappingAmount] = useState<string>('')
   const [executionFrequency, setExecutionFrequency] = useState<string>('MONTHLY')
@@ -880,9 +926,106 @@ export default function IncentiveProgramConfig() {
   const [clawbackConsidered, setClawbackConsidered] = useState(false)
   const [clawbackBasis, setClawbackBasis] = useState<ClawbackBasis>('cytd')
 
-  const [fresherMonths, setFresherMonths] = useState<number[]>(() => FRESHER_MONTH_OPTIONS.map((m) => m.value))
+  type FresherTargetInput = { logins: string; conversions: string; amount: string }
+  const [fresherTargetsInput, setFresherTargetsInput] = useState<FresherTargetInput[]>(() =>
+    Array.from({ length: 6 }, () => ({ logins: '', conversions: '', amount: '' })),
+  )
+  const [fresherSelectedMonths, setFresherSelectedMonths] = useState<boolean[]>(() =>
+    Array.from({ length: 6 }, () => true),
+  )
   const [fresherCatchUpPrevious, setFresherCatchUpPrevious] = useState(false)
   const [fresherEarlyBonus, setFresherEarlyBonus] = useState(false)
+
+  const parseFresherTargetDescription = useCallback((raw: any): FresherTargetInput => {
+    const s = String(raw ?? '').trim()
+    if (!s) return { logins: '', conversions: '', amount: '' }
+
+    const nums = s.match(/-?\d+(?:\.\d+)?/g) ?? []
+    return {
+      logins: nums[0] ?? '',
+      conversions: nums[1] ?? '',
+      amount: nums[2] ?? '',
+    }
+  }, [])
+
+  // Load program header for edit mode (programId from list → config).
+  useEffect(() => {
+    let cancelled = false
+    if (!isEditMode || !programId) return
+
+    ;(async () => {
+      setLoadingProgram(true)
+      try {
+        const res: any = await incentiveService.getProgramById(String(programId))
+        const incentiveProgram = res?.responseBody?.incentiveProgram ?? res?.incentiveProgram ?? res
+        if (!incentiveProgram || cancelled) return
+
+        // Lock program name for edits.
+        setProgramName(String(incentiveProgram.programName ?? incentiveProgram.name ?? '').trim())
+        setDescription(String(incentiveProgram.description ?? '').trim())
+
+        const uiFrom = toUiDate(incentiveProgram.effectiveFrom ?? incentiveProgram.startDate)
+        const uiTo = toUiDate(incentiveProgram.effectiveTo ?? incentiveProgram.endDate)
+        if (uiFrom) setStartDate(uiFrom)
+        if (uiTo) setEndDate(uiTo)
+
+        const category = String(incentiveProgram.programCategory ?? '').trim()
+        const tab =
+          PROGRAM_DETAIL_TABS.find((t) => t.label.toLowerCase() === category.toLowerCase())?.id ??
+          (category.toLowerCase().includes('fresher') ? 'fresher' : programDetailTab)
+        setProgramDetailTab(tab as ProgramDetailCategory)
+
+        const pt = String(incentiveProgram.programType ?? '').toLowerCase()
+        setProgramType(pt.includes('perpetual') ? 'perpetual' : 'one_time')
+
+        setCronValue(String(incentiveProgram.executionFrequency ?? cronValue ?? executionFrequency ?? '').toUpperCase())
+        setCappingAmount(String(incentiveProgram.cappingAmount ?? ''))
+        setConversionPeriodDays(String(incentiveProgram.conversionPeriod ?? incentiveProgram.conversionPeriodDays ?? ''))
+        setCancellationPeriodDays(String(incentiveProgram.cancellationPeriod ?? incentiveProgram.cancellationPeriodDays ?? ''))
+
+        const consider = Boolean(incentiveProgram.considerClawback ?? incentiveProgram.clawbackRecoveries)
+        setClawbackConsidered(consider)
+
+        // KPI ids from mapping list.
+        const kpis = Array.isArray(incentiveProgram.kpis) ? incentiveProgram.kpis : []
+        const ids = kpis
+          .map((k: any) => Number(k?.kpiId))
+          .filter((n: number) => Number.isFinite(n) && n > 0)
+        if (ids.length) setSelectedKpiIds(ids)
+
+        // Fresher targets (M1–M6) → 3 numeric fields (logins, conversions, amount)
+        const targets = Array.isArray(incentiveProgram.fresherTargets) ? incentiveProgram.fresherTargets : []
+        if (targets.length) {
+          setFresherTargetsInput((prev) => {
+            const next = prev.slice(0, 6)
+            while (next.length < 6) next.push({ logins: '', conversions: '', amount: '' })
+            for (let i = 0; i < Math.min(6, targets.length); i++) {
+              next[i] = parseFresherTargetDescription(targets[i]?.targetDescription)
+            }
+            return next
+          })
+          setFresherSelectedMonths(() => {
+            // Select only months that exist in API data; if API has 6, all selected.
+            const count = Math.min(6, targets.length)
+            return Array.from({ length: 6 }, (_, i) => i < count)
+          })
+        }
+
+        setFresherCatchUpPrevious(Boolean(incentiveProgram.catchUpPreviousQualification))
+        setFresherEarlyBonus(Boolean(incentiveProgram.earlyBonus))
+      } catch (e) {
+        if (!cancelled) {
+          showToast(NOTIFICATION_CONSTANTS.ERROR, 'Failed to load program for edit')
+        }
+      } finally {
+        if (!cancelled) setLoadingProgram(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isEditMode, programId])
 
   const [weightageOptions, setWeightageOptions] = useState<WeightageOption[]>(
     [],
@@ -916,6 +1059,8 @@ export default function IncentiveProgramConfig() {
 
   const [slabs, setSlabs] = useState<Array<SlabState>>(() => [createSlab()])
   const [activeSlabId, setActiveSlabId] = useState<string>(() => slabs[0]?.id ?? '')
+  const dragSlabIdRef = useRef<string | null>(null)
+  const [dragOverSlabId, setDragOverSlabId] = useState<string | null>(null)
   const [agentFilter, setAgentFilter] = useState<AgentFilterState>({
     channels: [],
     subChannels: [],
@@ -1442,12 +1587,29 @@ export default function IncentiveProgramConfig() {
       showToast(NOTIFICATION_CONSTANTS.ERROR, 'End Date is required for a one-time program')
       return
     }
-    if (programDetailTab === 'fresher' && fresherMonths.length === 0) {
-      showToast(
-        NOTIFICATION_CONSTANTS.ERROR,
-        'Fresher program: select at least one month (month-wise selection).',
-      )
-      return
+    if (programDetailTab === 'fresher') {
+      const anySelected = fresherSelectedMonths.some(Boolean)
+      if (!anySelected) {
+        showToast(NOTIFICATION_CONSTANTS.ERROR, 'Fresher program: select at least one month (M1–M6).')
+        return
+      }
+      for (let i = 0; i < 6; i++) {
+        if (!fresherSelectedMonths[i]) continue
+        const t = fresherTargetsInput[i] ?? { logins: '', conversions: '', amount: '' }
+        const monthLabel = `M${i + 1}`
+        if (!String(t.logins ?? '').trim()) {
+          showToast(NOTIFICATION_CONSTANTS.ERROR, `Fresher program: enter Logins(count) for ${monthLabel}.`)
+          return
+        }
+        if (!String(t.conversions ?? '').trim()) {
+          showToast(NOTIFICATION_CONSTANTS.ERROR, `Fresher program: enter Conversions for ${monthLabel}.`)
+          return
+        }
+        if (!String(t.amount ?? '').trim()) {
+          showToast(NOTIFICATION_CONSTANTS.ERROR, `Fresher program: enter Amount for ${monthLabel}.`)
+          return
+        }
+      }
     }
 
     const conv = parseInt(conversionPeriodDays, 10)
@@ -1468,46 +1630,41 @@ export default function IncentiveProgramConfig() {
     setIsSaving(true)
     try {
       const res = await incentiveService.upsertProgram({
+        ...(isEditMode && programId ? { programId } : {}),
         programName: name,
         description: description.trim(),
-        // Tab-driven payload fields (same API, payload varies by tab)
-        programCategory: programCategoryLabel,
-        tabName: programCategoryLabel,
         effectiveFrom,
         effectiveTo:
           programType === 'perpetual' ? (effectiveTo ?? null) : (effectiveTo as string),
-        // API example uses "Monthly" etc; we still allow cronValue if your UI sets it.
         executionFrequency: normalizeFrequencyLabel(cronValue || executionFrequency),
         selectionExpression: selectionExpression.trim() ? selectionExpression.trim() : null,
         cappingAmount: cappingAmountNum,
-        kpiIds: selectedKpiIds,
-        programDetailCategory: programDetailTab,
-        // Some backends expect Title Case values ("One Time", "Perpetual")
+        programCategory: programCategoryLabel,
         programType: programType === 'one_time' ? 'One Time' : 'Perpetual',
-        incentiveFrequency: programType === 'perpetual' ? incentiveFrequency : undefined,
-        conversionPeriodDays: Number.isFinite(conv) && conv >= 0 ? conv : undefined,
-        cancellationPeriodDays: Number.isFinite(canc) && canc >= 0 ? canc : undefined,
-        clawbackRecoveries: clawbackConsidered,
-        clawbackBasis: clawbackConsidered ? clawbackBasis : undefined,
-        // Alternate key names (requested payload shape)
-        considerClawback: clawbackConsidered,
-        clawbackPeriod: clawbackConsidered ? clawbackBasis : undefined,
         conversionPeriod: Number.isFinite(conv) && conv >= 0 ? conv : undefined,
         cancellationPeriod: Number.isFinite(canc) && canc >= 0 ? canc : undefined,
+        considerClawback: clawbackConsidered,
+        clawbackPeriod: clawbackConsidered ? clawbackPeriodForApi(clawbackBasis) : undefined,
+        kpiIds: selectedKpiIds,
+        ...(programType === 'perpetual'
+          ? { incentiveFrequency: mapIncentiveFrequencyForApi(incentiveFrequency) }
+          : {}),
         ...(programDetailTab === 'fresher'
           ? {
-              fresherEligibleMonths: [...fresherMonths].sort((a, b) => a - b),
-              fresherCatchUpPreviousQualification: fresherCatchUpPrevious,
-              fresherEarlyBonus: fresherEarlyBonus,
-              // API example keys for fresher tab
-              monthWiseSelection: [...fresherMonths]
-                .sort((a, b) => a - b)
-                .map((m) =>
-                  FRESHER_MONTH_OPTIONS.find((o) => o.value === m)?.label ?? String(m),
-                )
-                .join(','),
               catchUpPreviousQualification: fresherCatchUpPrevious,
               earlyBonus: fresherEarlyBonus,
+              fresherTargets: fresherTargetsInput
+                .slice(0, 6)
+                .map((t, idx) => ({ t, idx }))
+                .filter(({ idx }) => Boolean(fresherSelectedMonths[idx]))
+                .map(({ t, idx }) => ({
+                  targetId: 0,
+                  monthIdentifier: `M${idx + 1}`,
+                  targetDescription: `logins(count): ${String(t?.logins ?? '').trim()}, conversions: ${String(
+                    t?.conversions ?? '',
+                  ).trim()}, amount: ${String(t?.amount ?? '').trim()}`,
+                  isActive: true,
+                })),
             }
           : {}),
       })
@@ -1518,7 +1675,13 @@ export default function IncentiveProgramConfig() {
       const id = extractProgramId(res)
       if (id) setProgramId(id)
       if (id) {
-        showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Program saved successfully')
+        showToast(
+          NOTIFICATION_CONSTANTS.SUCCESS,
+          isEditMode ? 'Program updated successfully' : 'Program saved successfully',
+        )
+        if (isEditMode) {
+          navigate({ to: '/search/incentive/programs' as any })
+        }
       } else {
         showToast(
           NOTIFICATION_CONSTANTS.WARNING,
@@ -1705,6 +1868,19 @@ export default function IncentiveProgramConfig() {
     })
   }
 
+  const reorderSlabs = useCallback((sourceId: string, targetId: string) => {
+    if (!sourceId || !targetId || sourceId === targetId) return
+    setSlabs((prev) => {
+      const sourceIndex = prev.findIndex((s) => s.id === sourceId)
+      const targetIndex = prev.findIndex((s) => s.id === targetId)
+      if (sourceIndex < 0 || targetIndex < 0) return prev
+      const next = [...prev]
+      const [moved] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, moved)
+      return next
+    })
+  }, [])
+
   const activeSlab = slabs.find((s) => s.id === activeSlabId) ?? slabs[0]
 
   const isAllValid = slabs.every((s) => {
@@ -1749,6 +1925,7 @@ export default function IncentiveProgramConfig() {
       <div className="p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
+           
             <div className="flex items-center gap-2">
               <h1 className="truncate text-2xl font-semibold text-neutral-900">
                 Program Configuration
@@ -1773,7 +1950,7 @@ export default function IncentiveProgramConfig() {
                   periods, and clawback rules.
                 </p>
               </div>
-              <MdOutlineInfo className="mt-1 h-4 w-4 text-neutral-400" />
+              {/* <MdOutlineInfo className="mt-1 h-4 w-4 text-neutral-400" /> */}
             </CardHeader>
 
             <CardContent className="px-4 pb-4">
@@ -1802,7 +1979,13 @@ export default function IncentiveProgramConfig() {
                       onChange={(e) => setProgramName(e.target.value)}
                       placeholder="e.g., Q1 2025 Sales Excellence Program"
                       variant="standardone"
+                      disabled={isEditMode || loadingProgram}
                     />
+                    {isEditMode ? (
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Program Name cannot be changed while editing.
+                      </p>
+                    ) : null}
                   </div>
 
                   <div>
@@ -1836,7 +2019,66 @@ export default function IncentiveProgramConfig() {
                       </Select>
                     </div>
 
-                    {programType === 'perpetual' ? (
+                    <div className="p-3">
+                      <p className="mb-2 text-sm font-medium text-neutral-800">
+                        Should clawback / recoveries be considered?
+                      </p>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="clawback-yn"
+                            checked={!clawbackConsidered}
+                            onChange={() => setClawbackConsidered(false)}
+                            className="h-4 w-4 border-neutral-300 text-teal-600"
+                          />
+                          No
+                        </label>
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="clawback-yn"
+                            checked={clawbackConsidered}
+                            onChange={() => setClawbackConsidered(true)}
+                            className="h-4 w-4 border-neutral-300 text-teal-600"
+                          />
+                          Yes
+                        </label>
+                      </div>
+
+                      {clawbackConsidered ? (
+                        <div className="mt-3 border-t border-neutral-200 pt-3">
+                          <p className="mb-2 text-xs font-medium text-neutral-600">Clowback From</p>
+                          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            {(
+                              [
+                                ['itd', 'ITD'],
+                                ['fytd', 'FYTD'],
+                                ['cytd', 'CYTD'],
+                              ] as const
+                            ).map(([value, label]) => (
+                              <label
+                                key={value}
+                                className="flex cursor-pointer items-center gap-2 text-sm text-neutral-800"
+                              >
+                                <input
+                                  type="radio"
+                                  name="clawback-basis"
+                                  checked={clawbackBasis === value}
+                                  onChange={() => setClawbackBasis(value)}
+                                  className="h-4 w-4 border-neutral-300 text-teal-600"
+                                />
+                                {label}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {programType === 'perpetual' ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
                         <Label className="mb-1.5 block text-sm font-medium text-neutral-700">
                           Frequency *
@@ -1856,10 +2098,9 @@ export default function IncentiveProgramConfig() {
                           </SelectContent>
                         </Select>
                       </div>
-                    ) : (
                       <div className="hidden md:block" aria-hidden />
-                    )}
-                  </div>
+                    </div>
+                  ) : null}
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <DatePicker
@@ -1925,194 +2166,227 @@ export default function IncentiveProgramConfig() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-neutral-200 bg-neutral-50/80 p-3">
-                    <p className="mb-2 text-sm font-medium text-neutral-800">
-                      Should clawback / recoveries be considered?
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name="clawback-yn"
-                          checked={!clawbackConsidered}
-                          onChange={() => setClawbackConsidered(false)}
-                          className="h-4 w-4 border-neutral-300 text-teal-600"
-                        />
-                        No
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name="clawback-yn"
-                          checked={clawbackConsidered}
-                          onChange={() => setClawbackConsidered(true)}
-                          className="h-4 w-4 border-neutral-300 text-teal-600"
-                        />
-                        Yes
-                      </label>
-                    </div>
-
-                    {clawbackConsidered ? (
-                      <div className="mt-3 border-t border-neutral-200 pt-3">
-                        <p className="mb-2 text-xs font-medium text-neutral-600">Clowback From</p>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                          {(
-                            [
-                              ['itd', 'ITD'],
-                              ['fytd', 'FYTD'],
-                              ['cytd', 'CYTD'],
-                            ] as const
-                          ).map(([value, label]) => (
-                            <label
-                              key={value}
-                              className="flex cursor-pointer items-center gap-2 text-sm text-neutral-800"
-                            >
-                              <input
-                                type="radio"
-                                name="clawback-basis"
-                                checked={clawbackBasis === value}
-                                onChange={() => setClawbackBasis(value)}
-                                className="h-4 w-4 border-neutral-300 text-teal-600"
-                              />
-                              {label}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-
                   {programDetailTab === 'fresher' ? (
                     <div className="space-y-4 rounded-lg border border-violet-200 bg-violet-50/40 p-4">
                       <p className="text-sm font-semibold text-violet-900">Fresher program options</p>
 
-                      <div>
-                        <Label className="mb-2 block text-sm font-medium text-neutral-800">
-                          Month-wise selection
-                        </Label>
-                        <p className="mb-2 text-xs text-neutral-500">
-                          Choose which calendar months this fresher program applies to.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {FRESHER_MONTH_OPTIONS.map(({ value, label }) => {
-                            const checked = fresherMonths.includes(value)
-                            return (
-                              <label
-                                key={value}
-                                className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                                  checked
-                                    ? 'border-violet-500 bg-white text-violet-900 shadow-sm'
-                                    : 'border-neutral-200 bg-white/80 text-neutral-600 hover:bg-white'
-                                }`}
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-sm font-medium text-neutral-800">
+                              Monthly targets (M1–M6)
+                            </Label>
+                            <p className="mt-1 text-xs text-neutral-500">
+                              Select months (M1–M6). Targets are required only for selected months.
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {Array.from({ length: 6 }).map((_, idx) => {
+                                const checked = Boolean(fresherSelectedMonths[idx])
+                                return (
+                                  <label
+                                    key={idx}
+                                    className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                                      checked
+                                        ? 'border-violet-500 bg-white text-violet-900 shadow-sm'
+                                        : 'border-neutral-200 bg-white/80 text-neutral-600 hover:bg-white'
+                                    }`}
+                                  >
+                                    <Checkbox
+                                      checked={checked}
+                                      onCheckedChange={(c) => {
+                                        const on = Boolean(c)
+                                        setFresherSelectedMonths((prev) => {
+                                          const next = prev.slice(0, 6)
+                                          while (next.length < 6) next.push(false)
+                                          next[idx] = on
+                                          return next
+                                        })
+                                      }}
+                                      className="h-3.5 w-3.5"
+                                    />
+                                    M{idx + 1}
+                                  </label>
+                                )
+                              })}
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() =>
+                                  setFresherSelectedMonths(Array.from({ length: 6 }, () => true))
+                                }
                               >
-                                <Checkbox
-                                  checked={checked}
-                                  onCheckedChange={(c) => {
-                                    const on = Boolean(c)
-                                    setFresherMonths((prev) =>
-                                      on
-                                        ? prev.includes(value)
-                                          ? prev
-                                          : [...prev, value]
-                                        : prev.filter((m) => m !== value),
-                                    )
-                                  }}
-                                  className="h-3.5 w-3.5"
+                                Select all
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() =>
+                                  setFresherSelectedMonths(Array.from({ length: 6 }, () => false))
+                                }
+                              >
+                                Clear
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="rounded-lg border border-violet-200 bg-white/70 p-3">
+                            <p className="mb-2 text-sm font-medium text-neutral-800">
+                              Catch up of previous qualification
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                                <input
+                                  type="radio"
+                                  name="fresher-catchup"
+                                  checked={!fresherCatchUpPrevious}
+                                  onChange={() => setFresherCatchUpPrevious(false)}
+                                  className="h-4 w-4 border-neutral-300 text-violet-600"
                                 />
-                                {label}
+                                No
                               </label>
-                            )
-                          })}
-                        </div>
-                        {fresherMonths.length === 0 ? (
-                          <p className="mt-1.5 text-xs text-amber-700">
-                            Select at least one month, or use &quot;Select all&quot; below.
-                          </p>
-                        ) : null}
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs"
-                            onClick={() =>
-                              setFresherMonths(FRESHER_MONTH_OPTIONS.map((m) => m.value))
-                            }
-                          >
-                            Select all months
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-xs"
-                            onClick={() => setFresherMonths([])}
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
+                              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                                <input
+                                  type="radio"
+                                  name="fresher-catchup"
+                                  checked={fresherCatchUpPrevious}
+                                  onChange={() => setFresherCatchUpPrevious(true)}
+                                  className="h-4 w-4 border-neutral-300 text-violet-600"
+                                />
+                                Yes
+                              </label>
+                            </div>
+                          </div>
 
-                      <div className="border-t border-violet-200 pt-3">
-                        <p className="mb-2 text-sm font-medium text-neutral-800">
-                          Catch up of previous qualification
-                        </p>
-                        <div className="flex flex-wrap gap-4">
-                          <label className="flex cursor-pointer items-center gap-2 text-sm">
-                            <input
-                              type="radio"
-                              name="fresher-catchup"
-                              checked={!fresherCatchUpPrevious}
-                              onChange={() => setFresherCatchUpPrevious(false)}
-                              className="h-4 w-4 border-neutral-300 text-violet-600"
-                            />
-                            No
-                          </label>
-                          <label className="flex cursor-pointer items-center gap-2 text-sm">
-                            <input
-                              type="radio"
-                              name="fresher-catchup"
-                              checked={fresherCatchUpPrevious}
-                              onChange={() => setFresherCatchUpPrevious(true)}
-                              className="h-4 w-4 border-neutral-300 text-violet-600"
-                            />
-                            Yes
-                          </label>
+                          <div className="rounded-lg border border-violet-200 bg-white/70 p-3">
+                            <p className="mb-2 text-sm font-medium text-neutral-800">Early bonus</p>
+                            <div className="flex flex-wrap gap-4">
+                              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                                <input
+                                  type="radio"
+                                  name="fresher-early-bonus"
+                                  checked={!fresherEarlyBonus}
+                                  onChange={() => setFresherEarlyBonus(false)}
+                                  className="h-4 w-4 border-neutral-300 text-violet-600"
+                                />
+                                No
+                              </label>
+                              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                                <input
+                                  type="radio"
+                                  name="fresher-early-bonus"
+                                  checked={fresherEarlyBonus}
+                                  onChange={() => setFresherEarlyBonus(true)}
+                                  className="h-4 w-4 border-neutral-300 text-violet-600"
+                                />
+                                Yes
+                              </label>
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="border-t border-violet-200 pt-3">
-                        <p className="mb-2 text-sm font-medium text-neutral-800">Early bonus</p>
-                        <div className="flex flex-wrap gap-4">
-                          <label className="flex cursor-pointer items-center gap-2 text-sm">
-                            <input
-                              type="radio"
-                              name="fresher-early-bonus"
-                              checked={!fresherEarlyBonus}
-                              onChange={() => setFresherEarlyBonus(false)}
-                              className="h-4 w-4 border-neutral-300 text-violet-600"
-                            />
-                            No
-                          </label>
-                          <label className="flex cursor-pointer items-center gap-2 text-sm">
-                            <input
-                              type="radio"
-                              name="fresher-early-bonus"
-                              checked={fresherEarlyBonus}
-                              onChange={() => setFresherEarlyBonus(true)}
-                              className="h-4 w-4 border-neutral-300 text-violet-600"
-                            />
-                            Yes
-                          </label>
+                        <div className="rounded-lg border border-violet-200 bg-white/70 p-3">
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="hidden grid-cols-4 gap-3 text-xs font-medium text-neutral-600 md:grid">
+                              <div>Month</div>
+                              <div>Logins(count)</div>
+                              <div>Conversions</div>
+                              <div>Amount</div>
+                            </div>
+
+                            {Array.from({ length: 6 }).map((_, idx) => {
+                              const t =
+                                fresherTargetsInput[idx] ?? { logins: '', conversions: '', amount: '' }
+                              const selected = Boolean(fresherSelectedMonths[idx])
+                              if (!selected) return null
+                              return (
+                                <div
+                                  key={idx}
+                                  className="grid grid-cols-1 gap-2 rounded-lg border border-violet-100 bg-white/90 p-3 shadow-sm md:grid-cols-4 md:items-center md:gap-3"
+                                >
+                                  <div className="text-sm font-medium text-violet-950">M{idx + 1}</div>
+                                  <Input
+                                    label=""
+                                    type="number"
+                                    inputMode="numeric"
+                                    value={t.logins}
+                                    variant="standardone"
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setFresherTargetsInput((prev) => {
+                                        const next = prev.slice()
+                                        while (next.length < 6)
+                                          next.push({ logins: '', conversions: '', amount: '' })
+                                        next[idx] = { ...next[idx], logins: v }
+                                        return next
+                                      })
+                                    }}
+                                    placeholder="0"
+                                  />
+                                  <Input
+                                    label=""
+                                    type="number"
+                                    inputMode="numeric"
+                                    value={t.conversions}
+                                    variant="standardone"
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setFresherTargetsInput((prev) => {
+                                        const next = prev.slice()
+                                        while (next.length < 6)
+                                          next.push({ logins: '', conversions: '', amount: '' })
+                                        next[idx] = { ...next[idx], conversions: v }
+                                        return next
+                                      })
+                                    }}
+                                    placeholder="0"
+                                  />
+                                  <Input
+                                    label=""
+                                    type="number"
+                                    inputMode="decimal"
+                                    value={t.amount}
+                                    variant="standardone"
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setFresherTargetsInput((prev) => {
+                                        const next = prev.slice()
+                                        while (next.length < 6)
+                                          next.push({ logins: '', conversions: '', amount: '' })
+                                        next[idx] = { ...next[idx], amount: v }
+                                        return next
+                                      })
+                                    }}
+                                    placeholder="0"
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : null}
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                      Choose The KPI&apos;s
-                    </label>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <label className="block text-sm font-medium text-neutral-700">
+                        Choose The KPI&apos;s
+                      </label>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => navigate({ to: '/search/incentive/kpis' as any })}
+                        className="h-8 px-3 text-xs"
+                      >
+                        View KPI List
+                      </Button>
+                    </div>
                     <MultiSelectInline
                       options={kpisListOptions}
                       placeholder="Search KPIs..."
@@ -2155,7 +2429,7 @@ export default function IncentiveProgramConfig() {
                   disabled={isSaving}
                   loadingText="Saving..."
                 >
-                  Save
+                  {isEditMode ? 'Update' : 'Save'}
                 </Button>
               </div>
             </CardContent>
@@ -2451,25 +2725,98 @@ export default function IncentiveProgramConfig() {
                     const isActive = slab.id === (activeSlab?.id ?? '')
                     const hasName = slab.programName.trim() !== ''
                     return (
-                      <button
+                      <div
                         key={slab.id}
-                        type="button"
-                        onClick={() => setActiveSlabId(slab.id)}
-                        className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm transition border-l-2 ${isActive
+                        draggable
+                        onDragStart={(e) => {
+                          dragSlabIdRef.current = slab.id
+                          setDragOverSlabId(null)
+                          e.dataTransfer.effectAllowed = 'move'
+                          try {
+                            e.dataTransfer.setData('text/plain', slab.id)
+                          } catch {
+                            // ignore (older browsers / security settings)
+                          }
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          if (dragOverSlabId !== slab.id) setDragOverSlabId(slab.id)
+                          e.dataTransfer.dropEffect = 'move'
+                        }}
+                        onDragLeave={() => {
+                          setDragOverSlabId((prev) => (prev === slab.id ? null : prev))
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          const sourceId =
+                            dragSlabIdRef.current ??
+                            (() => {
+                              try {
+                                return e.dataTransfer.getData('text/plain')
+                              } catch {
+                                return ''
+                              }
+                            })()
+                          reorderSlabs(sourceId, slab.id)
+                          dragSlabIdRef.current = null
+                          setDragOverSlabId(null)
+                        }}
+                        onDragEnd={() => {
+                          dragSlabIdRef.current = null
+                          setDragOverSlabId(null)
+                        }}
+                        className={`group relative flex w-full items-center justify-between gap-2 px-2 py-2 text-left text-sm transition border-l-2 ${isActive
                           ? 'border-l-teal-500 bg-teal-50 font-semibold text-teal-700 shadow-sm'
                           : 'border-l-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800'
-                          }`}
+                          } ${dragOverSlabId === slab.id ? 'ring-2 ring-teal-200' : ''}`}
                       >
+                        <button
+                          type="button"
+                          aria-label="Drag to reorder slab"
+                          title="Drag to reorder"
+                          onClick={(e) => e.stopPropagation()}
+                          className="mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-white hover:text-neutral-600"
+                        >
+                          <FiMenu className="h-4 w-4" />
+                        </button>
+
                         <div className="min-w-0 flex-1">
                           <p className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${isActive ? 'text-teal-600' : 'text-neutral-500'}`}>
                             Slab {index + 1}
                           </p>
-                          <p className={`truncate text-sm ${hasName ? 'text-neutral-800' : 'text-neutral-400 italic'}`}>
-                            {hasName ? slab.programName : 'Untitled'}
-                          </p>
+                          {isActive ? (
+                            <Input
+                              label=""
+                              value={slab.programName}
+                              placeholder="Slab name"
+                              onChange={(e) => updateSlab(slab.id, { programName: e.target.value })}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setActiveSlabId(slab.id)
+                              }}
+                              variant="standardone"
+                              className="h-5 text-sm"
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setActiveSlabId(slab.id)}
+                              className={`block w-full text-left truncate text-sm ${hasName ? 'text-neutral-800' : 'text-neutral-400 italic'}`}
+                              title={hasName ? slab.programName : 'Untitled'}
+                            >
+                              {hasName ? slab.programName : 'Untitled'}
+                            </button>
+                          )}
                         </div>
-                        {isActive && <FiChevronRight className="h-3.5 w-3.5 shrink-0 text-teal-500" />}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveSlabId(slab.id)}
+                          className="flex items-center justify-center"
+                          aria-label="Select slab"
+                        >
+                          {isActive && <FiChevronRight className="h-3.5 w-3.5 shrink-0 text-teal-500" />}
+                        </button>
+                      </div>
                     )
                   })}
                 </div>
@@ -2506,9 +2853,13 @@ export default function IncentiveProgramConfig() {
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
-              onClick={() => navigate({ to: '/search/incentive' as any })}
+              onClick={() =>
+                navigate({
+                  to: (isEditMode ? '/search/incentive/programs' : '/search/incentive') as any,
+                })
+              }
             >
-              Back to Incentive
+              {isEditMode ? 'Back to Programs' : 'Back to Incentive'}
             </Button>
           </div>
         </div>

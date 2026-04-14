@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FiPlus } from 'react-icons/fi'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 
 import Button from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,6 +70,11 @@ function newId(prefix: string) {
 }
 
 export default function KpiBuilderScreen() {
+  const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { kpiId?: string | number; kpiName?: string }
+  const [editingKpiId, setEditingKpiId] = useState(0)
+  const [loadingKpi, setLoadingKpi] = useState(false)
+
   const [kpiName, setKpiName] = useState('')
   const [kpiCode, setKpiCode] = useState('')
   const [description, setDescription] = useState('')
@@ -105,6 +111,108 @@ export default function KpiBuilderScreen() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState('')
+
+  useEffect(() => {
+    const raw = search?.kpiId
+    if (raw === undefined || raw === null || raw === '') {
+      setEditingKpiId(0)
+      return
+    }
+    const n = typeof raw === 'string' ? parseInt(raw, 10) : Number(raw)
+    if (!Number.isFinite(n) || n <= 0) {
+      setEditingKpiId(0)
+      return
+    }
+    setEditingKpiId(n)
+    const nameFromUrl = search?.kpiName
+    if (typeof nameFromUrl === 'string' && nameFromUrl.trim()) {
+      setKpiName(nameFromUrl.trim())
+    }
+  }, [search?.kpiId, search?.kpiName])
+
+  useEffect(() => {
+    let cancelled = false
+    if (!editingKpiId) return
+
+    ;(async () => {
+      setLoadingKpi(true)
+      try {
+        const res: any = await incentiveService.getKpiDetails(editingKpiId)
+        const kpi =
+          res?.responseBody?.kpiDetail ??
+          res?.responseBody?.kpi ??
+          res?.responseBody?.kpiDetails ??
+          res?.responseBody?.kpiDetailsByProgram ??
+          res?.responseBody ??
+          res
+        if (!kpi || cancelled) return
+
+        setKpiName(String(kpi.kpiName ?? kpi.name ?? '').trim())
+        setKpiCode(String(kpi.kpiCode ?? kpi.code ?? '').trim())
+        setDescription(String(kpi.description ?? '').trim())
+        setUnitType(String(kpi.unitType ?? '').trim())
+
+        const grouping: string[] = Array.isArray(kpi.groupingTypes) ? kpi.groupingTypes : []
+        setGroupByTeam(grouping.some((x) => String(x).toLowerCase() === 'team'))
+        setGroupByRegion(grouping.some((x) => String(x).toLowerCase() === 'region'))
+
+        const tw = String(kpi.timeWindowType ?? '').toLowerCase()
+        if (tw.includes('custom')) setTimeWindow('CUSTOM_RANGE')
+        else if (tw.includes('rolling')) setTimeWindow('ROLLING_WINDOW')
+        else setTimeWindow('PROGRAM_DURATION')
+
+        const toDateOnly = (v: any) => {
+          if (!v) return ''
+          const d = new Date(String(v))
+          if (Number.isNaN(d.getTime())) return ''
+          return d.toISOString().slice(0, 10)
+        }
+        const customStartRaw =
+          kpi.timeWindowCustomStart ??
+          kpi.customStart ??
+          kpi.customStartDate ??
+          kpi.timeWindowStart ??
+          kpi.startDate ??
+          kpi.fromDate
+        const customEndRaw =
+          kpi.timeWindowCustomEnd ??
+          kpi.customEnd ??
+          kpi.customEndDate ??
+          kpi.timeWindowEnd ??
+          kpi.endDate ??
+          kpi.toDate
+        setCustomStart(toDateOnly(customStartRaw))
+        setCustomEnd(toDateOnly(customEndRaw))
+        setRollingDays(
+          kpi.timeWindowRollingDays == null || kpi.timeWindowRollingDays === ''
+            ? ''
+            : Number(kpi.timeWindowRollingDays),
+        )
+
+        const ds = Array.isArray(kpi.dataSources) ? kpi.dataSources : []
+        if (ds.length) {
+          setDataSources(
+            ds.map((x: any) => ({
+              id: newId('ds'),
+              object: String(x.objectName ?? x.object ?? ''),
+              aggregation: String(x.aggregationType ?? x.aggregation ?? 'SUM') as Aggregation,
+              field: String(x.fieldName ?? x.field ?? ''),
+              filters: [],
+            })),
+          )
+        }
+      } catch (e: any) {
+        const msg = e?.message || 'Failed to load KPI details'
+        showToast(NOTIFICATION_CONSTANTS.ERROR, msg)
+      } finally {
+        if (!cancelled) setLoadingKpi(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [editingKpiId])
 
   useEffect(() => {
     let cancelled = false
@@ -201,6 +309,7 @@ export default function KpiBuilderScreen() {
       field: '',
       filters: [],
     }
+    setEditingKpiId(0)
     setKpiName('')
     setKpiCode('')
     setDescription('')
@@ -229,7 +338,7 @@ export default function KpiBuilderScreen() {
       timeWindow === 'CUSTOM_RANGE' ? 'Custom' : timeWindow === 'ROLLING_WINDOW' ? 'Rolling' : 'Program Duration'
 
     return {
-      kpiId: 0,
+      kpiId: editingKpiId,
       kpiName,
       kpiCode,
       description,
@@ -263,7 +372,20 @@ export default function KpiBuilderScreen() {
       resetForm()
       const successMsg = typeof msg === 'string' && msg ? msg : 'Saved'
       setSaveSuccess(successMsg)
-      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'KPI saved', { description: successMsg })
+      showToast(
+        NOTIFICATION_CONSTANTS.SUCCESS,
+        editingKpiId > 0 ? 'KPI updated successfully' : 'KPI saved',
+        { description: successMsg },
+      )
+      if (editingKpiId > 0) {
+        navigate({ to: '/search/incentive/kpis' as any })
+      } else {
+        navigate({
+          to: '/search/incentive/kpi-builder',
+          search: {},
+          replace: true,
+        })
+      }
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : 'Failed to save KPI'
       setSaveError(errMsg)
@@ -282,6 +404,12 @@ export default function KpiBuilderScreen() {
             {/* KPI Name */}
             <Card className="rounded-xl border border-neutral-200 shadow-sm">
               <CardContent className="px-5 pb-5 pt-5">
+                {editingKpiId > 0 ? (
+                  <p className="mb-4 rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900">
+                    Editing existing KPI{' '}
+                    <span className="font-mono font-semibold">ID {editingKpiId}</span>
+                  </p>
+                ) : null}
                 <Input
                   label="KPI Name"
                   name="kpiName"
@@ -289,8 +417,12 @@ export default function KpiBuilderScreen() {
                   placeholder="e.g. Total Premium by Sales Personnel"
                   value={kpiName}
                   onChange={(e) => setKpiName(e.target.value)}
+                  disabled={editingKpiId > 0 || loadingKpi}
                   className="!h-10 w-full rounded-sm"
                 />
+                {editingKpiId > 0 ? (
+                  <p className="mt-1 text-xs text-neutral-500">KPI Name cannot be changed while editing.</p>
+                ) : null}
                 <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                   <Input
                     label="KPI Code"
@@ -673,7 +805,11 @@ export default function KpiBuilderScreen() {
               </CardHeader>
               <CardContent className="space-y-3 px-5 pb-5">
                 <Button onClick={onSave} disabled={saving} className="w-full">
-                  {saving ? 'Saving...' : 'Save KPI Definition'}
+                  {saving
+                    ? 'Saving...'
+                    : editingKpiId > 0
+                      ? 'Update KPI Definition'
+                      : 'Save KPI Definition'}
                 </Button>
                 {saveError ? <p className="text-xs text-red-600">{saveError}</p> : null}
                 {saveSuccess ? <p className="text-xs text-emerald-700">{saveSuccess}</p> : null}

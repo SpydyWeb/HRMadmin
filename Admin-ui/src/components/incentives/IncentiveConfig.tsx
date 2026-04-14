@@ -255,26 +255,34 @@ const IncentiveConfig: React.FC<IncentivesProbs> = ({
                 Add multiple clocks for the same pattern (e.g. several runs per day or per month).
               </p>
             </div>
-            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={addTimeSlot}>
-              <FiPlus className="h-4 w-4" />
-              Add time
-            </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {timeSlots.map((slot, index) => (
               <div key={index} className="flex items-center gap-2">
                 <input
                   type="time"
-                  className="min-w-[8rem] flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  className="w-[7.5rem] shrink-0 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                   value={slot}
                   onChange={(e) => updateTimeSlot(index, e.target.value)}
                 />
+                {index === timeSlots.length - 1 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1"
+                    onClick={addTimeSlot}
+                  >
+                    <FiPlus className="h-4 w-4" />
+                    Next time slot
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
-                  variant="ghost"
+                  // variant="ghost"
                   size="sm"
-                  className="shrink-0 text-neutral-400 hover:text-red-600"
+                  className="shrink-0 text-neutral-400 text-red-600"
                   disabled={timeSlots.length <= 1}
                   onClick={() => removeTimeSlot(index)}
                   aria-label="Remove time"

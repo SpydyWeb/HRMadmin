@@ -199,11 +199,40 @@ export const incentiveService = {
   /** GET /api/incentive/programs/{id} — program with all child mappings */
   getProgramById: async (id: string) => {
     try {
-      const response = await callApi<IIncentiveProgram>(
+      const args = [{ id }]
+      const fnCandidates = [
+        // Newer incentive proxy naming convention
+        'GetProgramDetails',
+        'GetProgramById',
+        // Older camelCase naming convention (some proxies use this)
+        'getProgramDetails',
+        'getProgramById',
+        // If proxy kept legacy name
         APIRoutes.GET_INCENTIVE_PROGRAM_BY_ID,
-        [{ id }],
-      )
-      return response
+        // Other plausible variants seen in this codebase
+        'GetIncentiveProgramById',
+        'getIncentiveProgramById',
+      ].filter(Boolean) as string[]
+
+      let lastErr: unknown
+      for (const fn of fnCandidates) {
+        try {
+          const response = await callApi<IIncentiveProgram>(fn, args)
+          return response
+        } catch (e: any) {
+          lastErr = e
+          const msg =
+            e?.response?.data?.error ||
+            e?.response?.data?.message ||
+            e?.message ||
+            ''
+          // If the proxy rejects the function name, try the next candidate.
+          if (String(msg).includes('Invalid function name')) continue
+          throw e
+        }
+      }
+
+      throw lastErr
     } catch (error) {
       console.error('incentiveService.getProgramById error:', error)
       throw error
@@ -410,6 +439,20 @@ export const incentiveService = {
       return response
     } catch (error) {
       console.error('incentiveService.getTableSchema error:', error)
+      throw error
+    }
+  },
+
+  /** POST /api/incentive/GetKpiDetails/{kpiId} — fetch a KPI definition for edit */
+  getKpiDetails: async (kpiId: number) => {
+    try {
+      const response = await callApi(
+        'GetKpiDetails',
+        [{ kpiId }],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getKpiDetails error:', error)
       throw error
     }
   },
