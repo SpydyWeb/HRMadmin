@@ -15,54 +15,84 @@ import {
   Bar,
   BarChart,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  Legend,
   XAxis,
   YAxis,
 } from 'recharts'
 
+type PeriodMode = 'monthly' | 'quarterly'
+type MonthlyAchievementRow = { month: string; budget: number; revenue: number; payout: number }
+type PeriodAchievementRow = { period: string; budget: number; revenue: number; payout: number }
+
 const statCards = [
-  { title: 'Active Plans', value: '12', delta: '+3 this month' },
-  { title: 'Total Agents', value: '248', delta: '+18 this month' },
-  { title: 'Pending Payouts', value: '₹4.2L', delta: '-2 this month' },
-  { title: 'Avg Achievement', value: '78%', delta: '+5% this month' },
+  { title: 'Variable Budget', value: '12', delta: '+3 this month' },
+  { title: 'Actual Expenses', value: '248', delta: '+18 this month' },
+  { title: 'Variance Against Budget', value: '₹4.2L', delta: '-2 this month' },
+  { title: 'Provision but yet to pay', value: '78%', delta: '+5% this month' },
 ]
 
-const monthlyPayoutData = [
-  { month: 'Jan', payout: 320000 },
-  { month: 'Feb', payout: 450000 },
-  { month: 'Mar', payout: 390000 },
-  { month: 'Apr', payout: 500000 },
-  { month: 'May', payout: 420000 },
-  { month: 'Jun', payout: 580000 },
+// Placeholder series until APIs are wired. Structure matches requested metrics.
+const monthlyAchievementData: MonthlyAchievementRow[] = [
+  { month: 'Jan', budget: 600000, revenue: 520000, payout: 310000 },
+  { month: 'Feb', budget: 650000, revenue: 610000, payout: 360000 },
+  { month: 'Mar', budget: 700000, revenue: 640000, payout: 390000 },
+  { month: 'Apr', budget: 720000, revenue: 690000, payout: 420000 },
+  { month: 'May', budget: 750000, revenue: 710000, payout: 440000 },
+  { month: 'Jun', budget: 800000, revenue: 760000, payout: 480000 },
 ]
 
-const productIncentiveData = [
-  { name: 'Life Insurance', value: 40, color: '#14b8a6' },
-  { name: 'Health Insurance', value: 25, color: '#7c3aed' },
-  { name: 'Motor Insurance', value: 20, color: '#f59e0b' },
-  { name: 'Travel Insurance', value: 15, color: '#ef4444' },
+const CHANNEL_COLORS: Record<string, string> = {
+  Agency: '#14b8a6',
+  Bancassurance: '#7c3aed',
+  Direct: '#f59e0b',
+  Broker: '#ef4444',
+}
+
+const channelRevenueShare = [
+  { name: 'Agency', value: 44, color: CHANNEL_COLORS.Agency },
+  { name: 'Bancassurance', value: 26, color: CHANNEL_COLORS.Bancassurance },
+  { name: 'Direct', value: 18, color: CHANNEL_COLORS.Direct },
+  { name: 'Broker', value: 12, color: CHANNEL_COLORS.Broker },
 ]
 
-const weeklyTrendData = [
-  { week: 'W1', achievement: 62 },
-  { week: 'W2', achievement: 70 },
-  { week: 'W3', achievement: 67 },
-  { week: 'W4', achievement: 76 },
-  { week: 'W5', achievement: 80 },
-  { week: 'W6', achievement: 74 },
+const channelIncentiveShare = [
+  { name: 'Agency', value: 38, color: CHANNEL_COLORS.Agency },
+  { name: 'Bancassurance', value: 24, color: CHANNEL_COLORS.Bancassurance },
+  { name: 'Direct', value: 22, color: CHANNEL_COLORS.Direct },
+  { name: 'Broker', value: 16, color: CHANNEL_COLORS.Broker },
 ]
 
-const topPerformers = [
-  { name: 'Rahul Sharma', region: 'North', achievement: '112%', amount: '₹85,000' },
-  { name: 'Priya Patel', region: 'West', achievement: '108%', amount: '₹78,200' },
-  { name: 'Amit Kumar', region: 'South', achievement: '103%', amount: '₹72,500' },
-  { name: 'Sneha Reddy', region: 'East', achievement: '98%', amount: '₹65,000' },
+const topSchemePerformance = [
+  { schemeName: 'Summer Fresher Program 2024', channel: 'Agency', budget: 500000, revenue: 430000, payout: 260000 },
+  { schemeName: 'Q2 Growth Booster', channel: 'Bancassurance', budget: 450000, revenue: 410000, payout: 240000 },
+  { schemeName: 'Motor Push', channel: 'Direct', budget: 380000, revenue: 360000, payout: 210000 },
+  { schemeName: 'Health Accelerator', channel: 'Broker', budget: 300000, revenue: 290000, payout: 175000 },
 ]
+
+const toCurrency = (n: number) => `₹${Math.round(n).toLocaleString()}`
+
+const quarterOf = (monthShort: string) => {
+  const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthShort)
+  if (m < 0) return 'Q?'
+  return `Q${Math.floor(m / 3) + 1}`
+}
+
+const aggregateToQuarterly = (rows: MonthlyAchievementRow[]): PeriodAchievementRow[] => {
+  const map = new Map<string, PeriodAchievementRow>()
+  for (const r of rows) {
+    const q = quarterOf(r.month)
+    const existing = map.get(q) ?? { period: q, budget: 0, revenue: 0, payout: 0 }
+    existing.budget += r.budget
+    existing.revenue += r.revenue
+    existing.payout += r.payout
+    map.set(q, existing)
+  }
+  return Array.from(map.values())
+}
 
 const quickActions = [
   {
@@ -112,6 +142,7 @@ const goToItems = [
 
 const IncentiveDashboard = () => {
   const [resourceSearch, setResourceSearch] = useState('')
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('monthly')
   const navigate = useNavigate()
 
   const filteredResources = useMemo(
@@ -121,6 +152,17 @@ const IncentiveDashboard = () => {
       ),
     [resourceSearch],
   )
+
+  const achievementChartData: PeriodAchievementRow[] = useMemo(() => {
+    return periodMode === 'monthly'
+      ? monthlyAchievementData.map((r) => ({
+          period: r.month,
+          budget: r.budget,
+          revenue: r.revenue,
+          payout: r.payout,
+        }))
+      : aggregateToQuarterly(monthlyAchievementData)
+  }, [periodMode])
 
   return (
     <div className="min-h-screen py-2">
@@ -144,15 +186,36 @@ const IncentiveDashboard = () => {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <Card className="rounded-lg border border-neutral-200 py-4">
                 <CardHeader className="px-4 pb-2">
-                  <CardTitle className="text-base">Monthly Payouts</CardTitle>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle className="text-base">Monthly / Quarterly Achievements</CardTitle>
+                    <div className="flex items-center rounded-md border border-neutral-200 bg-white p-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPeriodMode('monthly')}
+                        className={`rounded px-2 py-1 font-medium ${periodMode === 'monthly' ? 'bg-teal-600 text-white' : 'text-neutral-700 hover:bg-neutral-50'}`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPeriodMode('quarterly')}
+                        className={`rounded px-2 py-1 font-medium ${periodMode === 'quarterly' ? 'bg-teal-600 text-white' : 'text-neutral-700 hover:bg-neutral-50'}`}
+                      >
+                        Quarterly
+                      </button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="h-[280px] px-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyPayoutData}>
-                      <XAxis dataKey="month" />
+                    <BarChart data={achievementChartData}>
+                      <XAxis dataKey="period" />
                       <YAxis />
-                      <Tooltip formatter={(value: number) => `₹${value.toLocaleString()}`} />
-                      <Bar dataKey="payout" radius={[6, 6, 0, 0]} fill="#14b8a6" />
+                      <Tooltip formatter={(value) => toCurrency(Number(value ?? 0))} />
+                      <Legend />
+                      <Bar dataKey="budget" name="Budget" radius={[6, 6, 0, 0]} fill="#0ea5e9" />
+                      <Bar dataKey="revenue" name="Revenue" radius={[6, 6, 0, 0]} fill="#14b8a6" />
+                      <Bar dataKey="payout" name="Payout" radius={[6, 6, 0, 0]} fill="#7c3aed" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -160,27 +223,58 @@ const IncentiveDashboard = () => {
 
               <Card className="rounded-lg border border-neutral-200 py-4">
                 <CardHeader className="px-4 pb-2">
-                  <CardTitle className="text-base">Incentive by Product</CardTitle>
+                  <CardTitle className="text-base">Channel-wise Share</CardTitle>
                 </CardHeader>
-                <CardContent className="h-[280px] px-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={productIncentiveData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={58}
-                        outerRadius={90}
-                        paddingAngle={2}
-                        label={({ name, value }) => `${name} ${value}%`}
-                      >
-                        {productIncentiveData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `${value}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <CardContent className="px-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="rounded-md border border-neutral-200 bg-white p-2">
+                      <p className="px-2 pt-2 text-xs font-semibold text-neutral-700">Revenue</p>
+                      <div className="h-[220px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={channelRevenueShare}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={50}
+                              outerRadius={82}
+                              paddingAngle={2}
+                              label={({ name, value }) => `${name} ${value}%`}
+                            >
+                              {channelRevenueShare.map((entry) => (
+                                <Cell key={entry.name} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-neutral-200 bg-white p-2">
+                      <p className="px-2 pt-2 text-xs font-semibold text-neutral-700">Incentive</p>
+                      <div className="h-[220px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={channelIncentiveShare}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={50}
+                              outerRadius={82}
+                              paddingAngle={2}
+                              label={({ name, value }) => `${name} ${value}%`}
+                            >
+                              {channelIncentiveShare.map((entry) => (
+                                <Cell key={entry.name} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -188,44 +282,42 @@ const IncentiveDashboard = () => {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <Card className="rounded-lg border border-neutral-200 py-4">
                 <CardHeader className="px-4 pb-2">
-                  <CardTitle className="text-base">Weekly Achievement Trend</CardTitle>
+                  <CardTitle className="text-base">Budget vs Payout / Revenue</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[260px] px-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={weeklyTrendData}>
-                      <XAxis dataKey="week" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip formatter={(value: number) => `${value}%`} />
-                      <Line
-                        type="monotone"
-                        dataKey="achievement"
-                        stroke="#7c3aed"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
+                    <BarChart data={achievementChartData}>
+                      <XAxis dataKey="period" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => toCurrency(Number(value ?? 0))} />
+                      <Legend />
+                      <Bar dataKey="budget" name="Budget" radius={[6, 6, 0, 0]} fill="#0ea5e9" />
+                      <Bar dataKey="revenue" name="Revenue" radius={[6, 6, 0, 0]} fill="#14b8a6" />
+                      <Bar dataKey="payout" name="Payout" radius={[6, 6, 0, 0]} fill="#7c3aed" />
+                    </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
               <Card className="rounded-lg border border-neutral-200 py-4">
                 <CardHeader className="px-4 pb-2">
-                  <CardTitle className="text-base">Top Performers</CardTitle>
+                  <CardTitle className="text-base">Title here</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 px-4">
-                  {topPerformers.map((performer) => (
+                  {topSchemePerformance.map((row) => (
                     <div
-                      key={performer.name}
+                      key={`${row.schemeName}-${row.channel}`}
                       className="rounded-md border border-neutral-200 bg-neutral-100 p-3"
                     >
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-neutral-900">{performer.name}</p>
-                          <p className="text-xs text-neutral-500">{performer.region}</p>
+                          <p className="text-sm font-semibold text-neutral-900">{row.schemeName}</p>
+                          <p className="text-xs text-neutral-500">Channel: {row.channel}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-emerald-600">{performer.achievement}</p>
-                          <p className="text-xs text-neutral-500">{performer.amount}</p>
+                          <p className="text-xs text-neutral-500">Budget: {toCurrency(row.budget)}</p>
+                          <p className="text-xs text-neutral-500">Revenue: {toCurrency(row.revenue)}</p>
+                          <p className="text-sm font-semibold text-emerald-600">Payout: {toCurrency(row.payout)}</p>
                         </div>
                       </div>
                     </div>

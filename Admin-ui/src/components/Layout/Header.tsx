@@ -15,7 +15,12 @@ export default function Header() {
 
   // Determine header title based on current route
   const isCommissionRoute = location.pathname.startsWith('/commission')
-  const headerTitle = isCommissionRoute ? 'Commission Management' : 'Hierarchy Management'
+  const isIncentiveRoute = location.pathname.startsWith('/incentive')
+  const headerTitle = isIncentiveRoute
+    ? 'IncPro'
+    : isCommissionRoute
+      ? 'Commission Management'
+      : 'Hierarchy Management'
   
 
   const handleLogout = () => {
