@@ -936,6 +936,24 @@ export default function IncentiveProgramConfig() {
   const [fresherCatchUpPrevious, setFresherCatchUpPrevious] = useState(false)
   const [fresherEarlyBonus, setFresherEarlyBonus] = useState(false)
 
+  const programCategoryForApi = (tab: ProgramDetailCategory) => {
+    // Backend appears to key off exact category labels (see UpsertProgram sample).
+    if (tab === 'fresher') return 'Fresher Program'
+    return PROGRAM_DETAIL_TABS.find((t) => t.id === tab)?.label ?? tab
+  }
+
+  const toNonNegativeNumber = (raw: any) => {
+    const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? '').trim())
+    if (!Number.isFinite(n)) return 0
+    return n < 0 ? 0 : n
+  }
+
+  const toNonNegativeInt = (raw: any) => {
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? '').trim(), 10)
+    if (!Number.isFinite(n)) return 0
+    return n < 0 ? 0 : n
+  }
+
   const parseFresherTargetDescription = useCallback((raw: any): FresherTargetInput => {
     const s = String(raw ?? '').trim()
     if (!s) return { logins: '', conversions: '', amount: '' }
@@ -1000,7 +1018,18 @@ export default function IncentiveProgramConfig() {
             const next = prev.slice(0, 6)
             while (next.length < 6) next.push({ logins: '', conversions: '', amount: '' })
             for (let i = 0; i < Math.min(6, targets.length); i++) {
-              next[i] = parseFresherTargetDescription(targets[i]?.targetDescription)
+              const t = targets[i]
+              // Prefer explicit numeric fields if API sends them; fallback to legacy `targetDescription`.
+              const hasNumericFields =
+                t != null &&
+                (t.logins != null || t.conversions != null || t.amount != null)
+              next[i] = hasNumericFields
+                ? {
+                    logins: String(t?.logins ?? ''),
+                    conversions: String(t?.conversions ?? ''),
+                    amount: String(t?.amount ?? ''),
+                  }
+                : parseFresherTargetDescription(t?.targetDescription)
             }
             return next
           })
@@ -1290,7 +1319,7 @@ export default function IncentiveProgramConfig() {
     setChannelsLoading(true)
       ;(async () => {
         try {
-          const res = await incentiveService.getFiltersCascade({})
+          const res: any = await incentiveService.getFiltersCascade({})
           const rows = extractCascadeRows(res?.responseBody, [
             'channels',
             'channelList',
@@ -1396,7 +1425,7 @@ export default function IncentiveProgramConfig() {
     setSubChannelsLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.getFiltersCascade({
+          const res: any = await incentiveService.getFiltersCascade({
             channelIds: selectedChannelIds,
           })
           const rows = extractCascadeRows(res?.responseBody, [
@@ -1445,7 +1474,7 @@ export default function IncentiveProgramConfig() {
     setBranchesLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.getFiltersCascade({
+          const res: any = await incentiveService.getFiltersCascade({
             channelIds: selectedChannelIds,
             subChannelIds: selectedSubChannelIds,
           })
@@ -1497,7 +1526,7 @@ export default function IncentiveProgramConfig() {
     setDesignationsLoading(true)
       ; (async () => {
         try {
-          const res = await incentiveService.getFiltersCascade({
+          const res: any = await incentiveService.getFiltersCascade({
             channelIds: selectedChannelIds,
             subChannelIds: selectedSubChannelIds,
             branchIds: selectedBranchIds,
@@ -1573,8 +1602,7 @@ export default function IncentiveProgramConfig() {
       return
     }
 
-    const programCategoryLabel =
-      PROGRAM_DETAIL_TABS.find((t) => t.id === programDetailTab)?.label ?? programDetailTab
+    const programCategoryLabel = programCategoryForApi(programDetailTab)
 
     const effectiveFrom = toIso(startDate)
     const effectiveTo = toIso(endDate)
@@ -1629,7 +1657,7 @@ export default function IncentiveProgramConfig() {
 
     setIsSaving(true)
     try {
-      const res = await incentiveService.upsertProgram({
+      const res: any = await incentiveService.upsertProgram({
         ...(isEditMode && programId ? { programId } : {}),
         programName: name,
         description: description.trim(),
@@ -1660,6 +1688,10 @@ export default function IncentiveProgramConfig() {
                 .map(({ t, idx }) => ({
                   targetId: 0,
                   monthIdentifier: `M${idx + 1}`,
+                  logins: toNonNegativeInt(t?.logins),
+                  conversions: toNonNegativeInt(t?.conversions),
+                  amount: toNonNegativeNumber(t?.amount),
+                  // Keep these for backward compatibility with any older backend versions.
                   targetDescription: `logins(count): ${String(t?.logins ?? '').trim()}, conversions: ${String(
                     t?.conversions ?? '',
                   ).trim()}, amount: ${String(t?.amount ?? '').trim()}`,

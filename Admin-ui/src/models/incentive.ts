@@ -189,37 +189,33 @@ export type IncentiveFrequency = 'weekly' | 'monthly' | 'quarterly' | 'half_year
 
 export type ClawbackBasis = 'itd' | 'fytd' | 'cytd'
 
-/** Fresher program monthly targets — `monthIdentifier` is M1…Mn in calendar order of selected months. */
 export interface IFresherProgramTarget {
-  targetId: number
+  targetId?: number
   monthIdentifier: string
-  targetDescription: string
-  isActive: boolean
+  logins: number
+  conversions: number
+  amount: number
+  targetDescription?: string
+  isActive?: boolean
 }
 
-/** POST UpsertProgram — align with API body (no duplicate / UI-only aliases). */
 export interface IUpsertProgramRequest {
   programName: string
   description: string
   effectiveFrom: string
-  /** Omitted or null when program is perpetual with no fixed end. */
   effectiveTo?: string | null
   executionFrequency: string
   selectionExpression: string | null
   cappingAmount: number
-  /** Tab label shown in UI, e.g. "Fresher Program", "Standard". */
   programCategory: string
-  /** API expects title case, e.g. "One Time", "Perpetual". */
   programType: string
   conversionPeriod?: number
   cancellationPeriod?: number
   considerClawback?: boolean
-  /** Human-readable period basis, e.g. "ITD" / "FYTD" / "CYTD". */
   clawbackPeriod?: string
   kpiIds: number[]
-  /** When `programType` is perpetual (optional frequency label). */
   incentiveFrequency?: string
-  /** Fresher program only. */
+
   catchUpPreviousQualification?: boolean
   earlyBonus?: boolean
   fresherTargets?: IFresherProgramTarget[]
@@ -264,12 +260,10 @@ export interface IUpsertProgramWeightagesRequest {
 // ─── Cascade Filters ──────────────────────────────────────────────────────────
 
 export interface IFiltersCascadeParams {
-  // API supports multi-select payload (preferred)
   channelIds?: number[]
   subChannelIds?: number[]
   branchIds?: number[]
 
-  // Backward-compatible single-select payload (older callers)
   channelId?: number
   subChannelId?: number
   branchId?: number
