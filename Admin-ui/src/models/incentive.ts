@@ -189,6 +189,15 @@ export type IncentiveFrequency = 'weekly' | 'monthly' | 'quarterly' | 'half_year
 
 export type ClawbackBasis = 'itd' | 'fytd' | 'cytd'
 
+/** Fresher program monthly targets — `monthIdentifier` is M1…Mn in calendar order of selected months. */
+export interface IFresherProgramTarget {
+  targetId: number
+  monthIdentifier: string
+  targetDescription: string
+  isActive: boolean
+}
+
+/** POST UpsertProgram — align with API body (no duplicate / UI-only aliases). */
 export interface IUpsertProgramRequest {
   programName: string
   description: string
@@ -196,24 +205,24 @@ export interface IUpsertProgramRequest {
   /** Omitted or null when program is perpetual with no fixed end. */
   effectiveTo?: string | null
   executionFrequency: string
-  selectionExpression: string
+  selectionExpression: string | null
   cappingAmount: number
+  /** Tab label shown in UI, e.g. "Fresher Program", "Standard". */
+  programCategory: string
+  /** API expects title case, e.g. "One Time", "Perpetual". */
+  programType: string
+  conversionPeriod?: number
+  cancellationPeriod?: number
+  considerClawback?: boolean
+  /** Human-readable period basis, e.g. "ITD" / "FYTD" / "CYTD". */
+  clawbackPeriod?: string
   kpiIds: number[]
-  /** Active Program Details tab (Standard, Fresher, …). */
-  programDetailCategory?: ProgramDetailCategory
-  programType?: ProgramScheduleType
-  /** When `programType` is perpetual. */
-  incentiveFrequency?: IncentiveFrequency
-  /** Days after program end date. */
-  conversionPeriodDays?: number
-  /** Days after conversion period. */
-  cancellationPeriodDays?: number
-  clawbackRecoveries?: boolean
-  clawbackBasis?: ClawbackBasis
-  /** Fresher program — calendar months (1–12) that apply. */
-  fresherEligibleMonths?: number[]
-  fresherCatchUpPreviousQualification?: boolean
-  fresherEarlyBonus?: boolean
+  /** When `programType` is perpetual (optional frequency label). */
+  incentiveFrequency?: string
+  /** Fresher program only. */
+  catchUpPreviousQualification?: boolean
+  earlyBonus?: boolean
+  fresherTargets?: IFresherProgramTarget[]
 }
 
 // ─── KPIs List ────────────────────────────────────────────────────────────────

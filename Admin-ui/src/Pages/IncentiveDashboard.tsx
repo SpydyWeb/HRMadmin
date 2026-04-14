@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react'
-import { FiDownload, FiExternalLink, FiPlus, FiSearch, FiUpload, FiUserPlus } from 'react-icons/fi'
+import {
+  FiBarChart2,
+  FiDownload,
+  FiExternalLink,
+  FiList,
+  FiSearch,
+  FiUpload,
+  FiUserPlus,
+} from 'react-icons/fi'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -58,9 +66,14 @@ const topPerformers = [
 
 const quickActions = [
   {
-    title: 'Add New Programe',
-    subtitle: 'Configure a new payout plan',
-    icon: FiPlus,
+    title: 'Programs',
+    subtitle: 'View, edit, or create incentive programs',
+    icon: FiList,
+  },
+  {
+    title: 'KPI',
+    subtitle: 'Browse KPIs or create a new one',
+    icon: FiBarChart2,
   },
   {
     title: 'Add Agent Target',
@@ -88,9 +101,10 @@ const resourceItems = [
 ]
 
 const goToItems = [
+  { title: 'Programs', to: '/search/incentive/programs' },
   { title: 'Program Config', to: '/search/incentive/program-config' },
   { title: 'Product Weightage', to: '/search/incentive/product-weightage' },
-  { title: 'KPI Builder', to: '/search/incentive/kpi-builder' },
+  // { title: 'KPI', to: '/search/incentive/kpis' },
   { title: 'Payout Config', to: '#' },
   { title: 'Incentive Cycles', to: '#' },
   { title: 'Approval Queue', to: '#' },
@@ -231,8 +245,11 @@ const IncentiveDashboard = () => {
                   const Icon = item.icon
 
                   const handleClick = () => {
-                    if (item.title === 'Add New Programe') {
-                      navigate({ to: '/search/incentive/program-config' })
+                    if (item.title === 'Programs') {
+                      navigate({ to: '/search/incentive/programs' })
+                    }
+                    if (item.title === 'KPI') {
+                      navigate({ to: '/search/incentive/kpis' })
                     }
                   }
                   return (

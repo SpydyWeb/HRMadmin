@@ -44,7 +44,8 @@ export const APIRoutes = {
   UPDATE_INCENTIVE_KPI: 'updateIncentiveKpi',
   DELETE_INCENTIVE_KPI: 'deleteIncentiveKpi',
   GET_INCENTIVE_FILTERS: 'getIncentiveFilters',
-  GET_INCENTIVE_PROGRAM_BY_ID: 'getIncentiveProgramById',
+  // Incentive: fetch single program details by id (proxy fn name must match backend)
+  GET_INCENTIVE_PROGRAM_BY_ID: 'GetProgramDetails',
   CREATE_INCENTIVE_PROGRAM: 'createIncentiveProgram',
   UPDATE_INCENTIVE_PROGRAM: 'updateIncentiveProgram',
   GET_INCENTIVE_PROGRAM_PRODUCT_WEIGHTAGE: 'getIncentiveProgramProductWeightage',

@@ -575,6 +575,22 @@ const upsertProgramWeightages = (data = {}, headers = {}) => {
 const getProgramsList = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
 };
+const getProgramDetails = async (data = {}, headers = {}) => {
+  const programId = data?.programId ?? data?.id;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  // API: POST /api/incentive/GetProgramDetails/{programId}
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_PROGRAM_DETAILS}/${programId}`,
+    {},
+    { headers }
+  );
+};
+// Aliases for different client naming conventions
+const GetProgramDetails = getProgramDetails;
+const getIncentiveProgramById = getProgramDetails;
+const GetProgramById = getProgramDetails;
 const getAgentClubs = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_GET_AGENT_CLUBS, data, { headers });
 };
@@ -624,6 +640,18 @@ const GetTableSchema = (data = {}, headers = {}) => {
   return apiClient.post(url, {}, { headers });
 };
 
+const GetKpiDetails = (data = {}, headers = {}) => {
+  const kpiId = data?.kpiId ?? data?.id;
+  if (!kpiId) {
+    throw new Error("kpiId is required");
+  }
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_KPI_DETAILS}/${kpiId}`,
+    {},
+    { headers }
+  );
+};
+
 const UpsertKpi = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
     headers: {
@@ -670,6 +698,8 @@ const fetchBranchByUser = (data = {}, headers = {}) => {
       throw err;
     });
 };
+
+
 
 
 
@@ -751,6 +781,10 @@ module.exports = {
   getKpisList,
   upsertProgramWeightages,
   getProgramsList,
+  getProgramDetails,
+  GetProgramDetails,
+  getIncentiveProgramById,
+  GetProgramById,
   getAgentClubs,
   getProgramClubs,
   upsertProgramClubs,
@@ -760,6 +794,7 @@ module.exports = {
   GetKpiObjects,
   GetKpiFields,
   GetTableSchema,
+  GetKpiDetails,
   UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,

@@ -77,6 +77,8 @@ const APIRoutes = {
   INCENTIVE_GET_SELECTED_PROGRAM_KPIS: "/api/incentive/GetSelectedProgramKpis",
   INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: "/api/incentive/UpsertProgramWeightages",
   INCENTIVE_GET_PROGRAMS_LIST: "/api/incentive/GetProgramsList",
+  // Single program details by id (used for edit flow)
+  INCENTIVE_GET_PROGRAM_DETAILS: "/api/incentive/GetProgramDetails",
   INCENTIVE_GET_AGENT_CLUBS: "/api/incentive/GetAgentClubs",
   INCENTIVE_GET_PROGRAM_CLUBS: "/api/incentive/GetProgramClubs",
   INCENTIVE_UPSERT_PROGRAM_CLUBS: "/api/incentive/UpsertProgramClubs",
@@ -85,6 +87,7 @@ const APIRoutes = {
   INCENTIVE_GET_KPI_OBJECTS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiObjects",
   INCENTIVE_GET_KPI_FIELDS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiFields",
   INCENTIVE_GET_TABLE_SCHEMA: "http://hmsapi.ezytekapis.com/api/incentive/GetTableSchema",
+  INCENTIVE_GET_KPI_DETAILS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiDetails",
   INCENTIVE_UPSERT_KPI: "http://hmsapi.ezytekapis.com/api/incentive/UpsertKpi",
 
 };
