@@ -518,4 +518,19 @@ export const incentiveService = {
       throw error
     }
   },
+
+  // ─── Incentive Dashboard ────────────────────────────────────────────────────
+  /** POST /api/incentive/GetIncentiveDashboard — overview, trends, channel wise */
+  getIncentiveDashboard: async (payload: Record<string, unknown> = {}) => {
+    try {
+      const response = await callApi(
+        'GetIncentiveDashboard',
+        [payload],
+      )
+      return response
+    } catch (error) {
+      console.error('incentiveService.getIncentiveDashboard error:', error)
+      throw error
+    }
+  },
 }

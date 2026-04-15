@@ -78,7 +78,7 @@ export default function KpiBuilderScreen() {
   const [kpiName, setKpiName] = useState('')
   const [kpiCode, setKpiCode] = useState('')
   const [description, setDescription] = useState('')
-  const [unitType, setUnitType] = useState('')
+
 
   const [objectOptions, setObjectOptions] = useState<KpiLabelValue[]>([])
   const [objectsLoading, setObjectsLoading] = useState(false)
@@ -101,8 +101,6 @@ export default function KpiBuilderScreen() {
     const first = crypto.randomUUID()
     return `ds_${first}`
   })
-  const [groupByTeam, setGroupByTeam] = useState(false)
-  const [groupByRegion, setGroupByRegion] = useState(false)
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('PROGRAM_DURATION')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
@@ -150,11 +148,7 @@ export default function KpiBuilderScreen() {
         setKpiName(String(kpi.kpiName ?? kpi.name ?? '').trim())
         setKpiCode(String(kpi.kpiCode ?? kpi.code ?? '').trim())
         setDescription(String(kpi.description ?? '').trim())
-        setUnitType(String(kpi.unitType ?? '').trim())
-
-        const grouping: string[] = Array.isArray(kpi.groupingTypes) ? kpi.groupingTypes : []
-        setGroupByTeam(grouping.some((x) => String(x).toLowerCase() === 'team'))
-        setGroupByRegion(grouping.some((x) => String(x).toLowerCase() === 'region'))
+       
 
         const tw = String(kpi.timeWindowType ?? '').toLowerCase()
         if (tw.includes('custom')) setTimeWindow('CUSTOM_RANGE')
@@ -313,11 +307,9 @@ export default function KpiBuilderScreen() {
     setKpiName('')
     setKpiCode('')
     setDescription('')
-    setUnitType('')
+ 
     setDataSources([ds])
     setActiveDataSourceId(ds.id)
-    setGroupByTeam(false)
-    setGroupByRegion(false)
     setTimeWindow('PROGRAM_DURATION')
     setCustomStart('')
     setCustomEnd('')
@@ -330,9 +322,6 @@ export default function KpiBuilderScreen() {
   }
 
   const buildPayload = () => {
-    const groupingTypes: string[] = ['Sales Personnel ID']
-    if (groupByTeam) groupingTypes.push('Team')
-    if (groupByRegion) groupingTypes.push('Region')
 
     const timeWindowType =
       timeWindow === 'CUSTOM_RANGE' ? 'Custom' : timeWindow === 'ROLLING_WINDOW' ? 'Rolling' : 'Program Duration'
@@ -342,8 +331,6 @@ export default function KpiBuilderScreen() {
       kpiName,
       kpiCode,
       description,
-      unitType,
-      groupingTypes,
       timeWindowType,
       timeWindowCustomStart: timeWindow === 'CUSTOM_RANGE' && customStart ? new Date(customStart).toISOString() : null,
       timeWindowCustomEnd: timeWindow === 'CUSTOM_RANGE' && customEnd ? new Date(customEnd).toISOString() : null,
@@ -396,14 +383,15 @@ export default function KpiBuilderScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="p-4">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          {/* Left column */}
-          <div className="space-y-4">
+    <div className="min-h-screen w-full">
+      <div className="p-4 w-full">
+        <div className="w-full">
+        
+          <div className="space-y-4 w-full">
             {/* KPI Name */}
             <Card className="rounded-xl border border-neutral-200 shadow-sm">
               <CardContent className="px-5 pb-5 pt-5">
+                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {editingKpiId > 0 ? (
                   <p className="mb-4 rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900">
                     Editing existing KPI{' '}
@@ -423,7 +411,7 @@ export default function KpiBuilderScreen() {
                 {editingKpiId > 0 ? (
                   <p className="mt-1 text-xs text-neutral-500">KPI Name cannot be changed while editing.</p>
                 ) : null}
-                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                
                   <Input
                     label="KPI Code"
                     name="kpiCode"
@@ -431,15 +419,6 @@ export default function KpiBuilderScreen() {
                     placeholder="e.g. KPI_TOT_PREM_2024"
                     value={kpiCode}
                     onChange={(e) => setKpiCode(e.target.value)}
-                    className="!h-10 w-full rounded-sm"
-                  />
-                  <Input
-                    label="Unit Type"
-                    name="unitType"
-                    variant="standardone"
-                    placeholder="e.g. Currency"
-                    value={unitType}
-                    onChange={(e) => setUnitType(e.target.value)}
                     className="!h-10 w-full rounded-sm"
                   />
                 </div>
@@ -667,44 +646,6 @@ export default function KpiBuilderScreen() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Grouping */}
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Grouping</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Define how results are grouped</p>
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-lg border border-teal-200 bg-teal-50 px-3 py-3">
-                    <div>
-                      <p className="text-sm font-semibold text-teal-800">Sales Personnel ID</p>
-                      <p className="text-[11px] text-teal-700">Mandatory grouping — always applied</p>
-                    </div>
-                    <span className="rounded-md border border-teal-200 bg-teal-100 px-2 py-1 text-[11px] font-semibold text-teal-700">
-                      Locked
-                    </span>
-                  </div>
-
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-3 hover:bg-neutral-50">
-                    <Checkbox checked={groupByTeam} onCheckedChange={(v) => setGroupByTeam(Boolean(v))} />
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-800">Team</p>
-                      <p className="text-[11px] text-neutral-500">Group by team name</p>
-                    </div>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-3 hover:bg-neutral-50">
-                    <Checkbox checked={groupByRegion} onCheckedChange={(v) => setGroupByRegion(Boolean(v))} />
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-800">Region</p>
-                      <p className="text-[11px] text-neutral-500">Group by geographic region</p>
-                    </div>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Time Window */}
             <Card className="rounded-xl border border-neutral-200 shadow-sm">
               <CardHeader className="px-5 pb-3 pt-5">
@@ -728,19 +669,6 @@ export default function KpiBuilderScreen() {
 
                   <button
                     type="button"
-                    onClick={() => setTimeWindow('CUSTOM_RANGE')}
-                    className={`rounded-lg border px-4 py-4 text-left transition ${
-                      timeWindow === 'CUSTOM_RANGE'
-                        ? 'border-indigo-200 bg-indigo-50'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <p className="text-sm font-semibold text-neutral-800">Custom Range</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">Specific start and end dates</p>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setTimeWindow('ROLLING_WINDOW')}
                     className={`rounded-lg border px-4 py-4 text-left transition ${
                       timeWindow === 'ROLLING_WINDOW'
@@ -752,29 +680,6 @@ export default function KpiBuilderScreen() {
                     <p className="mt-0.5 text-xs text-neutral-500">Last N days from today</p>
                   </button>
                 </div>
-
-                {timeWindow === 'CUSTOM_RANGE' ? (
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div>
-                      <Label className="text-xs font-semibold text-neutral-600">Start</Label>
-                      <input
-                        type="date"
-                        value={customStart}
-                        onChange={(e) => setCustomStart(e.target.value)}
-                        className="mt-2 h-10 w-full rounded-sm border border-gray-400 bg-white px-3 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-neutral-600">End</Label>
-                      <input
-                        type="date"
-                        value={customEnd}
-                        onChange={(e) => setCustomEnd(e.target.value)}
-                        className="mt-2 h-10 w-full rounded-sm border border-gray-400 bg-white px-3 text-sm"
-                      />
-                    </div>
-                  </div>
-                ) : null}
 
                 {timeWindow === 'ROLLING_WINDOW' ? (
                   <div className="mt-4">
@@ -794,48 +699,20 @@ export default function KpiBuilderScreen() {
                 ) : null}
               </CardContent>
             </Card>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-4">
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Actions</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Save the KPI definition to the server.</p>
-              </CardHeader>
-              <CardContent className="space-y-3 px-5 pb-5">
-                <Button onClick={onSave} disabled={saving} className="w-full">
+                <div className="flex justify-end">
+               <Button onClick={onSave} disabled={saving} className="w-95 text-end">
                   {saving
                     ? 'Saving...'
                     : editingKpiId > 0
                       ? 'Update KPI Definition'
                       : 'Save KPI Definition'}
                 </Button>
+                </div>
                 {saveError ? <p className="text-xs text-red-600">{saveError}</p> : null}
                 {saveSuccess ? <p className="text-xs text-emerald-700">{saveSuccess}</p> : null}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Sample Data Test</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Test the KPI with a specific salesperson/personnel code.</p>
-              </CardHeader>
-              <CardContent className="space-y-3 px-5 pb-5">
-                <Input
-                  label=""
-                  variant="standard"
-                  placeholder="e.g., SP001"
-                  value={sampleCode}
-                  onChange={(e) => setSampleCode(e.target.value)}
-                />
-                <div className="space-y-2">
-                  <div className="h-10 rounded-md bg-neutral-200" />
-                  <div className="h-10 rounded-md bg-neutral-200" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
+
+    
         </div>
       </div>
     </div>

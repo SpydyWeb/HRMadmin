@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   FiBarChart2,
   FiDownload,
@@ -11,6 +11,7 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { incentiveService } from '@/services/incentiveService'
 import {
   Bar,
   BarChart,
@@ -28,23 +29,6 @@ type PeriodMode = 'monthly' | 'quarterly'
 type MonthlyAchievementRow = { month: string; budget: number; revenue: number; payout: number }
 type PeriodAchievementRow = { period: string; budget: number; revenue: number; payout: number }
 
-const statCards = [
-  { title: 'Variable Budget', value: '12', delta: '+3 this month' },
-  { title: 'Actual Expenses', value: '248', delta: '+18 this month' },
-  { title: 'Variance Against Budget', value: '₹4.2L', delta: '-2 this month' },
-  { title: 'Provision but yet to pay', value: '78%', delta: '+5% this month' },
-]
-
-// Placeholder series until APIs are wired. Structure matches requested metrics.
-const monthlyAchievementData: MonthlyAchievementRow[] = [
-  { month: 'Jan', budget: 600000, revenue: 520000, payout: 310000 },
-  { month: 'Feb', budget: 650000, revenue: 610000, payout: 360000 },
-  { month: 'Mar', budget: 700000, revenue: 640000, payout: 390000 },
-  { month: 'Apr', budget: 720000, revenue: 690000, payout: 420000 },
-  { month: 'May', budget: 750000, revenue: 710000, payout: 440000 },
-  { month: 'Jun', budget: 800000, revenue: 760000, payout: 480000 },
-]
-
 const CHANNEL_COLORS: Record<string, string> = {
   Agency: '#14b8a6',
   Bancassurance: '#7c3aed',
@@ -52,28 +36,16 @@ const CHANNEL_COLORS: Record<string, string> = {
   Broker: '#ef4444',
 }
 
-const channelRevenueShare = [
-  { name: 'Agency', value: 44, color: CHANNEL_COLORS.Agency },
-  { name: 'Bancassurance', value: 26, color: CHANNEL_COLORS.Bancassurance },
-  { name: 'Direct', value: 18, color: CHANNEL_COLORS.Direct },
-  { name: 'Broker', value: 12, color: CHANNEL_COLORS.Broker },
-]
 
-const channelIncentiveShare = [
-  { name: 'Agency', value: 38, color: CHANNEL_COLORS.Agency },
-  { name: 'Bancassurance', value: 24, color: CHANNEL_COLORS.Bancassurance },
-  { name: 'Direct', value: 22, color: CHANNEL_COLORS.Direct },
-  { name: 'Broker', value: 16, color: CHANNEL_COLORS.Broker },
-]
-
-const topSchemePerformance = [
-  { schemeName: 'Summer Fresher Program 2024', channel: 'Agency', budget: 500000, revenue: 430000, payout: 260000 },
-  { schemeName: 'Q2 Growth Booster', channel: 'Bancassurance', budget: 450000, revenue: 410000, payout: 240000 },
-  { schemeName: 'Motor Push', channel: 'Direct', budget: 380000, revenue: 360000, payout: 210000 },
-  { schemeName: 'Health Accelerator', channel: 'Broker', budget: 300000, revenue: 290000, payout: 175000 },
-]
 
 const toCurrency = (n: number) => `₹${Math.round(n).toLocaleString()}`
+const toCompactNumber = (n: number) => {
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}K`
+  return `${Math.round(n)}`
+}
 
 const quarterOf = (monthShort: string) => {
   const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthShort)
@@ -93,6 +65,32 @@ const aggregateToQuarterly = (rows: MonthlyAchievementRow[]): PeriodAchievementR
   }
   return Array.from(map.values())
 }
+
+type IncentiveDashboardResponse = {
+  responseHeader?: { errorCode?: number; errorMessage?: string }
+  responseBody?: {
+    incentiveDashboard?: {
+      overview?: {
+        id?: number
+        orgId?: number
+        variableBudget?: number
+        actualExpense?: number
+        varianceAgainstBudget?: number
+        previousButYetToPay?: number
+      }
+      trends?: {
+        monthly?: Array<{ period?: string; budget?: number; revenue?: number; payout?: number }>
+        quarterly?: Array<{ period?: string; budget?: number; revenue?: number; payout?: number }>
+      }
+      channelWise?: {
+        revenue?: Array<{ name?: string; value?: number }>
+        incentive?: Array<{ name?: string; value?: number }>
+      }
+    }
+  }
+}
+
+const PIE_FALLBACK_COLORS = ['#14b8a6', '#7c3aed', '#f59e0b', '#ef4444', '#0ea5e9', '#22c55e', '#a855f7']
 
 const quickActions = [
   {
@@ -143,7 +141,29 @@ const goToItems = [
 const IncentiveDashboard = () => {
   const [resourceSearch, setResourceSearch] = useState('')
   const [periodMode, setPeriodMode] = useState<PeriodMode>('monthly')
+  const [dashboard, setDashboard] = useState<IncentiveDashboardResponse['responseBody'] | null>(null)
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        setIsLoadingDashboard(true)
+        const res = await incentiveService.getIncentiveDashboard({})
+        if (cancelled) return
+        setDashboard((res as IncentiveDashboardResponse)?.responseBody ?? null)
+      } catch (e) {
+        console.error('GetIncentiveDashboard error:', e)
+        if (!cancelled) setDashboard(null)
+      } finally {
+        if (!cancelled) setIsLoadingDashboard(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filteredResources = useMemo(
     () =>
@@ -153,16 +173,74 @@ const IncentiveDashboard = () => {
     [resourceSearch],
   )
 
+  const statCards = useMemo(() => {
+    const o = dashboard?.incentiveDashboard?.overview
+    return [
+      { title: 'Variable Budget', value: o?.variableBudget != null ? toCurrency(o.variableBudget) : '—', delta: '' },
+      { title: 'Actual Expenses', value: o?.actualExpense != null ? toCurrency(o.actualExpense) : '—', delta: '' },
+      { title: 'Variance Against Budget', value: o?.varianceAgainstBudget != null ? `${o.varianceAgainstBudget}%` : '—', delta: '' },
+      { title: 'Provision but yet to pay', value: o?.previousButYetToPay != null ? toCurrency(o.previousButYetToPay) : '—', delta: '' },
+    ]
+  }, [dashboard])
+
+  const monthlyAchievementData: MonthlyAchievementRow[] = useMemo(() => {
+    const rows = dashboard?.incentiveDashboard?.trends?.monthly ?? []
+    return rows
+      .filter((r) => r?.period)
+      .map((r) => ({
+        month: String(r.period),
+        budget: Number(r.budget ?? 0),
+        revenue: Number(r.revenue ?? 0),
+        payout: Number(r.payout ?? 0),
+      }))
+  }, [dashboard])
+
   const achievementChartData: PeriodAchievementRow[] = useMemo(() => {
-    return periodMode === 'monthly'
-      ? monthlyAchievementData.map((r) => ({
-          period: r.month,
-          budget: r.budget,
-          revenue: r.revenue,
-          payout: r.payout,
+    if (periodMode === 'monthly') {
+      return monthlyAchievementData.map((r) => ({
+        period: r.month,
+        budget: r.budget,
+        revenue: r.revenue,
+        payout: r.payout,
+      }))
+    }
+
+    const qRows = dashboard?.incentiveDashboard?.trends?.quarterly
+    if (qRows && qRows.length > 0) {
+      return qRows
+        .filter((r) => r?.period)
+        .map((r) => ({
+          period: String(r.period),
+          budget: Number(r.budget ?? 0),
+          revenue: Number(r.revenue ?? 0),
+          payout: Number(r.payout ?? 0),
         }))
-      : aggregateToQuarterly(monthlyAchievementData)
-  }, [periodMode])
+    }
+
+    return aggregateToQuarterly(monthlyAchievementData)
+  }, [periodMode, monthlyAchievementData, dashboard])
+
+  const channelRevenueShare = useMemo(() => {
+    const rows = dashboard?.incentiveDashboard?.channelWise?.revenue ?? []
+    return rows
+      .filter((r) => r?.name)
+      .map((r, idx) => {
+        const name = String(r.name)
+        const color = CHANNEL_COLORS[name] ?? PIE_FALLBACK_COLORS[idx % PIE_FALLBACK_COLORS.length]
+        return { name, value: Number(r.value ?? 0), color }
+      })
+  }, [dashboard])
+
+  const channelIncentiveShare = useMemo(() => {
+    const rows = dashboard?.incentiveDashboard?.channelWise?.incentive ?? []
+    return rows
+      .filter((r) => r?.name)
+      .map((r, idx) => {
+        const name = String(r.name)
+        const color = CHANNEL_COLORS[name] ?? PIE_FALLBACK_COLORS[idx % PIE_FALLBACK_COLORS.length]
+        return { name, value: Number(r.value ?? 0), color }
+      })
+  }, [dashboard])
 
   return (
     <div className="min-h-screen py-2">
@@ -176,8 +254,8 @@ const IncentiveDashboard = () => {
                 <Card key={card.title} className="gap-2 rounded-lg border border-neutral-200 py-4 shadow-sm">
                   <CardContent className="px-4">
                     <p className="text-sm text-neutral-500">{card.title}</p>
-                    <p className="mt-1 text-3xl font-bold text-neutral-900">{card.value}</p>
-                    <p className="mt-1 text-xs text-emerald-600">{card.delta}</p>
+                    <p className="mt-1 text-2xl font-semibold text-neutral-900">{card.value}</p>
+                    {card.delta ? <p className="mt-1 text-xs text-emerald-600">{card.delta}</p> : null}
                   </CardContent>
                 </Card>
               ))}
@@ -188,6 +266,7 @@ const IncentiveDashboard = () => {
                 <CardHeader className="px-4 pb-2">
                   <div className="flex items-center justify-between gap-3">
                     <CardTitle className="text-base">Monthly / Quarterly Achievements</CardTitle>
+                    {isLoadingDashboard ? <span className="text-xs text-neutral-500">Loading…</span> : null}
                     <div className="flex items-center rounded-md border border-neutral-200 bg-white p-1 text-xs">
                       <button
                         type="button"
@@ -206,13 +285,16 @@ const IncentiveDashboard = () => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="h-[280px] px-2">
+                <CardContent className="h-[320px] px-2">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={achievementChartData}>
-                      <XAxis dataKey="period" />
-                      <YAxis />
+                    <BarChart
+                      data={achievementChartData}
+                      margin={{ top: 16, right: 16, left: 8, bottom: 28 }}
+                    >
+                      <XAxis dataKey="period" tickMargin={10} interval={0} />
+                      <YAxis tickFormatter={(v) => toCompactNumber(Number(v ?? 0))} width={48} />
                       <Tooltip formatter={(value) => toCurrency(Number(value ?? 0))} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: 8 }} />
                       <Bar dataKey="budget" name="Budget" radius={[6, 6, 0, 0]} fill="#0ea5e9" />
                       <Bar dataKey="revenue" name="Revenue" radius={[6, 6, 0, 0]} fill="#14b8a6" />
                       <Bar dataKey="payout" name="Payout" radius={[6, 6, 0, 0]} fill="#7c3aed" />
@@ -229,23 +311,24 @@ const IncentiveDashboard = () => {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="rounded-md border border-neutral-200 bg-white p-2">
                       <p className="px-2 pt-2 text-xs font-semibold text-neutral-700">Revenue</p>
-                      <div className="h-[220px]">
+                      <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
+                          <PieChart margin={{ top: 8, right: 16, bottom: 28, left: 16 }}>
                             <Pie
                               data={channelRevenueShare}
                               dataKey="value"
                               nameKey="name"
                               innerRadius={50}
-                              outerRadius={82}
+                              outerRadius={78}
                               paddingAngle={2}
-                              label={({ name, value }) => `${name} ${value}%`}
+                              labelLine={false}
                             >
                               {channelRevenueShare.map((entry) => (
                                 <Cell key={entry.name} fill={entry.color} />
                               ))}
                             </Pie>
                             <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} />
+                            <Legend verticalAlign="bottom" height={28} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -253,23 +336,24 @@ const IncentiveDashboard = () => {
 
                     <div className="rounded-md border border-neutral-200 bg-white p-2">
                       <p className="px-2 pt-2 text-xs font-semibold text-neutral-700">Incentive</p>
-                      <div className="h-[220px]">
+                      <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
+                          <PieChart margin={{ top: 8, right: 16, bottom: 28, left: 16 }}>
                             <Pie
                               data={channelIncentiveShare}
                               dataKey="value"
                               nameKey="name"
                               innerRadius={50}
-                              outerRadius={82}
+                              outerRadius={78}
                               paddingAngle={2}
-                              label={({ name, value }) => `${name} ${value}%`}
+                              labelLine={false}
                             >
                               {channelIncentiveShare.map((entry) => (
                                 <Cell key={entry.name} fill={entry.color} />
                               ))}
                             </Pie>
                             <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} />
+                            <Legend verticalAlign="bottom" height={28} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -279,7 +363,7 @@ const IncentiveDashboard = () => {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <Card className="rounded-lg border border-neutral-200 py-4">
                 <CardHeader className="px-4 pb-2">
                   <CardTitle className="text-base">Budget vs Payout / Revenue</CardTitle>
@@ -299,32 +383,8 @@ const IncentiveDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-lg border border-neutral-200 py-4">
-                <CardHeader className="px-4 pb-2">
-                  <CardTitle className="text-base">Title here</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 px-4">
-                  {topSchemePerformance.map((row) => (
-                    <div
-                      key={`${row.schemeName}-${row.channel}`}
-                      className="rounded-md border border-neutral-200 bg-neutral-100 p-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-neutral-900">{row.schemeName}</p>
-                          <p className="text-xs text-neutral-500">Channel: {row.channel}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-neutral-500">Budget: {toCurrency(row.budget)}</p>
-                          <p className="text-xs text-neutral-500">Revenue: {toCurrency(row.revenue)}</p>
-                          <p className="text-sm font-semibold text-emerald-600">Payout: {toCurrency(row.payout)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+           
+            </div> */}
           </div>
 
           <div className="w-full xl:max-w-[22rem] space-y-3">
