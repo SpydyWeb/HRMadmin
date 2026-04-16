@@ -6,7 +6,6 @@ import {
   ILoginResponseBody,
 } from '@/models/authentication'
 import { storage } from '@/utils/storage'
-import { parseStoredAuth } from '@/utils/parseStoredAuth'
 import { authStore } from '@/store/authStore'
 
 let _token: string | null = null
@@ -17,6 +16,7 @@ export const auth = {
     if (typeof window === 'undefined') return null // SSR guard
     if (_token) return _token
     _token = storage.get(TOKEN_KEY)
+    console.log(_token);
 
     return _token
   },
@@ -31,11 +31,8 @@ export const auth = {
     const token = this.getToken()
     if (!token) return false
 
-    const session = parseStoredAuth(token)
-    if (!session?.token) return false
-
     try {
-      const payload = JSON.parse(atob(session.token.split('.')[1]))
+      const payload = JSON.parse(atob(token.split('.')[1]))
       const now = Date.now() / 1000
       if (payload.exp && payload.exp < now) {
         this.logout()
@@ -69,4 +66,22 @@ export const auth = {
       window.location.href = '/login'
     }
   },
+
+  async generateOtp(userId: number) {
+    return await authService.generateOtp(userId)
+  },
+  async verifyOtp(userId: number, submittedOtp: string): Promise<ApiResponse<ILoginResponseBody>> {
+    const response = await authService.verifyOtp(userId, submittedOtp)
+    const loginResponse = response.responseBody.loginResponse
+    if (loginResponse?.token) {
+      _token = loginResponse.token
+      storage.set(TOKEN_KEY, loginResponse.token)
+      authStore.setState({
+        token: loginResponse.token,
+        user: loginResponse as any,
+      })
+    }
+    return response
+  },
 }
+ 

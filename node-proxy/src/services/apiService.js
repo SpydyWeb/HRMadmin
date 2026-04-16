@@ -37,10 +37,6 @@ const AgentByCode = (data, headers = {}) => {
 const GetMasters = (data, headers = {}) => {
   return apiClient.post(`${APIRoutes.GETMASTERS}/${data}`, {}, { headers });
 };
-const getWeightages = (data, headers = {}) => {
-  return apiClient.post(APIRoutes.GETWEIGHTAGES, data, { headers });
-};
-
 
 const file = (data, headers = {}) => {
   console.log('====================================');
@@ -353,9 +349,9 @@ const searchForPartner = (data, headers = {}) => {
 };
 
 const getRefreshToken = (data, headers = {}) => {
-  console.log("getting refreshToken", data);
+  console.log("getting refreshToken",data);
 
-  return apiClient.post(APIRoutes.REFRESHTOKEN, data, {});
+  return apiClient.post(APIRoutes.REFRESHTOKEN,data, {  });
 };
 
 const GetMastersBulk = async (keys, headers = {}) => {
@@ -493,16 +489,6 @@ const getGraphData = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETGRAPHDATA, data, { headers });
 }
 
-const upsertWeightageMaster = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_WEIGHTAGE, data, {
-    headers: {
-      accept: "*/*",
-      "Content-Type": "application/json",
-      ...headers,
-    },
-  });
-};
-
 const getChannelStats = (data = {}, headers = {}) => {
   console.log("Fetching channel stats with data:", data);
   console.log("Fetching channel stats with headers:", headers);
@@ -563,104 +549,6 @@ const SaveProduct = (data = {}, headers = {}) => {
 const GetProducts = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETPRODUCTS, data, { headers });
 }
-const upsertProgram = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM, data, { headers });
-};
-const getKpisList = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_GET_KPIS_LIST, data, { headers });
-};
-const upsertProgramWeightages = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
-};
-const getProgramsList = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
-};
-const getProgramDetails = async (data = {}, headers = {}) => {
-  const programId = data?.programId ?? data?.id;
-  if (!programId) {
-    throw new Error("programId is required");
-  }
-  // API: POST /api/incentive/GetProgramDetails/{programId}
-  return apiClient.post(
-    `${APIRoutes.INCENTIVE_GET_PROGRAM_DETAILS}/${programId}`,
-    {},
-    { headers }
-  );
-};
-// Aliases for different client naming conventions
-const GetProgramDetails = getProgramDetails;
-const getIncentiveProgramById = getProgramDetails;
-const GetProgramById = getProgramDetails;
-const getAgentClubs = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_GET_AGENT_CLUBS, data, { headers });
-};
-const getProgramClubs = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAM_CLUBS, data, { headers });
-};
-const upsertProgramClubs = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_CLUBS, data, { headers });
-};
-const getSelectedProgramKpis = (data = {}, headers = {}) => {
-  const programId = data?.programId;
-  if (!programId) {
-    throw new Error("programId is required");
-  }
-  return apiClient.post(
-    `${APIRoutes.INCENTIVE_GET_SELECTED_PROGRAM_KPIS}/${programId}`,
-    {},
-    { headers }
-  );
-};
-const getFiltersCascade = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.GET_FILTERS_CASCADE, data, { headers });
-};
-const upsertProgramFilters = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
-};
-
-const GetKpiObjects = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_GET_KPI_OBJECTS, data, { headers });
-};
-
-const GetKpiFields = (data = {}, headers = {}) => {
-  const objectName = data?.objectName;
-  if (!objectName) {
-    throw new Error("objectName is required");
-  }
-  const url = `${APIRoutes.INCENTIVE_GET_KPI_FIELDS}?objectName=${encodeURIComponent(objectName)}`;
-  return apiClient.post(url, {}, { headers });
-};
-
-const GetTableSchema = (data = {}, headers = {}) => {
-  const tableName = data?.tableName;
-  if (!tableName) {
-    throw new Error("tableName is required");
-  }
-  const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
-  return apiClient.post(url, {}, { headers });
-};
-
-const GetKpiDetails = (data = {}, headers = {}) => {
-  const kpiId = data?.kpiId ?? data?.id;
-  if (!kpiId) {
-    throw new Error("kpiId is required");
-  }
-  return apiClient.post(
-    `${APIRoutes.INCENTIVE_GET_KPI_DETAILS}/${kpiId}`,
-    {},
-    { headers }
-  );
-};
-
-const UpsertKpi = (data = {}, headers = {}) => {
-  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
-    headers: {
-      accept: "*/*",
-      "Content-Type": "application/json",
-      ...headers,
-    },
-  });
-};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -678,31 +566,93 @@ const CreateIndividualAgent = (data = {}, headers = {}) => {
 };
 
 const saveBranchLinkedUser = (data = {}, headers = {}) => {
-  return apiClient
-    .post(APIRoutes.SAVEUSERLINKEDBRANCH, data, { headers })
-    .catch((err) => {
-      if (err?.response?.status === 404 && APIRoutes.SAVEUSERLINKEDBRANCH_V2) {
-        return apiClient.post(APIRoutes.SAVEUSERLINKEDBRANCH_V2, data, { headers });
-      }
-      throw err;
-    });
+  return apiClient.post(APIRoutes.SAVEUSERLINKEDBRANCH, data, { headers });
 };
 
 const fetchBranchByUser = (data = {}, headers = {}) => {
-  return apiClient
-    .post(`${APIRoutes.FETCHBRANCHBYUSER}/${data.userId}`, {}, { headers })
-    .catch((err) => {
-      if (err?.response?.status === 404 && APIRoutes.FETCHBRANCHBYUSER_V2) {
-        return apiClient.post(`${APIRoutes.FETCHBRANCHBYUSER_V2}/${data.userId}`, {}, { headers });
-      }
-      throw err;
-    });
+  return apiClient.post(`${APIRoutes.FETCHBRANCHBYUSER}/${data.userId}`, {}, { headers });
 };
 
 
 
+const saveCustomField = async (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.SAVECUSTOMFIELD, data, { headers });
+};
 
+const getCustomFields = async (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GETCUSTOMFIELDS, data, { headers });
+};
 
+// ─── Incentive: KPI Library ────────────────────────────────────────────────────
+
+const getIncentiveKpiLibrary = async (data = {}, headers = {}) => {
+  return apiClient.get(APIRoutes.INCENTIVE_KPI_LIBRARY, { params: data, headers });
+};
+
+const getIncentiveKpiById = async (data = {}, headers = {}) => {
+  const { id } = data;
+  return apiClient.get(`${APIRoutes.INCENTIVE_KPI_LIBRARY}/${id}`, { headers });
+};
+
+const createIncentiveKpi = async (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_KPI_LIBRARY, data, { headers });
+};
+
+const updateIncentiveKpi = async (data = {}, headers = {}) => {
+  const { id, ...body } = data;
+  return apiClient.put(`${APIRoutes.INCENTIVE_KPI_LIBRARY}/${id}`, body, { headers });
+};
+
+const deleteIncentiveKpi = async (data = {}, headers = {}) => {
+  const { id } = data;
+  return apiClient.delete(`${APIRoutes.INCENTIVE_KPI_LIBRARY}/${id}`, { headers });
+};
+
+// ─── Incentive: Filters ────────────────────────────────────────────────────────
+
+const getIncentiveFilters = async (data = {}, headers = {}) => {
+  return apiClient.get(APIRoutes.INCENTIVE_FILTERS, { params: data, headers });
+};
+
+// ─── Incentive: Programs ──────────────────────────────────────────────────────
+
+const getIncentivePrograms = async (data = {}, headers = {}) => {
+  return apiClient.get(APIRoutes.INCENTIVE_PROGRAMS, { params: data, headers });
+};
+
+const getIncentiveProgramById = async (data = {}, headers = {}) => {
+  const { id } = data;
+  return apiClient.get(`${APIRoutes.INCENTIVE_PROGRAMS}/${id}`, { headers });
+};
+
+const createIncentiveProgram = async (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_PROGRAMS, data, { headers });
+};
+
+const updateIncentiveProgram = async (data = {}, headers = {}) => {
+  const { id, ...body } = data;
+  return apiClient.put(`${APIRoutes.INCENTIVE_PROGRAMS}/${id}`, body, { headers });
+};
+
+const getIncentiveProgramProductWeightage = async (data = {}, headers = {}) => {
+  const { id } = data;
+  return apiClient.get(`${APIRoutes.INCENTIVE_PROGRAMS}/${id}/product-weightage`, { headers });
+};
+
+const saveIncentiveProgramProductWeightage = async (data = {}, headers = {}) => {
+  const { id, ...body } = data;
+  return apiClient.post(`${APIRoutes.INCENTIVE_PROGRAMS}/${id}/product-weightage`, body, { headers });
+};
+
+const verifyOtp = async (data = {}, headers = {}) => {
+  const { id, ...body } = data;
+  return apiClient.post(`${APIRoutes.VERIFY_OTP}`, body, { headers });
+};
+
+const generateOtp = async (data = {}, headers = {}) => {
+  const { id, ...body } = data;
+  return apiClient.post(`${APIRoutes.GENERATE_OTP}`, body, { headers });
+}
 module.exports = {
   login,
   search,
@@ -713,7 +663,6 @@ module.exports = {
   Agentbyid,
   AgentByCode,
   GetMasters,
-  getWeightages,
   file,
   userList,
   getRefreshToken,
@@ -759,7 +708,6 @@ module.exports = {
   GeoHierarchyTable,
   hmsDashboard,
   getGraphData,
-  upsertWeightageMaster,
   getChannelStats,
   uploadFileList,
   downloadReport,
@@ -777,29 +725,26 @@ module.exports = {
   orgConfigUpdate,
   SaveProduct,
   GetProducts,
-  upsertProgram,
-  getKpisList,
-  upsertProgramWeightages,
-  getProgramsList,
-  getProgramDetails,
-  GetProgramDetails,
-  getIncentiveProgramById,
-  GetProgramById,
-  getAgentClubs,
-  getProgramClubs,
-  upsertProgramClubs,
-  getSelectedProgramKpis,
-  getFiltersCascade,
-  upsertProgramFilters,
-  GetKpiObjects,
-  GetKpiFields,
-  GetTableSchema,
-  GetKpiDetails,
-  UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,
   CreateIndividualAgent,
   saveBranchLinkedUser,
   fetchBranchByUser,
+  saveCustomField,
+  getCustomFields,
+  getIncentiveKpiLibrary,
+  getIncentiveKpiById,
+  createIncentiveKpi,
+  updateIncentiveKpi,
+  deleteIncentiveKpi,
+  getIncentiveFilters,
+  getIncentivePrograms,
+  getIncentiveProgramById,
+  createIncentiveProgram,
+  updateIncentiveProgram,
+  getIncentiveProgramProductWeightage,
+  saveIncentiveProgramProductWeightage,
+  verifyOtp,
+  generateOtp,
 };
