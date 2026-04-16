@@ -84,11 +84,13 @@ const APIRoutes = {
   INCENTIVE_UPSERT_PROGRAM_CLUBS: "/api/incentive/UpsertProgramClubs",
   GET_FILTERS_CASCADE: "/api/incentive/filters/cascade",
   UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
-  INCENTIVE_GET_KPI_OBJECTS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiObjects",
-  INCENTIVE_GET_KPI_FIELDS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiFields",
-  INCENTIVE_GET_TABLE_SCHEMA: "http://hmsapi.ezytekapis.com/api/incentive/GetTableSchema",
-  INCENTIVE_GET_KPI_DETAILS: "http://hmsapi.ezytekapis.com/api/incentive/GetKpiDetails",
-  INCENTIVE_UPSERT_KPI: "http://hmsapi.ezytekapis.com/api/incentive/UpsertKpi",
+  INCENTIVE_GET_KPI_OBJECTS: "/api/incentive/GetKpiObjects",
+  INCENTIVE_GET_KPI_FIELDS: "/api/incentive/GetKpiFields",
+  INCENTIVE_GET_TABLE_SCHEMA: "/api/incentive/GetTableSchema",
+  INCENTIVE_GET_KPI_DETAILS: "/api/incentive/GetKpiDetails",
+  INCENTIVE_UPSERT_KPI: "/api/incentive/UpsertKpi",
+  // Incentive Dashboard (external HMS API)
+  INCENTIVE_GET_DASHBOARD: "/api/incentive/GetIncentiveDashboard",
 
 };
 

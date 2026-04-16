@@ -618,6 +618,16 @@ const upsertProgramFilters = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
 };
 
+const GetIncentiveDashboard = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_DASHBOARD, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+};
+
 const GetKpiObjects = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_GET_KPI_OBJECTS, data, { headers });
 };
@@ -791,6 +801,7 @@ module.exports = {
   getSelectedProgramKpis,
   getFiltersCascade,
   upsertProgramFilters,
+  GetIncentiveDashboard,
   GetKpiObjects,
   GetKpiFields,
   GetTableSchema,
