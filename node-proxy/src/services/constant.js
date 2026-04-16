@@ -4,7 +4,6 @@ const APIRoutes = {
   AGENTBYCODE: "/api/Agent/AgentByCode",
   AGENTBYID: "/api/Agent/AgentByid",
   GETMASTERS: "/api/AppMasters/get",
-  GETWEIGHTAGES: "/api/incentive/GetWeightages",
   GETCOMMISSION: "/api/CommissionMgmt/Dashboard",
   PROCESSCOMMISSION: "/api/CommissionMgmt/ProcessCommissions",
   HOLDCOMMISSION: "/api/CommissionMgmt/HoldCommission",
@@ -58,18 +57,12 @@ const APIRoutes = {
   AGENTSEARCHFORPARTNER: "/api/Agent",
   // Graph (external service)
   GETGRAPHDATA: "http://hmsapi.ezytekapis.com/GetGraphData",
-  // Incentive (external HMS API) — matches Postman: /api/incentive/UpsertWeightage
-  INCENTIVE_UPSERT_WEIGHTAGE:
-    "http://hmsapi.ezytekapis.com/api/incentive/UpsertWeightage",
   FETCHALLBRANCHES: "/api/AppMasters/GetRegulatorBranches",
   SAVEAGENTLINKEDBRANCH: "/api/Agent/RegulatorBranch/Save",
   FETCHBRANCHBYAGENT: "/api/Agent/RegulatorBranch/FetchByAgent",
   CREATEINDIVIDUALAGENT: "/api/Agent/CreateIndividualAgent",
   SAVEUSERLINKEDBRANCH: "/api/Users/RegulatorUserBranch/Save",
   FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
-  // Fallback routes (some environments expose these paths instead)
-  SAVEUSERLINKEDBRANCH_V2: "/api/Users/RegulatorBranch/Save",
-  FETCHBRANCHBYUSER_V2: "/api/Users/RegulatorBranch/FetchByUser",
   SAVEPRODUCT: "/api/AppMasters/SaveProduct",
   GETPRODUCTS: "/api/AppMasters/GetProducts",
   INCENTIVE_UPSERT_PROGRAM: "/api/incentive/UpsertProgram",
@@ -91,6 +84,13 @@ const APIRoutes = {
   INCENTIVE_UPSERT_KPI: "/api/incentive/UpsertKpi",
   // Incentive Dashboard (external HMS API)
   INCENTIVE_GET_DASHBOARD: "/api/incentive/GetIncentiveDashboard",
+   SAVECUSTOMFIELD: "/api/CustomFields/Save",
+  GETCUSTOMFIELDS: "/api/CustomFields/Fetch",
+  INCENTIVE_KPI_LIBRARY: "/api/incentive/kpi-library",
+  INCENTIVE_FILTERS: "/api/incentive/filters",
+  INCENTIVE_PROGRAMS: "/api/incentive/programs",
+  GENERATE_OTP: "/api/auth/generate-otp",
+  VERIFY_OTP: "/api/auth/verify-otp"
 
 };
 

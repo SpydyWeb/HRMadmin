@@ -6,7 +6,7 @@ import {
 
 interface OTPInputtype{
     value:string,
-    onChange:()=>void
+  onChange:(value: string) => void
 }
 
 export default function OTPInput({value,onChange}:OTPInputtype) {
