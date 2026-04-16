@@ -1117,6 +1117,29 @@ export default function IncentiveProgramConfig() {
     [selectedChannelIds],
   )
 
+  // Fresher month selection (M1–M6) drives slab count/order (Slab 1 = first selected month, etc.)
+  useEffect(() => {
+    if (programDetailTab !== 'fresher') return
+
+    const selectedIdxs = (fresherSelectedMonths ?? [])
+      .slice(0, 6)
+      .map((on, idx) => (on ? idx : -1))
+      .filter((idx) => idx >= 0)
+
+    setSlabs((prev) => {
+      const desired = selectedIdxs.length
+      if (desired <= 0) return prev
+
+      const next: SlabState[] = []
+      for (let i = 0; i < desired; i++) {
+        next.push(prev[i] ?? createSlab())
+      }
+
+      setActiveSlabId((curr) => (next.some((s) => s.id === curr) ? curr : next[0]?.id ?? curr))
+      return next
+    })
+  }, [fresherSelectedMonths, programDetailTab])
+
   useEffect(() => {
     let cancelled = false
 
@@ -2367,86 +2390,6 @@ export default function IncentiveProgramConfig() {
                                 Yes
                               </label>
                             </div>
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg border border-violet-200 bg-white/70 p-3">
-                          <div className="grid grid-cols-1 gap-3">
-                            <div className="hidden grid-cols-4 gap-3 text-xs font-medium text-neutral-600 md:grid">
-                              <div>Month</div>
-                              <div>Logins(count)</div>
-                              <div>Conversions</div>
-                              <div>Amount</div>
-                            </div>
-
-                            {Array.from({ length: 6 }).map((_, idx) => {
-                              const t =
-                                fresherTargetsInput[idx] ?? { logins: '', conversions: '', amount: '' }
-                              const selected = Boolean(fresherSelectedMonths[idx])
-                              if (!selected) return null
-                              return (
-                                <div
-                                  key={idx}
-                                  className="grid grid-cols-1 gap-2 rounded-lg border border-violet-100 bg-white/90 p-3 shadow-sm md:grid-cols-4 md:items-center md:gap-3"
-                                >
-                                  <div className="text-sm font-medium text-violet-950">M{idx + 1}</div>
-                                  <Input
-                                    label=""
-                                    type="number"
-                                    inputMode="numeric"
-                                    value={t.logins}
-                                    variant="standardone"
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setFresherTargetsInput((prev) => {
-                                        const next = prev.slice()
-                                        while (next.length < 6)
-                                          next.push({ logins: '', conversions: '', amount: '' })
-                                        next[idx] = { ...next[idx], logins: v }
-                                        return next
-                                      })
-                                    }}
-                                    placeholder="0"
-                                  />
-                                  <Input
-                                    label=""
-                                    type="number"
-                                    inputMode="numeric"
-                                    value={t.conversions}
-                                    variant="standardone"
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setFresherTargetsInput((prev) => {
-                                        const next = prev.slice()
-                                        while (next.length < 6)
-                                          next.push({ logins: '', conversions: '', amount: '' })
-                                        next[idx] = { ...next[idx], conversions: v }
-                                        return next
-                                      })
-                                    }}
-                                    placeholder="0"
-                                  />
-                                  <Input
-                                    label=""
-                                    type="number"
-                                    inputMode="decimal"
-                                    value={t.amount}
-                                    variant="standardone"
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setFresherTargetsInput((prev) => {
-                                        const next = prev.slice()
-                                        while (next.length < 6)
-                                          next.push({ logins: '', conversions: '', amount: '' })
-                                        next[idx] = { ...next[idx], amount: v }
-                                        return next
-                                      })
-                                    }}
-                                    placeholder="0"
-                                  />
-                                </div>
-                              )
-                            })}
                           </div>
                         </div>
                       </div>
