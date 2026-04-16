@@ -728,11 +728,6 @@ const getIncentivePrograms = async (data = {}, headers = {}) => {
   return apiClient.get(APIRoutes.INCENTIVE_PROGRAMS, { params: data, headers });
 };
 
-const getIncentiveProgramById = async (data = {}, headers = {}) => {
-  const { id } = data;
-  return apiClient.get(`${APIRoutes.INCENTIVE_PROGRAMS}/${id}`, { headers });
-};
-
 const createIncentiveProgram = async (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.INCENTIVE_PROGRAMS, data, { headers });
 };
@@ -839,7 +834,6 @@ module.exports = {
   getProgramsList,
   getProgramDetails,
   GetProgramDetails,
-  getIncentiveProgramById,
   GetProgramById,
   getAgentClubs,
   getProgramClubs,

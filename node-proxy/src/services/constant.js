@@ -84,6 +84,13 @@ const APIRoutes = {
   INCENTIVE_UPSERT_KPI: "/api/incentive/UpsertKpi",
   // Incentive Dashboard (external HMS API)
   INCENTIVE_GET_DASHBOARD: "/api/incentive/GetIncentiveDashboard",
+   SAVECUSTOMFIELD: "/api/CustomFields/Save",
+  GETCUSTOMFIELDS: "/api/CustomFields/Fetch",
+  INCENTIVE_KPI_LIBRARY: "/api/incentive/kpi-library",
+  INCENTIVE_FILTERS: "/api/incentive/filters",
+  INCENTIVE_PROGRAMS: "/api/incentive/programs",
+  GENERATE_OTP: "/api/auth/generate-otp",
+  VERIFY_OTP: "/api/auth/verify-otp"
 
 };
 
