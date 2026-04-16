@@ -21,6 +21,8 @@ import { incentiveService } from '@/services/incentiveService'
 import { showToast } from '@/components/ui/sonner'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { NOTIFICATION_CONSTANTS } from '@/utils/constant'
 import type {
   ClawbackBasis,
@@ -556,31 +558,6 @@ const SlabSection = ({
       </div>
 
       <div className="space-y-4 p-4">
-        <Card className="rounded-md border border-neutral-200">
-          <div className="grid grid-cols-1 border-neutral-200 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)] md:divide-x">
-            <CardHeader className="min-w-0 border-b border-neutral-200 px-4 py-3 md:border-b-0">
-              <CardTitle className="text-base font-semibold">Weightage</CardTitle>
-              <p className="mt-1 text-xs text-neutral-500">
-                Select the applicable weightage options for this incentive program.
-              </p>
-              <p className="mt-1 text-xs text-neutral-600">
-                Program id for save:{' '}
-                <span className="font-medium text-neutral-800">
-                  {programId != null ? programId : '— save Program Details first'}
-                </span>
-              </p>
-            </CardHeader>
-            <CardContent className="min-w-0 overflow-x-auto px-4 py-4">
-              <AddUserInline
-                programId={programmeId ?? 0}
-                onSuccess={(users) => {
-                  console.log('Saved users:', users)
-                }}
-              />
-            </CardContent>
-          </div>
-        </Card>
-
         {/* ── 3. Filter Criteria — tabbed: Selected KPI | Selection Expression ── */}
         <Card className="rounded-lg border border-neutral-200">
           <CardHeader className="px-4 pb-2 pt-4">
@@ -905,7 +882,6 @@ export default function IncentiveProgramConfig() {
   const [endDate, setEndDate] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [programId, setProgramId] = useState<number | null>(null)
-  const [isSavingWeightages, setIsSavingWeightages] = useState(false)
   const [loadingProgram, setLoadingProgram] = useState(false)
 
   useEffect(() => {
@@ -1004,6 +980,13 @@ export default function IncentiveProgramConfig() {
         const consider = Boolean(incentiveProgram.considerClawback ?? incentiveProgram.clawbackRecoveries)
         setClawbackConsidered(consider)
 
+        const rawWeightageId =
+          incentiveProgram?.weightageId ??
+          incentiveProgram?.weightageID ??
+          incentiveProgram?.WeightageId
+        const wid = rawWeightageId == null || String(rawWeightageId).trim() === '' ? NaN : Number(rawWeightageId)
+        if (Number.isFinite(wid) && wid > 0) setSelectedWeightageId(wid)
+
         // KPI ids from mapping list.
         const kpis = Array.isArray(incentiveProgram.kpis) ? incentiveProgram.kpis : []
         const ids = kpis
@@ -1059,8 +1042,21 @@ export default function IncentiveProgramConfig() {
   const [weightageOptions, setWeightageOptions] = useState<WeightageOption[]>(
     [],
   )
-  const [weightage, setWeightage] = useState<Record<string, boolean>>({})
   const [weightagesLoading, setWeightagesLoading] = useState(true)
+  const [selectedWeightageId, setSelectedWeightageId] = useState<number | null>(null)
+  const [weightageDropdownOpen, setWeightageDropdownOpen] = useState(false)
+  const [weightageSearch, setWeightageSearch] = useState('')
+
+  const selectedWeightageLabel = useMemo(() => {
+    if (selectedWeightageId == null) return ''
+    return weightageOptions.find((w) => w.id === selectedWeightageId)?.label ?? ''
+  }, [selectedWeightageId, weightageOptions])
+
+  const filteredWeightageOptions = useMemo(() => {
+    const q = weightageSearch.trim().toLowerCase()
+    if (!q) return weightageOptions
+    return weightageOptions.filter((w) => w.label.toLowerCase().includes(q) || String(w.id ?? '').includes(q))
+  }, [weightageOptions, weightageSearch])
 
   const [channelOptions, setChannelOptions] = useState<CascadeOption[]>([])
   const [selectedChannelIds, setSelectedChannelIds] = useState<number[]>([])
@@ -1108,7 +1104,7 @@ export default function IncentiveProgramConfig() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  const [selectedWeightages, setSelectedWeightages] = useState<string[]>([])
+  // Weightage is single-select and saved via UpsertProgram (weightageId).
 
   const [clubOptions, setClubOptions] = useState<CascadeOption[]>([])
   const [selectedClubIds, setSelectedClubIds] = useState<number[]>([])
@@ -1202,6 +1198,21 @@ export default function IncentiveProgramConfig() {
         })
         .filter(Boolean) as WeightageOption[]
     }
+
+    const fetchWeightages = async () => {
+      setWeightagesLoading(true)
+      try {
+        const res = await incentiveService.getWeightages()
+        if (cancelled) return
+        setWeightageOptions(normalizeWeightages(res))
+      } catch {
+        if (!cancelled) setWeightageOptions([])
+      } finally {
+        if (!cancelled) setWeightagesLoading(false)
+      }
+    }
+
+    void fetchWeightages()
 
     return () => {
       cancelled = true
@@ -1640,6 +1651,11 @@ export default function IncentiveProgramConfig() {
       }
     }
 
+    if (selectedWeightageId == null || !Number.isFinite(selectedWeightageId) || selectedWeightageId <= 0) {
+      showToast(NOTIFICATION_CONSTANTS.ERROR, 'Please select a weightage.')
+      return
+    }
+
     const conv = parseInt(conversionPeriodDays, 10)
     const canc = parseInt(cancellationPeriodDays, 10)
     const cappingAmountNum = parseFloat(cappingAmount) || 0
@@ -1673,6 +1689,7 @@ export default function IncentiveProgramConfig() {
         cancellationPeriod: Number.isFinite(canc) && canc >= 0 ? canc : undefined,
         considerClawback: clawbackConsidered,
         clawbackPeriod: clawbackConsidered ? clawbackPeriodForApi(clawbackBasis) : undefined,
+        weightageId: selectedWeightageId,
         kpiIds: selectedKpiIds,
         ...(programType === 'perpetual'
           ? { incentiveFrequency: mapIncentiveFrequencyForApi(incentiveFrequency) }
@@ -1732,55 +1749,6 @@ export default function IncentiveProgramConfig() {
     }
   }
 
-  const handleSaveWeightages = async () => {
-    if (!programId) {
-      showToast(
-        NOTIFICATION_CONSTANTS.ERROR,
-        'Please save Program Details first so we have programId from UpsertProgram',
-      )
-      return
-    }
-
-    // UpsertProgramWeightages: { programId, weightageIds: number[] }
-    const selectedIds = weightageOptions
-      .filter((o) => Boolean(weightage[o.key]))
-      .map((o) => {
-        if (o.id != null && Number.isFinite(Number(o.id)) && Number(o.id) > 0) {
-          return Number(o.id)
-        }
-        const fromKey = Number(o.key)
-        if (Number.isFinite(fromKey) && fromKey > 0) return fromKey
-        return null
-      })
-      .filter((n): n is number => n != null)
-
-    if (!selectedIds.length) {
-      showToast(
-        NOTIFICATION_CONSTANTS.ERROR,
-        'Please select at least one weightage (each item needs a numeric id from GetWeightages)',
-      )
-      return
-    }
-
-    setIsSavingWeightages(true)
-    try {
-      await incentiveService.upsertProgramWeightages({
-        programId,
-        weightageIds: selectedIds,
-      })
-      showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Weightages saved successfully')
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.errorMessage ||
-        err?.message ||
-        'Failed to save weightages'
-      showToast(NOTIFICATION_CONSTANTS.ERROR, message)
-    } finally {
-      setIsSavingWeightages(false)
-    }
-  }
-
   const handleSaveFilters = async () => {
     if (!programId) {
       showToast(
@@ -1801,15 +1769,13 @@ export default function IncentiveProgramConfig() {
         programId,
         filters: [
           {
-            filterId: 0,
-            programId,
             channelIds: selectedChannelIds,
             subChannelIds: selectedSubChannelIds,
             branchIds: selectedBranchIds,
             designationIds: selectedDesignationIds,
-            isActive: true,
           },
         ],
+        clubIds: selectedClubIds,
       })
       showToast(NOTIFICATION_CONSTANTS.SUCCESS, 'Filters saved successfully')
     } catch (err: any) {
@@ -2107,6 +2073,88 @@ export default function IncentiveProgramConfig() {
                         </div>
                       ) : null}
                     </div>
+                  </div>
+
+                  <div>
+                    <Label className="mb-1.5 block text-sm font-medium text-neutral-700">
+                      Weightage *
+                    </Label>
+                    <Popover open={weightageDropdownOpen} onOpenChange={setWeightageDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-10 w-full items-center justify-between rounded-md border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+                        >
+                          <span className={`truncate ${selectedWeightageLabel ? '' : 'text-neutral-400'}`}>
+                            {selectedWeightageLabel ||
+                              (weightagesLoading ? 'Loading weightages...' : 'Select weightage')}
+                          </span>
+                          <FiSearch className="h-4 w-4 text-neutral-400" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                        <Input
+                          label=""
+                          name="weightageSearch"
+                          variant="standardone"
+                          placeholder="Search weightage..."
+                          value={weightageSearch}
+                          onChange={(e) => setWeightageSearch(e.target.value)}
+                          className="!h-9 w-full rounded-sm"
+                        />
+
+                        <div className="mt-2">
+                          <ScrollArea className="max-h-52 rounded-md border border-neutral-200 bg-white">
+                            <div className="py-1">
+                              {filteredWeightageOptions.length === 0 ? (
+                                <p className="px-3 py-2 text-xs text-neutral-500">No weightage found.</p>
+                              ) : (
+                                filteredWeightageOptions.map((w) => {
+                                  const active = w.id != null && w.id === selectedWeightageId
+                                  return (
+                                    <button
+                                      key={w.key}
+                                      type="button"
+                                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50 ${
+                                        active ? 'bg-neutral-100' : ''
+                                      }`}
+                                      onClick={() => {
+                                        if (w.id != null && Number.isFinite(Number(w.id)) && Number(w.id) > 0) {
+                                          setSelectedWeightageId(Number(w.id))
+                                        }
+                                        setWeightageDropdownOpen(false)
+                                      }}
+                                    >
+                                      <span className="truncate">{w.label}</span>
+                                      {active ? <span className="text-xs text-neutral-600">Selected</span> : null}
+                                    </button>
+                                  )
+                                })
+                              )}
+                            </div>
+                          </ScrollArea>
+
+                          <div className="mt-2 flex items-center justify-between">
+                            <button
+                              type="button"
+                              className="text-xs text-neutral-600 hover:text-neutral-900"
+                              onClick={() => {
+                                setSelectedWeightageId(null)
+                                setWeightageDropdownOpen(false)
+                              }}
+                            >
+                              Clear
+                            </button>
+                            <span className="text-[11px] text-neutral-500">
+                              {filteredWeightageOptions.length} option{filteredWeightageOptions.length === 1 ? '' : 's'}
+                            </span>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Only one weightage can be selected and it will be saved with the program.
+                    </p>
                   </div>
 
                   {programType === 'perpetual' ? (
@@ -2482,7 +2530,7 @@ export default function IncentiveProgramConfig() {
               <FiFilter className="mt-1 h-4 w-4 text-neutral-400" />
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
                 <div className="md:col-span-1">
                   <label className="mb-2 block text-sm font-medium text-neutral-700">
                     Channel <span className="text-red-600">*</span>
@@ -2650,6 +2698,46 @@ export default function IncentiveProgramConfig() {
                     )}
                   </div>
                 </div>
+
+                <div className="md:col-span-1">
+                  <label className="mb-2 block text-sm font-medium text-neutral-700">
+                    Clubs
+                  </label>
+                  <div className="rounded-md border border-neutral-200 bg-white p-3">
+                    {clubsLoading ? (
+                      <p className="text-xs text-neutral-500">Loading…</p>
+                    ) : clubOptions.length === 0 ? (
+                      <p className="text-xs text-neutral-500">
+                        No clubs are available right now.
+                      </p>
+                    ) : (
+                      <div className="max-h-40 space-y-2 overflow-auto pr-1">
+                        {clubOptions.map((c) => (
+                          <label
+                            key={c.id}
+                            className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
+                          >
+                            <Checkbox
+                              checked={selectedClubIds.includes(c.id)}
+                              onCheckedChange={(checked) => {
+                                const isChecked = Boolean(checked)
+                                setSelectedClubIds((prev) => {
+                                  if (isChecked) {
+                                    return prev.includes(c.id)
+                                      ? prev
+                                      : [...prev, c.id]
+                                  }
+                                  return prev.filter((id) => id !== c.id)
+                                })
+                              }}
+                            />
+                            {c.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-end">
                 <Button
@@ -2659,73 +2747,7 @@ export default function IncentiveProgramConfig() {
                   disabled={isSavingFilters}
                   loadingText="Saving..."
                 >
-                  Save Filters
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-md border border-neutral-200">
-            <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 py-3">
-              <div>
-                <CardTitle className="text-base font-semibold">
-                  Clubs
-                </CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">
-                  Select one or more clubs. Agents who belong to any selected club
-                  are eligible for this incentive program (in addition to other
-                  eligibility rules).
-                </p>
-              </div>
-              <FiUsers className="mt-1 h-4 w-4 text-neutral-400" />
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="max-w-xl">
-                <label className="mb-2 block text-sm font-medium text-neutral-700">
-                  Eligible clubs
-                </label>
-                <div className="rounded-md border border-neutral-200 bg-white p-3">
-                  {clubsLoading ? (
-                    <p className="text-xs text-neutral-500">Loading…</p>
-                  ) : clubOptions.length === 0 ? (
-                    <p className="text-xs text-neutral-500">
-                      No clubs are available right now.
-                    </p>
-                  ) : (
-                    <div className="max-h-40 space-y-2 overflow-auto pr-1">
-                      {clubOptions.map((c) => (
-                        <label
-                          key={c.id}
-                          className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
-                        >
-                          <Checkbox
-                            checked={selectedClubIds.includes(c.id)}
-                            onCheckedChange={(checked) => {
-                              const isChecked = Boolean(checked)
-                              setSelectedClubIds((prev) => {
-                                if (isChecked) {
-                                  return prev.includes(c.id) ? prev : [...prev, c.id]
-                                }
-                                return prev.filter((id) => id !== c.id)
-                              })
-                            }}
-                          />
-                          {c.label}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-end">
-                <Button
-                  variant="blue"
-                  onClick={handleSaveClubs}
-                  isLoading={isSavingClubs}
-                  disabled={isSavingClubs}
-                  loadingText="Saving..."
-                >
-                  Save clubs
+                  Save
                 </Button>
               </div>
             </CardContent>

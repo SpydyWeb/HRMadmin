@@ -549,6 +549,114 @@ const SaveProduct = (data = {}, headers = {}) => {
 const GetProducts = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.GETPRODUCTS, data, { headers });
 }
+const upsertProgram = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM, data, { headers });
+};
+const getKpisList = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_KPIS_LIST, data, { headers });
+};
+const upsertProgramWeightages = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES, data, { headers });
+};
+const getProgramsList = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAMS_LIST, data, { headers });
+};
+const getProgramDetails = async (data = {}, headers = {}) => {
+  const programId = data?.programId ?? data?.id;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  // API: POST /api/incentive/GetProgramDetails/{programId}
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_PROGRAM_DETAILS}/${programId}`,
+    {},
+    { headers }
+  );
+};
+// Aliases for different client naming conventions
+const GetProgramDetails = getProgramDetails;
+const getIncentiveProgramById = getProgramDetails;
+const GetProgramById = getProgramDetails;
+const getAgentClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_AGENT_CLUBS, data, { headers });
+};
+const getProgramClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_PROGRAM_CLUBS, data, { headers });
+};
+const upsertProgramClubs = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_PROGRAM_CLUBS, data, { headers });
+};
+const getSelectedProgramKpis = (data = {}, headers = {}) => {
+  const programId = data?.programId;
+  if (!programId) {
+    throw new Error("programId is required");
+  }
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_SELECTED_PROGRAM_KPIS}/${programId}`,
+    {},
+    { headers }
+  );
+};
+const getFiltersCascade = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.GET_FILTERS_CASCADE, data, { headers });
+};
+const upsertProgramFilters = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.UPSERT_PROGRAM_FILTERS, data, { headers });
+};
+
+const GetIncentiveDashboard = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_DASHBOARD, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+};
+
+const GetKpiObjects = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_GET_KPI_OBJECTS, data, { headers });
+};
+
+const GetKpiFields = (data = {}, headers = {}) => {
+  const objectName = data?.objectName;
+  if (!objectName) {
+    throw new Error("objectName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_KPI_FIELDS}?objectName=${encodeURIComponent(objectName)}`;
+  return apiClient.post(url, {}, { headers });
+};
+
+const GetTableSchema = (data = {}, headers = {}) => {
+  const tableName = data?.tableName;
+  if (!tableName) {
+    throw new Error("tableName is required");
+  }
+  const url = `${APIRoutes.INCENTIVE_GET_TABLE_SCHEMA}?tableName=${encodeURIComponent(tableName)}`;
+  return apiClient.post(url, {}, { headers });
+};
+
+const GetKpiDetails = (data = {}, headers = {}) => {
+  const kpiId = data?.kpiId ?? data?.id;
+  if (!kpiId) {
+    throw new Error("kpiId is required");
+  }
+  return apiClient.post(
+    `${APIRoutes.INCENTIVE_GET_KPI_DETAILS}/${kpiId}`,
+    {},
+    { headers }
+  );
+};
+
+const UpsertKpi = (data = {}, headers = {}) => {
+  return apiClient.post(APIRoutes.INCENTIVE_UPSERT_KPI, data, {
+    headers: {
+      accept: "*/*",
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  });
+};
 const fetchAllBranches = (data = {}, headers = {}) => {
   return apiClient.post(APIRoutes.FETCHALLBRANCHES, data, { headers });
 };
@@ -725,6 +833,26 @@ module.exports = {
   orgConfigUpdate,
   SaveProduct,
   GetProducts,
+  upsertProgram,
+  getKpisList,
+  upsertProgramWeightages,
+  getProgramsList,
+  getProgramDetails,
+  GetProgramDetails,
+  getIncentiveProgramById,
+  GetProgramById,
+  getAgentClubs,
+  getProgramClubs,
+  upsertProgramClubs,
+  getSelectedProgramKpis,
+  getFiltersCascade,
+  upsertProgramFilters,
+  GetIncentiveDashboard,
+  GetKpiObjects,
+  GetKpiFields,
+  GetTableSchema,
+  GetKpiDetails,
+  UpsertKpi,
   fetchAllBranches,
   saveBranchLinkedAgent,
   fetchBranchByAgent,

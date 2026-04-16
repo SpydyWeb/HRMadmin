@@ -65,15 +65,26 @@ const APIRoutes = {
   FETCHBRANCHBYUSER: "/api/Users/RegulatorUserBranch/FetchByUser",
   SAVEPRODUCT: "/api/AppMasters/SaveProduct",
   GETPRODUCTS: "/api/AppMasters/GetProducts",
-  SAVECUSTOMFIELD: "/api/CustomFields/Save",
-  GETCUSTOMFIELDS: "/api/CustomFields/Fetch",
+  INCENTIVE_UPSERT_PROGRAM: "/api/incentive/UpsertProgram",
+  INCENTIVE_GET_KPIS_LIST: "/api/incentive/GetKpisList",
+  INCENTIVE_GET_SELECTED_PROGRAM_KPIS: "/api/incentive/GetSelectedProgramKpis",
+  INCENTIVE_UPSERT_PROGRAM_WEIGHTAGES: "/api/incentive/UpsertProgramWeightages",
+  INCENTIVE_GET_PROGRAMS_LIST: "/api/incentive/GetProgramsList",
+  // Single program details by id (used for edit flow)
+  INCENTIVE_GET_PROGRAM_DETAILS: "/api/incentive/GetProgramDetails",
+  INCENTIVE_GET_AGENT_CLUBS: "/api/incentive/GetAgentClubs",
+  INCENTIVE_GET_PROGRAM_CLUBS: "/api/incentive/GetProgramClubs",
+  INCENTIVE_UPSERT_PROGRAM_CLUBS: "/api/incentive/UpsertProgramClubs",
+  GET_FILTERS_CASCADE: "/api/incentive/filters/cascade",
+  UPSERT_PROGRAM_FILTERS: "/api/incentive/UpsertProgramFilters",
+  INCENTIVE_GET_KPI_OBJECTS: "/api/incentive/GetKpiObjects",
+  INCENTIVE_GET_KPI_FIELDS: "/api/incentive/GetKpiFields",
+  INCENTIVE_GET_TABLE_SCHEMA: "/api/incentive/GetTableSchema",
+  INCENTIVE_GET_KPI_DETAILS: "/api/incentive/GetKpiDetails",
+  INCENTIVE_UPSERT_KPI: "/api/incentive/UpsertKpi",
+  // Incentive Dashboard (external HMS API)
+  INCENTIVE_GET_DASHBOARD: "/api/incentive/GetIncentiveDashboard",
 
-  // Incentive APIs
-  INCENTIVE_KPI_LIBRARY: "/api/incentive/kpi-library",
-  INCENTIVE_FILTERS: "/api/incentive/filters",
-  INCENTIVE_PROGRAMS: "/api/incentive/programs",
-  GENERATE_OTP: "/api/auth/generate-otp",
-  VERIFY_OTP: "/api/auth/verify-otp"
 };
 
 module.exports = { APIRoutes };
