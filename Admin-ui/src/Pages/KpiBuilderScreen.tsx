@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { FiPlus } from 'react-icons/fi'
+import { FiPlus, FiTrash2 } from 'react-icons/fi'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
 import Button from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -17,10 +16,31 @@ type Aggregation = 'SUM' | 'COUNT' | 'DISTINCT_COUNT' | 'AVG'
 
 type DataSource = {
   id: string
-  object: string
+  /** Persisted `dataSourceId` from GetKpiDetails; use 0 for new rows on create/update */
+  serverDataSourceId?: number
+  objectId: string
+  objectDisplayName: string
   aggregation: Aggregation
-  field: string
-  filters: Array<{ id: string; label: string }>
+  fieldId: string
+  fieldDisplayName: string
+  filters: Array<{
+    id: string
+    fieldId: string
+    displayName: string
+    operator:
+      | 'EQUALS'
+      | 'NOT_EQUALS'
+      | 'LESS_THAN'
+      | 'LESS_THAN_OR_EQUAL'
+      | 'GREATER_THAN'
+      | 'GREATER_THAN_OR_EQUAL'
+      | 'ADD'
+      | 'SUBTRACT'
+      | 'MULTIPLY'
+      | 'DIVIDE'
+    value: string
+    valueType: 'Text' | 'Number' | 'Date' | 'List'
+  }>
 }
 
 type TimeWindow = 'PROGRAM_DURATION' | 'CUSTOM_RANGE' | 'ROLLING_WINDOW'
@@ -58,6 +78,28 @@ function extractLabelValueList(payload: unknown): KpiLabelValue[] {
     .filter((x): x is KpiLabelValue => x != null)
 }
 
+type TableSchemaColumn = {
+  ColumnName?: string
+  DataType?: string
+  CharacterMaximumLength?: number | null
+}
+
+function extractTableSchemaColumns(payload: unknown): TableSchemaColumn[] {
+  const body = (payload as any)?.responseBody ?? (payload as any)?.data ?? payload
+  const schema = (body as any)?.tableSchema
+  return Array.isArray(schema) ? (schema as TableSchemaColumn[]) : []
+}
+
+function mapDbTypeToValueType(dbType: string | undefined): DataSource['filters'][number]['valueType'] {
+  const t = String(dbType ?? '').toLowerCase()
+  if (!t) return 'Text'
+  if (t.includes('date') || t.includes('time')) return 'Date'
+  if (t.includes('int') || t.includes('numeric') || t.includes('decimal') || t.includes('real') || t.includes('double')) {
+    return 'Number'
+  }
+  return 'Text'
+}
+
 const AGGREGATIONS: Array<{ id: Aggregation; title: string; subtitle: string }> = [
   { id: 'SUM', title: 'SUM', subtitle: 'Sum of numeric field' },
   { id: 'COUNT', title: 'COUNT', subtitle: 'Count of records' },
@@ -69,6 +111,11 @@ function newId(prefix: string) {
   return `${prefix}_${crypto.randomUUID()}`
 }
 
+function generateKpiCode() {
+  const token = crypto.randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()
+  return `KPI_CODE_${token}`
+}
+
 export default function KpiBuilderScreen() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { kpiId?: string | number; kpiName?: string }
@@ -78,7 +125,7 @@ export default function KpiBuilderScreen() {
   const [kpiName, setKpiName] = useState('')
   const [kpiCode, setKpiCode] = useState('')
   const [description, setDescription] = useState('')
-  const [unitType, setUnitType] = useState('')
+
 
   const [objectOptions, setObjectOptions] = useState<KpiLabelValue[]>([])
   const [objectsLoading, setObjectsLoading] = useState(false)
@@ -87,13 +134,16 @@ export default function KpiBuilderScreen() {
   const [fieldsByObject, setFieldsByObject] = useState<Record<string, KpiLabelValue[]>>({})
   const [fieldsLoadingByObject, setFieldsLoadingByObject] = useState<Record<string, boolean>>({})
   const [fieldsErrorByObject, setFieldsErrorByObject] = useState<Record<string, string>>({})
+  const [fieldTypeByObject, setFieldTypeByObject] = useState<Record<string, Record<string, string>>>({})
 
   const [dataSources, setDataSources] = useState<DataSource[]>([
     {
       id: newId('ds'),
-      object: '',
+      objectId: '',
+      objectDisplayName: '',
       aggregation: 'SUM',
-      field: '',
+      fieldId: '',
+      fieldDisplayName: '',
       filters: [],
     },
   ])
@@ -101,13 +151,10 @@ export default function KpiBuilderScreen() {
     const first = crypto.randomUUID()
     return `ds_${first}`
   })
-  const [groupByTeam, setGroupByTeam] = useState(false)
-  const [groupByRegion, setGroupByRegion] = useState(false)
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('PROGRAM_DURATION')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
   const [rollingDays, setRollingDays] = useState<number | ''>('')
-  const [sampleCode, setSampleCode] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState('')
@@ -150,11 +197,7 @@ export default function KpiBuilderScreen() {
         setKpiName(String(kpi.kpiName ?? kpi.name ?? '').trim())
         setKpiCode(String(kpi.kpiCode ?? kpi.code ?? '').trim())
         setDescription(String(kpi.description ?? '').trim())
-        setUnitType(String(kpi.unitType ?? '').trim())
-
-        const grouping: string[] = Array.isArray(kpi.groupingTypes) ? kpi.groupingTypes : []
-        setGroupByTeam(grouping.some((x) => String(x).toLowerCase() === 'team'))
-        setGroupByRegion(grouping.some((x) => String(x).toLowerCase() === 'region'))
+       
 
         const tw = String(kpi.timeWindowType ?? '').toLowerCase()
         if (tw.includes('custom')) setTimeWindow('CUSTOM_RANGE')
@@ -191,13 +234,96 @@ export default function KpiBuilderScreen() {
 
         const ds = Array.isArray(kpi.dataSources) ? kpi.dataSources : []
         if (ds.length) {
+          const parseSelectionConfiguration = (raw: any) => {
+            if (!raw) return null
+            if (typeof raw === 'string') {
+              try {
+                return JSON.parse(raw)
+              } catch {
+                return null
+              }
+            }
+            if (typeof raw === 'object') return raw
+            return null
+          }
+
           setDataSources(
             ds.map((x: any) => ({
               id: newId('ds'),
-              object: String(x.objectName ?? x.object ?? ''),
-              aggregation: String(x.aggregationType ?? x.aggregation ?? 'SUM') as Aggregation,
-              field: String(x.fieldName ?? x.field ?? ''),
-              filters: [],
+              serverDataSourceId: (() => {
+                const raw = x?.dataSourceId
+                if (raw == null || String(raw).trim() === '') return undefined
+                const n = Number(raw)
+                return Number.isFinite(n) ? n : undefined
+              })(),
+              objectId: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                return String(
+                  sc?.object?.id ??
+                    x.objectId ??
+                    x.objectCode ??
+                    x.objectName ??
+                    x.object ??
+                    '',
+                )
+              })(),
+              objectDisplayName: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                return String(
+                  sc?.object?.displayName ??
+                    x.objectDisplayName ??
+                    x.objectName ??
+                    x.object ??
+                    '',
+                )
+              })(),
+              aggregation: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                return String(
+                  sc?.aggregation?.type ??
+                    x.aggregationType ??
+                    x.aggregation ??
+                    'SUM',
+                ) as Aggregation
+              })(),
+              fieldId: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                return String(
+                  sc?.field?.id ??
+                    x.fieldId ??
+                    x.fieldCode ??
+                    x.fieldName ??
+                    x.field ??
+                    '',
+                )
+              })(),
+              fieldDisplayName: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                return String(
+                  sc?.field?.displayName ??
+                    x.fieldDisplayName ??
+                    x.fieldName ??
+                    x.field ??
+                    '',
+                )
+              })(),
+              filters: (() => {
+                const sc = parseSelectionConfiguration(x.selectionConfiguration)
+                const rawFilters = Array.isArray(sc?.filters)
+                  ? sc.filters
+                  : Array.isArray(x.filters)
+                    ? x.filters
+                    : []
+
+                return rawFilters.map((f: any) => ({
+                  id: newId('flt'),
+                  fieldId: String(f.fieldId ?? ''),
+                  displayName: String(f.displayName ?? f.fieldName ?? ''),
+                  operator: String(f.operator ?? 'EQUALS'),
+                  value: Array.isArray(f.value) ? f.value.join(',') : String(f.value ?? ''),
+                  valueType: String(f.valueType ?? 'Text'),
+                }))
+              })(),
             })),
           )
         }
@@ -247,10 +373,13 @@ export default function KpiBuilderScreen() {
     }
   }, [activeDataSourceId, dataSources])
 
-  const getFieldsForObject = (objectValue: string) => fieldsByObject[objectValue] ?? []
+  const getObjectKey = (ds: Pick<DataSource, 'objectId' | 'objectDisplayName'>) => ds.objectId || ds.objectDisplayName
 
-  const loadFieldsForObject = async (objectName: string) => {
-    const trimmed = objectName.trim()
+  const getFieldsForObject = (objectKey: string) => fieldsByObject[objectKey] ?? []
+  const getFieldTypeForObject = (objectKey: string, fieldId: string) => fieldTypeByObject[objectKey]?.[fieldId]
+
+  const loadFieldsForObject = async (tableName: string) => {
+    const trimmed = tableName.trim()
     if (!trimmed) return
     if (fieldsByObject[trimmed]?.length) return
     if (fieldsLoadingByObject[trimmed]) return
@@ -259,13 +388,26 @@ export default function KpiBuilderScreen() {
     setFieldsErrorByObject((prev) => ({ ...prev, [trimmed]: '' }))
 
     try {
-      const json = (await incentiveService.getKpiFields(trimmed)) as unknown
-      const list = extractLabelValueList(json)
+      const json = (await incentiveService.getTableSchema(trimmed)) as unknown
+      const cols = extractTableSchemaColumns(json)
+      const typeMap: Record<string, string> = {}
+      const list: KpiLabelValue[] = cols
+        .map((c) => {
+          const name = String(c?.ColumnName ?? '').trim()
+          if (!name) return null
+          const dt = String(c?.DataType ?? '').trim()
+          if (dt) typeMap[name] = dt
+          const label = dt ? `${name} (${dt})` : name
+          return { label, value: name }
+        })
+        .filter((x): x is KpiLabelValue => x != null)
+
       setFieldsByObject((prev) => ({ ...prev, [trimmed]: list }))
+      setFieldTypeByObject((prev) => ({ ...prev, [trimmed]: typeMap }))
     } catch (e) {
       setFieldsErrorByObject((prev) => ({
         ...prev,
-        [trimmed]: e instanceof Error ? e.message : 'Failed to load fields',
+        [trimmed]: e instanceof Error ? e.message : 'Failed to load table schema',
       }))
     } finally {
       setFieldsLoadingByObject((prev) => ({ ...prev, [trimmed]: false }))
@@ -279,13 +421,30 @@ export default function KpiBuilderScreen() {
   const addDataSource = () => {
     const created: DataSource = {
       id: newId('ds'),
-      object: '',
+      objectId: '',
+      objectDisplayName: '',
       aggregation: 'SUM',
-      field: '',
+      fieldId: '',
+      fieldDisplayName: '',
       filters: [],
     }
     setDataSources((prev) => [...prev, created])
     setActiveDataSourceId(created.id)
+  }
+
+  const removeDataSource = (dsId: string) => {
+    setDataSources((prev) => {
+      if (prev.length <= 1) return prev
+      const next = prev.filter((d) => d.id !== dsId)
+      if (next.length === 0) return prev
+
+      setActiveDataSourceId((curr) => {
+        if (curr !== dsId) return curr
+        return next[0]?.id ?? curr
+      })
+
+      return next
+    })
   }
 
   const addFilter = (dsId: string) => {
@@ -294,66 +453,119 @@ export default function KpiBuilderScreen() {
         d.id === dsId
           ? {
               ...d,
-              filters: [...d.filters, { id: newId('flt'), label: 'New filter' }],
+              filters: [
+                ...d.filters,
+                {
+                  id: newId('flt'),
+                  fieldId: '',
+                  displayName: '',
+                  operator: 'EQUALS',
+                  value: '',
+                  valueType: 'Text',
+                },
+              ],
             }
           : d,
       ),
     )
   }
 
+  const removeFilter = (dsId: string, filterId: string) => {
+    setDataSources((prev) =>
+      prev.map((d) => (d.id === dsId ? { ...d, filters: d.filters.filter((f) => f.id !== filterId) } : d)),
+    )
+  }
+
   const resetForm = () => {
     const ds: DataSource = {
       id: newId('ds'),
-      object: '',
+      objectId: '',
+      objectDisplayName: '',
       aggregation: 'SUM',
-      field: '',
+      fieldId: '',
+      fieldDisplayName: '',
       filters: [],
     }
     setEditingKpiId(0)
     setKpiName('')
     setKpiCode('')
     setDescription('')
-    setUnitType('')
+ 
     setDataSources([ds])
     setActiveDataSourceId(ds.id)
-    setGroupByTeam(false)
-    setGroupByRegion(false)
     setTimeWindow('PROGRAM_DURATION')
     setCustomStart('')
     setCustomEnd('')
     setRollingDays('')
-    setSampleCode('')
     setFieldsByObject({})
     setFieldsLoadingByObject({})
     setFieldsErrorByObject({})
+    setFieldTypeByObject({})
     setSaveError('')
   }
 
   const buildPayload = () => {
-    const groupingTypes: string[] = ['Sales Personnel ID']
-    if (groupByTeam) groupingTypes.push('Team')
-    if (groupByRegion) groupingTypes.push('Region')
-
     const timeWindowType =
-      timeWindow === 'CUSTOM_RANGE' ? 'Custom' : timeWindow === 'ROLLING_WINDOW' ? 'Rolling' : 'Program Duration'
+      timeWindow === 'CUSTOM_RANGE'
+        ? 'Custom'
+        : timeWindow === 'ROLLING_WINDOW'
+          ? 'Rolling'
+          : 'Program Duration'
 
     return {
       kpiId: editingKpiId,
       kpiName,
       kpiCode,
       description,
-      unitType,
-      groupingTypes,
       timeWindowType,
-      timeWindowCustomStart: timeWindow === 'CUSTOM_RANGE' && customStart ? new Date(customStart).toISOString() : null,
-      timeWindowCustomEnd: timeWindow === 'CUSTOM_RANGE' && customEnd ? new Date(customEnd).toISOString() : null,
+      timeWindowCustomStart: timeWindow === 'CUSTOM_RANGE' && customStart ? customStart : null,
+      timeWindowCustomEnd: timeWindow === 'CUSTOM_RANGE' && customEnd ? customEnd : null,
       timeWindowRollingDays: timeWindow === 'ROLLING_WINDOW' && rollingDays !== '' ? Number(rollingDays) : null,
-      dataSources: dataSources.map((ds) => ({
-        dataSourceId: 0,
-        objectName: ds.object,
-        aggregationType: ds.aggregation,
-        fieldName: ds.field,
-      })),
+      dataSources: dataSources.map((ds) => {
+        const filters = ds.filters
+          .filter((f) => f.fieldId && f.operator)
+          .map((f) => {
+            const trimmed = String(f.value ?? '').trim()
+            const normalizedValue =
+              f.valueType === 'List'
+                ? trimmed
+                    .split(',')
+                    .map((x) => x.trim())
+                    .filter(Boolean)
+                : f.valueType === 'Number'
+                  ? (trimmed === '' ? null : Number(trimmed))
+                  : trimmed
+
+            return {
+              fieldId: f.fieldId,
+              displayName: f.displayName,
+              operator: f.operator,
+              value: normalizedValue,
+              valueType: f.valueType,
+            }
+          })
+
+        const selectionConfiguration = JSON.stringify({
+          object: {
+            id: ds.objectId,
+            displayName: ds.objectDisplayName,
+          },
+          aggregation: {
+            type: ds.aggregation,
+            field: ds.fieldDisplayName || ds.fieldId,
+          },
+          field: {
+            id: ds.fieldId,
+            displayName: ds.fieldDisplayName || ds.fieldId,
+          },
+          filters,
+        })
+
+        return {
+          dataSourceId: ds.serverDataSourceId ?? 0,
+          selectionConfiguration,
+        }
+      }),
     }
   }
 
@@ -377,15 +589,7 @@ export default function KpiBuilderScreen() {
         editingKpiId > 0 ? 'KPI updated successfully' : 'KPI saved',
         { description: successMsg },
       )
-      if (editingKpiId > 0) {
-        navigate({ to: '/search/incentive/kpis' as any })
-      } else {
-        navigate({
-          to: '/search/incentive/kpi-builder',
-          search: {},
-          replace: true,
-        })
-      }
+      navigate({ to: '/search/incentive/kpis' as any })
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : 'Failed to save KPI'
       setSaveError(errMsg)
@@ -396,14 +600,15 @@ export default function KpiBuilderScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="p-4">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          {/* Left column */}
-          <div className="space-y-4">
+    <div className="min-h-screen w-full">
+      <div className="p-4 w-full">
+        <div className="w-full">
+        
+          <div className="space-y-4 w-full">
             {/* KPI Name */}
             <Card className="rounded-xl border border-neutral-200 shadow-sm">
               <CardContent className="px-5 pb-5 pt-5">
+                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {editingKpiId > 0 ? (
                   <p className="mb-4 rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900">
                     Editing existing KPI{' '}
@@ -423,7 +628,7 @@ export default function KpiBuilderScreen() {
                 {editingKpiId > 0 ? (
                   <p className="mt-1 text-xs text-neutral-500">KPI Name cannot be changed while editing.</p>
                 ) : null}
-                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="flex items-end gap-2">
                   <Input
                     label="KPI Code"
                     name="kpiCode"
@@ -433,15 +638,16 @@ export default function KpiBuilderScreen() {
                     onChange={(e) => setKpiCode(e.target.value)}
                     className="!h-10 w-full rounded-sm"
                   />
-                  <Input
-                    label="Unit Type"
-                    name="unitType"
-                    variant="standardone"
-                    placeholder="e.g. Currency"
-                    value={unitType}
-                    onChange={(e) => setUnitType(e.target.value)}
-                    className="!h-10 w-full rounded-sm"
-                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-10"
+                    onClick={() => setKpiCode(generateKpiCode())}
+                  >
+                    Generate
+                  </Button>
+                </div>
                 </div>
                 <div className="mt-3">
                   <Input
@@ -485,7 +691,6 @@ export default function KpiBuilderScreen() {
                     <div className="space-y-1">
                       {dataSources.map((ds, idx) => {
                         const active = ds.id === activeDataSourceId
-                        const objLabel = objectOptions.find((o) => o.value === ds.object)?.label
                         return (
                           <button
                             key={ds.id}
@@ -498,7 +703,7 @@ export default function KpiBuilderScreen() {
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-semibold">Data Source {idx + 1}</span>
                               <span className={`text-[11px] ${active ? 'text-neutral-200' : 'text-neutral-500'}`}>
-                                {ds.object ? objLabel ?? ds.object : 'Not set'}
+                                {ds.objectDisplayName ? ds.objectDisplayName : 'Not set'}
                               </span>
                             </div>
                           </button>
@@ -514,18 +719,37 @@ export default function KpiBuilderScreen() {
                     const idx = dataSources.findIndex((d) => d.id === ds.id)
                     return (
                       <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                        <p className="text-sm font-semibold text-neutral-800">Data Source {idx + 1}</p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-neutral-800">Data Source {idx + 1}</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            icon={<FiTrash2 className="h-4 w-4" />}
+                            onClick={() => removeDataSource(ds.id)}
+                            disabled={dataSources.length <= 1}
+                          >
+                            Delete
+                          </Button>
+                        </div>
 
                         <div className="mt-4 space-y-4">
                           {/* Object */}
                           <div>
                             <Label className="text-xs font-semibold text-neutral-600">Object</Label>
                             <Select
-                              value={ds.object || '__none__'}
+                              value={ds.objectId || '__none__'}
                               onValueChange={(v) => {
-                                const nextObject = v === '__none__' ? '' : v
-                                updateDataSource(ds.id, { object: nextObject, field: '' })
-                                if (nextObject) void loadFieldsForObject(nextObject)
+                                const nextObjectId = v === '__none__' ? '' : v
+                                const nextObjectDisplayName =
+                                  nextObjectId ? objectOptions.find((o) => o.value === nextObjectId)?.label ?? '' : ''
+                                updateDataSource(ds.id, {
+                                  objectId: nextObjectId,
+                                  objectDisplayName: nextObjectDisplayName,
+                                  fieldId: '',
+                                  fieldDisplayName: '',
+                                })
+                                if (nextObjectId) void loadFieldsForObject(nextObjectId)
                               }}
                             >
                               <SelectTrigger className="mt-2 !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
@@ -572,34 +796,43 @@ export default function KpiBuilderScreen() {
                           <div>
                             <Label className="text-xs font-semibold text-neutral-600">Field</Label>
                             <Select
-                              value={ds.field || '__none__'}
-                              onValueChange={(v) => updateDataSource(ds.id, { field: v === '__none__' ? '' : v })}
+                              value={ds.fieldId || '__none__'}
+                              onValueChange={(v) => {
+                                const nextFieldId = v === '__none__' ? '' : v
+                                const fieldOptions = getFieldsForObject(getObjectKey(ds))
+                                const nextFieldDisplayName =
+                                  nextFieldId ? fieldOptions.find((f) => f.value === nextFieldId)?.label ?? '' : ''
+                                updateDataSource(ds.id, {
+                                  fieldId: nextFieldId,
+                                  fieldDisplayName: nextFieldDisplayName,
+                                })
+                              }}
                             >
                               <SelectTrigger className="mt-2 !h-10 w-full rounded-sm border border-gray-400 bg-white px-3 py-2 text-sm">
-                                <SelectValue placeholder={ds.object ? 'Select field...' : 'No compatible fields'} />
+                                <SelectValue placeholder={ds.objectId ? 'Select field...' : 'No compatible fields'} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="__none__">
-                                  {!ds.object
+                                  {!ds.objectId
                                     ? 'Select an object first'
-                                    : fieldsLoadingByObject[ds.object]
+                                    : fieldsLoadingByObject[getObjectKey(ds)]
                                       ? 'Loading fields...'
                                       : 'Select field...'}
                                 </SelectItem>
-                                {getFieldsForObject(ds.object).map((f) => (
+                                {getFieldsForObject(getObjectKey(ds)).map((f) => (
                                   <SelectItem key={f.value} value={f.value}>
                                     {f.label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                            {ds.object && fieldsErrorByObject[ds.object] ? (
-                              <p className="mt-2 text-xs text-red-600">{fieldsErrorByObject[ds.object]}</p>
+                            {getObjectKey(ds) && fieldsErrorByObject[getObjectKey(ds)] ? (
+                              <p className="mt-2 text-xs text-red-600">{fieldsErrorByObject[getObjectKey(ds)]}</p>
                             ) : null}
                           </div>
 
                           {/* Preview table */}
-                          {ds.object && ds.field ? (
+                          {ds.objectDisplayName && ds.fieldId ? (
                             <div className="rounded-lg border border-neutral-200 bg-white">
                               <div className="border-b border-neutral-200 px-3 py-2">
                                 <p className="text-xs font-semibold text-neutral-700">Selected Configuration</p>
@@ -616,12 +849,12 @@ export default function KpiBuilderScreen() {
                                   <TableBody>
                                     <TableRow>
                                       <TableCell>
-                                        {objectOptions.find((o) => o.value === ds.object)?.label ?? ds.object}
+                                        {ds.objectDisplayName || ds.objectId}
                                       </TableCell>
                                       <TableCell>{ds.aggregation}</TableCell>
                                       <TableCell>
-                                        {getFieldsForObject(ds.object).find((f) => f.value === ds.field)?.label ??
-                                          ds.field}
+                                        {getFieldsForObject(getObjectKey(ds)).find((f) => f.value === ds.fieldId)
+                                          ?.label ?? ds.fieldDisplayName ?? ds.fieldId}
                                       </TableCell>
                                     </TableRow>
                                   </TableBody>
@@ -649,14 +882,120 @@ export default function KpiBuilderScreen() {
                               </p>
                             ) : (
                               <div className="mt-3 space-y-2">
-                                {ds.filters.map((f) => (
-                                  <div
-                                    key={f.id}
-                                    className="rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-700"
-                                  >
-                                    {f.label}
-                                  </div>
-                                ))}
+                                <div className="grid grid-cols-[1fr_12rem_10rem_1fr_auto] gap-2 px-1 text-[11px] font-semibold text-neutral-500">
+                                  <div>Field name</div>
+                                  <div>Operator</div>
+                                  <div>Value type</div>
+                                  <div>Value</div>
+                                  <div />
+                                </div>
+
+                                {ds.filters.map((f) => {
+                                  const objectKey = getObjectKey(ds)
+                                  const fieldOptions = getFieldsForObject(objectKey)
+                                  const dt = objectKey && f.fieldId ? getFieldTypeForObject(objectKey, f.fieldId) : undefined
+                                  const mergedTypeLabel = dt ? `${mapDbTypeToValueType(dt)} (${dt})` : f.valueType
+                                  return (
+                                    <div
+                                      key={f.id}
+                                      className="grid grid-cols-[1fr_12rem_10rem_1fr_auto] items-center gap-2 rounded-md border border-neutral-200 bg-white p-2"
+                                    >
+                                      <Select
+                                        value={f.fieldId || '__none__'}
+                                        onValueChange={(v) => {
+                                          const nextFieldId = v === '__none__' ? '' : v
+                                          const nextDisplayName =
+                                            nextFieldId
+                                              ? fieldOptions.find((x) => x.value === nextFieldId)?.label ?? ''
+                                              : ''
+                                          const nextDt =
+                                            objectKey && nextFieldId ? getFieldTypeForObject(objectKey, nextFieldId) : undefined
+                                          const nextValueType = mapDbTypeToValueType(nextDt)
+                                          // Important: update in a single state write, otherwise the
+                                          // second update can overwrite the first (losing the selected field).
+                                          const nextFilters = ds.filters.map((x) =>
+                                            x.id === f.id
+                                              ? {
+                                                  ...x,
+                                                  fieldId: nextFieldId,
+                                                  displayName: nextDisplayName,
+                                                  valueType: nextValueType,
+                                                  value: '',
+                                                }
+                                              : x,
+                                          )
+                                          updateDataSource(ds.id, { filters: nextFilters })
+                                        }}
+                                      >
+                                        <SelectTrigger className="!h-9 w-full rounded-sm border border-gray-300 bg-white px-2 py-1 text-xs">
+                                          <SelectValue placeholder="Select field..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="__none__">Select field...</SelectItem>
+                                          {fieldOptions.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+
+                                      <Select
+                                        value={f.operator}
+                                        onValueChange={(v) => {
+                                          updateDataSource(ds.id, {
+                                            filters: ds.filters.map((x) => (x.id === f.id ? { ...x, operator: v as any } : x)),
+                                          })
+                                        }}
+                                      >
+                                        <SelectTrigger className="!h-9 w-full rounded-sm border border-gray-300 bg-white px-2 py-1 text-xs">
+                                          <SelectValue placeholder="Operator" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="EQUALS">=</SelectItem>
+                                          <SelectItem value="NOT_EQUALS">!=</SelectItem>
+                                          <SelectItem value="LESS_THAN">&lt;</SelectItem>
+                                          <SelectItem value="LESS_THAN_OR_EQUAL">&lt;=</SelectItem>
+                                          <SelectItem value="GREATER_THAN">&gt;</SelectItem>
+                                          <SelectItem value="GREATER_THAN_OR_EQUAL">&gt;=</SelectItem>
+                                          <SelectItem value="ADD">+</SelectItem>
+                                          <SelectItem value="SUBTRACT">-</SelectItem>
+                                          <SelectItem value="MULTIPLY">*</SelectItem>
+                                          <SelectItem value="DIVIDE">/</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+
+                                      <div className="flex !h-9 w-full items-center rounded-sm border border-gray-300 bg-neutral-50 px-2 text-xs text-neutral-700">
+                                        {mergedTypeLabel || 'Text'}
+                                      </div>
+
+                                      <Input
+                                        label=""
+                                        name="filterValue"
+                                        variant="standardone"
+                                        type={f.valueType === 'Date' ? 'date' : 'text'}
+                                        placeholder={f.valueType === 'List' ? 'Comma separated (e.g. North,West)' : 'Value'}
+                                        value={f.value}
+                                        onChange={(e) => {
+                                          updateDataSource(ds.id, {
+                                            filters: ds.filters.map((x) =>
+                                              x.id === f.id ? { ...x, value: e.target.value } : x,
+                                            ),
+                                          })
+                                        }}
+                                        className="!h-9 w-full rounded-sm"
+                                      />
+
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => removeFilter(ds.id, f.id)}
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )}
                           </div>
@@ -667,44 +1006,6 @@ export default function KpiBuilderScreen() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Grouping */}
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Grouping</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Define how results are grouped</p>
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-lg border border-teal-200 bg-teal-50 px-3 py-3">
-                    <div>
-                      <p className="text-sm font-semibold text-teal-800">Sales Personnel ID</p>
-                      <p className="text-[11px] text-teal-700">Mandatory grouping — always applied</p>
-                    </div>
-                    <span className="rounded-md border border-teal-200 bg-teal-100 px-2 py-1 text-[11px] font-semibold text-teal-700">
-                      Locked
-                    </span>
-                  </div>
-
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-3 hover:bg-neutral-50">
-                    <Checkbox checked={groupByTeam} onCheckedChange={(v) => setGroupByTeam(Boolean(v))} />
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-800">Team</p>
-                      <p className="text-[11px] text-neutral-500">Group by team name</p>
-                    </div>
-                  </label>
-
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-3 hover:bg-neutral-50">
-                    <Checkbox checked={groupByRegion} onCheckedChange={(v) => setGroupByRegion(Boolean(v))} />
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-800">Region</p>
-                      <p className="text-[11px] text-neutral-500">Group by geographic region</p>
-                    </div>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Time Window */}
             <Card className="rounded-xl border border-neutral-200 shadow-sm">
               <CardHeader className="px-5 pb-3 pt-5">
@@ -728,19 +1029,6 @@ export default function KpiBuilderScreen() {
 
                   <button
                     type="button"
-                    onClick={() => setTimeWindow('CUSTOM_RANGE')}
-                    className={`rounded-lg border px-4 py-4 text-left transition ${
-                      timeWindow === 'CUSTOM_RANGE'
-                        ? 'border-indigo-200 bg-indigo-50'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm'
-                    }`}
-                  >
-                    <p className="text-sm font-semibold text-neutral-800">Custom Range</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">Specific start and end dates</p>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setTimeWindow('ROLLING_WINDOW')}
                     className={`rounded-lg border px-4 py-4 text-left transition ${
                       timeWindow === 'ROLLING_WINDOW'
@@ -752,29 +1040,6 @@ export default function KpiBuilderScreen() {
                     <p className="mt-0.5 text-xs text-neutral-500">Last N days from today</p>
                   </button>
                 </div>
-
-                {timeWindow === 'CUSTOM_RANGE' ? (
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div>
-                      <Label className="text-xs font-semibold text-neutral-600">Start</Label>
-                      <input
-                        type="date"
-                        value={customStart}
-                        onChange={(e) => setCustomStart(e.target.value)}
-                        className="mt-2 h-10 w-full rounded-sm border border-gray-400 bg-white px-3 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-neutral-600">End</Label>
-                      <input
-                        type="date"
-                        value={customEnd}
-                        onChange={(e) => setCustomEnd(e.target.value)}
-                        className="mt-2 h-10 w-full rounded-sm border border-gray-400 bg-white px-3 text-sm"
-                      />
-                    </div>
-                  </div>
-                ) : null}
 
                 {timeWindow === 'ROLLING_WINDOW' ? (
                   <div className="mt-4">
@@ -794,48 +1059,20 @@ export default function KpiBuilderScreen() {
                 ) : null}
               </CardContent>
             </Card>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-4">
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Actions</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Save the KPI definition to the server.</p>
-              </CardHeader>
-              <CardContent className="space-y-3 px-5 pb-5">
-                <Button onClick={onSave} disabled={saving} className="w-full">
+                <div className="flex justify-end">
+               <Button onClick={onSave} disabled={saving} className="w-95 text-end">
                   {saving
                     ? 'Saving...'
                     : editingKpiId > 0
                       ? 'Update KPI Definition'
                       : 'Save KPI Definition'}
                 </Button>
+                </div>
                 {saveError ? <p className="text-xs text-red-600">{saveError}</p> : null}
                 {saveSuccess ? <p className="text-xs text-emerald-700">{saveSuccess}</p> : null}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-xl border border-neutral-200 shadow-sm">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-base">Sample Data Test</CardTitle>
-                <p className="mt-1 text-xs text-neutral-500">Test the KPI with a specific salesperson/personnel code.</p>
-              </CardHeader>
-              <CardContent className="space-y-3 px-5 pb-5">
-                <Input
-                  label=""
-                  variant="standard"
-                  placeholder="e.g., SP001"
-                  value={sampleCode}
-                  onChange={(e) => setSampleCode(e.target.value)}
-                />
-                <div className="space-y-2">
-                  <div className="h-10 rounded-md bg-neutral-200" />
-                  <div className="h-10 rounded-md bg-neutral-200" />
-                </div>
-              </CardContent>
-            </Card>
           </div>
+
+    
         </div>
       </div>
     </div>
