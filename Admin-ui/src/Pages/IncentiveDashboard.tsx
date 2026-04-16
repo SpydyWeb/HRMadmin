@@ -104,20 +104,25 @@ const quickActions = [
     icon: FiBarChart2,
   },
   {
-    title: 'Add Agent Target',
-    subtitle: 'Assign agent-wise goals',
+    title: 'Manage Budgets',
+    subtitle: 'For managing Budgets',
     icon: FiUserPlus,
   },
   {
-    title: 'Export Incentive Data',
-    subtitle: 'Download monthly payout report',
+    title: 'Add Adjustments',
+    subtitle: 'For adding adjustments',
     icon: FiDownload,
   },
   {
-    title: 'Import Payout File',
+    title: 'Hold Payouts',
     subtitle: 'Upload processed payout file',
     icon: FiUpload,
   },
+  {
+    title: 'Release Hold Payouts',
+    subtitle: 'Upload processed payout file',
+    icon: FiUpload,
+  }
 ]
 
 const resourceItems = [
@@ -243,7 +248,7 @@ const IncentiveDashboard = () => {
   }, [dashboard])
 
   return (
-    <div className="min-h-screen py-2">
+    <div className="py-2">
       <div className="max-w-full p-2">
         <div className="flex flex-col gap-4 xl:flex-row">
           <div className="min-w-0 flex-1 space-y-4">
@@ -424,7 +429,7 @@ const IncentiveDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-md gap-0 py-3">
+            {/* <Card className="rounded-md gap-0 py-3">
               <CardHeader className="px-4">
                 <CardTitle className="text-xl font-semibold">Resources</CardTitle>
               </CardHeader>
@@ -453,9 +458,9 @@ const IncentiveDashboard = () => {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
-            <Card className="rounded-md gap-0 py-3">
+            {/* <Card className="rounded-md gap-0 py-3">
               <CardHeader className="px-4">
                 <CardTitle className="text-xl font-semibold">Go To</CardTitle>
               </CardHeader>
@@ -477,7 +482,7 @@ const IncentiveDashboard = () => {
                   </button>
                 ))}
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>
